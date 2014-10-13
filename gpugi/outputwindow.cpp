@@ -9,15 +9,7 @@ static void ErrorCallbackGLFW(int error, const char* description)
 	std::cerr << "GLFW error, code " << error << " desc: \"" << description << "\"" << std::endl;
 }
 
-static void APIENTRY GLDebugOutput(
-	GLenum source,
-	GLenum type,
-	GLuint id,
-	GLenum severity,
-	GLsizei length,
-	const GLchar* message,
-	GLvoid* userParam
-	)
+static void GLAPIENTRY GLDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
 	std::string debSource, debType, debSev;
 
@@ -67,14 +59,26 @@ static void APIENTRY GLDebugOutput(
 	std::cerr << debSource << ": " << debType << "(" << debSev << ") " << id << ": " << message << std::endl;
 }
 
-void ActivateDebugOutput()
+enum class GLDebugSeverity
+{
+	LOW,
+	MEDIUM,
+	HIGH
+};
+
+void ActivateDebugOutput(GLDebugSeverity level)
 {
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-
-//	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW, 0, NULL, GL_TRUE);
-	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, NULL, GL_TRUE);
-//	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, NULL, GL_TRUE);
+	switch (level)
+	{
+	case GLDebugSeverity::LOW:
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW, 0, NULL, GL_TRUE);
+	case GLDebugSeverity::MEDIUM:
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, NULL, GL_TRUE);
+	case GLDebugSeverity::HIGH:
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, NULL, GL_TRUE);
+	}
 
 	glDebugMessageCallback(&GLDebugOutput, NULL);
 }
@@ -102,7 +106,7 @@ OutputWindow::OutputWindow(unsigned int width, unsigned int height)
 		throw std::string("Error: ") + reinterpret_cast<const char*>(glewGetErrorString(err));
 
 #ifdef _DEBUG
-	ActivateDebugOutput();
+	ActivateDebugOutput(GLDebugSeverity::MEDIUM);
 #endif
 
 	GetGLFWKeystates();
