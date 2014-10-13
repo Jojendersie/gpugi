@@ -1,0 +1,5 @@
+These time classes are part of ezEngine and were adapted to work without the rest of the engine.
+
+http://ezengine.net/
+
+ezEngine is licensed under a Creative Commons Attribution 3.0 Unported License.

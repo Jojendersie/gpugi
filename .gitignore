@@ -26,3 +26,13 @@
 *.exe
 *.out
 *.app
+
+# Visual Studio stuff
+*.opensdf
+*.sdf
+*.user
+*.suo
+
+# Build directories
+/gpugi/x64
+/x64
