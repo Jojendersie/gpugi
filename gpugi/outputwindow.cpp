@@ -1,4 +1,4 @@
-#include "OutputWindow.h"
+#include "outputwindow.hpp"
 
 #include <iostream>
 #include <cassert>

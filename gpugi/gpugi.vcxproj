@@ -101,7 +101,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;LOG_LEVEL=0;GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,7 +134,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;LOG_LEVEL=1;GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -145,16 +145,37 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="glhelper\gl.cpp" />
+    <ClCompile Include="glhelper\shaderobject.cpp" />
+    <ClCompile Include="glhelper\uniformbuffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="outputwindow.cpp" />
     <ClCompile Include="Time\Implementation\Stopwatch.cpp" />
     <ClCompile Include="Time\Implementation\Time.cpp" />
+    <ClCompile Include="utilities\assert.cpp" />
+    <ClCompile Include="utilities\logger.cpp" />
+    <ClCompile Include="utilities\pathutils.cpp" />
+    <ClCompile Include="utilities\policy.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="outputwindow.h" />
+    <ClInclude Include="glhelper\gl.hpp" />
+    <ClInclude Include="glhelper\shaderdatametainfo.hpp" />
+    <ClInclude Include="glhelper\shaderobject.hpp" />
+    <ClInclude Include="glhelper\uniformbuffer.hpp" />
+    <ClInclude Include="outputwindow.hpp" />
     <ClInclude Include="Time\Implementation\Time_inl.h" />
     <ClInclude Include="Time\Stopwatch.h" />
     <ClInclude Include="Time\Time.h" />
+    <ClInclude Include="utilities\assert.hpp" />
+    <ClInclude Include="utilities\logger.hpp" />
+    <ClInclude Include="utilities\loggerinit.hpp" />
+    <ClInclude Include="utilities\pathutils.hpp" />
+    <ClInclude Include="utilities\policy.hpp" />
+    <ClInclude Include="utilities\utils.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="glhelper\shaderdatametainfo.inl" />
+    <None Include="glhelper\uniformbuffer.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

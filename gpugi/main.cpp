@@ -1,7 +1,9 @@
 #include <iostream>
 #include <memory>
-#include "Outputwindow.h"
+#include "outputwindow.hpp"
 #include "Time/Stopwatch.h"
+
+#include "utilities/loggerinit.hpp"
 
 const unsigned int defaultWindowWidth = 1024;
 const unsigned int defaultWindowHeight = 768;
@@ -60,6 +62,12 @@ private:
 
 int main(int argc, char** argv)
 {
+	// Logger init.
+	Logger::FilePolicy filePolicy("log.txt");
+	Logger::g_logger.Initialize(&filePolicy);
+
+
+	// Actual application.
 	try
 	{
 		Application application;

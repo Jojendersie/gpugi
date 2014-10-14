@@ -10,6 +10,12 @@
     <Filter Include="Time">
       <UniqueIdentifier>{6b3b9bda-4975-40b0-b9e3-7fa3c9c04b0d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="code\glhelper">
+      <UniqueIdentifier>{9cb5bc7d-6439-4ab4-93eb-2d7a4e7036fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="code\utilities">
+      <UniqueIdentifier>{9f118de0-8de1-4757-83d0-fab722550b2d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="outputwindow.cpp">
@@ -24,11 +30,29 @@
     <ClCompile Include="Time\Implementation\Time.cpp">
       <Filter>Time</Filter>
     </ClCompile>
+    <ClCompile Include="utilities\pathutils.cpp">
+      <Filter>code\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="utilities\policy.cpp">
+      <Filter>code\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="utilities\assert.cpp">
+      <Filter>code\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="utilities\logger.cpp">
+      <Filter>code\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="glhelper\uniformbuffer.cpp">
+      <Filter>code\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="glhelper\shaderobject.cpp">
+      <Filter>code\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="glhelper\gl.cpp">
+      <Filter>code\glhelper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="outputwindow.h">
-      <Filter>code</Filter>
-    </ClInclude>
     <ClInclude Include="Time\Stopwatch.h">
       <Filter>Time</Filter>
     </ClInclude>
@@ -38,5 +62,46 @@
     <ClInclude Include="Time\Implementation\Time_inl.h">
       <Filter>Time</Filter>
     </ClInclude>
+    <ClInclude Include="utilities\loggerinit.hpp">
+      <Filter>code\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\pathutils.hpp">
+      <Filter>code\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\policy.hpp">
+      <Filter>code\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\assert.hpp">
+      <Filter>code\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\logger.hpp">
+      <Filter>code\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\gl.hpp">
+      <Filter>code\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="outputwindow.hpp">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\utils.hpp">
+      <Filter>code\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\uniformbuffer.hpp">
+      <Filter>code\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\shaderobject.hpp">
+      <Filter>code\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\shaderdatametainfo.hpp">
+      <Filter>code\glhelper</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="glhelper\uniformbuffer.inl">
+      <Filter>code\glhelper</Filter>
+    </None>
+    <None Include="glhelper\shaderdatametainfo.inl">
+      <Filter>code\glhelper</Filter>
+    </None>
   </ItemGroup>
 </Project>
