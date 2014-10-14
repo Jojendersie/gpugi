@@ -21,7 +21,19 @@ namespace gl
 
 
 	// Error handling
-	// Note that using GL_CALL may not be that important anymore if using the DebugMessage functionallity
+
+	// Note that using GL_CALL may not be that important anymore if using the DebugMessage functionality (see ActivateDebugExtension)
+
+
+	enum class DebugSeverity
+	{
+		LOW,
+		MEDIUM,
+		HIGH
+	};
+
+	/// Activates GL_DEBUG_OUTPUT.
+	void ActivateGLDebugOutput(DebugSeverity level);
 
 	/// Performs OpenGL error handling via glGetError and outputs results into the log.
 	/// \param openGLFunctionName

@@ -1,5 +1,7 @@
 #include "outputwindow.hpp"
 
+#include "glhelper/gl.hpp"
+
 #include <iostream>
 #include <cassert>
 #include <memory>
@@ -8,81 +10,6 @@ static void ErrorCallbackGLFW(int error, const char* description)
 {
 	std::cerr << "GLFW error, code " << error << " desc: \"" << description << "\"" << std::endl;
 }
-
-static void GLAPIENTRY GLDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
-{
-	std::string debSource, debType, debSev;
-
-	if(source == GL_DEBUG_SOURCE_API_ARB)
-		debSource = "OpenGL";
-	else if(source == GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB)
-		debSource = "Windows";
-	else if(source == GL_DEBUG_SOURCE_SHADER_COMPILER_ARB)
-		debSource = "Shader Compiler";
-	else if(source == GL_DEBUG_SOURCE_THIRD_PARTY_ARB)
-		debSource = "Third Party";
-	else if(source == GL_DEBUG_SOURCE_APPLICATION_ARB)
-		debSource = "Application";
-	else if(source == GL_DEBUG_SOURCE_OTHER_ARB)
-		debSource = "Other";
-
-	if(type == GL_DEBUG_TYPE_ERROR_ARB)
-	{
-		debType = "error";
-	}
-	else if(type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB)
-	{
-		debType = "deprecated behavior";
-	}
-	else if(type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB)
-	{
-		debType = "undefined behavior";
-	}
-	else if(type == GL_DEBUG_TYPE_PORTABILITY_ARB)
-	{
-		debType = "portability";
-	}
-	else if(type == GL_DEBUG_TYPE_PERFORMANCE_ARB)
-	{
-		debType = "performance";
-	}
-	else if(type == GL_DEBUG_TYPE_OTHER_ARB)
-	{
-		debType = "message";
-	}
-
-	if(severity == GL_DEBUG_SEVERITY_MEDIUM_ARB)
-		debSev = "medium";
-	else if(severity == GL_DEBUG_SEVERITY_LOW_ARB)
-		debSev = "low";
-
-	std::cerr << debSource << ": " << debType << "(" << debSev << ") " << id << ": " << message << std::endl;
-}
-
-enum class GLDebugSeverity
-{
-	LOW,
-	MEDIUM,
-	HIGH
-};
-
-void ActivateDebugOutput(GLDebugSeverity level)
-{
-	glEnable(GL_DEBUG_OUTPUT);
-	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-	switch (level)
-	{
-	case GLDebugSeverity::LOW:
-		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW, 0, NULL, GL_TRUE);
-	case GLDebugSeverity::MEDIUM:
-		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, NULL, GL_TRUE);
-	case GLDebugSeverity::HIGH:
-		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, NULL, GL_TRUE);
-	}
-
-	glDebugMessageCallback(&GLDebugOutput, NULL);
-}
-
 
 OutputWindow::OutputWindow(unsigned int width, unsigned int height)
 {
@@ -106,7 +33,7 @@ OutputWindow::OutputWindow(unsigned int width, unsigned int height)
 		throw std::string("Error: ") + reinterpret_cast<const char*>(glewGetErrorString(err));
 
 #ifdef _DEBUG
-	ActivateDebugOutput(GLDebugSeverity::MEDIUM);
+	gl::ActivateGLDebugOutput(gl::DebugSeverity::MEDIUM);
 #endif
 
 	GetGLFWKeystates();

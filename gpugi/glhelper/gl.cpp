@@ -63,4 +63,70 @@ namespace gl
 		}
 	};
 
+	static void GLAPIENTRY GLDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
+	{
+		std::string debSource, debType, debSev;
+
+		if (source == GL_DEBUG_SOURCE_API_ARB)
+			debSource = "OpenGL";
+		else if (source == GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB)
+			debSource = "Windows";
+		else if (source == GL_DEBUG_SOURCE_SHADER_COMPILER_ARB)
+			debSource = "Shader Compiler";
+		else if (source == GL_DEBUG_SOURCE_THIRD_PARTY_ARB)
+			debSource = "Third Party";
+		else if (source == GL_DEBUG_SOURCE_APPLICATION_ARB)
+			debSource = "Application";
+		else if (source == GL_DEBUG_SOURCE_OTHER_ARB)
+			debSource = "Other";
+
+		if (type == GL_DEBUG_TYPE_ERROR_ARB)
+		{
+			debType = "error";
+		}
+		else if (type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB)
+		{
+			debType = "deprecated behavior";
+		}
+		else if (type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB)
+		{
+			debType = "undefined behavior";
+		}
+		else if (type == GL_DEBUG_TYPE_PORTABILITY_ARB)
+		{
+			debType = "portability";
+		}
+		else if (type == GL_DEBUG_TYPE_PERFORMANCE_ARB)
+		{
+			debType = "performance";
+		}
+		else if (type == GL_DEBUG_TYPE_OTHER_ARB)
+		{
+			debType = "message";
+		}
+
+		if (severity == GL_DEBUG_SEVERITY_MEDIUM_ARB)
+			debSev = "medium";
+		else if (severity == GL_DEBUG_SEVERITY_LOW_ARB)
+			debSev = "low";
+
+		LOG_ERROR(debSource + ": " + debType + "(" + debSev + ") " + std::to_string(id) + ": " + message);
+	}
+
+	void ActivateGLDebugOutput(DebugSeverity level)
+	{
+		GL_CALL(glEnable, GL_DEBUG_OUTPUT);
+		GL_CALL(glEnable, GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		switch (level)
+		{
+		case DebugSeverity::LOW:
+			GL_CALL(glDebugMessageControl, GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW, 0, nullptr, GL_TRUE);
+		case DebugSeverity::MEDIUM:
+			GL_CALL(glDebugMessageControl, GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, nullptr, GL_TRUE);
+		case DebugSeverity::HIGH:
+			GL_CALL(glDebugMessageControl, GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
+		}
+
+		GL_CALL(glDebugMessageCallback, &GLDebugOutput, nullptr);
+	}
 }
