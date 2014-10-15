@@ -42,9 +42,10 @@ namespace Logger {
 		std::stringstream message;	message.str("");
 
 		// Shorten the full file name done to just the file
-		const char* fileShort = strrchr(_file, '\\')+1;
-		if( !fileShort ) fileShort = strrchr(_file, '/')+1;
+		const char* fileShort = strrchr(_file, '\\');
+		if( !fileShort ) fileShort = strrchr(_file, '/');
 		if( !fileShort ) fileShort = _file;
+        else ++fileShort;
 
 		message << _severity << " < ";
 		// Write millisecond since start at the beginning
