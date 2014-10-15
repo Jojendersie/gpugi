@@ -1,0 +1,4 @@
+Most of this code was borrowed from Monolith
+https://github.com/Jojendersie/Monolith/tree/master/src/utilities
+
+Don't forget to feed improvements in both directions!

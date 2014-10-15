@@ -1,22 +1,32 @@
 #include "outputwindow.hpp"
 
-#include "glhelper/gl.hpp"
+#include "glhelper/texture2d.hpp"
+#include "glhelper/screenalignedtriangle.hpp"
+
+#include "utilities/logger.hpp"
 
 #include <iostream>
 #include <cassert>
 #include <memory>
+#include <string>
 
 static void ErrorCallbackGLFW(int error, const char* description)
 {
-	std::cerr << "GLFW error, code " << error << " desc: \"" << description << "\"" << std::endl;
+	LOG_ERROR("GLFW error, code " + std::to_string(error) + " desc: \"" + description + "\"");
 }
 
-OutputWindow::OutputWindow(unsigned int width, unsigned int height)
+OutputWindow::OutputWindow(unsigned int width, unsigned int height) :
+	displayHDR("displayHDR")
 {
 	if (!glfwInit())
 		throw std::exception("GLFW init failed");
 
 	glfwSetErrorCallback(ErrorCallbackGLFW);
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE); // GLFW_OPENGL_CORE_PROFILE
 
 	window = glfwCreateWindow(width, height, "<Add fancy title here>", nullptr, nullptr);
 	if (!window)
@@ -28,6 +38,7 @@ OutputWindow::OutputWindow(unsigned int width, unsigned int height)
 	glfwMakeContextCurrent(window);
 
 	// Init glew now since the GL context is ready.
+	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
 	if (err != GLEW_OK)
 		throw std::string("Error: ") + reinterpret_cast<const char*>(glewGetErrorString(err));
@@ -36,12 +47,29 @@ OutputWindow::OutputWindow(unsigned int width, unsigned int height)
 	gl::ActivateGLDebugOutput(gl::DebugSeverity::MEDIUM);
 #endif
 
+	// There must be a non-zero VAO at all times.
+	// http://stackoverflow.com/questions/21767467/glvertexattribpointer-raising-impossible-gl-invalid-operation
+	GLuint vao;
+	GL_CALL(glGenVertexArrays, 1, &vao);
+	GL_CALL(glBindVertexArray, vao);
+
 	GetGLFWKeystates();
+
+
+
+	displayHDR.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/screenTri.vert");
+	displayHDR.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/displayHDR.frag");
+	displayHDR.CreateProgram();
+
+	screenTri = new gl::ScreenAlignedTriangle();
 }
 
 OutputWindow::~OutputWindow(void)
 {
+	SAFE_DELETE(screenTri);
+
 	glfwDestroyWindow(window);
+	window = nullptr;
 	glfwTerminate();
 }
 
@@ -74,6 +102,13 @@ bool OutputWindow::WasButtonPressed(unsigned int glfwKey)
 void OutputWindow::SetTitle(const std::string& windowTitle)
 {
 	glfwSetWindowTitle(window, windowTitle.c_str());
+}
+
+void OutputWindow::DisplayHDRTexture(gl::Texture2D& texture)
+{
+	texture.Bind(0);
+	displayHDR.Activate();
+	screenTri->Draw();
 }
 
 void OutputWindow::Present()

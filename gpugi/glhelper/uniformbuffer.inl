@@ -14,13 +14,13 @@ inline void UniformBuffer::SetData(const void* pData, std::uint32_t dataSize, st
 	Assert(offset + dataSize <= m_uiBufferSizeBytes, "Data block doesn't fit into uniform buffer.");
 	Assert(pData != NULL, "Data to copy into uniform is NULL.");
 
-	m_uiBufferDirtyRangeStart = std::min(m_uiBufferDirtyRangeStart, offset);
-	m_uiBufferDirtyRangeEnd = std::max(m_uiBufferDirtyRangeEnd, offset + dataSize);
+	m_bufferDirtyRangeStart = std::min(m_bufferDirtyRangeStart, offset);
+	m_bufferDirtyRangeEnd = std::max(m_bufferDirtyRangeEnd, offset + dataSize);
 	memcpy(m_bufferData.get() + offset, reinterpret_cast<const char*>(pData), dataSize);
 }
 
 inline UniformBuffer::Variable& UniformBuffer::operator[] (const std::string& sVariableName)
 {
-	Assert(m_Variables.find(sVariableName) != m_Variables.end(), "There is no variable named \"" + sVariableName + "\" in the uniform buffer \"" + m_sBufferName + " \"");
-	return m_Variables[sVariableName];
+	Assert(m_variables.find(sVariableName) != m_variables.end(), "There is no variable named \"" + sVariableName + "\" in the uniform buffer \"" + m_sBufferName + " \"");
+	return m_variables[sVariableName];
 }

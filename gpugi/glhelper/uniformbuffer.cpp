@@ -9,10 +9,10 @@ namespace gl
 	UniformBuffer::UniformBuffer() :
 		m_BufferObject(9999),
 		m_uiBufferSizeBytes(0),
-		m_Variables(),
+		m_variables(),
 		m_sBufferName(""),
-		m_uiBufferDirtyRangeEnd(0),
-		m_uiBufferDirtyRangeStart(0)
+		m_bufferDirtyRangeEnd(0),
+		m_bufferDirtyRangeStart(0)
 	{
 	}
 
@@ -21,13 +21,13 @@ namespace gl
 		glDeleteBuffers(1, &m_BufferObject);
 	}
 
-	Result UniformBuffer::Init(std::uint32_t bufferSizeBytes, const std::string& sBufferName)
+	Result UniformBuffer::Init(std::uint32_t bufferSizeBytes, const std::string& bufferName)
 	{
-		m_sBufferName = sBufferName;
+		m_sBufferName = bufferName;
 		m_uiBufferSizeBytes = bufferSizeBytes;
 
 		m_bufferData.reset(new int8_t[bufferSizeBytes]);
-		m_uiBufferDirtyRangeEnd = m_uiBufferDirtyRangeStart = 0;
+		m_bufferDirtyRangeEnd = m_bufferDirtyRangeStart = 0;
 
 		GL_CALL(glCreateBuffers, 1, &m_BufferObject);
 		GL_CALL(glNamedBufferStorage, m_BufferObject, static_cast<GLsizeiptr>(bufferSizeBytes), nullptr, GL_DYNAMIC_STORAGE_BIT); // TODO: Using mapping could be faster! http://www.gamedev.net/topic/622685-constant-buffer-updatesubresource-vs-map/
@@ -45,12 +45,12 @@ namespace gl
 		}
 
 		for (auto it = uniformBufferInfoIterator->second.Variables.begin(); it != uniformBufferInfoIterator->second.Variables.end(); ++it)
-			m_Variables.emplace(it->first, Variable(it->second, this));
+			m_variables.emplace(it->first, Variable(it->second, this));
 
 		return Init(uniformBufferInfoIterator->second.iBufferDataSizeByte, bufferName);
 	}
 
-	Result UniformBuffer::Init(std::initializer_list<const gl::ShaderObject*> metaInfos, const std::string& sBufferName)
+	Result UniformBuffer::Init(std::initializer_list<const gl::ShaderObject*> metaInfos, const std::string& bufferName)
 	{
 		Assert(metaInfos.size() != 0, "Meta info lookup list is empty!");
 
@@ -60,19 +60,19 @@ namespace gl
 		{
 			if (*shaderObjectIt == NULL)
 			{
-				LOG_LVL2("ShaderObject \"" + (*shaderObjectIt)->GetName() + "\" in list for uniform buffer \"" + sBufferName + "\" initialization doesn't contain the needed meta data! Skiping..");
+				LOG_LVL2("ShaderObject \"" + (*shaderObjectIt)->GetName() + "\" in list for uniform buffer \"" + bufferName + "\" initialization doesn't contain the needed meta data! Skiping..");
 				continue;
 			}
-			auto uniformBufferInfoIterator = (*shaderObjectIt)->GetUniformBufferInfo().find(sBufferName);
+			auto uniformBufferInfoIterator = (*shaderObjectIt)->GetUniformBufferInfo().find(bufferName);
 			if (uniformBufferInfoIterator == (*shaderObjectIt)->GetUniformBufferInfo().end())
 			{
-				LOG_LVL2("ShaderObject \"" + (*shaderObjectIt)->GetName() + "\" in list for uniform buffer \"" + sBufferName + "\" initialization doesn't contain the needed meta data! Skiping..");
+				LOG_LVL2("ShaderObject \"" + (*shaderObjectIt)->GetName() + "\" in list for uniform buffer \"" + bufferName + "\" initialization doesn't contain the needed meta data! Skiping..");
 				continue;
 			}
 
 			if (!initialized)
 			{
-				Result result = Init(**metaInfos.begin(), sBufferName);
+				Result result = Init(**metaInfos.begin(), bufferName);
 				if (result == SUCCEEDED)
 					initialized = true;
 				continue;
@@ -81,28 +81,28 @@ namespace gl
 			// Sanity check.
 			if (uniformBufferInfoIterator->second.iBufferDataSizeByte != m_uiBufferSizeBytes)
 			{
-				LOG_LVL2("ShaderObject \"" + (*shaderObjectIt)->GetName() + "\" in list for uniform buffer \"" + sBufferName + "\" initialization gives size " +
+				LOG_LVL2("ShaderObject \"" + (*shaderObjectIt)->GetName() + "\" in list for uniform buffer \"" + bufferName + "\" initialization gives size " +
 					std::to_string(uniformBufferInfoIterator->second.iBufferDataSizeByte) + ", first shader gave size " + std::to_string(m_uiBufferSizeBytes) + "! Skiping..");
 				continue;
 			}
 
 			for (auto varIt = uniformBufferInfoIterator->second.Variables.begin(); varIt != uniformBufferInfoIterator->second.Variables.end(); ++varIt)
 			{
-				auto ownVarIt = m_Variables.find(varIt->first);
-				if (ownVarIt != m_Variables.end())  // overlap
+				auto ownVarIt = m_variables.find(varIt->first);
+				if (ownVarIt != m_variables.end())  // overlap
 				{
 					// Sanity check.
 					const gl::UniformVariableInfo* ownVar = &ownVarIt->second.GetMetaInfo();
 					const gl::UniformVariableInfo* otherVar = &varIt->second;
 					if (memcmp(ownVar, otherVar, sizeof(gl::UniformVariableInfo)) != 0)
 					{
-						LOG_ERROR("ShaderObject \"" + (*shaderObjectIt)->GetName() + "\" in list for uniform buffer \"" + sBufferName + "\" has a description of variable \"" +
+						LOG_ERROR("ShaderObject \"" + (*shaderObjectIt)->GetName() + "\" in list for uniform buffer \"" + bufferName + "\" has a description of variable \"" +
 							varIt->first + "\" that doesn't match with the ones before!");
 					}
 				}
 				else // new one
 				{
-					m_Variables.emplace(varIt->first, Variable(varIt->second, this));
+					m_variables.emplace(varIt->first, Variable(varIt->second, this));
 					// todo? check overlaps
 				}
 			}
@@ -113,15 +113,15 @@ namespace gl
 
 	void UniformBuffer::UpdateGPUData()
 	{
-		if (m_uiBufferDirtyRangeEnd <= m_uiBufferDirtyRangeStart)
+		if (m_bufferDirtyRangeEnd <= m_bufferDirtyRangeStart)
 			return;
 
 		// TODO: Mapping could be faster! http://www.gamedev.net/topic/622685-constant-buffer-updatesubresource-vs-map/
 		// See also here: https://www.opengl.org/wiki/Buffer_Object#Mapping .. can get rather complicated with all that syncing..
-		GL_CALL(glNamedBufferSubData, m_BufferObject, m_uiBufferDirtyRangeStart, m_uiBufferDirtyRangeEnd - m_uiBufferDirtyRangeStart, m_bufferData.get() + m_uiBufferDirtyRangeStart);
+		GL_CALL(glNamedBufferSubData, m_BufferObject, m_bufferDirtyRangeStart, m_bufferDirtyRangeEnd - m_bufferDirtyRangeStart, m_bufferData.get() + m_bufferDirtyRangeStart);
 
-		m_uiBufferDirtyRangeEnd = std::numeric_limits<std::uint32_t>::min();
-		m_uiBufferDirtyRangeStart = std::numeric_limits<std::uint32_t>::max();
+		m_bufferDirtyRangeEnd = std::numeric_limits<std::uint32_t>::min();
+		m_bufferDirtyRangeStart = std::numeric_limits<std::uint32_t>::max();
 	}
 
 	void UniformBuffer::BindBuffer(GLuint locationIndex)

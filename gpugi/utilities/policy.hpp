@@ -24,7 +24,7 @@ namespace Logger
 		void Write( const std::string& _message ) override;
 		
 	private:
-		std::fstream m_file;
+		std::ofstream m_file;
 	};
 
 } // namespace Logger

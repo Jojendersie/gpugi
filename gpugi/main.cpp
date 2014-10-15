@@ -5,6 +5,8 @@
 
 #include "utilities/loggerinit.hpp"
 
+#include "renderer/testrenderer.hpp"
+
 const unsigned int defaultWindowWidth = 1024;
 const unsigned int defaultWindowHeight = 768;
 
@@ -19,6 +21,8 @@ public:
 	{
 		std::cout << "Init window ...\n";
 		window.reset(new OutputWindow(defaultWindowWidth, defaultWindowHeight));
+
+		renderer.reset(new TestRenderer());
 	}
 
 	~Application()
@@ -37,11 +41,19 @@ public:
 			mainLoopStopWatch.Resume();
 
 			window->PollWindowEvents();
+
+			Draw();
 			Input();
 		}
 	}
 
 private:
+
+	void Draw()
+	{
+		window->DisplayHDRTexture(renderer->GetBackbuffer());
+		window->Present();
+	}
 
 	void Input()
 	{
@@ -57,14 +69,15 @@ private:
 		// TODO: Save a HDR image to a default location with a clever name
 	}
 
+	std::unique_ptr<Renderer> renderer;
 	std::unique_ptr<OutputWindow> window;
 };
 
 int main(int argc, char** argv)
 {
 	// Logger init.
-	Logger::FilePolicy filePolicy("log.txt");
-	Logger::g_logger.Initialize(&filePolicy);
+	Logger::FilePolicy* filePolicy = new Logger::FilePolicy("log.txt");
+	Logger::g_logger.Initialize(filePolicy);
 
 
 	// Actual application.
@@ -94,6 +107,8 @@ int main(int argc, char** argv)
 		__debugbreak();
 		return 1;
 	}
+
+	// FIXME/TODO: Deleting the logger policy is not possible since the logger is destructed later -.-
 
 	return 0;
 }

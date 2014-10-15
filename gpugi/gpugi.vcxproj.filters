@@ -16,6 +16,12 @@
     <Filter Include="code\utilities">
       <UniqueIdentifier>{9f118de0-8de1-4757-83d0-fab722550b2d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Time\Implementation">
+      <UniqueIdentifier>{fa51355f-b8cd-49d3-a6bb-b5fa09c8a900}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="code\renderer">
+      <UniqueIdentifier>{3c591337-e4bd-4812-bb53-d068cf234a04}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="outputwindow.cpp">
@@ -23,12 +29,6 @@
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>code</Filter>
-    </ClCompile>
-    <ClCompile Include="Time\Implementation\Stopwatch.cpp">
-      <Filter>Time</Filter>
-    </ClCompile>
-    <ClCompile Include="Time\Implementation\Time.cpp">
-      <Filter>Time</Filter>
     </ClCompile>
     <ClCompile Include="utilities\pathutils.cpp">
       <Filter>code\utilities</Filter>
@@ -51,17 +51,32 @@
     <ClCompile Include="glhelper\gl.cpp">
       <Filter>code\glhelper</Filter>
     </ClCompile>
+    <ClCompile Include="Time\Implementation\Time.cpp">
+      <Filter>Time\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="Time\Implementation\Stopwatch.cpp">
+      <Filter>Time\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="glhelper\texture2d.cpp">
+      <Filter>code\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="glhelper\texture.cpp">
+      <Filter>code\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="glhelper\screenalignedtriangle.cpp">
+      <Filter>code\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="glhelper\textureformats.cpp">
+      <Filter>code\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\renderer.cpp">
+      <Filter>code\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\testrenderer.cpp">
+      <Filter>code\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Time\Stopwatch.h">
-      <Filter>Time</Filter>
-    </ClInclude>
-    <ClInclude Include="Time\Time.h">
-      <Filter>Time</Filter>
-    </ClInclude>
-    <ClInclude Include="Time\Implementation\Time_inl.h">
-      <Filter>Time</Filter>
-    </ClInclude>
     <ClInclude Include="utilities\loggerinit.hpp">
       <Filter>code\utilities</Filter>
     </ClInclude>
@@ -95,6 +110,33 @@
     <ClInclude Include="glhelper\shaderdatametainfo.hpp">
       <Filter>code\glhelper</Filter>
     </ClInclude>
+    <ClInclude Include="Time\Implementation\Time_inl.h">
+      <Filter>Time\Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="Time\Stopwatch.h">
+      <Filter>Time</Filter>
+    </ClInclude>
+    <ClInclude Include="Time\Time.h">
+      <Filter>Time</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\texture2d.hpp">
+      <Filter>code\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\texture.hpp">
+      <Filter>code\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\screenalignedtriangle.hpp">
+      <Filter>code\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\textureformats.hpp">
+      <Filter>code\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\renderer.hpp">
+      <Filter>code\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\testrenderer.hpp">
+      <Filter>code\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="glhelper\uniformbuffer.inl">
@@ -102,6 +144,12 @@
     </None>
     <None Include="glhelper\shaderdatametainfo.inl">
       <Filter>code\glhelper</Filter>
+    </None>
+    <None Include="shader\screenTri.vert">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\displayHDR.frag">
+      <Filter>shader</Filter>
     </None>
   </ItemGroup>
 </Project>

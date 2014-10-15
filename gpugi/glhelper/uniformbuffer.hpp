@@ -39,7 +39,7 @@ namespace gl
 		};
 
 
-		bool ContainsVariable(const std::string& sVariableName) const       { return m_Variables.find(sVariableName) != m_Variables.end(); }
+		bool ContainsVariable(const std::string& sVariableName) const       { return m_variables.find(sVariableName) != m_variables.end(); }
 		UniformBuffer::Variable& operator[] (const std::string& sVariableName);
 
 		/// \brief Sets data in buffer directly.
@@ -63,14 +63,14 @@ namespace gl
 		std::string    m_sBufferName;
 
 		/// where the currently dirty range of the buffer starts (bytes)
-		std::uint32_t m_uiBufferDirtyRangeStart;
+		std::uint32_t m_bufferDirtyRangeStart;
 		/// where the currently dirty range of the buffer ends (bytes)
-		std::uint32_t m_uiBufferDirtyRangeEnd;
+		std::uint32_t m_bufferDirtyRangeEnd;
 		/// local copy of the buffer data
 		std::unique_ptr<std::int8_t[]> m_bufferData;
 
 		/// meta information
-		std::unordered_map<std::string, Variable> m_Variables;  /// \todo no ezHashTable possible?
+		std::unordered_map<std::string, Variable> m_variables;  /// \todo no ezHashTable possible?
 
 
 		/// Currently bound UBOs - number is arbitrary!
