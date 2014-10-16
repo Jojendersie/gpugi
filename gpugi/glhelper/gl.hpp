@@ -72,7 +72,7 @@ namespace gl
 #define __GL_CALL_HANDLING(openGLFunctionName, openGLFunction, ...) \
 			{ \
 		openGLFunction(__VA_ARGS__); \
-		return Result::SUCCESS; \
+		return ::SUCCEEDED; \
 			}
 
 #define __GL_CALL_HANDLING_RET(openGLFunctionName, openGLFunction, ...) \
