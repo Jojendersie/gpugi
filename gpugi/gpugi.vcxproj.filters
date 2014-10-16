@@ -151,5 +151,8 @@
     <None Include="shader\displayHDR.frag">
       <Filter>shader</Filter>
     </None>
+    <None Include="shader\testcompute.comp">
+      <Filter>shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

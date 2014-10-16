@@ -190,6 +190,7 @@
     <None Include="glhelper\uniformbuffer.inl" />
     <None Include="shader\displayHDR.frag" />
     <None Include="shader\screenTri.vert" />
+    <None Include="shader\testcompute.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

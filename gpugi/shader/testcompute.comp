@@ -1,0 +1,21 @@
+#version 450
+
+layout(binding = 0, rgba32f) restrict writeonly uniform image2D OutputTexture; // attention! No coherent flag set!
+
+layout(binding = 0, std140) uniform TestUBO
+{
+	float Time;
+};
+
+#define LOCAL_SIZE 32
+
+// compute shader size
+layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
+void main()
+{
+	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy); //ivec2(gl_WorkGroupID.xy) * ivec2(LOCAL_SIZE, LOCAL_SIZE) + ivec2(gl_LocalInvocationID.xy);
+
+	vec4 color = vec4(vec2(gridPosition) / (gl_NumWorkGroups.xy * gl_WorkGroupSize.xy), 0.5 + 0.5 * sin(Time), 1.0);
+
+	imageStore(OutputTexture, gridPosition, color);
+}

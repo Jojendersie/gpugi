@@ -12,8 +12,10 @@ namespace gl
 		Texture(std::uint32_t width, std::uint32_t height, std::uint32_t depth, TextureFormat format, std::int32_t numMipLevels, std::uint32_t numMSAASamples = 0);
 		~Texture();
 
+		/// Binds texture to the given slot.
 		void Bind(GLuint slot);
 
+		/// Different possibilities to access an image.
 		enum class ImageAccess
 		{
 			WRITE = GL_WRITE_ONLY,
@@ -27,8 +29,13 @@ namespace gl
 		void BindImage(GLuint slotIndex, ImageAccess access) { BindImage(0, access, m_format); }
 		void BindImage(GLuint slotIndex, ImageAccess access, TextureFormat format);
 
-		static void ResetImageBinding(GLuint slotIndex) { GL_CALL(glBindImageTexture, 0, 0, 0, false, 0, GL_READ_WRITE, GL_RGBA8); }
+		/// Unbinds image slot.
+		static void ResetImageBinding(GLuint _slotIndex);
 
+		/// Clears texture to zero using glClearTexImage (http://docs.gl/gl4/glClearTexImage)
+		void ClearToZero(std::uint32_t _mipLevel = 0);
+
+		/// Returns intern OpenGL texture handle.
 		TextureId GetInternHandle() { return m_TextureHandle; }
 
 		std::uint32_t GetWidth() const           { return m_width; }

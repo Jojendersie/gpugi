@@ -2,6 +2,7 @@
 
 #include "../glhelper/texture2d.hpp"
 #include "../glhelper/shaderobject.hpp"
+#include "../glhelper/uniformbuffer.hpp"
 
 class Renderer
 {
@@ -11,12 +12,11 @@ public:
 	gl::Texture2D& GetBackbuffer() { return backbuffer; }
 
 	/// Performs a draw iteration. Todo: Communicate camera etc.
-	void Draw();
+	virtual void Draw() = 0;
 
 protected:
 	Renderer();
 
-private:
 	gl::Texture2D backbuffer;
 };
 

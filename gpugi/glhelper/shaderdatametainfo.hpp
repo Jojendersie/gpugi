@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <unordered_map>
 
+#include "../utilities/assert.hpp"
+
 namespace gl
 {
 	enum class ShaderVariableType

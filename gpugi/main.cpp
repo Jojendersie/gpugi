@@ -51,6 +51,8 @@ private:
 
 	void Draw()
 	{
+		renderer->Draw();
+
 		window->DisplayHDRTexture(renderer->GetBackbuffer());
 		window->Present();
 	}
