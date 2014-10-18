@@ -1,6 +1,13 @@
 #include "globalconfig.hpp"
 
-std::unordered_map<std::string, GlobalConfig::Entry> GlobalConfig::m_entries;
+struct Entry
+{
+	std::unordered_map<std::string, GlobalConfig::ListenerFunc> m_listeners;
+	GlobalConfig::ParameterType m_value;
+	std::string m_description;
+};
+static std::unordered_map<std::string, Entry> m_entries;
+
 
 void GlobalConfig::AddParameter(const std::string& _name, const ParameterType& _value, const std::string& _description)
 {
@@ -63,4 +70,30 @@ void GlobalConfig::SetParameter(const std::string& _name, const ParameterType& _
 			it->second(_newValue);
 		}
 	}
+}
+
+std::string GlobalConfig::GetEntryDescriptions()
+{
+	std::string out;
+	unsigned int descIdx = 0;
+	for (auto desc = m_entries.begin(); desc != m_entries.end(); ++desc, ++descIdx)
+	{
+		out += "##### \"" + desc->first + "\"\n" + desc->second.m_description;
+		if (!desc->second.m_listeners.empty())
+		{
+			out += "\n[Listeners: ";
+			unsigned int listenerIdx = 0;
+			for (auto listener = desc->second.m_listeners.begin(); listener != desc->second.m_listeners.end(); ++listener, ++listenerIdx)
+			{
+				out += "\"" + listener->first + "\"";
+				if (listenerIdx < desc->second.m_listeners.size() - 1)
+					out += ", ";
+			}
+			out += "]";
+		}
+		if (descIdx < m_entries.size() - 1)
+			out += "\n\n";
+		
+	}
+	return out;
 }

@@ -36,8 +36,15 @@ OutputWindow::OutputWindow() :
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #endif
 
-	unsigned int width = static_cast<unsigned int>(GlobalConfig::GetParameter("resolution")[0]);
-	unsigned int height = static_cast<unsigned int>(GlobalConfig::GetParameter("resolution")[1]);
+
+	unsigned int width = 1024;
+	unsigned int height = 768;
+	auto resolutionParam = GlobalConfig::GetParameter("resolution");
+	if (resolutionParam.size() >= 2)
+	{
+		width = static_cast<unsigned int>(resolutionParam[0]);
+		height = static_cast<unsigned int>(resolutionParam[1]);
+	}
 
 	window = glfwCreateWindow(width, height, "<Add fancy title here>", nullptr, nullptr);
 	if (!window)

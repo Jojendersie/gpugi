@@ -6,6 +6,7 @@
 #include "utilities/loggerinit.hpp"
 
 #include "control/globalconfig.hpp"
+#include "control/scriptprocessing.hpp"
 
 #include "renderer/testrenderer.hpp"
 
@@ -14,22 +15,31 @@ class Application
 public:
 	Application()
 	{
-		// Add a few fundamental global parameters.
-		GlobalConfig::AddParameter("pause", { 0.0f }, "Set to <=0 to pause drawing. Input will still work.");
-		GlobalConfig::AddParameter("resolution", { 1024, 768 }, "The windows's width and height.");
-	}
+		// Logger init.
+		Logger::FilePolicy* filePolicy = new Logger::FilePolicy("log.txt");
+		Logger::g_logger.Initialize(filePolicy);
 
-	void Init()
-	{
-		std::cout << "Init window ...\n";
+		// Init console input
+		ScriptProcessing::StartCommandWindowThread();
+
+		// Add a few fundamental global parameters/events.
+		GlobalConfig::AddParameter("pause", { 0.0f }, "Set to <=0 to pause drawing. Input will still work.");
+		GlobalConfig::AddParameter("resolution", { 1024, 768 }, "The window's width and height.");
+		GlobalConfig::AddParameter("help", { }, "Dumps all available parameter/events to the command line");
+		GlobalConfig::AddListener("help", "HelpDumpFunc", [](const GlobalConfig::ParameterType) { std::cout << GlobalConfig::GetEntryDescriptions() << std::endl; });
+
+		// Window...
+		LOG_LVL2("Init window ...");
 		window.reset(new OutputWindow());
 
+		// Renderer...
 		renderer.reset(new TestRenderer());
 	}
 
 	~Application()
 	{
 		SaveImage();
+		ScriptProcessing::StopCommandWindowThread();
 	}
 
 	void Run()
@@ -43,8 +53,10 @@ public:
 			mainLoopStopWatch.Resume();
 
 			window->PollWindowEvents();
+			ScriptProcessing::ProcessCommandQueue();
 
-			if (GlobalConfig::GetParameter("pause")[0] <= 0.0f)
+			auto pauseParam = GlobalConfig::GetParameter("pause");
+			if (pauseParam.size() > 0 && pauseParam[0] <= 0.0f)
 				Draw();
 			Input();
 		}
@@ -80,16 +92,10 @@ private:
 
 int main(int argc, char** argv)
 {
-	// Logger init.
-	Logger::FilePolicy* filePolicy = new Logger::FilePolicy("log.txt");
-	Logger::g_logger.Initialize(filePolicy);
-
-
 	// Actual application.
 	try
 	{
 		Application application;
-		application.Init();
 		application.Run();
 	}
 	catch(std::exception e)
