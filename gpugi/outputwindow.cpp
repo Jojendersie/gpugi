@@ -3,6 +3,7 @@
 #include "glhelper/texture2d.hpp"
 #include "glhelper/screenalignedtriangle.hpp"
 
+#include "control/globalconfig.hpp"
 #include "utilities/logger.hpp"
 
 #include <iostream>
@@ -10,12 +11,13 @@
 #include <memory>
 #include <string>
 
+
 static void ErrorCallbackGLFW(int error, const char* description)
 {
 	LOG_ERROR("GLFW error, code " + std::to_string(error) + " desc: \"" + description + "\"");
 }
 
-OutputWindow::OutputWindow(unsigned int width, unsigned int height) :
+OutputWindow::OutputWindow() :
 	displayHDR("displayHDR")
 {
 	if (!glfwInit())
@@ -33,6 +35,9 @@ OutputWindow::OutputWindow(unsigned int width, unsigned int height) :
 #ifdef _DEBUG
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #endif
+
+	unsigned int width = static_cast<unsigned int>(GlobalConfig::GetParameter("resolution")[0]);
+	unsigned int height = static_cast<unsigned int>(GlobalConfig::GetParameter("resolution")[1]);
 
 	window = glfwCreateWindow(width, height, "<Add fancy title here>", nullptr, nullptr);
 	if (!window)

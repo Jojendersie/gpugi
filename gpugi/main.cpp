@@ -5,22 +5,24 @@
 
 #include "utilities/loggerinit.hpp"
 
-#include "renderer/testrenderer.hpp"
+#include "control/globalconfig.hpp"
 
-const unsigned int defaultWindowWidth = 1024;
-const unsigned int defaultWindowHeight = 768;
+#include "renderer/testrenderer.hpp"
 
 class Application
 {
 public:
 	Application()
 	{
+		// Add a few fundamental global parameters.
+		GlobalConfig::AddParameter("pause", { 0.0f }, "Set to <=0 to pause drawing. Input will still work.");
+		GlobalConfig::AddParameter("resolution", { 1024, 768 }, "The windows's width and height.");
 	}
 
 	void Init()
 	{
 		std::cout << "Init window ...\n";
-		window.reset(new OutputWindow(defaultWindowWidth, defaultWindowHeight));
+		window.reset(new OutputWindow());
 
 		renderer.reset(new TestRenderer());
 	}
@@ -42,7 +44,8 @@ public:
 
 			window->PollWindowEvents();
 
-			Draw();
+			if (GlobalConfig::GetParameter("pause")[0] <= 0.0f)
+				Draw();
 			Input();
 		}
 	}

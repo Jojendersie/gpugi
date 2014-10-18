@@ -22,6 +22,9 @@
     <Filter Include="code\renderer">
       <UniqueIdentifier>{3c591337-e4bd-4812-bb53-d068cf234a04}</UniqueIdentifier>
     </Filter>
+    <Filter Include="code\control">
+      <UniqueIdentifier>{cb1085d0-eb6e-4c94-bd75-c8176594fb0a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="outputwindow.cpp">
@@ -74,6 +77,12 @@
     </ClCompile>
     <ClCompile Include="renderer\testrenderer.cpp">
       <Filter>code\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="control\scriptprocessing.cpp">
+      <Filter>code\control</Filter>
+    </ClCompile>
+    <ClCompile Include="control\globalconfig.cpp">
+      <Filter>code\control</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -136,6 +145,12 @@
     </ClInclude>
     <ClInclude Include="renderer\testrenderer.hpp">
       <Filter>code\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="control\scriptprocessing.hpp">
+      <Filter>code\control</Filter>
+    </ClInclude>
+    <ClInclude Include="control\globalconfig.hpp">
+      <Filter>code\control</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

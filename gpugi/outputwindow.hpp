@@ -14,7 +14,7 @@ namespace gl
 class OutputWindow
 {
 public:
-	OutputWindow(unsigned int width, unsigned int height);
+	OutputWindow();
 	~OutputWindow();
 
 	/// Polls events to keep the window responsive.
