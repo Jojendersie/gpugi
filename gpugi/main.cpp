@@ -13,14 +13,11 @@
 class Application
 {
 public:
-	Application()
+	Application(int argc, char** argv)
 	{
 		// Logger init.
 		Logger::FilePolicy* filePolicy = new Logger::FilePolicy("log.txt");
 		Logger::g_logger.Initialize(filePolicy);
-
-		// Init console input
-		ScriptProcessing::StartCommandWindowThread();
 
 		// Add a few fundamental global parameters/events.
 		GlobalConfig::AddParameter("pause", { 0.0f }, "Set to <=0 to pause drawing. Input will still work.");
@@ -34,6 +31,13 @@ public:
 
 		// Renderer...
 		renderer.reset(new TestRenderer());
+
+		// Init console input.
+		ScriptProcessing::StartCommandWindowThread();
+
+		// Load command script if there's a parameter
+		if (argc > 1)
+			ScriptProcessing::RunScript(argv[1]);
 	}
 
 	~Application()
@@ -94,7 +98,7 @@ int main(int argc, char** argv)
 	// Actual application.
 	try
 	{
-		Application application;
+		Application application(argc, argv);
 		application.Run();
 	}
 	catch(std::exception e)
