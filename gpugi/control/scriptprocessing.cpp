@@ -113,9 +113,9 @@ void ScriptProcessing::ProcessCommandQueue()
 		{
 			GlobalConfig::SetParameter(name, parameter);
 		}
-		catch (const std::runtime_error&)
+		catch (const std::invalid_argument& e)
 		{
-			LOG_ERROR("Command name " + name + " does not exist!");
+			LOG_ERROR(e.what());
 		}
 
 		m_commandQueue.pop();

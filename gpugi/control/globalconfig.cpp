@@ -16,7 +16,7 @@ void GlobalConfig::AddParameter(const std::string& _name, const ParameterType& _
 	newEntry.m_value = _value;
 	auto it = m_entries.emplace(_name, newEntry);
 	if (!it.second)
-		throw std::runtime_error("Config entry with name \"" + _name + "\" does already exist.");
+		throw std::invalid_argument("Config entry with name \"" + _name + "\" does already exist.");
 }
 
 void GlobalConfig::AddListener(const std::string& _name, const std::string& _listenerName, const ListenerFunc& _listenerFunc)
@@ -26,10 +26,10 @@ void GlobalConfig::AddListener(const std::string& _name, const std::string& _lis
 	{
 		auto listener = entry->second.m_listeners.emplace(_listenerName, _listenerFunc);
 		if (!listener.second)
-			throw std::runtime_error("Config entry with name \"" + _name + "\" has already a listener with name \"" + _listenerName + "\".");
+			throw std::invalid_argument("Config entry with name \"" + _name + "\" has already a listener with name \"" + _listenerName + "\".");
 	}
 	else
-		throw std::runtime_error("Config entry with name \"" + _name + "\" does not exist.");
+		throw std::invalid_argument("Config entry with name \"" + _name + "\" does not exist.");
 }
 
 void GlobalConfig::RemovesListener(const std::string& _name, const std::string& _listenerName)
@@ -39,11 +39,11 @@ void GlobalConfig::RemovesListener(const std::string& _name, const std::string& 
 	{
 		auto listener = entry->second.m_listeners.find(_listenerName);
 		if (listener == entry->second.m_listeners.end())
-			throw std::runtime_error("Config entry with name \"" + _name + "\" does not have a listener with name \"" + _listenerName + "\".");
+			throw std::invalid_argument("Config entry with name \"" + _name + "\" does not have a listener with name \"" + _listenerName + "\".");
 		entry->second.m_listeners.erase(listener);
 	}
 	else
-		throw std::runtime_error("Config entry with name \"" + _name + "\" does not exist.");
+		throw std::invalid_argument("Config entry \"" + _name + "\" does not exist.");
 }
 
 
@@ -51,7 +51,7 @@ GlobalConfig::ParameterType GlobalConfig::GetParameter(const std::string& _name)
 {
 	auto entry = m_entries.find(_name);
 	if (entry == m_entries.end())
-		throw std::runtime_error("Config entry with name \"" + _name + "\" does not exist.");
+		throw std::invalid_argument("Config entry \"" + _name + "\" does not exist.");
 	else
 		return entry->second.m_value;
 }
@@ -60,9 +60,12 @@ void GlobalConfig::SetParameter(const std::string& _name, const ParameterType& _
 {
 	auto entry = m_entries.find(_name);
 	if (entry == m_entries.end())
-		throw std::runtime_error("Config entry with name \"" + _name + "\" does not exist.");
+		throw std::invalid_argument("Config entry \"" + _name + "\" does not exist.");
 	else
 	{
+		if (_newValue.size() != entry->second.m_value.size())
+			throw std::invalid_argument("Config entry \"" + _name + "\" expects " + std::to_string(entry->second.m_value.size()) + " parameters. Passed were " + std::to_string(_newValue.size()));
+
 		entry->second.m_value = _newValue;
 
 		for (auto it = entry->second.m_listeners.begin(); it != entry->second.m_listeners.end(); ++it)
@@ -78,7 +81,7 @@ std::string GlobalConfig::GetEntryDescriptions()
 	unsigned int descIdx = 0;
 	for (auto desc = m_entries.begin(); desc != m_entries.end(); ++desc, ++descIdx)
 	{
-		out += "##### \"" + desc->first + "\"\n" + desc->second.m_description;
+		out += "##### \"" + desc->first + "\"" + " (" + std::to_string(desc->second.m_value.size()) + " params)\n" + desc->second.m_description;
 		if (!desc->second.m_listeners.empty())
 		{
 			out += "\n[Listeners: ";

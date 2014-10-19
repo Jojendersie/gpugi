@@ -25,7 +25,7 @@ public:
 		// Add a few fundamental global parameters/events.
 		GlobalConfig::AddParameter("pause", { 0.0f }, "Set to <=0 to pause drawing. Input will still work.");
 		GlobalConfig::AddParameter("resolution", { 1024, 768 }, "The window's width and height.");
-		GlobalConfig::AddParameter("help", { }, "Dumps all available parameter/events to the command line");
+		GlobalConfig::AddParameter("help", { }, "Dumps all available parameter/events to the command window.");
 		GlobalConfig::AddListener("help", "HelpDumpFunc", [](const GlobalConfig::ParameterType) { std::cout << GlobalConfig::GetEntryDescriptions() << std::endl; });
 
 		// Window...
@@ -55,8 +55,7 @@ public:
 			window->PollWindowEvents();
 			ScriptProcessing::ProcessCommandQueue();
 
-			auto pauseParam = GlobalConfig::GetParameter("pause");
-			if (pauseParam.size() > 0 && pauseParam[0] <= 0.0f)
+			if (GlobalConfig::GetParameter("pause")[0] <= 0.0f)
 				Draw();
 			Input();
 		}
