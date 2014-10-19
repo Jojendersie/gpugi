@@ -71,4 +71,10 @@ namespace gl
 			s_boundTextures[slotIndex] = this;
 		}
 	}
+
+	void Texture::ReadImage(unsigned int _mipLevel, TextureReadFormat _format, TextureReadType _type, unsigned int _bufferSize, void* _buffer)
+	{
+		Assert(m_numMipLevels > _mipLevel, "Miplevel " + std::to_string(_mipLevel) + " not available, texture has only " + std::to_string(m_numMipLevels) + " levels!");
+		glGetTextureImage(m_textureHandle, _mipLevel, static_cast<GLenum>(_format), static_cast<GLenum>(_type), _bufferSize, _buffer);
+	}
 }

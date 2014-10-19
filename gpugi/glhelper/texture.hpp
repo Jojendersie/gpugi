@@ -29,6 +29,9 @@ namespace gl
 		void BindImage(GLuint slotIndex, ImageAccess access) { BindImage(0, access, m_format); }
 		void BindImage(GLuint slotIndex, ImageAccess access, TextureFormat format);
 
+		/// Reads image via glGetImage (http://docs.gl/gl4/glGetTexImage)
+		void ReadImage(unsigned int _mipLevel, TextureReadFormat _format, TextureReadType _type, unsigned int _bufferSize, void* _buffer);
+
 		/// Unbinds image slot.
 		static void ResetImageBinding(GLuint _slotIndex);
 

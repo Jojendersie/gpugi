@@ -156,6 +156,7 @@
     <ClCompile Include="glhelper\texture2d.cpp" />
     <ClCompile Include="glhelper\textureformats.cpp" />
     <ClCompile Include="glhelper\uniformbuffer.cpp" />
+    <ClCompile Include="hdrimage.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="outputwindow.cpp" />
     <ClCompile Include="renderer\renderer.cpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="glhelper\texture2d.hpp" />
     <ClInclude Include="glhelper\textureformats.hpp" />
     <ClInclude Include="glhelper\uniformbuffer.hpp" />
+    <ClInclude Include="hdrimage.hpp" />
     <ClInclude Include="outputwindow.hpp" />
     <ClInclude Include="renderer\renderer.hpp" />
     <ClInclude Include="renderer\testrenderer.hpp" />

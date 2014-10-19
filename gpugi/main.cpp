@@ -10,10 +10,17 @@
 
 #include "renderer/testrenderer.hpp"
 
+#include "glhelper/texture2d.hpp"
+
+#include "hdrimage.hpp"
+
+#include <ctime>
+
+
 class Application
 {
 public:
-	Application(int argc, char** argv)
+	Application(int argc, char** argv) : screenShotName("screenshot")
 	{
 		// Logger init.
 		Logger::FilePolicy* filePolicy = new Logger::FilePolicy("log.txt");
@@ -24,6 +31,9 @@ public:
 		GlobalConfig::AddParameter("resolution", { 1024, 768 }, "The window's width and height.");
 		GlobalConfig::AddParameter("help", { }, "Dumps all available parameter/events to the command window.");
 		GlobalConfig::AddListener("help", "HelpDumpFunc", [](const GlobalConfig::ParameterType) { std::cout << GlobalConfig::GetEntryDescriptions() << std::endl; });
+		GlobalConfig::AddParameter("screenshot", {}, "Saves a screenshot.");
+		GlobalConfig::AddListener("screenshot", "SaveScreenshot", [=](const GlobalConfig::ParameterType) { this->SaveImage(); });
+
 
 		// Window...
 		LOG_LVL2("Init window ...");
@@ -84,11 +94,27 @@ private:
 		// Add more useful hotkeys on demand!
 	}
 
-	void SaveImage()
+	std::string UIntToMinLengthString(int number, int minDigits)
 	{
-		// TODO: Save a HDR image to a default location with a clever name
+		int zeros = std::max(0, minDigits - static_cast<int>(ceil(log10(number))));
+		std::string out = std::string("0", zeros) + std::to_string(number);
+		return out;
 	}
 
+	void SaveImage()
+	{
+		time_t t = time(0);   // get time now
+		struct tm* now = localtime(&t);
+		std::string filename = screenShotName + " " + UIntToMinLengthString(now->tm_mday, 2) + "." + UIntToMinLengthString(now->tm_mon, 2) + " " +
+								UIntToMinLengthString(now->tm_hour, 2) + "h" + UIntToMinLengthString(now->tm_min, 2) + "m" + std::to_string(now->tm_sec) + "s.pfm";
+		gl::Texture2D& backbuffer = renderer->GetBackbuffer();
+		std::unique_ptr<ei::Vec4[]> imageData(new ei::Vec4[backbuffer.GetWidth() * backbuffer.GetHeight()]);
+		backbuffer.ReadImage(0, gl::TextureReadFormat::RGBA, gl::TextureReadType::FLOAT, backbuffer.GetWidth() * backbuffer.GetHeight() * sizeof(ei::Vec4), imageData.get());
+		WritePfm(imageData.get(), ei::IVec2(backbuffer.GetWidth(), backbuffer.GetHeight()), filename);
+		LOG_LVL1("Wrote screenshot \"" + filename + "\"");
+	}
+
+	std::string screenShotName;
 	std::unique_ptr<Renderer> renderer;
 	std::unique_ptr<OutputWindow> window;
 };

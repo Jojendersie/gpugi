@@ -96,6 +96,9 @@
     <ClCompile Include="..\dependencies\epsilon\src\3dtypes.cpp">
       <Filter>dependencies\epsilon</Filter>
     </ClCompile>
+    <ClCompile Include="hdrimage.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -163,6 +166,9 @@
     </ClInclude>
     <ClInclude Include="control\globalconfig.hpp">
       <Filter>code\control</Filter>
+    </ClInclude>
+    <ClInclude Include="hdrimage.hpp">
+      <Filter>code</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

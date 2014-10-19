@@ -1,5 +1,4 @@
 #include "textureformats.hpp"
-#include "gl.hpp"
 
 namespace gl
 {
