@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <unordered_map>
 
+#include <ei/matrix.hpp>
 #include "../utilities/assert.hpp"
 
 namespace gl
@@ -177,33 +178,33 @@ namespace gl
 	typedef BufferInfo<BufferVariableInfo> ShaderStorageBufferMetaInfo;
 	typedef BufferInfo<UniformVariableInfo> UniformBufferMetaInfo;
 
-	/// \brief Base class for setable variable - basically a wrapper for
+	/// \brief Base class for setable variable.
 	template<typename VariableType>
 	class ShaderVariable
 	{
 	public:
 		void Set(float f);
-		/* void Set(const ezVec2& v);
-		 void Set(const ezVec3& v);
-		 void Set(const ezVec4& v);
-		 void Set(const ezMat3& m);
-		 void Set(const ezMat4& m);*/
+		void Set(const ei::Vec2& v);
+		void Set(const ei::Vec3& v);
+		void Set(const ei::Vec4& v);
+		void Set(const ei::Mat3x3& m);
+		void Set(const ei::Mat4x4& m);
 
 		void Set(double f);
-		/*    void Set(const ezVec2d& v);
-			void Set(const ezVec3d& v);
-			void Set(const ezVec4d& v);
-			void Set(const ezMat3d& m);
-			void Set(const ezMat4d& m); */
+		//void Set(const ei::vecd& v);
+		//void Set(const ei::Vec3d& v);
+		//void Set(const ei::Vec4d& v);
+		//void Set(const ei::Mat3x3d& m);
+		//void Set(const ei::Mat4x4d& m);
 
 		void Set(std::uint32_t ui);
-		/* void Set(const ezVec2U32& v);
-		 void Set(const ezVec3Template<std::int32_t>& v);
-		 void Set(const ezVec4Template<std::int32_t>& v);*/
+		//void Set(const ei::Vec2U32& v);
+		//void Set(const ei::Vec3Template<std::int32_t>& v);
+		//void Set(const ei::Vec4Template<std::int32_t>& v);
 		void Set(std::int32_t i);
-		/*void Set(const ezVec2I32& v);
-		void Set(const ezVec3Template<std::uint32_t>& v);
-		void Set(const ezVec4Template<std::uint32_t>& v);*/
+		void Set(const ei::IVec2& v);
+		void Set(const ei::IVec3& v);
+		void Set(const ei::IVec4& v);
 
 		virtual void Set(const void* pData, std::uint32_t uiSizeInBytes) = 0;
 

@@ -7,23 +7,29 @@
     <Filter Include="code">
       <UniqueIdentifier>{afd5e741-7caa-473a-953e-5fc961e47d38}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Time">
-      <UniqueIdentifier>{6b3b9bda-4975-40b0-b9e3-7fa3c9c04b0d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="code\glhelper">
       <UniqueIdentifier>{9cb5bc7d-6439-4ab4-93eb-2d7a4e7036fb}</UniqueIdentifier>
     </Filter>
     <Filter Include="code\utilities">
       <UniqueIdentifier>{9f118de0-8de1-4757-83d0-fab722550b2d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Time\Implementation">
-      <UniqueIdentifier>{fa51355f-b8cd-49d3-a6bb-b5fa09c8a900}</UniqueIdentifier>
-    </Filter>
     <Filter Include="code\renderer">
       <UniqueIdentifier>{3c591337-e4bd-4812-bb53-d068cf234a04}</UniqueIdentifier>
     </Filter>
     <Filter Include="code\control">
       <UniqueIdentifier>{cb1085d0-eb6e-4c94-bd75-c8176594fb0a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="code\Time">
+      <UniqueIdentifier>{6b3b9bda-4975-40b0-b9e3-7fa3c9c04b0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="code\Time\Implementation">
+      <UniqueIdentifier>{fa51355f-b8cd-49d3-a6bb-b5fa09c8a900}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies">
+      <UniqueIdentifier>{03447250-2658-4642-91b4-20f5cfcf64ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\epsilon">
+      <UniqueIdentifier>{3d03f8ce-bcac-4cbf-86e3-0b7e78850445}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -55,10 +61,10 @@
       <Filter>code\glhelper</Filter>
     </ClCompile>
     <ClCompile Include="Time\Implementation\Time.cpp">
-      <Filter>Time\Implementation</Filter>
+      <Filter>code\Time\Implementation</Filter>
     </ClCompile>
     <ClCompile Include="Time\Implementation\Stopwatch.cpp">
-      <Filter>Time\Implementation</Filter>
+      <Filter>code\Time\Implementation</Filter>
     </ClCompile>
     <ClCompile Include="glhelper\texture2d.cpp">
       <Filter>code\glhelper</Filter>
@@ -83,6 +89,12 @@
     </ClCompile>
     <ClCompile Include="control\globalconfig.cpp">
       <Filter>code\control</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\epsilon\src\2dtypes.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\epsilon\src\3dtypes.cpp">
+      <Filter>dependencies\epsilon</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -120,13 +132,13 @@
       <Filter>code\glhelper</Filter>
     </ClInclude>
     <ClInclude Include="Time\Implementation\Time_inl.h">
-      <Filter>Time\Implementation</Filter>
+      <Filter>code\Time\Implementation</Filter>
     </ClInclude>
     <ClInclude Include="Time\Stopwatch.h">
-      <Filter>Time</Filter>
+      <Filter>code\Time</Filter>
     </ClInclude>
     <ClInclude Include="Time\Time.h">
-      <Filter>Time</Filter>
+      <Filter>code\Time</Filter>
     </ClInclude>
     <ClInclude Include="glhelper\texture2d.hpp">
       <Filter>code\glhelper</Filter>

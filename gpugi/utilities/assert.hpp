@@ -2,6 +2,10 @@
 
 #include <string>
 
+#ifdef DEBUG_BREAK
+#undef DEBUG_BREAK
+#endif
+
 #if defined(_WIN32)
 	#define DEBUG_BREAK do { __debugbreak(); } while(false)
 #else
