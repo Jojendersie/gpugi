@@ -16,6 +16,12 @@
 
 #include <ctime>
 
+#ifdef _WIN32
+	#undef APIENTRY
+	#define NOMINMAX
+	#include <windows.h>
+#endif
+
 
 class Application
 {
@@ -53,6 +59,12 @@ public:
 	~Application()
 	{
 		SaveImage();
+
+		// Only known method to kill the console.
+#ifdef _WIN32
+		FreeConsole();
+#endif
+
 		ScriptProcessing::StopCommandWindowThread();
 	}
 
