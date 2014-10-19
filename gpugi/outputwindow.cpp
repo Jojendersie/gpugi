@@ -48,6 +48,7 @@ OutputWindow::OutputWindow() :
 	}
 
 	GlobalConfig::AddListener("resolution", "outputwindow", [=](const GlobalConfig::ParameterType& p){ ChangeWindowSize(ei::IVec2(static_cast<int>(p[0]), static_cast<int>(p[1]))); });
+	GlobalConfig::AddParameter("srgb", { 1.0f }, "If >0 the output window will perform an srgb conversion. Does not affect (hdr)screenshots!");
 
 	glfwMakeContextCurrent(window);
 
@@ -130,9 +131,16 @@ void OutputWindow::SetTitle(const std::string& windowTitle)
 
 void OutputWindow::DisplayHDRTexture(gl::Texture2D& texture)
 {
+	bool srgboutput = GlobalConfig::GetParameter("srgb")[0] > 0.0f;
+	if (srgboutput)
+		glEnable(GL_FRAMEBUFFER_SRGB);
+
 	texture.Bind(0);
 	displayHDR.Activate();
 	screenTri->Draw();
+
+	if (srgboutput)
+		glDisable(GL_FRAMEBUFFER_SRGB);
 }
 
 void OutputWindow::Present()
