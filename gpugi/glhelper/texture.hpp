@@ -36,7 +36,7 @@ namespace gl
 		void ClearToZero(std::uint32_t _mipLevel = 0);
 
 		/// Returns intern OpenGL texture handle.
-		TextureId GetInternHandle() { return m_TextureHandle; }
+		TextureId GetInternHandle() { return m_textureHandle; }
 
 		std::uint32_t GetWidth() const           { return m_width; }
 		std::uint32_t GetHeight() const          { return m_height; }
@@ -48,11 +48,14 @@ namespace gl
 		virtual GLenum GetOpenGLTextureType() = 0;
 
 	protected:
+		static const unsigned int m_numTextureBindings = 32;
+		
 		/// Currently bound textures - number is arbitrary!
 		/// Not used for image binding
-		static Texture* s_pBoundTextures[32];
+		static Texture* s_boundTextures[m_numTextureBindings];
+		
 
-		TextureId m_TextureHandle;
+		TextureId m_textureHandle;
 
 		const std::uint32_t m_width;
 		const std::uint32_t m_height;

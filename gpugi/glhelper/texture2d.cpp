@@ -5,11 +5,11 @@ namespace gl
 	Texture2D::Texture2D(std::uint32_t width, std::uint32_t height, TextureFormat format, std::int32_t numMipLevels, std::uint32_t numMSAASamples) :
 		Texture(width, height, 1, format, numMipLevels, numMSAASamples)
 	{
-		Bind(0);
+		GL_CALL(glCreateTextures, GL_TEXTURE_2D, 1, &m_textureHandle);
 		if (m_numMSAASamples == 0)
-			GL_CALL(glTexStorage2D, GL_TEXTURE_2D, m_numMipLevels, gl::TextureFormatToGLSizedInternal[static_cast<unsigned int>(format)], m_width, m_height);
+			GL_CALL(glTextureStorage2D, m_textureHandle, m_numMipLevels, gl::TextureFormatToGLSizedInternal[static_cast<unsigned int>(format)], m_width, m_height);
 		else
-			GL_CALL(glTexStorage2DMultisample, GL_TEXTURE_2D_MULTISAMPLE, m_numMSAASamples, gl::TextureFormatToGLSizedInternal[static_cast<unsigned int>(format)], m_width, m_height, GL_FALSE);
+			GL_CALL(glTextureStorage2DMultisample, m_textureHandle, m_numMSAASamples, gl::TextureFormatToGLSizedInternal[static_cast<unsigned int>(format)], m_width, m_height, GL_FALSE);
 	}
 
 	/*Texture2D* Texture2D::LoadFromFile(const ezString& sFilename, bool sRGB, bool generateMipMaps)
@@ -51,7 +51,7 @@ namespace gl
 
 	void Texture2D::GenMipMaps()
 	{
-		GL_CALL(glGenerateTextureMipmap, m_TextureHandle);
+		GL_CALL(glGenerateTextureMipmap, m_textureHandle);
 	}
 
 	/*void Texture2D::SetData(std::uint32_t uiMipLevel, const ezColor8UNorm* pData)

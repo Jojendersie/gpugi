@@ -47,6 +47,8 @@ OutputWindow::OutputWindow() :
 		throw std::exception("Failed to create glfw window!");
 	}
 
+	GlobalConfig::AddListener("resolution", "outputwindow", [=](const GlobalConfig::ParameterType& p){ ChangeWindowSize(ei::IVec2(static_cast<int>(p[0]), static_cast<int>(p[1]))); });
+
 	glfwMakeContextCurrent(window);
 
 	// Init glew now since the GL context is ready.
@@ -58,6 +60,8 @@ OutputWindow::OutputWindow() :
 #ifdef _DEBUG
 	gl::ActivateGLDebugOutput(gl::DebugSeverity::MEDIUM);
 #endif
+
+	GL_CALL(glViewport, 0, 0, width, height);
 
 	// There must be a non-zero VAO at all times.
 	// http://stackoverflow.com/questions/21767467/glvertexattribpointer-raising-impossible-gl-invalid-operation
@@ -80,9 +84,17 @@ OutputWindow::~OutputWindow(void)
 {
 	SAFE_DELETE(screenTri);
 
+	GlobalConfig::RemovesListener("resolution", "outputwindow");
+
 	glfwDestroyWindow(window);
 	window = nullptr;
 	glfwTerminate();
+}	
+
+void OutputWindow::ChangeWindowSize(const ei::IVec2& newResolution)
+{
+	glfwSetWindowSize(window, newResolution.x, newResolution.y);
+	GL_CALL(glViewport, 0, 0, newResolution.x, newResolution.y);
 }
 
 /// Polls events to keep the window responsive.

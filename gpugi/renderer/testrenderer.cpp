@@ -1,10 +1,11 @@
 #include "testrenderer.hpp"
 #include "../Time/Time.h"
+#include "../glhelper/texture2d.hpp"
 
 TestRenderer::TestRenderer() :
 	testshader("testrenderer")
 {
-	backbuffer.ClearToZero(0);
+	backbuffer->ClearToZero(0);
 
 	testshader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/testcompute.comp");
 	testshader.CreateProgram();
@@ -17,11 +18,11 @@ void TestRenderer::Draw()
 	testubo.UpdateGPUData();
 	testubo.BindBuffer(0);
 
-	backbuffer.BindImage(0, gl::Texture::ImageAccess::WRITE);
+	backbuffer->BindImage(0, gl::Texture::ImageAccess::WRITE);
 
 	testshader.Activate();
 
-	GL_CALL(glDispatchCompute, backbuffer.GetWidth() / 32, backbuffer.GetHeight() / 32, 1);
+	GL_CALL(glDispatchCompute, backbuffer->GetWidth() / 32, backbuffer->GetHeight() / 32, 1);
 
 	// Ensure that all future fetches will use the modified data.
 	// See https://www.opengl.org/wiki/Memory_Model#Ensuring_visibility
