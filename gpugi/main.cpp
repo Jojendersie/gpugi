@@ -10,6 +10,8 @@
 
 #include "renderer/testrenderer.hpp"
 
+#include "camera/interactivecamera.hpp"
+
 #include "glhelper/texture2d.hpp"
 
 #include "hdrimage.hpp"
@@ -29,8 +31,7 @@ public:
 	Application(int argc, char** argv) : screenShotName("screenshot")
 	{
 		// Logger init.
-		Logger::FilePolicy* filePolicy = new Logger::FilePolicy("log.txt");
-		Logger::g_logger.Initialize(filePolicy);
+		Logger::g_logger.Initialize(new Logger::FilePolicy("log.txt"));
 
 		// Add a few fundamental global parameters/events.
 		GlobalConfig::AddParameter("pause", { 0.0f }, "Set to <=0 to pause drawing. Input will still work.");
@@ -40,20 +41,25 @@ public:
 		GlobalConfig::AddParameter("screenshot", {}, "Saves a screenshot.");
 		GlobalConfig::AddListener("screenshot", "SaveScreenshot", [=](const GlobalConfig::ParameterType) { this->SaveImage(); });
 
-
 		// Window...
 		LOG_LVL2("Init window ...");
 		window.reset(new OutputWindow());
 
-		// Renderer...
-		renderer.reset(new TestRenderer());
+		// Create "global" camera.
+		camera.reset(new InteractiveCamera(window->GetGLFWWindow(), ei::Vec3(0.0f), ei::Vec3(0.0f, 0.0f, 1.0f), 
+											GlobalConfig::GetParameter("resolution")[0] / GlobalConfig::GetParameter("resolution")[1], 70.0f));
+		camera->ConnectToGlobalConfig();
 
-		// Init console input.
-		ScriptProcessing::StartCommandWindowThread();
+		// Renderer...
+		LOG_LVL2("Init window ...");
+		renderer.reset(new TestRenderer(*camera));
 
 		// Load command script if there's a parameter
 		if (argc > 1)
 			ScriptProcessing::RunScript(argv[1]);
+
+		// Init console input.
+		ScriptProcessing::StartCommandWindowThread();
 	}
 
 	~Application()
@@ -74,20 +80,28 @@ public:
 		ezStopwatch mainLoopStopWatch;
 		while(window->IsWindowAlive())
 		{
-			ezTime mainLoopTime = mainLoopStopWatch.GetRunningTotal();
+			ezTime timeSinceLastUpdate = mainLoopStopWatch.GetRunningTotal();
 			mainLoopStopWatch.StopAndReset();
 			mainLoopStopWatch.Resume();
 
-			window->PollWindowEvents();
-			ScriptProcessing::ProcessCommandQueue();
-
+			Update(timeSinceLastUpdate);
 			if (GlobalConfig::GetParameter("pause")[0] <= 0.0f)
 				Draw();
-			Input();
 		}
 	}
 
 private:
+
+	void Update(ezTime timeSinceLastUpdate)
+	{
+		window->PollWindowEvents();
+		ScriptProcessing::ProcessCommandQueue();
+
+		Input();
+
+		if (camera->Update(timeSinceLastUpdate))
+			renderer->SetCamera(*camera);
+	}
 
 	void Draw()
 	{
@@ -129,6 +143,7 @@ private:
 	std::string screenShotName;
 	std::unique_ptr<Renderer> renderer;
 	std::unique_ptr<OutputWindow> window;
+	std::unique_ptr<InteractiveCamera> camera;
 };
 
 int main(int argc, char** argv)
@@ -159,8 +174,6 @@ int main(int argc, char** argv)
 		__debugbreak();
 		return 1;
 	}
-
-	// FIXME/TODO: Deleting the logger policy is not possible since the logger is destructed later -.-
 
 	return 0;
 }

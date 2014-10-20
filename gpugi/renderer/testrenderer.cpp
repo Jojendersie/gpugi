@@ -1,8 +1,16 @@
 #include "testrenderer.hpp"
 #include "../Time/Time.h"
 #include "../glhelper/texture2d.hpp"
+#include "../camera/camera.hpp"
+#include <ei/matrix.hpp>
 
-TestRenderer::TestRenderer() :
+void CameraMatrixFromLookAt(ei::Vec3 eye, ei::Vec3 lookat, ei::Vec3 up, float hfov, float aspect_ratio,
+							ei::Vec3& outU, ei::Vec3& outV, ei::Vec3& outW)
+{
+
+}
+
+TestRenderer::TestRenderer(const Camera& initialCamera) :
 	testshader("testrenderer")
 {
 	backbuffer->ClearToZero(0);
@@ -10,6 +18,16 @@ TestRenderer::TestRenderer() :
 	testshader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/testcompute.comp");
 	testshader.CreateProgram();
 	testubo.Init(testshader, "TestUBO");
+
+	SetCamera(initialCamera);
+}
+
+void TestRenderer::SetCamera(const Camera& camera)
+{
+	testubo["CameraU"].Set(camera.GetCameraU());
+	testubo["CameraV"].Set(camera.GetCameraV());
+	testubo["CameraW"].Set(camera.GetCameraW());
+	testubo["CameraPosition"].Set(camera.GetPosition());
 }
 
 void TestRenderer::Draw()

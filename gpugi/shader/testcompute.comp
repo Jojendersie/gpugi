@@ -4,18 +4,112 @@ layout(binding = 0, rgba32f) restrict writeonly uniform image2D OutputTexture; /
 
 layout(binding = 0, std140) uniform TestUBO
 {
+	vec3 CameraU;
+	vec3 CameraV;
+	vec3 CameraW;
+	vec3 CameraPosition;
 	float Time;
 };
 
 #define LOCAL_SIZE 32
 
-// compute shader size
+struct Ray
+{
+	vec3 org;
+	vec3 dir;
+};
+struct Sphere
+{
+	vec3 pos;
+	float radius;
+	vec3 col;
+};
+struct Intersection
+{
+	float t;
+	Sphere sphere;
+};
+
+bool PlaneIntersect(vec3 planeNormal, vec3 planePoint, vec3 rayDir, vec3 rayOrigin, out float t1)
+{
+	if(dot(planeNormal, rayDir ) > 0)
+	{
+		t1 = -dot(planeNormal, (rayOrigin - planePoint)) / dot(planeNormal,rayDir);
+		return true;
+	}
+	else
+		return false;
+}
+
+void SphereIntersect(const Sphere sphere, const Ray ray, inout Intersection isect)
+{
+	vec3 rs = ray.org - sphere.pos;
+	float B = dot(rs, ray.dir);
+	float C = dot(rs, rs) - (sphere.radius * sphere.radius);
+	float D = B * B - C;
+
+	if (D > 0.0)
+	{
+		D = sqrt(D);
+		float t0 = -B - D;
+		float t1 = -B + D;
+		if ( (t0 > 0.0) && (t0 < isect.t) )
+		{
+			isect.t = t0;
+			isect.sphere = sphere;
+		}
+		else if ( (t1 > 0.0) && (t1 < isect.t) )
+		{
+			isect.t = t1;
+			isect.sphere = sphere;
+		}
+	}
+}
+Sphere sphere[4];
+void Intersect(const Ray ray, inout Intersection isect)
+{
+	SphereIntersect(sphere[0], ray, isect);
+	SphereIntersect(sphere[1], ray, isect);
+	SphereIntersect(sphere[2], ray, isect);
+}
+void DefineScene()
+{
+	sphere[0].pos    = vec3(27, 15.5, 88.0);
+	sphere[0].radius = 15.5;
+	sphere[0].col = vec3(1.0, 0.1, 0.1);
+
+	sphere[1].pos    = vec3(73, 15.5, 88.0);
+	sphere[1].radius = 15.5;
+	sphere[1].col = vec3(1.0, 1.0, 0.1);
+
+	sphere[2].pos    = vec3(50.0, 15.5, 48.0);
+	sphere[2].radius = 15.5;
+	sphere[2].col = vec3(0.1, 0.1, 1.0);
+
+	sphere[3].pos    = vec3(0.0);
+	sphere[3].radius = 0.0;
+	sphere[3].col = vec3(0.0);
+}
+
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
 void main()
 {
-	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy); //ivec2(gl_WorkGroupID.xy) * ivec2(LOCAL_SIZE, LOCAL_SIZE) + ivec2(gl_LocalInvocationID.xy);
+	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
+	vec2 screenCoord = vec2(gl_GlobalInvocationID.xy) / (gl_NumWorkGroups.xy * gl_WorkGroupSize.xy) * 2.0 - 1.0;
 
-	vec4 color = vec4(vec2(gridPosition) / (gl_NumWorkGroups.xy * gl_WorkGroupSize.xy), 0.5 + 0.5 * sin(Time), 1.0);
+	Ray cameraRay;
+	cameraRay.org = CameraPosition;
+	cameraRay.dir = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
+
+	DefineScene();
+	Intersection intersect;
+	intersect.t = 1.0e+30;
+	intersect.sphere = sphere[3];
+	Intersect(cameraRay, intersect);
+
+	const vec3 lightDir = normalize(vec3(1.0, 1.0, 0.0));
+	vec3 hitPos = cameraRay.org + intersect.t * cameraRay.dir;
+	vec4 color = vec4(intersect.sphere.col * dot(lightDir, normalize(hitPos - intersect.sphere.pos)), 1.0);
 
 	imageStore(OutputTexture, gridPosition, color);
 }

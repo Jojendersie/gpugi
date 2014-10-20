@@ -147,6 +147,8 @@
   <ItemGroup>
     <ClCompile Include="..\dependencies\epsilon\src\2dtypes.cpp" />
     <ClCompile Include="..\dependencies\epsilon\src\3dtypes.cpp" />
+    <ClCompile Include="camera\camera.cpp" />
+    <ClCompile Include="camera\interactivecamera.cpp" />
     <ClCompile Include="control\globalconfig.cpp" />
     <ClCompile Include="control\scriptprocessing.cpp" />
     <ClCompile Include="glhelper\gl.cpp" />
@@ -169,6 +171,8 @@
     <ClCompile Include="utilities\policy.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="camera\camera.hpp" />
+    <ClInclude Include="camera\interactivecamera.hpp" />
     <ClInclude Include="control\globalconfig.hpp" />
     <ClInclude Include="control\scriptprocessing.hpp" />
     <ClInclude Include="glhelper\gl.hpp" />

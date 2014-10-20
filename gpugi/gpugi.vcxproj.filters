@@ -31,6 +31,9 @@
     <Filter Include="dependencies\epsilon">
       <UniqueIdentifier>{3d03f8ce-bcac-4cbf-86e3-0b7e78850445}</UniqueIdentifier>
     </Filter>
+    <Filter Include="code\camera">
+      <UniqueIdentifier>{60abc877-8356-4a3f-a333-196109efe798}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="outputwindow.cpp">
@@ -98,6 +101,12 @@
     </ClCompile>
     <ClCompile Include="hdrimage.cpp">
       <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="camera\interactivecamera.cpp">
+      <Filter>code\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="camera\camera.cpp">
+      <Filter>code\camera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -169,6 +178,12 @@
     </ClInclude>
     <ClInclude Include="hdrimage.hpp">
       <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="camera\interactivecamera.hpp">
+      <Filter>code\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="camera\camera.hpp">
+      <Filter>code\camera</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

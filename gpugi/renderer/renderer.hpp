@@ -10,6 +10,7 @@ namespace gl
 {
 	class Texture2D;
 }
+class Camera;
 
 class Renderer
 {
@@ -18,7 +19,10 @@ public:
 
 	gl::Texture2D& GetBackbuffer() { return *backbuffer; }
 
-	/// Performs a draw iteration. Todo: Communicate camera etc.
+	/// Sets camera. May result in a scene reset!
+	virtual void SetCamera(const Camera& camera)=0;
+
+	/// Performs a draw iteration.
 	virtual void Draw() = 0;
 
 protected:

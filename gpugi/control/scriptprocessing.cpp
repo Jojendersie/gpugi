@@ -58,12 +58,12 @@ void ScriptProcessing::StartCommandWindowThread()
 
 void ScriptProcessing::StopCommandWindowThread()
 {
+	commandWindowThreadRunning = false;
 	if (m_commandWindowObservationThread)
 	{
 		m_commandWindowObservationThread->join();
 		m_commandWindowObservationThread.release();
 	}
-	commandWindowThreadRunning = false;
 }
 
 void ScriptProcessing::ProcessCommandQueue()

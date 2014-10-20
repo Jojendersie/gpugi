@@ -5,8 +5,9 @@
 class TestRenderer : public Renderer
 {
 public:
-	TestRenderer();
+	TestRenderer(const Camera& initialCamera);
 
+	void SetCamera(const Camera& camera) override;
 	void Draw() override;
 
 private:
