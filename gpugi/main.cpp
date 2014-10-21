@@ -59,10 +59,10 @@ public:
 
 		// Load command script if there's a parameter
 		if (argc > 1)
-			ScriptProcessing::RunScript(argv[1]);
+			m_scriptProcessing.RunScript(argv[1]);
 
 		// Init console input.
-		ScriptProcessing::StartCommandWindowThread();
+		m_scriptProcessing.StartConsoleWindowThread();
 	}
 
 	~Application()
@@ -74,7 +74,7 @@ public:
 		FreeConsole();
 #endif
 
-		ScriptProcessing::StopCommandWindowThread();
+		m_scriptProcessing.StopConsoleWindowThread();
 	}
 
 	void Run()
@@ -98,7 +98,7 @@ private:
 	void Update(ezTime timeSinceLastUpdate)
 	{
 		m_window->PollWindowEvents();
-		ScriptProcessing::ProcessCommandQueue();
+		m_scriptProcessing.ProcessCommandQueue(timeSinceLastUpdate.GetSeconds());
 
 		Input();
 
@@ -143,6 +143,7 @@ private:
 		LOG_LVL1("Wrote screenshot \"" + filename + "\"");
 	}
 
+	ScriptProcessing m_scriptProcessing;
 	std::string m_screenShotName;
 	std::unique_ptr<Renderer> m_renderer;
 	std::unique_ptr<OutputWindow> m_window;
