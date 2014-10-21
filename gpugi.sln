@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gpugi", "gpugi\gpugi.vcxproj", "{EAD16AC9-2BC5-44A7-AC80-A03274B85854}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bvhmake", "bvhmake\bvhmake.vcxproj", "{17A8FCD2-56B4-4F83-8767-B735311BB4FD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -15,6 +17,10 @@ Global
 		{EAD16AC9-2BC5-44A7-AC80-A03274B85854}.Debug|x64.Build.0 = Debug|x64
 		{EAD16AC9-2BC5-44A7-AC80-A03274B85854}.Release|x64.ActiveCfg = Release|x64
 		{EAD16AC9-2BC5-44A7-AC80-A03274B85854}.Release|x64.Build.0 = Release|x64
+		{17A8FCD2-56B4-4F83-8767-B735311BB4FD}.Debug|x64.ActiveCfg = Debug|x64
+		{17A8FCD2-56B4-4F83-8767-B735311BB4FD}.Debug|x64.Build.0 = Debug|x64
+		{17A8FCD2-56B4-4F83-8767-B735311BB4FD}.Release|x64.ActiveCfg = Release|x64
+		{17A8FCD2-56B4-4F83-8767-B735311BB4FD}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

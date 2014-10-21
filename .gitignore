@@ -34,6 +34,7 @@
 *.suo
 
 # Build directories
-/gpugi/x64
 /x64
+/gpugi/x64
+/bvhmake/x64
 log.txt
