@@ -10,6 +10,9 @@
     <Filter Include="code">
       <UniqueIdentifier>{6a3adcef-6b3f-45ff-8bf5-521465669018}</UniqueIdentifier>
     </Filter>
+    <Filter Include="dependencies\utilities">
+      <UniqueIdentifier>{14fd5d48-b6ec-40c6-be33-06351a9d9e50}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\dependencies\epsilon\src\2dtypes.cpp">
@@ -21,5 +24,43 @@
     <ClCompile Include="main.cpp">
       <Filter>code</Filter>
     </ClCompile>
+    <ClCompile Include="..\gpugi\utilities\logger.cpp">
+      <Filter>dependencies\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gpugi\utilities\pathutils.cpp">
+      <Filter>dependencies\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gpugi\utilities\policy.cpp">
+      <Filter>dependencies\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gpugi\utilities\assert.cpp">
+      <Filter>dependencies\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="bvhbuilder.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bvhmake.hpp">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gpugi\utilities\assert.hpp">
+      <Filter>dependencies\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gpugi\utilities\logger.hpp">
+      <Filter>dependencies\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gpugi\utilities\loggerinit.hpp">
+      <Filter>dependencies\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gpugi\utilities\pathutils.hpp">
+      <Filter>dependencies\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gpugi\utilities\policy.hpp">
+      <Filter>dependencies\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gpugi\utilities\utils.hpp">
+      <Filter>dependencies\utilities</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

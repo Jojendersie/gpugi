@@ -1,4 +1,123 @@
+#include <iostream>
+#include <assimp/DefaultLogger.hpp>
+#include "bvhmake.hpp"
+#include "..\gpugi\utilities\pathutils.hpp"
+#include "..\gpugi\utilities\loggerinit.hpp"
+
+// ************************************************************************* //
+// Assimp logging interfacing
+class LogDebugStream: public Assimp::LogStream {
+	void write(const char* message) override { LOG_LVL0( message ); }
+};
+
+class LogInfoStream: public Assimp::LogStream {
+	void write(const char* message) override { LOG_LVL1( message ); }
+};
+
+class LogWarnStream: public Assimp::LogStream {
+	void write(const char* message) override { LOG_LVL2( message ); }
+};
+
+class LogErrStream: public Assimp::LogStream {
+	void write(const char* message) override { LOG_ERROR( message ); }
+};
+
+
+
 int main( int _numArgs, const char** _args )
 {
+    // Logger init.
+	Logger::g_logger.Initialize(new Logger::FilePolicy("log.txt"));
+    Assimp::DefaultLogger::get()->setLogSeverity( Assimp::Logger::LogSeverity::VERBOSE );
+    Assimp::DefaultLogger::get()->attachStream( new LogDebugStream, Assimp::Logger::Debugging);
+	Assimp::DefaultLogger::get()->attachStream( new LogInfoStream, Assimp::Logger::Info);
+	Assimp::DefaultLogger::get()->attachStream( new LogWarnStream, Assimp::Logger::Warn);
+	Assimp::DefaultLogger::get()->attachStream( new LogErrStream, Assimp::Logger::Err);
+
+    // Builder init.
+    BVHBuilder builder;
+
+    // Show help text on invalid use
+    if( _numArgs <= 1 )
+    {
+        std::cerr << "Expected at least one argument (the scene file to import)."
+                     << std::endl << std::endl
+                  << "bvhmake.exe <scene file> m=[build method] g=[bounding"\
+                     "geometry type] o=[output directory]" << std::endl
+                  << "  <scene file>: REQUIRED. Relative or absolute path and\n"\
+                     "      file name. It is not possible to merge multiple files."
+                     << std::endl
+                  << "  m=[build method]: OPTIONAL. The valid arguments are:\n      "
+                     << builder.GetBuildMethods()
+                     << "      The default is kdtree." << std::endl
+                  << "  g=[bounding geometry type]: OPTIONAL. The valid\n"\
+                     << builder.GetFitMethods()
+                     << "      The default is aabox." << std::endl
+                  << "  o=[output directory]: OPTIONAL. A path where the scene\n"\
+                     "      directory should be created. Otherwise the output is\n"\
+                     "      located at the import file location." << std::endl;
+        return 1;
+    }
+
+    // Set defaults for optional arguments
+    std::string outputPath = PathUtils::GetDirectory( std::string(_args[1]) );
+    // Get the optional arguments
+    for( int i = 2; i < _numArgs; ++i )
+    {
+        switch(_args[i][0])
+        {
+        case 'm':
+            if( !builder.SetBuildMethod( _args[i] + 2 ) )
+            {
+                std::cerr << "Invalid build method: " << (_args[i] + 2) << std::endl;
+                return 1;
+            }
+            break;
+        case 'g':
+            if( !builder.SetGeometryType( _args[i] + 2 ) )
+            {
+                std::cerr << "Invalid geometry type: " << (_args[i] + 2) << std::endl;
+                return 1;
+            }
+            break;
+        case 'o':
+            outputPath = _args[i] + 2;
+            break;
+        default:
+            std::cerr << "Unknown optional argument!" << std::endl;
+            return 1;
+        }
+    }
+    
+    // Try to create output files before spending time for Assimp
+    std::string sceneName = PathUtils::GetFilename(std::string(_args[1]));
+    sceneName.erase( sceneName.find_last_of( '.' ) );
+    sceneName = outputPath + '/' + sceneName + ".rawscene";
+    std::ofstream sceneOut( sceneName );
+    if( sceneOut.bad() )
+    {
+        std::cerr << "Cannot open file: " << sceneName << std::endl;
+        return 2;
+    } else
+        std::cerr << "Opened scene file for output: " << sceneName << std::endl;
+    // The material file is a json which already might contain stuff load that first.
+    // TODO
+
+    std::cerr << "Loading with Assimp..." << std::endl;
+    if( !builder.LoadSceneWithAssimp( _args[1] ) )
+    {
+        std::cerr << "Assimp could not load the scene: " << _args[1] << std::endl;
+        return 3;
+    }
+
+    std::cerr << "Computing hierarchy..." << std::endl;
+    // TODO
+
+    std::cerr << "Exporting hierarchy..." << std::endl;
+    // TODO
+
+    std::cerr << "Exporting geometry..." << std::endl;
+    // TODO
+
     return 0;
 }
