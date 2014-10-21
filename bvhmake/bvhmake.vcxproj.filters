@@ -62,5 +62,8 @@
     <ClInclude Include="..\gpugi\utilities\utils.hpp">
       <Filter>dependencies\utilities</Filter>
     </ClInclude>
+    <ClInclude Include="filedef.hpp">
+      <Filter>code</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

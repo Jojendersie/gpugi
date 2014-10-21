@@ -1,4 +1,5 @@
 #include "bvhmake.hpp"
+#include "filedef.hpp"
 #include <assimp/matrix4x4.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -77,4 +78,13 @@ bool BVHBuilder::LoadSceneWithAssimp( const char* _file )
 	);
 
 	return m_scene != nullptr;
+}
+
+
+void BVHBuilder::ExportGeometry( std::ofstream& _file )
+{
+    NamedArray header;
+    strcpy( header.name, "triangles" );
+    header.elementSize = sizeof(Triangle);
+    header.numElements;
 }

@@ -32,6 +32,9 @@ public:
     /// \brief Returns success or not.
     bool LoadSceneWithAssimp( const char* _file );
 
+    /// \brief Write the vertex and triangle arrays to file
+    void ExportGeometry( std::ofstream& _file );
+
 private:
     BuildMethod m_buildMethod;
     FitMethod m_fitMethod;
