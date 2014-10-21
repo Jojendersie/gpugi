@@ -19,6 +19,14 @@ void GlobalConfig::AddParameter(const std::string& _name, const ParameterType& _
 		throw std::invalid_argument("Config entry with name \"" + _name + "\" does already exist.");
 }
 
+void GlobalConfig::RemoveParameter(const std::string& _name)
+{
+	auto entry = m_entries.find(_name);
+	if (entry == m_entries.end())
+		throw std::invalid_argument("Config entry \"" + _name + "\" does not exist.");
+	m_entries.erase(entry);
+}
+
 void GlobalConfig::AddListener(const std::string& _name, const std::string& _listenerName, const ListenerFunc& _listenerFunc)
 {
 	auto entry = m_entries.find(_name);

@@ -36,8 +36,8 @@ public:
 		// Add a few fundamental global parameters/events.
 		GlobalConfig::AddParameter("pause", { 0.0f }, "Set to <=0 to pause drawing. Input will still work.");
 		GlobalConfig::AddParameter("resolution", { 1024, 768 }, "The window's width and height.");
-		GlobalConfig::AddParameter("help", { }, "Dumps all available parameter/events to the command window.");
-		GlobalConfig::AddListener("help", "HelpDumpFunc", [](const GlobalConfig::ParameterType) { std::cout << GlobalConfig::GetEntryDescriptions() << std::endl; });
+		GlobalConfig::AddParameter("help", {}, "Dumps all available parameter/events to the command window.");
+		GlobalConfig::AddListener("help", "HelpDumpFunc", [](const GlobalConfig::ParameterType&) { std::cout << GlobalConfig::GetEntryDescriptions() << std::endl; });
 		GlobalConfig::AddParameter("screenshot", {}, "Saves a screenshot.");
 		GlobalConfig::AddListener("screenshot", "SaveScreenshot", [=](const GlobalConfig::ParameterType) { this->SaveImage(); });
 
@@ -46,9 +46,12 @@ public:
 		window.reset(new OutputWindow());
 
 		// Create "global" camera.
-		camera.reset(new InteractiveCamera(window->GetGLFWWindow(), ei::Vec3(0.0f), ei::Vec3(0.0f, 0.0f, 1.0f), 
-											GlobalConfig::GetParameter("resolution")[0] / GlobalConfig::GetParameter("resolution")[1], 70.0f));
+		camera.reset(new InteractiveCamera(window->GetGLFWWindow(), ei::Vec3(0.0f), ei::Vec3(0.0f, 0.0f, 1.0f), GlobalConfig::GetParameter("resolution")[0] / GlobalConfig::GetParameter("resolution")[1], 70.0f));
 		camera->ConnectToGlobalConfig();
+		GlobalConfig::AddListener("resolution", "global camera aspect", [=](const GlobalConfig::ParameterType& p) { this->camera->SetAspectRatio(p[0] / p[1]); this->renderer->SetCamera(*camera); });
+		GlobalConfig::AddListener("cameraPos", "update renderer cam", [=](const GlobalConfig::ParameterType& p){ this->renderer->SetCamera(*camera); });
+		GlobalConfig::AddListener("cameraLookAt", "update renderer cam", [=](const GlobalConfig::ParameterType& p){ this->renderer->SetCamera(*camera); });
+		GlobalConfig::AddListener("cameraFOV", "update renderer cam", [=](const GlobalConfig::ParameterType& p){ this->renderer->SetCamera(*camera); });
 
 		// Renderer...
 		LOG_LVL2("Init window ...");

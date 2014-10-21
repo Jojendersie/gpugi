@@ -10,15 +10,18 @@ public:
 
 	/// Connects parameters to global config, will also listen to resolution.
 	/// Only one camera can be connected to the global config.
+	/// Registers: cameraPos, cameraLookAt, cameraFOV
 	void ConnectToGlobalConfig();
 	void DisconnectFromGlobalConfig();
 
 	const ei::Vec3& GetPosition() const  { return m_position; }
 	const ei::Vec3& GetLookAt() const  { return m_lookat; }
 
-	void SetPosition(const ei::Vec3& position)		{ this->m_position = position; UpdateCameraParams(); }
-	void SetLookAt(const ei::Vec3& lookat)			{ this->m_lookat = lookat; UpdateCameraParams(); }
-
+	void SetAspectRatio(float aspect)				{ m_aspectRatio = aspect; UpdateCameraParams(); }
+	void SetHFov(float hfov)						{ m_hfov = hfov; UpdateCameraParams(); }
+	void SetPosition(const ei::Vec3& position)		{ m_position = position; UpdateCameraParams(); }
+	void SetLookAt(const ei::Vec3& lookat)			{ m_lookat = lookat; UpdateCameraParams(); }
+	
 	const ei::Vec3& GetUp() const  { return m_up; }
 	const float GetHFov() const  { return m_hfov; }
 	const float GetAspectRatio() const  { return m_aspectRatio; }

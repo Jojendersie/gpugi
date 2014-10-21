@@ -24,6 +24,13 @@ namespace GlobalConfig
 	/// \throws std::invalid_argument if parameter already exists.
 	void AddParameter(const std::string& _name, const ParameterType& _value, const std::string& _description = "<no desc>");
 
+	/// Removes a new global parameter.
+	///
+	/// \param _name 
+	///		Name of the parameter.
+	/// \throws std::invalid_argument if parameter already exists.
+	void RemoveParameter(const std::string& _name);
+
 	/// Adds a listener to an existing parameter.
 	///
 	/// \param _name 
