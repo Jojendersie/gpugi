@@ -52,13 +52,13 @@ bool InteractiveCamera::Update(ezTime timeSinceLastFrame)
 		m_rotY += m_rotSpeed * (newMousePosY - m_lastMousePosY);
 
 		float scaledMoveSpeed = m_moveSpeed;
-		if(glfwGetKey(m_window, GLFW_KEY_RIGHT_SHIFT))
+		if (glfwGetKey(m_window, GLFW_KEY_RIGHT_SHIFT) || glfwGetKey(m_window, GLFW_KEY_LEFT_SHIFT))
 			scaledMoveSpeed *= 10.0f;
 
-		float forward = (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(m_window, 'w') == GLFW_PRESS) ? 1.0f : 0.0f;
-		float back	  = (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(m_window, 's') == GLFW_PRESS) ? 1.0f : 0.0f;
-		float left	  = (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(m_window, 'a') == GLFW_PRESS) ? 1.0f : 0.0f;
-		float right	  = (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(m_window, 'd') == GLFW_PRESS) ? 1.0f : 0.0f;
+		float forward = (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) ? 1.0f : 0.0f;
+		float back = (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) ? 1.0f : 0.0f;
+		float left = (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS) ? 1.0f : 0.0f;
+		float right = (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) ? 1.0f : 0.0f;
 
 		ei::Vec3 cameraDirection = ei::Vec3(static_cast<float>(sin(m_rotX) * cos(m_rotY)), static_cast<float>(sin(m_rotY)), static_cast<float>(cos(m_rotX) * cos(m_rotY)));
 		ei::Vec3 cameraLeft = ei::cross(cameraDirection, ei::Vec3(0, 1, 0));

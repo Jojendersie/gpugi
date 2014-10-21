@@ -28,10 +28,10 @@ void Camera::ConnectToGlobalConfig()
 		return;
 	}
 
-	GlobalConfig::AddParameter("cameraPos", { m_position.x, m_position.z, m_position.y }, "Global camera's position");
+	GlobalConfig::AddParameter("cameraPos", { m_position.x, m_position.y, m_position.z }, "Global camera's position");
 	GlobalConfig::AddListener("cameraPos", "global camera", [=](const GlobalConfig::ParameterType& p){ this->SetPosition(ei::Vec3(p[0], p[1], p[2])); });
 
-	GlobalConfig::AddParameter("cameraLookAt", { m_lookat.x, m_lookat.z, m_lookat.y }, "Global camera's look at");
+	GlobalConfig::AddParameter("cameraLookAt", { m_lookat.x, m_lookat.y, m_lookat.z }, "Global camera's look at");
 	GlobalConfig::AddListener("cameraLookAt", "global camera", [=](const GlobalConfig::ParameterType& p){ this->SetLookAt(ei::Vec3(p[0], p[1], p[2])); });
 
 	GlobalConfig::AddParameter("cameraFOV", { m_hfov }, "Global camera's horizontal FOV");
