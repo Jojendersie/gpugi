@@ -1,12 +1,13 @@
 #include "interactivecamera.hpp"
 #include <GLFW/glfw3.h>
+#include "../control/globalconfig.hpp"
 
 InteractiveCamera::InteractiveCamera(GLFWwindow* window, const Camera& camera) :
 	Camera(camera.GetPosition(), camera.GetLookAt(), camera.GetAspectRatio(), camera.GetHFov(), camera.GetUp()),
 	m_window(m_window),
 	m_rotSpeed(0.01f),
 	m_moveSpeed(16.0f),
-	m_rotX(0), m_rotY(0)
+	m_rotX(0), m_rotY(0), m_dirty(true)
 {
 	RotFromLookat();
 }
@@ -42,7 +43,6 @@ void InteractiveCamera::RotFromLookat()
 
 bool InteractiveCamera::Update(ezTime timeSinceLastFrame)
 {
-	bool dirty = false;
 	double newMousePosX, newMousePosY;
 	glfwGetCursorPos(m_window, &newMousePosX, &newMousePosY);
 
@@ -69,13 +69,21 @@ bool InteractiveCamera::Update(ezTime timeSinceLastFrame)
 		m_lookat = m_position + cameraDirection;
 
 		
-		UpdateCameraParams();
-		dirty = oldPosition.x != m_position.x || oldPosition.y != m_position.y || oldPosition.z != m_position.z || 
+		
+		m_dirty |= oldPosition.x != m_position.x || oldPosition.y != m_position.y || oldPosition.z != m_position.z ||
 					oldLookat.x != m_lookat.x || oldLookat.y != m_lookat.y || oldLookat.z != m_lookat.z;
+
+		if (IsConnectedToGlobalConfig() && m_dirty)
+		{
+			GlobalConfig::SetParameter("cameraPos", { m_position.x, m_position.y, m_position.z });
+			GlobalConfig::SetParameter("cameraLookAt", { m_lookat.x, m_lookat.y, m_lookat.z });
+		}
 	}
 
 	m_lastMousePosX = newMousePosX;
 	m_lastMousePosY = newMousePosY;
 
-	return dirty;
+	bool outDirty = m_dirty;
+	m_dirty = false;
+	return outDirty;
 }

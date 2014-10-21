@@ -17,19 +17,16 @@ public:
 	const ei::Vec3& GetPosition() const  { return m_position; }
 	const ei::Vec3& GetLookAt() const  { return m_lookat; }
 
-	void SetAspectRatio(float aspect)				{ m_aspectRatio = aspect; UpdateCameraParams(); }
-	void SetHFov(float hfov)						{ m_hfov = hfov; UpdateCameraParams(); }
-	void SetPosition(const ei::Vec3& position)		{ m_position = position; UpdateCameraParams(); }
-	void SetLookAt(const ei::Vec3& lookat)			{ m_lookat = lookat; UpdateCameraParams(); }
+	virtual void SetAspectRatio(float aspect)				{ m_aspectRatio = aspect; }
+	virtual void SetHFov(float hfov)						{ m_hfov = hfov; }
+	virtual void SetPosition(const ei::Vec3& position)		{ m_position = position; }
+	virtual void SetLookAt(const ei::Vec3& lookat)			{ m_lookat = lookat; }
 	
 	const ei::Vec3& GetUp() const  { return m_up; }
 	const float GetHFov() const  { return m_hfov; }
 	const float GetAspectRatio() const  { return m_aspectRatio; }
 
-	const ei::Vec3& GetCameraU() const  { return m_cameraU; }
-	const ei::Vec3& GetCameraV() const  { return m_cameraV; }
-	const ei::Vec3& GetCameraW() const  { return m_cameraW; }
-
+	void ComputeCameraParams(ei::Vec3& cameraU, ei::Vec3& cameraV, ei::Vec3& cameraW) const;
 
 protected:
 	ei::Vec3 m_position;
@@ -38,11 +35,9 @@ protected:
 	float m_hfov;
 	float m_aspectRatio;
 
-	void UpdateCameraParams();
+	bool IsConnectedToGlobalConfig() const { return m_connectedToGlobalConfig; }
 
 private:
-	ei::Vec3 m_cameraU, m_cameraV, m_cameraW;
-
 	static bool s_anyCameraConnectedToGlobalConfig;
 	bool m_connectedToGlobalConfig;
 };

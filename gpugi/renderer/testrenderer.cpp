@@ -24,9 +24,11 @@ TestRenderer::TestRenderer(const Camera& initialCamera) :
 
 void TestRenderer::SetCamera(const Camera& camera)
 {
-	testubo["CameraU"].Set(camera.GetCameraU());
-	testubo["CameraV"].Set(camera.GetCameraV());
-	testubo["CameraW"].Set(camera.GetCameraW());
+	ei::Vec3 camU, camV, camW;
+	camera.ComputeCameraParams(camU, camV, camW);
+	testubo["CameraU"].Set(camU);
+	testubo["CameraV"].Set(camV);
+	testubo["CameraW"].Set(camW);
 	testubo["CameraPosition"].Set(camera.GetPosition());
 }
 

@@ -12,7 +12,6 @@ Camera::Camera(const ei::Vec3& position, const ei::Vec3& lookat, float aspectRat
 	m_up(up),
 	m_connectedToGlobalConfig(false)
 {
-	UpdateCameraParams();
 }
 
 
@@ -56,22 +55,22 @@ void Camera::DisconnectFromGlobalConfig()
 	s_anyCameraConnectedToGlobalConfig = false;
 }
 
-void Camera::UpdateCameraParams()
+void Camera::ComputeCameraParams(ei::Vec3& cameraU, ei::Vec3& cameraV, ei::Vec3& cameraW) const
 {
 	float ulen, vlen, wlen;
-	m_cameraW.x = m_lookat.x - m_position.x;
-	m_cameraW.y = m_lookat.y - m_position.y;  /* Do not normalize W -- it implies focal length */
-	m_cameraW.z = m_lookat.z - m_position.z;
+	cameraW.x = m_lookat.x - m_position.x;
+	cameraW.y = m_lookat.y - m_position.y;  /* Do not normalize W -- it implies focal length */
+	cameraW.z = m_lookat.z - m_position.z;
 
-	wlen = sqrtf(ei::dot(m_cameraW, m_cameraW));
-	m_cameraU = ei::normalize(ei::cross(m_cameraW, m_up));
-	m_cameraV = ei::normalize(ei::cross(m_cameraU, m_cameraW));
+	wlen = sqrtf(ei::dot(cameraW, cameraW));
+	cameraU = ei::normalize(ei::cross(cameraW, m_up));
+	cameraV = ei::normalize(ei::cross(cameraU, cameraW));
 	ulen = wlen * tanf(m_hfov / 2.0f * 3.14159265358979323846f / 180.0f);
-	m_cameraU.x *= ulen;
-	m_cameraU.y *= ulen;
-	m_cameraU.z *= ulen;
+	cameraU.x *= ulen;
+	cameraU.y *= ulen;
+	cameraU.z *= ulen;
 	vlen = ulen / m_aspectRatio;
-	m_cameraV.x *= vlen;
-	m_cameraV.y *= vlen;
-	m_cameraV.z *= vlen;
+	cameraV.x *= vlen;
+	cameraV.y *= vlen;
+	cameraV.z *= vlen;
 }
