@@ -30,7 +30,8 @@ namespace gl
 		m_bufferDirtyRangeEnd = m_bufferDirtyRangeStart = 0;
 
 		GL_CALL(glCreateBuffers, 1, &m_BufferObject);
-		GL_CALL(glNamedBufferStorage, m_BufferObject, static_cast<GLsizeiptr>(bufferSizeBytes), nullptr, GL_DYNAMIC_STORAGE_BIT); // TODO: Using mapping could be faster! http://www.gamedev.net/topic/622685-constant-buffer-updatesubresource-vs-map/
+		// TODO: Using mapping could be faster! http://www.gamedev.net/topic/622685-constant-buffer-updatesubresource-vs-map/
+		GL_CALL(glNamedBufferStorage, m_BufferObject, static_cast<GLsizeiptr>(bufferSizeBytes), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
 		return SUCCEEDED;
 	}
@@ -103,7 +104,7 @@ namespace gl
 				else // new one
 				{
 					m_variables.emplace(varIt->first, Variable(varIt->second, this));
-					// todo? check overlaps
+					// No overlap checking so far.
 				}
 			}
 		}

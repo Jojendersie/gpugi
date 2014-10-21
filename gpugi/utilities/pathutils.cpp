@@ -3,9 +3,6 @@
 
 namespace PathUtils
 {
-	// TODO: Add platform independent functions.
-
-
 	/// Concats to paths.
 	std::string AppendPath(const std::string& _leftPath, const std::string& _rightPath)
 	{

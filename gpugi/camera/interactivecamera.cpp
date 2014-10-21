@@ -1,12 +1,13 @@
 #include "interactivecamera.hpp"
 #include <GLFW/glfw3.h>
+#include "../control/globalconfig.hpp"
 
 InteractiveCamera::InteractiveCamera(GLFWwindow* window, const Camera& camera) :
 	Camera(camera.GetPosition(), camera.GetLookAt(), camera.GetAspectRatio(), camera.GetHFov(), camera.GetUp()),
 	m_window(m_window),
 	m_rotSpeed(0.01f),
 	m_moveSpeed(16.0f),
-	m_rotX(0), m_rotY(0)
+	m_rotX(0), m_rotY(0), m_dirty(true)
 {
 	RotFromLookat();
 }
@@ -42,7 +43,6 @@ void InteractiveCamera::RotFromLookat()
 
 bool InteractiveCamera::Update(ezTime timeSinceLastFrame)
 {
-	bool dirty = false;
 	double newMousePosX, newMousePosY;
 	glfwGetCursorPos(m_window, &newMousePosX, &newMousePosY);
 
@@ -52,13 +52,13 @@ bool InteractiveCamera::Update(ezTime timeSinceLastFrame)
 		m_rotY += m_rotSpeed * (newMousePosY - m_lastMousePosY);
 
 		float scaledMoveSpeed = m_moveSpeed;
-		if(glfwGetKey(m_window, GLFW_KEY_RIGHT_SHIFT))
+		if (glfwGetKey(m_window, GLFW_KEY_RIGHT_SHIFT) || glfwGetKey(m_window, GLFW_KEY_LEFT_SHIFT))
 			scaledMoveSpeed *= 10.0f;
 
-		float forward = (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(m_window, 'w') == GLFW_PRESS) ? 1.0f : 0.0f;
-		float back	  = (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(m_window, 's') == GLFW_PRESS) ? 1.0f : 0.0f;
-		float left	  = (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(m_window, 'a') == GLFW_PRESS) ? 1.0f : 0.0f;
-		float right	  = (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(m_window, 'd') == GLFW_PRESS) ? 1.0f : 0.0f;
+		float forward = (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) ? 1.0f : 0.0f;
+		float back = (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) ? 1.0f : 0.0f;
+		float left = (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS) ? 1.0f : 0.0f;
+		float right = (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) ? 1.0f : 0.0f;
 
 		ei::Vec3 cameraDirection = ei::Vec3(static_cast<float>(sin(m_rotX) * cos(m_rotY)), static_cast<float>(sin(m_rotY)), static_cast<float>(cos(m_rotX) * cos(m_rotY)));
 		ei::Vec3 cameraLeft = ei::cross(cameraDirection, ei::Vec3(0, 1, 0));
@@ -69,13 +69,21 @@ bool InteractiveCamera::Update(ezTime timeSinceLastFrame)
 		m_lookat = m_position + cameraDirection;
 
 		
-		UpdateCameraParams();
-		dirty = oldPosition.x != m_position.x || oldPosition.y != m_position.y || oldPosition.z != m_position.z || 
+		
+		m_dirty |= oldPosition.x != m_position.x || oldPosition.y != m_position.y || oldPosition.z != m_position.z ||
 					oldLookat.x != m_lookat.x || oldLookat.y != m_lookat.y || oldLookat.z != m_lookat.z;
+
+		if (IsConnectedToGlobalConfig() && m_dirty)
+		{
+			GlobalConfig::SetParameter("cameraPos", { m_position.x, m_position.y, m_position.z });
+			GlobalConfig::SetParameter("cameraLookAt", { m_lookat.x, m_lookat.y, m_lookat.z });
+		}
 	}
 
 	m_lastMousePosX = newMousePosX;
 	m_lastMousePosY = newMousePosY;
 
-	return dirty;
+	bool outDirty = m_dirty;
+	m_dirty = false;
+	return outDirty;
 }

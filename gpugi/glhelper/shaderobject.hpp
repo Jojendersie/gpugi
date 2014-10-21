@@ -49,8 +49,6 @@ namespace gl
 
 		/// Makes program active
 		/// You can only activate one program at a time
-		/// \todo use new pipeline stage feature instead of glUseProgram - things like that: http://www.opengl.org/wiki/GLAPI/glBindProgramPipeline
-		///         -> then you also can acitvate multiple programs at a time because they only overwrite the stages they use
 		void Activate() const;
 
 

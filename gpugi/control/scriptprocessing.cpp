@@ -5,13 +5,12 @@
 #include <thread>
 #include <iostream>
 
-
-static std::unique_ptr<std::thread> m_commandWindowObservationThread;
-
-static std::mutex m_commandQueueMutex;
-static std::queue<std::string> m_commandQueue;
-
-static bool commandWindowThreadRunning = false;
+ScriptProcessing::ScriptProcessing() : 
+	m_scriptWaitSeconds(0.0f),
+	m_scriptWaitIterations(0),
+	m_consoleWindowThreadRunning(false)
+{
+}
 
 void ScriptProcessing::RunScript(const std::string& _scriptFilename)
 {
@@ -22,103 +21,151 @@ void ScriptProcessing::RunScript(const std::string& _scriptFilename)
 		return;
 	}
 
-	m_commandQueueMutex.lock();
 	std::string line;
 	while (std::getline(file, line))
-		m_commandQueue.push(line);
-	m_commandQueueMutex.unlock();
+		m_scriptCommandQueue.push(line);
 }
 
-static void CommandWindowThread()
+void ScriptProcessing::CommandWindowThread()
 {
-	while (commandWindowThreadRunning)
+	while (m_consoleWindowThreadRunning)
 	{
 		std::string line;
 		std::getline(std::cin, line);
 
 		if (line.empty())
 			continue;
-		m_commandQueueMutex.lock();
-		m_commandQueue.push(line);
-		m_commandQueueMutex.unlock();
+		m_consoleCommandQueueMutex.lock();
+		m_consoleCommandQueue.push(line);
+		m_consoleCommandQueueMutex.unlock();
 	}
 }
 
-void ScriptProcessing::StartCommandWindowThread()
+void ScriptProcessing::StartConsoleWindowThread()
 {
-	if (m_commandWindowObservationThread || commandWindowThreadRunning)
+	if (m_consoleWindowObservationThread || m_consoleWindowThreadRunning)
 	{
 		LOG_ERROR("Command window thread was still running. Try to stop old thread...");
-		StopCommandWindowThread();
+		StopConsoleWindowThread();
 	}
 
-	commandWindowThreadRunning = true;
-	m_commandWindowObservationThread.reset(new std::thread(CommandWindowThread));
+	m_consoleWindowThreadRunning = true;
+	m_consoleWindowObservationThread.reset(new std::thread(&ScriptProcessing::CommandWindowThread, this));
 }
 
-void ScriptProcessing::StopCommandWindowThread()
+void ScriptProcessing::StopConsoleWindowThread()
 {
-	commandWindowThreadRunning = false;
-	if (m_commandWindowObservationThread)
+	m_consoleWindowThreadRunning = false;
+	if (m_consoleWindowObservationThread)
 	{
-		m_commandWindowObservationThread->join();
-		m_commandWindowObservationThread.release();
+		m_consoleWindowObservationThread->join();
+		m_consoleWindowObservationThread.release();
 	}
 }
 
-void ScriptProcessing::ProcessCommandQueue()
+void ScriptProcessing::ParseCommand(std::string _commandLine, bool _fromScriptFile)
 {
-	m_commandQueueMutex.lock();
-	while (!m_commandQueue.empty())
+	_commandLine.erase(std::remove(_commandLine.begin(), _commandLine.end(), ' '), _commandLine.end());
+	_commandLine.erase(std::remove(_commandLine.begin(), _commandLine.end(), '\t'), _commandLine.end());
+	if (_commandLine.empty())
+		return;
+
+	// Primitive parsing.
+	std::string::size_type equalityIdx = _commandLine.find('=');
+	std::string name = _commandLine.substr(0, equalityIdx);
+	GlobalConfig::ParameterType argumentList;
+
+	std::string::size_type lastComma = equalityIdx;
+	std::string::size_type nextComma;
+	if (equalityIdx != std::string::npos)
 	{
-		std::string command = m_commandQueue.front();
-		command.erase(std::remove(command.begin(), command.end(), ' '), command.end());
-
-		// Primitive parsing.
-		std::string::size_type equalityIdx = command.find('=');
-		std::string name = command.substr(0, equalityIdx);
-		GlobalConfig::ParameterType parameter;
-
-		std::string::size_type lastComma = equalityIdx;
-		std::string::size_type nextComma;
-		if (equalityIdx != std::string::npos)
+		do
 		{
-			do
+			nextComma = _commandLine.find(',', lastComma + 1);
+
+			std::string paramlistPart;
+			if (nextComma == std::string::npos)
+				paramlistPart = _commandLine.substr(lastComma + 1);
+			else
+				paramlistPart = _commandLine.substr(lastComma + 1, nextComma - lastComma - 1);
+
+			float value = 0.0f;
+			try
 			{
-				nextComma = command.find(',', lastComma + 1);
+				value = std::stof(paramlistPart);
+				argumentList.push_back(value);
+			}
+			catch (...)
+			{
+				LOG_ERROR("Invalid parameter!");
+			}
 
-				std::string paramlistPart;
-				if (nextComma == std::string::npos)
-					paramlistPart = command.substr(lastComma + 1);
-				else
-					paramlistPart = command.substr(lastComma + 1, nextComma - lastComma - 1);
-
-				float value = 0.0f;
-				try
-				{
-					value = std::stof(paramlistPart);
-					parameter.push_back(value);
-				}
-				catch (...)
-				{
-					LOG_ERROR("Invalid parameter!");
-				}
-
-				lastComma = nextComma;
-			} while (nextComma != std::string::npos);
-		}
-
-		// Perform command.
-		try
-		{
-			GlobalConfig::SetParameter(name, parameter);
-		}
-		catch (const std::invalid_argument& e)
-		{
-			LOG_ERROR(e.what());
-		}
-
-		m_commandQueue.pop();
+			lastComma = nextComma;
+		} while (nextComma != std::string::npos);
 	}
-	m_commandQueueMutex.unlock();
+
+	// Parse special file commands.
+	if (_fromScriptFile)
+	{
+		if (name == "waitSeconds")
+		{
+			if (argumentList.size() != 1)
+				LOG_ERROR("The waitSeconds command expects a single number as argument.");
+			else
+				m_scriptWaitSeconds = argumentList[0];
+			return;
+		}
+		else if (name == "waitIterations")
+		{
+			if (argumentList.size() != 1)
+				LOG_ERROR("The waitIterations command expects a single number as argument.");
+			else
+				m_scriptWaitIterations = static_cast<unsigned int>(argumentList[0]);
+			return;
+		}
+	}
+
+	// Perform command - if the argument list is empty, but the parameter consists of at least one parameter, interpret the command as getter.
+	try
+	{
+		GlobalConfig::ParameterType currentValue = GlobalConfig::GetParameter(name);
+		if (argumentList.empty() && !currentValue.empty())
+		{
+			std::cout << "{";
+			for (size_t i = 0; i < currentValue.size() - 1; ++i)
+				std::cout << std::to_string(currentValue[i]) << ", ";
+			std::cout << std::to_string(currentValue[currentValue.size() - 1]) << " }\n";
+		}
+		else
+		{
+			GlobalConfig::SetParameter(name, argumentList);
+		}
+	}
+	catch (const std::invalid_argument& e)
+	{
+		LOG_ERROR(e.what());
+	}
+}
+
+void ScriptProcessing::ProcessCommandQueue(double timeDelta, unsigned int iterationDelta)
+{
+	m_scriptWaitSeconds -= timeDelta;
+	if (m_scriptWaitIterations > 0)
+		m_scriptWaitIterations -= iterationDelta;
+
+	// Execute script commands.
+	while (m_scriptWaitSeconds <= 0.0f && m_scriptWaitIterations == 0 && !m_scriptCommandQueue.empty())
+	{
+		ParseCommand(m_scriptCommandQueue.front(), true);
+		m_scriptCommandQueue.pop();
+	}
+
+	// Execute console commands.
+	m_consoleCommandQueueMutex.lock();
+	while (!m_consoleCommandQueue.empty())
+	{
+		ParseCommand(m_consoleCommandQueue.front(), false);
+		m_consoleCommandQueue.pop();
+	}
+	m_consoleCommandQueueMutex.unlock();
 }
