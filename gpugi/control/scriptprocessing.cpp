@@ -77,7 +77,7 @@ void ScriptProcessing::ProcessCommandQueue()
 		// Primitive parsing.
 		std::string::size_type equalityIdx = command.find('=');
 		std::string name = command.substr(0, equalityIdx);
-		GlobalConfig::ParameterType parameter;
+		GlobalConfig::ParameterType argumentList;
 
 		std::string::size_type lastComma = equalityIdx;
 		std::string::size_type nextComma;
@@ -97,7 +97,7 @@ void ScriptProcessing::ProcessCommandQueue()
 				try
 				{
 					value = std::stof(paramlistPart);
-					parameter.push_back(value);
+					argumentList.push_back(value);
 				}
 				catch (...)
 				{
@@ -108,10 +108,21 @@ void ScriptProcessing::ProcessCommandQueue()
 			} while (nextComma != std::string::npos);
 		}
 
-		// Perform command.
+		// Perform command - if the argument list is empty, but the parameter consists of at least one parameter, interpret the command as getter.
 		try
 		{
-			GlobalConfig::SetParameter(name, parameter);
+			GlobalConfig::ParameterType currentValue = GlobalConfig::GetParameter(name);
+			if (argumentList.empty() && !currentValue.empty())
+			{
+				std::cout << "{";
+				for (size_t i = 0; i < currentValue.size() - 1; ++i)
+					std::cout << std::to_string(currentValue[i]) << ", ";
+				std::cout << std::to_string(currentValue.size() - 1) << " }\n";
+			}
+			else
+			{
+				GlobalConfig::SetParameter(name, argumentList);
+			}
 		}
 		catch (const std::invalid_argument& e)
 		{
