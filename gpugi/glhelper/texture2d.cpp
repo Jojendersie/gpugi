@@ -45,7 +45,7 @@ namespace gl
 	{
 		Assert(_mipLevel < m_numMipLevels, "MipLevel " + std::to_string(_mipLevel) + " does not exist, texture has only " + std::to_string(m_numMipLevels) + " MipMapLevels");
 
-		glTextureSubImage2D(m_textureHandle, _mipLevel, 0, 0, m_width, m_height, 
+		GL_CALL(glTextureSubImage2D, m_textureHandle, _mipLevel, 0, 0, m_width, m_height, 
 							static_cast<GLenum>(_dataFormat), static_cast<GLenum>(_dataType), _data);
 	}
 
