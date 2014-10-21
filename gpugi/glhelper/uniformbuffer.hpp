@@ -70,7 +70,7 @@ namespace gl
 		std::unique_ptr<std::int8_t[]> m_bufferData;
 
 		/// meta information
-		std::unordered_map<std::string, Variable> m_variables;  /// \todo no ezHashTable possible?
+		std::unordered_map<std::string, Variable> m_variables;
 
 
 		/// Currently bound UBOs - number is arbitrary!
