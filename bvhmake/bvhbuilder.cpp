@@ -1,5 +1,7 @@
 ﻿#include "bvhmake.hpp"
 #include "filedef.hpp"
+#include "fitmethods/aaboxfit.hpp"
+#include "buildmethods/kdtree.hpp"
 #include <assimp/matrix4x4.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -16,17 +18,36 @@ T hard_cast(F _from)
 }
 
 
-void foo() {}
 
-BVHBuilder::BVHBuilder()
+BVHBuilder::BVHBuilder() :
+    m_bvbuffer(nullptr),
+    m_nodes(nullptr),
+    m_leaves(nullptr),
+    m_innerNodeCount(0),
+    m_maxInnerNodeCount(0),
+    m_leafNodeCount(0),
+    m_maxLeafNodeCount(0)
 {
     // Register methods
-    m_buildMethods.insert( {"kdtree", foo} );
-    m_fitMethods.insert( {"aabox", foo} );
+    m_buildMethods.insert( {"kdtree", new BuildKdtree(this)} );
+    m_fitMethods.insert( {"aabox", new FitBox(this)} );
 
     // Set defaults
     m_buildMethod = m_buildMethods["kdtree"];
     m_fitMethod = m_fitMethods["aabox"];
+}
+
+BVHBuilder::~BVHBuilder()
+{
+    for( auto it : m_buildMethods )
+        delete it.second;
+
+    for( auto it : m_fitMethods )
+        delete it.second;
+
+    delete[] m_bvbuffer;
+    delete[] m_nodes;
+    delete[] m_leaves;
 }
 
 std::string BVHBuilder::GetBuildMethods()
@@ -57,14 +78,14 @@ bool BVHBuilder::SetBuildMethod( const char* _methodName )
     auto it = m_buildMethods.find( _methodName );
     if( it != m_buildMethods.end() )
         m_buildMethod = it->second;
-    return it != m_fitMethods.end();
+    return it != m_buildMethods.end();
 }
 
 bool BVHBuilder::SetGeometryType( const char* _methodName )
 {
     auto it = m_fitMethods.find( _methodName );
     if( it != m_fitMethods.end() )
-        m_buildMethod = it->second;
+        m_fitMethod = it->second;
     return it != m_fitMethods.end();
 }
 
@@ -97,12 +118,12 @@ bool BVHBuilder::LoadSceneWithAssimp( const char* _file )
 void BVHBuilder::ExportGeometry( std::ofstream& _file )
 {
     // Prepare file headers and find out how much space is required
-    NamedArray indexHeader;
-    NamedArray vertexHeader;
+    FileDecl::NamedArray indexHeader;
+    FileDecl::NamedArray vertexHeader;
     strcpy( indexHeader.name, "triangles" );
     strcpy( vertexHeader.name, "vertices" );
-    indexHeader.elementSize = sizeof(Triangle);
-    vertexHeader.elementSize = sizeof(Vertex);
+    indexHeader.elementSize = sizeof(FileDecl::Triangle);
+    vertexHeader.elementSize = sizeof(FileDecl::Vertex);
     indexHeader.numElements = 0;
     vertexHeader.numElements = 0;
     CountGeometry( m_scene->mRootNode, vertexHeader.numElements, indexHeader.numElements );
@@ -111,14 +132,14 @@ void BVHBuilder::ExportGeometry( std::ofstream& _file )
     // the hierarchy build algorithm).
     m_positions.reset( new ε::Vec3[vertexHeader.numElements] );
     m_triangles.reset( new uint[indexHeader.numElements * 3] );
-    m_triangleCursor = 0;
+    m_triangleCount = 0;
     // TODO Materials
 
     // Export vertices directly streams to the file and fills m_positions
     // as well as m_triangles
-    _file.write( (const char*)&vertexHeader, sizeof(NamedArray) );
+    _file.write( (const char*)&vertexHeader, sizeof(FileDecl::NamedArray) );
     ExportVertices( _file, m_scene->mRootNode, ε::identity4x4() );
-    _file.write( (const char*)&indexHeader, sizeof(NamedArray) );
+    _file.write( (const char*)&indexHeader, sizeof(FileDecl::NamedArray) );
     _file.write( (const char*)&m_triangles[0], sizeof(uint) * indexHeader.numElements * 3 );
 
     // This is not required anymore, make place for the algorithms
@@ -155,28 +176,50 @@ void BVHBuilder::ExportVertices( std::ofstream& _file,
 		{
 			const aiFace& face = mesh->mFaces[t];
 			Assert( face.mNumIndices == 3, "This is a triangle importer!" );
-            m_triangles[m_triangleCursor + 0] = face.mIndices[0] + m_vertexCursor;
-            m_triangles[m_triangleCursor + 1] = face.mIndices[1] + m_vertexCursor;
-            m_triangles[m_triangleCursor + 2] = face.mIndices[2] + m_vertexCursor;
-            m_triangleCursor += 3;
+            m_triangles[m_triangleCount + 0] = face.mIndices[0] + m_vertexCount;
+            m_triangles[m_triangleCount + 1] = face.mIndices[1] + m_vertexCount;
+            m_triangles[m_triangleCount + 2] = face.mIndices[2] + m_vertexCount;
+            m_triangleCount += 3;
         }
 
         // Add vertices to file and positions to the list
         for( unsigned v = 0; v < mesh->mNumVertices; ++v )
         {
-            Vertex vertex;
+            FileDecl::Vertex vertex;
             vertex.position = ε::Vec3(transformation * homo(hard_cast<ε::Vec3>(mesh->mVertices[v])));
             vertex.normal = hard_cast<ε::Vec3>(mesh->mNormals[v]);
             if( mesh->HasTextureCoords(0) )
 				vertex.texcoord = ε::Vec2(mesh->mTextureCoords[0][v].x, mesh->mTextureCoords[0][v].y);
 			else
                 vertex.texcoord = ε::Vec2(0.0f, 0.0f);
-            _file.write( (const char*)&vertex, sizeof(Vertex) );
-            m_positions[m_vertexCursor++] = vertex.position;
+            _file.write( (const char*)&vertex, sizeof(FileDecl::Vertex) );
+            m_positions[m_vertexCount++] = vertex.position;
         }
     }
 
     // Export all children
 	for( unsigned i = 0; i < _node->mNumChildren; ++i )
         ExportVertices( _file, _node->mChildren[i], transformation );
+}
+
+
+void BVHBuilder::BuildBVH()
+{
+    // The maximum number of nodes is limited. It is possible that a build
+    // method use less, but should never take more.
+    m_buildMethod->EstimateNodeCounts(m_maxInnerNodeCount, m_maxLeafNodeCount);
+    m_innerNodeCount = m_leafNodeCount = 0;
+    m_nodes = new Node[m_maxInnerNodeCount];
+    m_leaves = new FileDecl::Leaf[m_maxLeafNodeCount];
+    switch(m_fitMethod->Type())
+    {
+    case FitMethod::BVType::AABOX:
+        m_bvbuffer = new ε::Box[m_maxInnerNodeCount];
+        break;
+    case FitMethod::BVType::SPHERE:
+        m_bvbuffer = new ε::Sphere[m_maxInnerNodeCount];
+        break;
+    default:
+        break;
+    }
 }

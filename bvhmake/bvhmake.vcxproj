@@ -135,7 +135,9 @@
     <ClCompile Include="..\gpugi\utilities\logger.cpp" />
     <ClCompile Include="..\gpugi\utilities\pathutils.cpp" />
     <ClCompile Include="..\gpugi\utilities\policy.cpp" />
+    <ClCompile Include="buildmethods\kdtree.cpp" />
     <ClCompile Include="bvhbuilder.cpp" />
+    <ClCompile Include="fitmethods\aaboxfit.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -145,8 +147,10 @@
     <ClInclude Include="..\gpugi\utilities\pathutils.hpp" />
     <ClInclude Include="..\gpugi\utilities\policy.hpp" />
     <ClInclude Include="..\gpugi\utilities\utils.hpp" />
+    <ClInclude Include="buildmethods\kdtree.hpp" />
     <ClInclude Include="bvhmake.hpp" />
     <ClInclude Include="filedef.hpp" />
+    <ClInclude Include="fitmethods\aaboxfit.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

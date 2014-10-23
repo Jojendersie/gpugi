@@ -13,6 +13,12 @@
     <Filter Include="dependencies\utilities">
       <UniqueIdentifier>{14fd5d48-b6ec-40c6-be33-06351a9d9e50}</UniqueIdentifier>
     </Filter>
+    <Filter Include="code\fitmethods">
+      <UniqueIdentifier>{c95af285-5456-48f1-9612-794ca5d45f6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="code\buildmethods">
+      <UniqueIdentifier>{11e5fc34-6e91-4453-b4c1-1184608c2718}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\dependencies\epsilon\src\2dtypes.cpp">
@@ -39,6 +45,12 @@
     <ClCompile Include="bvhbuilder.cpp">
       <Filter>code</Filter>
     </ClCompile>
+    <ClCompile Include="fitmethods\aaboxfit.cpp">
+      <Filter>code\fitmethods</Filter>
+    </ClCompile>
+    <ClCompile Include="buildmethods\kdtree.cpp">
+      <Filter>code\buildmethods</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bvhmake.hpp">
@@ -64,6 +76,12 @@
     </ClInclude>
     <ClInclude Include="filedef.hpp">
       <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="fitmethods\aaboxfit.hpp">
+      <Filter>code\fitmethods</Filter>
+    </ClInclude>
+    <ClInclude Include="buildmethods\kdtree.hpp">
+      <Filter>code\buildmethods</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
