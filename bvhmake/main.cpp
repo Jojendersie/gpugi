@@ -47,7 +47,7 @@ int main( int _numArgs, const char** _args )
                   << "  <scene file>: REQUIRED. Relative or absolute path and\n"\
                      "      file name. It is not possible to merge multiple files."
                      << std::endl
-                  << "  m=[build method]: OPTIONAL. The valid arguments are:\n      "
+                  << "  b=[build method]: OPTIONAL. The valid arguments are:\n      "
                      << builder.GetBuildMethods()
                      << "      The default is kdtree." << std::endl
                   << "  g=[bounding geometry type]: OPTIONAL. The valid\n"\
@@ -66,7 +66,7 @@ int main( int _numArgs, const char** _args )
     {
         switch(_args[i][0])
         {
-        case 'm':
+        case 'b':
             if( !builder.SetBuildMethod( _args[i] + 2 ) )
             {
                 std::cerr << "Invalid build method: " << (_args[i] + 2) << std::endl;
@@ -93,7 +93,7 @@ int main( int _numArgs, const char** _args )
     std::string sceneName = PathUtils::GetFilename(std::string(_args[1]));
     sceneName.erase( sceneName.find_last_of( '.' ) );
     sceneName = outputPath + '/' + sceneName + ".rawscene";
-    std::ofstream sceneOut( sceneName );
+    std::ofstream sceneOut( sceneName, std::ofstream::binary );
     if( sceneOut.bad() )
     {
         std::cerr << "Cannot open file: " << sceneName << std::endl;
@@ -110,13 +110,15 @@ int main( int _numArgs, const char** _args )
         return 3;
     }
 
+    // Export geometry must be first because it organizes the data for the
+    // other calls
+    std::cerr << "Exporting geometry..." << std::endl;
+    builder.ExportGeometry( sceneOut );
+
     std::cerr << "Computing hierarchy..." << std::endl;
     // TODO
 
     std::cerr << "Exporting hierarchy..." << std::endl;
-    // TODO
-
-    std::cerr << "Exporting geometry..." << std::endl;
     // TODO
 
     return 0;
