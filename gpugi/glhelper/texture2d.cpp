@@ -1,4 +1,10 @@
+#define STB_IMAGE_IMPLEMENTATION
+
 #include "texture2d.hpp"
+#include "stb_image.h"
+#include "../utilities/logger.hpp"
+#include "../utilities/assert.hpp"
+#include <string>
 
 namespace gl
 {
@@ -12,56 +18,39 @@ namespace gl
 			GL_CALL(glTextureStorage2DMultisample, m_textureHandle, m_numMSAASamples, gl::TextureFormatToGLSizedInternal[static_cast<unsigned int>(format)], m_width, m_height, GL_FALSE);
 	}
 
-	/*Texture2D* Texture2D::LoadFromFile(const ezString& sFilename, bool sRGB, bool generateMipMaps)
+	std::unique_ptr<Texture2D> Texture2D::LoadFromFile(const std::string& _filename, bool _generateMipMaps, bool _sRGB)
 	{
-		int uiTexSizeX = -1;
-		int uiTexSizeY = -1;
-		ezString sAbsolutePath;
-		if (ezFileSystem::ResolvePath(sFilename.GetData(), false, &sAbsolutePath, NULL) == EZ_FAILURE)
-		{
-			ezLog::Error("Couldn't find texture \"%s\".", sFilename.GetData());
-			return NULL;
-		}
+		int texSizeX = -1;
+		int texSizeY = -1;
+
 		int numComps = -1;
-		stbi_uc* pTextureData = stbi_load(sAbsolutePath.GetData(), &uiTexSizeX, &uiTexSizeY, &numComps, 4);
-		if (!pTextureData)
+		stbi_uc* textureData = stbi_load(_filename.c_str(), &texSizeX, &texSizeY, &numComps, 4);
+		if (!textureData)
 		{
-			ezLog::Error("Error loading texture \"%s\".", sAbsolutePath.GetData());
-			return NULL;
+			LOG_ERROR("Error loading texture \"" + _filename + "\".");
+			return nullptr;
 		}
 
-		Texture2D* poOt = EZ_NEW(pAllocator, Texture2D)(static_cast<std::uint32_t>(uiTexSizeX), static_cast<std::uint32_t>(uiTexSizeY), sRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8, generateMipMaps ? -1 : 1);
-		poOt->SetData(0, reinterpret_cast<const ezColor8UNorm*>(pTextureData));
+		std::unique_ptr<Texture2D> newTex(new Texture2D(static_cast<std::uint32_t>(texSizeX), static_cast<std::uint32_t>(texSizeY), _sRGB ? gl::TextureFormat::SRGB8_ALPHA8 : gl::TextureFormat::RGB8, _generateMipMaps ? -1 : 1));
+		newTex->SetData(0, TextureSetDataFormat::RGBA, TextureSetDataType::UNSIGNED_BYTE, textureData);
+		if (_generateMipMaps)
+			newTex->GenMipMaps();
 
-		if (generateMipMaps && poOt->GetNumMipLevels() > 1)
-			glGenerateMipmap(GL_TEXTURE_2D);
+		stbi_image_free(textureData);
 
-		stbi_image_free(pTextureData);
+		return std::move(newTex);
+	}
 
-		return poOt;
-	}*/
-
-/*	void Texture2D::SetData(std::uint32_t uiMipLevel, const ezColor* pData)
+	void Texture2D::SetData(std::uint32_t _mipLevel, TextureSetDataFormat _dataFormat, TextureSetDataType _dataType, const void* _data)
 	{
-		Assert(uiMipLevel < m_numMipLevels, "MipLevel %i does not exist, texture has only %i MipMapLevels", uiMipLevel, m_numMipLevels);
+		Assert(_mipLevel < m_numMipLevels, "MipLevel " + std::to_string(_mipLevel) + " does not exist, texture has only " + std::to_string(m_numMipLevels) + " MipMapLevels");
 
-		glTextureSubImage2D(m_TextureHandle, uiMipLevel, 0, 0, m_width, m_height,
-			GL_RGBA, GL_FLOAT, pData);
-	}*/
+		GL_CALL(glTextureSubImage2D, m_textureHandle, _mipLevel, 0, 0, m_width, m_height, 
+							static_cast<GLenum>(_dataFormat), static_cast<GLenum>(_dataType), _data);
+	}
 
 	void Texture2D::GenMipMaps()
 	{
 		GL_CALL(glGenerateTextureMipmap, m_textureHandle);
 	}
-
-	/*void Texture2D::SetData(std::uint32_t uiMipLevel, const ezColor8UNorm* pData)
-	{
-		EZ_ASSERT(uiMipLevel < m_numMipLevels, "MipLevel %i does not exist, texture has only %i MipMapLevels", uiMipLevel, m_numMipLevels);
-
-		glTextureSubImage2D(m_TextureHandle,
-			uiMipLevel,
-			0, 0,
-			m_width, m_height,
-			GL_RGBA, GL_UNSIGNED_BYTE, pData);
-	}*/
 }
