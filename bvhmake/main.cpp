@@ -116,7 +116,7 @@ int main( int _numArgs, const char** _args )
     builder.ExportGeometry( sceneOut );
 
     std::cerr << "Computing hierarchy..." << std::endl;
-    // TODO
+    builder.BuildBVH();
 
     std::cerr << "Exporting hierarchy..." << std::endl;
     // TODO

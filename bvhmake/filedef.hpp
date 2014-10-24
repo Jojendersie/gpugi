@@ -46,12 +46,14 @@ namespace FileDecl
         uint32 parent;
         uint32 firstChild;
         uint32 next;
-        uint32 flags;       ///< 1 if firstChild points to the leave array
+        uint32 flags;       ///< 1 if firstChild points to the leave array. If the child is a leaf there is only this one child
     };
 
     /// \brief A leaf node references a list of N triangles (array: leafnodes).
     struct Leaf
     {
-        uint32 triangles[8];
+        static const uint NUM_PRIMITIVES = 8;
+        uint32 triangles[NUM_PRIMITIVES];
+        uint32 numTriangles;
     };
 }

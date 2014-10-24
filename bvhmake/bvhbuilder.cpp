@@ -176,10 +176,10 @@ void BVHBuilder::ExportVertices( std::ofstream& _file,
 		{
 			const aiFace& face = mesh->mFaces[t];
 			Assert( face.mNumIndices == 3, "This is a triangle importer!" );
-            m_triangles[m_triangleCount + 0] = face.mIndices[0] + m_vertexCount;
-            m_triangles[m_triangleCount + 1] = face.mIndices[1] + m_vertexCount;
-            m_triangles[m_triangleCount + 2] = face.mIndices[2] + m_vertexCount;
-            m_triangleCount += 3;
+            m_triangles[m_triangleCount*3 + 0] = face.mIndices[0] + m_vertexCount;
+            m_triangles[m_triangleCount*3 + 1] = face.mIndices[1] + m_vertexCount;
+            m_triangles[m_triangleCount*3 + 2] = face.mIndices[2] + m_vertexCount;
+            ++m_triangleCount;
         }
 
         // Add vertices to file and positions to the list
@@ -222,4 +222,28 @@ void BVHBuilder::BuildBVH()
     default:
         break;
     }
+
+    // Build now
+    //uint32 root = (*m_buildMethod)();
+}
+
+ε::Triangle BVHBuilder::GetTriangle( uint32 _index ) const
+{
+    return ε::Triangle( m_positions[ m_triangles[_index * 3 + 0] ],
+                        m_positions[ m_triangles[_index * 3 + 1] ],
+                        m_positions[ m_triangles[_index * 3 + 2] ]
+        );
+}
+
+uint32 BVHBuilder::GetNewLeaf()
+{
+    Assert( m_leaves != nullptr, "BuildBVH() was not called or the memory is not allocated for other reasons." );
+    Assert( m_leafNodeCount < m_maxLeafNodeCount, "Out-of-Bounds. The builder's estimation for the leaf count was to small!" );
+    return m_leafNodeCount++;
+}
+
+uint32 BVHBuilder::GetNewNode()
+{
+    Assert( m_innerNodeCount < m_maxInnerNodeCount, "Out-of-Bounds. The builder's estimation for the inner node count was to small!" );
+    return m_innerNodeCount++;
 }
