@@ -198,9 +198,9 @@ namespace gl
 		//void Set(const ei::Mat4x4d& m);
 
 		void Set(std::uint32_t ui);
-		//void Set(const ei::Vec2U32& v);
-		//void Set(const ei::Vec3Template<std::int32_t>& v);
-		//void Set(const ei::Vec4Template<std::int32_t>& v);
+		void Set(const ei::UVec2& v);
+		void Set(const ei::UVec3& v);
+		void Set(const ei::UVec4& v);
 		void Set(std::int32_t i);
 		void Set(const ei::IVec2& v);
 		void Set(const ei::IVec3& v);

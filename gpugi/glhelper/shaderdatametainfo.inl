@@ -76,25 +76,25 @@ inline void ShaderVariable<VariableType>::Set(std::uint32_t ui)
 	Assert(m_MetaInfo.Type == ShaderVariableType::UNSIGNED_INT, "Variable type does not match!");
 	Set(&ui, sizeof(ui));
 }
-/*template<typename VariableType>
-inline void ShaderVariable<VariableType>::Set(const ei::Vec2U32& v)
+template<typename VariableType>
+inline void ShaderVariable<VariableType>::Set(const ei::UVec2& v)
 {
-Assert(m_MetaInfo.Type == ShaderVariableType::UNSIGNED_INT_VEC2, "Variable type does not match!");
-Set(&v, sizeof(v));
+	Assert(m_MetaInfo.Type == ShaderVariableType::UNSIGNED_INT_VEC2, "Variable type does not match!");
+	Set(&v, sizeof(v));
 }
 template<typename VariableType>
-inline void ShaderVariable<VariableType>::Set(const ei::Vec3Template<std::uint32_t>& v)
+inline void ShaderVariable<VariableType>::Set(const ei::UVec3& v)
 {
-Assert(m_MetaInfo.Type == ShaderVariableType::UNSIGNED_INT_VEC3, "Variable type does not match!");
-Set(&v, sizeof(v));
+	Assert(m_MetaInfo.Type == ShaderVariableType::UNSIGNED_INT_VEC3, "Variable type does not match!");
+	Set(&v, sizeof(v));
 }
 template<typename VariableType>
-inline void ShaderVariable<VariableType>::Set(const ei::Vec4Template<std::uint32_t>& v)
+inline void ShaderVariable<VariableType>::Set(const ei::UVec4& v)
 {
-Assert(m_MetaInfo.Type == ShaderVariableType::UNSIGNED_INT_VEC4, "Variable type does not match!");
-Set(&v, sizeof(v));
+	Assert(m_MetaInfo.Type == ShaderVariableType::UNSIGNED_INT_VEC4, "Variable type does not match!");
+	Set(&v, sizeof(v));
 }
-*/
+
 template<typename VariableType>
 inline void ShaderVariable<VariableType>::Set(std::int32_t i)
 {
