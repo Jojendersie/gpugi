@@ -27,7 +27,7 @@ void main()
 	DefineScene();
 	Intersection intersect;
 	intersect.t = 1.0e+30;
-	intersect.sphere = sphere[3];
+	intersect.sphere = sphere[4];
 	TraceRay(cameraRay, intersect);
 
 	const vec3 lightDir = normalize(vec3(1.0, 1.0, 0.0));

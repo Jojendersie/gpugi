@@ -51,7 +51,7 @@ void SphereIntersect(const Sphere sphere, const Ray ray, inout Intersection isec
 		}
 	}
 }
-Sphere sphere[4];
+Sphere sphere[5];
 void DefineScene()
 {
 	sphere[0].pos    = vec3(27, 15.5, 88.0);
@@ -66,9 +66,13 @@ void DefineScene()
 	sphere[2].radius = 15.5;
 	sphere[2].col = vec3(0.1, 0.1, 1.0);
 
-	sphere[3].pos    = vec3(0.0);
-	sphere[3].radius = 0.0;
-	sphere[3].col = vec3(0.0);
+	sphere[3].pos    = vec3(50.0, -500.0, 50.0);
+	sphere[3].radius = 500.0;
+	sphere[3].col = vec3(0.4);
+
+	sphere[4].pos    = vec3(0.0);
+	sphere[4].radius = 0.0;
+	sphere[4].col = vec3(0.0);
 }
 
 void TraceRay(const Ray ray, inout Intersection isect)
@@ -76,4 +80,5 @@ void TraceRay(const Ray ray, inout Intersection isect)
 	SphereIntersect(sphere[0], ray, isect);
 	SphereIntersect(sphere[1], ray, isect);
 	SphereIntersect(sphere[2], ray, isect);
+	SphereIntersect(sphere[3], ray, isect);
 }
