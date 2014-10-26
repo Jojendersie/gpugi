@@ -573,7 +573,6 @@ namespace gl
 		{
 			LOG_ERROR("ShaderObject \"" + m_name + " \": Shader " + sShaderName + " compiled.Output:"); // Not necessarily an error - depends on driver.
 			LOG_ERROR(infoLog);
-			__debugbreak();
 		}
 		else
 			LOG_LVL0("ShaderObject \"" + m_name + " \": Shader " + sShaderName + " compiled successfully");
@@ -597,7 +596,6 @@ namespace gl
 		{
 			LOG_ERROR("Program \"" + m_name + " \" linked. Output:"); // Not necessarily an error - depends on driver.
 			LOG_ERROR(infoLog);
-			__debugbreak();
 		}
 		else
 			LOG_LVL0("Program \"" + m_name + " \" linked successfully");

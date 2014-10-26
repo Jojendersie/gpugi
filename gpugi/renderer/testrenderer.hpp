@@ -5,13 +5,13 @@
 class TestRenderer : public Renderer
 {
 public:
-	TestRenderer(const Camera& initialCamera);
+	TestRenderer(const Camera& _initialCamera);
 
-	void SetCamera(const Camera& camera) override;
+	void SetCamera(const Camera& _camera) override;
 	void Draw() override;
 
 private:
-	gl::ShaderObject testshader;
-	gl::UniformBuffer testubo;
+	gl::ShaderObject m_testshader;
+	gl::UniformBuffer m_testubo;
 };
 

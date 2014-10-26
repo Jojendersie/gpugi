@@ -9,6 +9,7 @@
 #include "control/scriptprocessing.hpp"
 
 #include "renderer/testrenderer.hpp"
+#include "renderer/referencerenderer.hpp"
 
 #include "camera/interactivecamera.hpp"
 
@@ -152,6 +153,12 @@ private:
 
 int main(int argc, char** argv)
 {
+	float f = 0.0f;
+	long i = 0;
+	while (static_cast<long>(f + 1.0) == ++i)
+		f += 1.0;
+	std::cout << i;
+
 	// Actual application.
 	try
 	{

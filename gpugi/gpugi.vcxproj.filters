@@ -112,6 +112,9 @@
       <Filter>code\renderer</Filter>
     </ClCompile>
     <ClCompile Include="glhelper\framebufferobject.cpp" />
+    <ClCompile Include="utilities\random.cpp">
+      <Filter>code\utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -193,6 +196,9 @@
       <Filter>code\renderer</Filter>
     </ClInclude>
     <ClInclude Include="glhelper\framebufferobject.hpp" />
+    <ClInclude Include="utilities\random.hpp">
+      <Filter>code\utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="glhelper\uniformbuffer.inl">
@@ -211,6 +217,12 @@
       <Filter>shader</Filter>
     </None>
     <None Include="shader\pathtracer.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\random.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\raytrace.glsl">
       <Filter>shader</Filter>
     </None>
   </ItemGroup>

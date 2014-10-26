@@ -169,6 +169,7 @@
     <ClCompile Include="Time\Implementation\Time.cpp" />
     <ClCompile Include="utilities\assert.cpp" />
     <ClCompile Include="utilities\logger.cpp" />
+    <ClCompile Include="utilities\random.cpp" />
     <ClCompile Include="utilities\pathutils.cpp" />
     <ClCompile Include="utilities\policy.cpp" />
   </ItemGroup>
@@ -197,6 +198,7 @@
     <ClInclude Include="utilities\assert.hpp" />
     <ClInclude Include="utilities\logger.hpp" />
     <ClInclude Include="utilities\loggerinit.hpp" />
+    <ClInclude Include="utilities\random.hpp" />
     <ClInclude Include="utilities\pathutils.hpp" />
     <ClInclude Include="utilities\policy.hpp" />
     <ClInclude Include="utilities\utils.hpp" />
@@ -206,6 +208,8 @@
     <None Include="glhelper\uniformbuffer.inl" />
     <None Include="shader\displayHDR.frag" />
     <None Include="shader\pathtracer.frag" />
+    <None Include="shader\random.glsl" />
+    <None Include="shader\raytrace.glsl" />
     <None Include="shader\screenTri.vert" />
     <None Include="shader\testcompute.comp" />
   </ItemGroup>

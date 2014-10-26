@@ -8,4 +8,5 @@ layout(location = 0, index = 0) out vec4 FragColor;
 void main()
 {	
 	FragColor = texture(Texture, vs_out_texcoord);
+  FragColor.rgb /= FragColor.a;
 }
