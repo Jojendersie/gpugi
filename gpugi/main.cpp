@@ -56,7 +56,7 @@ public:
 
 		// Renderer...
 		LOG_LVL2("Init window ...");
-		m_renderer.reset(new TestRenderer(*m_camera));
+		m_renderer.reset(new ReferenceRenderer(*m_camera));
 
 		// Load command script if there's a parameter
 		if (argc > 1)
