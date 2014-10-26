@@ -2,7 +2,7 @@
 #include "..\control\globalconfig.hpp"
 #include "..\glhelper\texture2d.hpp"
 
-Renderer::Renderer()
+Renderer::Renderer() : m_iterationCount(0)
 {
 	CreateBackbuffer(ei::UVec2(static_cast<std::uint32_t>(GlobalConfig::GetParameter("resolution")[0]), static_cast<std::uint32_t>(GlobalConfig::GetParameter("resolution")[1])));
 	GlobalConfig::AddListener("resolution", "renderer", [=](const GlobalConfig::ParameterType& p){ this->OnResize(ei::UVec2(static_cast<std::uint32_t>(p[0]), static_cast<std::uint32_t>(p[1]))); });

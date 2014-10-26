@@ -55,7 +55,7 @@ public:
 		GlobalConfig::AddListener("cameraFOV", "update renderer cam", [=](const GlobalConfig::ParameterType& p){ this->m_renderer->SetCamera(*m_camera); });
 
 		// Renderer...
-		LOG_LVL2("Init window ...");
+		LOG_LVL2("Init renderer ...");
 		m_renderer.reset(new ReferenceRenderer(*m_camera));
 
 		// Load command script if there's a parameter
@@ -105,6 +105,10 @@ private:
 
 		if (m_camera->Update(timeSinceLastUpdate))
 			m_renderer->SetCamera(*m_camera);
+
+
+		m_window->SetTitle("iteration: " + std::to_string(m_renderer->GetIterationCount()) + " - time per frame " + 
+							std::to_string(timeSinceLastUpdate.GetMilliseconds()) + "ms (FPS: " + std::to_string(1.0f / timeSinceLastUpdate.GetSeconds()));
 	}
 
 	void Draw()
@@ -153,12 +157,6 @@ private:
 
 int main(int argc, char** argv)
 {
-	float f = 0.0f;
-	long i = 0;
-	while (static_cast<long>(f + 1.0) == ++i)
-		f += 1.0;
-	std::cout << i;
-
 	// Actual application.
 	try
 	{

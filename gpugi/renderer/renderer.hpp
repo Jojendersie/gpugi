@@ -25,6 +25,10 @@ public:
 	/// Performs a draw iteration.
 	virtual void Draw() = 0;
 
+	/// Hoy many iterations did the current image already render.
+	/// Meaning may differ with concrete renderer.
+	unsigned long GetIterationCount() const { return m_iterationCount;  }
+
 protected:
 	virtual void OnResize(const ei::UVec2& newSize);
 
@@ -33,5 +37,6 @@ protected:
 	void CreateBackbuffer(const ei::UVec2& resolution);
 
 	std::unique_ptr<gl::Texture2D> m_backbuffer;
+	unsigned long m_iterationCount;
 };
 

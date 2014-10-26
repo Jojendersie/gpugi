@@ -15,8 +15,6 @@ ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 	m_pathtracerShader("pathtracer"),
 	m_backbufferFBO(gl::FramebufferObject::Attachment(m_backbuffer.get()))
 {
-	m_backbuffer->ClearToZero(0);
-
 	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/screenTri.vert");
 	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/pathtracer.frag");
 	m_pathtracerShader.CreateProgram();
@@ -48,6 +46,7 @@ void ReferenceRenderer::SetCamera(const Camera& _camera)
 	m_cameraUBO["CameraPosition"].Set(_camera.GetPosition());
 	m_cameraUBO.UpdateGPUData();
 
+	m_iterationCount = 0;
 	m_backbuffer->ClearToZero(0);
 }
 
@@ -55,10 +54,14 @@ void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)
 {
 	Renderer::OnResize(_newSize);
 	m_perIterationUBO["BackbufferSize"].Set(_newSize);
+	
+	m_iterationCount = 0;
+	m_backbuffer->ClearToZero(0);
 }
 
 void ReferenceRenderer::Draw()
 {
+	++m_iterationCount;
 	m_perIterationUBO["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(ezTime::Now().GetMicroseconds())));
 	m_perIterationUBO.UpdateGPUData();
 

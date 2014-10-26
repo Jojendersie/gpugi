@@ -63,54 +63,60 @@ namespace gl
 		}
 	};
 
-	static void GLAPIENTRY GLDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
+	static void GLAPIENTRY GLDebugOutput(GLenum _source, GLenum _type, GLuint _id, GLenum _severity, GLsizei _length, const GLchar* _message, const void* _userParam)
 	{
 		std::string debSource, debType, debSev;
 
-		if (source == GL_DEBUG_SOURCE_API_ARB)
+		if (_source == GL_DEBUG_SOURCE_API_ARB)
 			debSource = "OpenGL";
-		else if (source == GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB)
+		else if (_source == GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB)
 			debSource = "Windows";
-		else if (source == GL_DEBUG_SOURCE_SHADER_COMPILER_ARB)
+		else if (_source == GL_DEBUG_SOURCE_SHADER_COMPILER_ARB)
 			debSource = "Shader Compiler";
-		else if (source == GL_DEBUG_SOURCE_THIRD_PARTY_ARB)
+		else if (_source == GL_DEBUG_SOURCE_THIRD_PARTY_ARB)
 			debSource = "Third Party";
-		else if (source == GL_DEBUG_SOURCE_APPLICATION_ARB)
+		else if (_source == GL_DEBUG_SOURCE_APPLICATION_ARB)
 			debSource = "Application";
-		else if (source == GL_DEBUG_SOURCE_OTHER_ARB)
+		else if (_source == GL_DEBUG_SOURCE_OTHER_ARB)
 			debSource = "Other";
 
-		if (type == GL_DEBUG_TYPE_ERROR_ARB)
+		if (_type == GL_DEBUG_TYPE_ERROR_ARB)
 		{
 			debType = "error";
 		}
-		else if (type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB)
+		else if (_type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB)
 		{
 			debType = "deprecated behavior";
 		}
-		else if (type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB)
+		else if (_type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB)
 		{
 			debType = "undefined behavior";
 		}
-		else if (type == GL_DEBUG_TYPE_PORTABILITY_ARB)
+		else if (_type == GL_DEBUG_TYPE_PORTABILITY_ARB)
 		{
 			debType = "portability";
 		}
-		else if (type == GL_DEBUG_TYPE_PERFORMANCE_ARB)
+		else if (_type == GL_DEBUG_TYPE_PERFORMANCE_ARB)
 		{
 			debType = "performance";
 		}
-		else if (type == GL_DEBUG_TYPE_OTHER_ARB)
+		else if (_type == GL_DEBUG_TYPE_OTHER_ARB)
 		{
 			debType = "message";
 		}
 
-		if (severity == GL_DEBUG_SEVERITY_MEDIUM_ARB)
+		if (_severity == GL_DEBUG_SEVERITY_MEDIUM_ARB)
 			debSev = "medium";
-		else if (severity == GL_DEBUG_SEVERITY_LOW_ARB)
+		else if (_severity == GL_DEBUG_SEVERITY_LOW_ARB)
 			debSev = "low";
 
-		LOG_ERROR(debSource + ": " + debType + "(" + debSev + ") " + std::to_string(id) + ": " + message);
+		std::string logMessage = debSource + ": " + debType + "(" + debSev + ") " + std::to_string(_id) + ": " + _message;
+		if (_type == GL_DEBUG_TYPE_ERROR_ARB || _type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB)
+			LOG_ERROR(logMessage);
+		else if (_type == GL_DEBUG_TYPE_PERFORMANCE_ARB)
+			LOG_LVL1(logMessage);
+		else
+			LOG_LVL2(logMessage);
 	}
 
 	void ActivateGLDebugOutput(DebugSeverity level)

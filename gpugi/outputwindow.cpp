@@ -58,9 +58,17 @@ OutputWindow::OutputWindow() :
 	if (err != GLEW_OK)
 		throw std::string("Error: ") + reinterpret_cast<const char*>(glewGetErrorString(err));
 
+	// glew has a problem with GLCore and gives sometimes a GL_INVALID_ENUM
+	// http://stackoverflow.com/questions/10857335/opengl-glgeterror-returns-invalid-enum-after-call-to-glewinit
+	// Ignore it:
+	glGetError();
+
 #ifdef _DEBUG
 	gl::ActivateGLDebugOutput(gl::DebugSeverity::MEDIUM);
 #endif
+	
+	// Disable V-Sync
+	glfwSwapInterval(0);
 
 	GL_CALL(glViewport, 0, 0, width, height);
 
