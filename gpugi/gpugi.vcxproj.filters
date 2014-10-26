@@ -108,6 +108,10 @@
     <ClCompile Include="camera\camera.cpp">
       <Filter>code\camera</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\referencerenderer.cpp">
+      <Filter>code\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="glhelper\framebufferobject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -185,6 +189,10 @@
     <ClInclude Include="camera\camera.hpp">
       <Filter>code\camera</Filter>
     </ClInclude>
+    <ClInclude Include="renderer\referencerenderer.hpp">
+      <Filter>code\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\framebufferobject.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="glhelper\uniformbuffer.inl">
@@ -200,6 +208,9 @@
       <Filter>shader</Filter>
     </None>
     <None Include="shader\testcompute.comp">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\pathtracer.frag">
       <Filter>shader</Filter>
     </None>
   </ItemGroup>
