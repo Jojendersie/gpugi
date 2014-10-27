@@ -27,6 +27,7 @@ layout(location = 0, index = 0) out vec4 FragColor;
 
 #define MAX_NUM_BOUNCES 16
 #define RAY_HIT_EPSILON 0.01
+#define RUSSIAN_ROULETTE
 
 void main()
 {	
@@ -50,8 +51,16 @@ void main()
 	for(int i=0; i<MAX_NUM_BOUNCES; ++i)
 	{
 		TraceRay(cameraRay, intersect);
-		rayColor *= intersect.sphere.col; // Absorption, not via Russion Roulette, but by color multiplication
+		if(intersect.t >= 1.0e+30)
+			break;
 
+#ifdef RUSSIAN_ROULETTE
+		float notAbsorption = dot(intersect.sphere.col, vec3(0.333333));
+		rayColor *= intersect.sphere.col / notAbsorption; // Only change in spectrum, no energy loss.
+#else
+		rayColor *= intersect.sphere.col; // Absorption, not via Russion Roulette, but by color multiplication.
+#endif
+		
 		// Add direct light.
 		cameraRay.origin = cameraRay.origin + (intersect.t - RAY_HIT_EPSILON) * cameraRay.direction;
 		vec3 hitNormal = normalize(cameraRay.origin - intersect.sphere.pos);
@@ -60,6 +69,11 @@ void main()
 		TraceRay(cameraRay, intersect);
 		if(intersect.t >= 1.0e+30)
 			color += rayColor * saturate(dot(lightDir, hitNormal)); // 1/PI is BRDF, rayColor incoming L
+
+#ifdef RUSSIAN_ROULETTE
+		if(Random(randomSeed) > notAbsorption)
+			break;
+#endif
 
 		// Bounce ray.
 		vec3 U, V;
