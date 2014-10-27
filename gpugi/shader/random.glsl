@@ -19,7 +19,7 @@ float Random(inout uint seed)
 	seed ^= (seed >> 17);
 	seed ^= (seed << 5);
 	
-	return float(seed % 8388608) / 8388608.0;
+	return float(seed % 8388593) / 8388593.0;
 }
 
 vec2 Random2(inout uint seed)
