@@ -62,7 +62,7 @@ void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)
 void ReferenceRenderer::Draw()
 {
 	++m_iterationCount;
-	m_perIterationUBO["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(ezTime::Now().GetMicroseconds())));
+	m_perIterationUBO["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
 	m_perIterationUBO.UpdateGPUData();
 
 	m_backbufferFBO.Bind(false);

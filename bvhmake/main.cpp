@@ -119,7 +119,7 @@ int main( int _numArgs, const char** _args )
     builder.BuildBVH();
 
     std::cerr << "Exporting hierarchy..." << std::endl;
-    // TODO
+    builder.ExportBVH( sceneOut );
 
     return 0;
 }

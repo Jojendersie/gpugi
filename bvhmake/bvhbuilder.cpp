@@ -18,6 +18,8 @@ T hard_cast(F _from)
 }
 
 
+const FileDecl::Triangle FileDecl::INVALID_TRIANGLE = {{0xffffffff, 0xffffffff, 0xffffffff}};
+
 
 BVHBuilder::BVHBuilder() :
     m_bvbuffer(nullptr),
@@ -139,8 +141,8 @@ void BVHBuilder::ExportGeometry( std::ofstream& _file )
     // as well as m_triangles
     _file.write( (const char*)&vertexHeader, sizeof(FileDecl::NamedArray) );
     ExportVertices( _file, m_scene->mRootNode, ε::identity4x4() );
-    _file.write( (const char*)&indexHeader, sizeof(FileDecl::NamedArray) );
-    _file.write( (const char*)&m_triangles[0], sizeof(uint) * indexHeader.numElements * 3 );
+//    _file.write( (const char*)&indexHeader, sizeof(FileDecl::NamedArray) );
+//    _file.write( (const char*)&m_triangles[0], sizeof(uint) * indexHeader.numElements * 3 );
 
     // This is not required anymore, make place for the algorithms
     m_importer.FreeScene();
@@ -224,7 +226,46 @@ void BVHBuilder::BuildBVH()
     }
 
     // Build now
-    //uint32 root = (*m_buildMethod)();
+    uint32 root = (*m_buildMethod)();
+}
+
+void BVHBuilder::ExportBVH( std::ofstream& _file )
+{
+    // Prepare file headers and find out how much space is required
+    FileDecl::NamedArray treeHeader;
+    FileDecl::NamedArray indexHeader;
+    FileDecl::NamedArray bvHeader;
+    strcpy( treeHeader.name, "hierarchy" );
+    strcpy( indexHeader.name, "triangles" );
+    treeHeader.elementSize = sizeof(FileDecl::Node);
+    indexHeader.elementSize = sizeof(FileDecl::Triangle) * FileDecl::Leaf::NUM_PRIMITIVES;
+    treeHeader.numElements = m_innerNodeCount;
+    indexHeader.numElements = m_leafNodeCount;
+    bvHeader.numElements = m_innerNodeCount;
+    switch(m_fitMethod->Type())
+    {
+    case FitMethod::BVType::AABOX: strcpy( bvHeader.name, "bounding_aabox" );
+        bvHeader.elementSize = sizeof(ε::Box);
+        break;
+    case FitMethod::BVType::SPHERE: strcpy( bvHeader.name, "bounding_sphere" );
+        bvHeader.elementSize = sizeof(ε::Sphere);
+        break;
+    default: Assert( false, "Current geometry cannot be stored!" ); break;
+    }
+
+    // Meta information header (contains number of maximum triangle count per leaf)
+    //FileDecl::NamedArray leafSizeHeader;
+    //strcpy( leafSizeHeader.name, "leafnodesize" );
+    //leafSizeHeader.elementSize = sizeof(FileDecl::Triangle) * FileDecl::Leaf::NUM_PRIMITIVES;
+    //leafSizeHeader.numElements = 0;
+
+    // Write the hierarchy as it is in the memory
+    _file.write( (const char*)&treeHeader, sizeof(FileDecl::NamedArray) );
+    _file.write( (const char*)m_nodes, treeHeader.elementSize * treeHeader.numElements );
+
+    // write a "resorted index buffer" to file
+    _file.write( (const char*)&indexHeader, sizeof(FileDecl::NamedArray) );
+    _file.write( (const char*)m_leaves, indexHeader.elementSize * indexHeader.numElements );
 }
 
 ε::Triangle BVHBuilder::GetTriangle( uint32 _index ) const
@@ -233,6 +274,23 @@ void BVHBuilder::BuildBVH()
                         m_positions[ m_triangles[_index * 3 + 1] ],
                         m_positions[ m_triangles[_index * 3 + 2] ]
         );
+}
+
+ε::Triangle BVHBuilder::GetTriangle( FileDecl::Triangle _triangle ) const
+{
+    return ε::Triangle( m_positions[ _triangle.vertices[0] ],
+                        m_positions[ _triangle.vertices[1] ],
+                        m_positions[ _triangle.vertices[2] ]
+        );
+}
+
+FileDecl::Triangle BVHBuilder::GetTriangleIdx( uint32 _index ) const
+{
+    FileDecl::Triangle t;
+    t.vertices[0] = m_triangles[_index * 3 + 0];
+    t.vertices[1] = m_triangles[_index * 3 + 1];
+    t.vertices[2] = m_triangles[_index * 3 + 2];
+    return t;
 }
 
 uint32 BVHBuilder::GetNewLeaf()

@@ -30,8 +30,8 @@ uint32 BuildKdtree::operator()() const
 
 void BuildKdtree::EstimateNodeCounts( uint32& _numInnerNodes, uint32& _numLeafNodes ) const 
 {
-    _numInnerNodes = m_manager->GetTriangleCount() / FileDecl::Leaf::NUM_PRIMITIVES;
-    _numLeafNodes = m_manager->GetTriangleCount() / FileDecl::Leaf::NUM_PRIMITIVES + 1;
+    _numInnerNodes = 4 * m_manager->GetTriangleCount() / FileDecl::Leaf::NUM_PRIMITIVES;
+    _numLeafNodes = 2 * m_manager->GetTriangleCount() / FileDecl::Leaf::NUM_PRIMITIVES;
 }
 
 void BuildKdtree::Initialize( const std::unique_ptr<uint32[]>* _sorted, Vec3* _centers ) const
@@ -44,7 +44,7 @@ void BuildKdtree::Initialize( const std::unique_ptr<uint32[]>* _sorted, Vec3* _c
 		_sorted[0][i] = i;
 		_sorted[1][i] = i;
 		_sorted[2][i] = i;
-        Triangle t = this->m_manager->GetTriangle( i );
+        Triangle t = m_manager->GetTriangle( i );
         _centers[i] = (t.v0 + t.v1 + t.v2) / 3.0f;
 	}
 
@@ -87,7 +87,7 @@ uint32 BuildKdtree::Build( const std::unique_ptr<uint32[]>* _sorted, Vec3* _cent
     auto fit = m_manager->GetFitMethod();
 
     // Create a leaf if less than NUM_PRIMITIVES elements remain.
-	if( _max - _min <= FileDecl::Leaf::NUM_PRIMITIVES )
+	if( _max - _min < FileDecl::Leaf::NUM_PRIMITIVES )
 	{
 //		Assert( _sorted[0][_min] == _sorted[1][_min] && _sorted[0][_min] == _sorted[2][_min],
 //			"All sorted array should reference the same element!" );
@@ -96,9 +96,12 @@ uint32 BuildKdtree::Build( const std::unique_ptr<uint32[]>* _sorted, Vec3* _cent
         uint32 leafIdx = m_manager->GetNewLeaf();
         FileDecl::Leaf& leaf = m_manager->GetLeaf( leafIdx );
         // Fill it
-        leaf.numTriangles = _max - _min;
-        for( uint i = _min; i < _max; ++i )
-            leaf.triangles[i] = _sorted[0][i];
+   //     leaf.numTriangles = _max - _min;
+        FileDecl::Triangle* trianglesPtr = leaf.triangles;
+        for( uint i = _min; i <= _max; ++i )
+            *(trianglesPtr++) = m_manager->GetTriangleIdx( _sorted[0][i] );
+        for( uint i = 0; i < FileDecl::Leaf::NUM_PRIMITIVES - (_max - _min + 1); ++i )
+            *(trianglesPtr++) = FileDecl::INVALID_TRIANGLE;
 
         // Allocate a new node pointing to this leaf
         uint32 nodeIdx = m_manager->GetNewNode();
@@ -134,13 +137,13 @@ uint32 BuildKdtree::Build( const std::unique_ptr<uint32[]>* _sorted, Vec3* _cent
 	uint32 m = ( _min + _max ) / 2;
 	// If there are many elements with the same coordinate change their
 	// positions temporary to something greater until split is done. Then
-	// rest it back
+	// reset them back to the median value.
 	uint32 numChanged = 0;
-    float splitPlane = _centers[m][dim];
-	while( m+numChanged < _max && _centers[m+1+numChanged][dim] == splitPlane )
+    float splitPlane = _centers[_sorted[dim][m]][dim];
+	while( m+numChanged < _max && _centers[_sorted[dim][m+1+numChanged]][dim] == splitPlane )
 	{
 		// The added amount is irrelevant because it is reset after split anyway.
-        _centers[m+1+numChanged][dim] += 1.0f;
+        _centers[_sorted[dim][m+1+numChanged]][dim] += 1.0f;
 		++numChanged;
 	}
 	// The split requires to reorder the two other dimension arrays

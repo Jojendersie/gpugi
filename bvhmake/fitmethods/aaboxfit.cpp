@@ -12,12 +12,14 @@ void FitBox::operator()(uint32 _left, uint32 _right, uint32 _target) const
 void FitBox::operator()(uint32 _leaf, uint32 _target) const
 {
     FileDecl::Leaf& leaf = m_manager->GetLeaf( _leaf );
-    Assert( leaf.numTriangles >= 1, "Empty leaves not allowed." );
+    Assert( IsTriangleValid(leaf.triangles[0]),
+        "Empty leaves not allowed." );
+    //Assert( leaf.numTriangles > 0, "Empty leaves not allowed." );
     // Box from first triangle
     ε::Box box( m_manager->GetTriangle(leaf.triangles[0]) );
     // Add triangles successive
-    for( uint32 i = 1; i < leaf.numTriangles; ++i )
-        box = ε::Box(ε::Box(m_manager->GetTriangle(leaf.triangles[0])), box);
+    for( uint32 i = 1; i < FileDecl::Leaf::NUM_PRIMITIVES && IsTriangleValid(leaf.triangles[i]); ++i )
+        box = ε::Box(ε::Box(m_manager->GetTriangle(leaf.triangles[i])), box);
     m_manager->GetBoundingVolume<ε::Box>(_target) = box;
 }
 

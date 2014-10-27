@@ -115,6 +115,9 @@ public:
     /// \brief Allocate space for the tree and the BVs and compute them.
     void BuildBVH();
 
+    /// \brief Write the bounding volume hierarchy to file.
+    void ExportBVH( std::ofstream& _file );
+
     /// \brief A tree node which should be used from any build method
     struct Node
     {
@@ -134,6 +137,10 @@ public:
     /// \details The triangle is constructed from index and vertex buffer on
     ///     call.
     ε::Triangle GetTriangle( uint32 _index ) const;
+    ε::Triangle GetTriangle( FileDecl::Triangle _triangle ) const;
+
+    /// \brief Get the index buffer for a triangle.
+    FileDecl::Triangle GetTriangleIdx( uint32 _index ) const;
 
     /// \brief Allocate a new leaf from the pool.
     /// \returns Index of the new leaf.
