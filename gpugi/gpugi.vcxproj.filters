@@ -118,6 +118,9 @@
     <ClCompile Include="utilities\random.cpp">
       <Filter>code\utilities</Filter>
     </ClCompile>
+    <ClCompile Include="glhelper\samplerobject.cpp">
+      <Filter>code\glhelper</Filter>
+    </ClCompile>
     <ClCompile Include="scene\scene.cpp">
       <Filter>code\scene</Filter>
     </ClCompile>
@@ -213,6 +216,9 @@
     <ClInclude Include="glhelper\framebufferobject.hpp" />
     <ClInclude Include="utilities\random.hpp">
       <Filter>code\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\samplerobject.hpp">
+      <Filter>code\glhelper</Filter>
     </ClInclude>
     <ClInclude Include="scene\scene.hpp">
       <Filter>code\scene</Filter>
