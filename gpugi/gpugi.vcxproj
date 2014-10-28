@@ -153,6 +153,7 @@
     <ClCompile Include="control\scriptprocessing.cpp" />
     <ClCompile Include="glhelper\framebufferobject.cpp" />
     <ClCompile Include="glhelper\gl.cpp" />
+    <ClCompile Include="glhelper\samplerobject.cpp" />
     <ClCompile Include="glhelper\screenalignedtriangle.cpp" />
     <ClCompile Include="glhelper\shaderobject.cpp" />
     <ClCompile Include="glhelper\texture.cpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="control\scriptprocessing.hpp" />
     <ClInclude Include="glhelper\framebufferobject.hpp" />
     <ClInclude Include="glhelper\gl.hpp" />
+    <ClInclude Include="glhelper\samplerobject.hpp" />
     <ClInclude Include="glhelper\screenalignedtriangle.hpp" />
     <ClInclude Include="glhelper\shaderdatametainfo.hpp" />
     <ClInclude Include="glhelper\shaderobject.hpp" />
