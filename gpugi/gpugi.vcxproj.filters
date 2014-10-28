@@ -34,6 +34,9 @@
     <Filter Include="code\camera">
       <UniqueIdentifier>{60abc877-8356-4a3f-a333-196109efe798}</UniqueIdentifier>
     </Filter>
+    <Filter Include="code\scene">
+      <UniqueIdentifier>{289e5674-bac3-4417-8232-271f81b14537}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="outputwindow.cpp">
@@ -114,6 +117,12 @@
     <ClCompile Include="glhelper\framebufferobject.cpp" />
     <ClCompile Include="utilities\random.cpp">
       <Filter>code\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="scene\scene.cpp">
+      <Filter>code\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="glhelper\buffer.cpp">
+      <Filter>code\glhelper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -198,6 +207,12 @@
     <ClInclude Include="glhelper\framebufferobject.hpp" />
     <ClInclude Include="utilities\random.hpp">
       <Filter>code\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="scene\scene.hpp">
+      <Filter>code\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\buffer.hpp">
+      <Filter>code\glhelper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -13,6 +13,8 @@
 
 #include "camera/interactivecamera.hpp"
 
+#include "scene/scene.hpp"
+
 #include "glhelper/texture2d.hpp"
 
 #include "hdrimage.hpp"
@@ -61,6 +63,7 @@ public:
 		// Load command script if there's a parameter
 		if (argc > 1)
 			m_scriptProcessing.RunScript(argv[1]);
+        else m_scene = std::make_shared<Scene>( Scene( "" ) );
 
 		// Init console input.
 		m_scriptProcessing.StartConsoleWindowThread();
@@ -153,6 +156,7 @@ private:
 	std::unique_ptr<Renderer> m_renderer;
 	std::unique_ptr<OutputWindow> m_window;
 	std::unique_ptr<InteractiveCamera> m_camera;
+    std::shared_ptr<Scene> m_scene;
 };
 
 int main(int argc, char** argv)

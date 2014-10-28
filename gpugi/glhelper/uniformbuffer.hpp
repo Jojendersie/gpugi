@@ -8,7 +8,7 @@
 
 #include <initializer_list>
 #include <algorithm>
-#include <memory	>
+#include <memory>
 
 namespace gl
 {
@@ -79,4 +79,3 @@ namespace gl
 
 #include "UniformBuffer.inl"
 }
-

@@ -151,6 +151,7 @@
     <ClCompile Include="camera\interactivecamera.cpp" />
     <ClCompile Include="control\globalconfig.cpp" />
     <ClCompile Include="control\scriptprocessing.cpp" />
+    <ClCompile Include="glhelper\buffer.cpp" />
     <ClCompile Include="glhelper\framebufferobject.cpp" />
     <ClCompile Include="glhelper\gl.cpp" />
     <ClCompile Include="glhelper\screenalignedtriangle.cpp" />
@@ -165,6 +166,7 @@
     <ClCompile Include="renderer\referencerenderer.cpp" />
     <ClCompile Include="renderer\renderer.cpp" />
     <ClCompile Include="renderer\testrenderer.cpp" />
+    <ClCompile Include="scene\scene.cpp" />
     <ClCompile Include="Time\Implementation\Stopwatch.cpp" />
     <ClCompile Include="Time\Implementation\Time.cpp" />
     <ClCompile Include="utilities\assert.cpp" />
@@ -178,6 +180,7 @@
     <ClInclude Include="camera\interactivecamera.hpp" />
     <ClInclude Include="control\globalconfig.hpp" />
     <ClInclude Include="control\scriptprocessing.hpp" />
+    <ClInclude Include="glhelper\buffer.hpp" />
     <ClInclude Include="glhelper\framebufferobject.hpp" />
     <ClInclude Include="glhelper\gl.hpp" />
     <ClInclude Include="glhelper\screenalignedtriangle.hpp" />
@@ -192,6 +195,7 @@
     <ClInclude Include="renderer\referencerenderer.hpp" />
     <ClInclude Include="renderer\renderer.hpp" />
     <ClInclude Include="renderer\testrenderer.hpp" />
+    <ClInclude Include="scene\scene.hpp" />
     <ClInclude Include="Time\Implementation\Time_inl.h" />
     <ClInclude Include="Time\Stopwatch.h" />
     <ClInclude Include="Time\Time.h" />
