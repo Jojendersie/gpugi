@@ -61,6 +61,11 @@ namespace gl
 		/// Binds an ubo by its intern buffer name
 		Result BindUBO(UniformBuffer& ubo);
 
+		/// Binds a shader storage buffer by name
+		Result BindSSBO(const class StructuredBufferView& _ssbo, const std::string& _SSBOName);
+		/// Binds a shader storage buffer by its intern buffer name
+		Result BindSSBO(const class StructuredBufferView& _ssbo);
+
 
 		/// The set of active user-defined inputs to the first shader stage in this program. 
 		/// 

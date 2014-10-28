@@ -4,7 +4,7 @@
 
 namespace gl
 {
-	TextureBufferView* TextureBufferView::s_boundTBOs[16];
+	const TextureBufferView* TextureBufferView::s_boundTBOs[16];
 
 	TextureBufferView::TextureBufferView() :
 		m_textureObject(0)
@@ -29,16 +29,16 @@ namespace gl
         return SUCCEEDED;
     }
 
-	void TextureBufferView::BindBuffer(GLuint locationIndex)
+	void TextureBufferView::BindBuffer(GLuint _locationIndex) const
 	{
-		Assert(locationIndex < sizeof(s_boundTBOs) / sizeof(TextureBufferView*), 
-			"Can't bind tbo to slot " + std::to_string(locationIndex) + ". Maximum number of slots is " + std::to_string(sizeof(s_boundTBOs) / sizeof(TextureBufferView*)));
+		Assert(_locationIndex < sizeof(s_boundTBOs) / sizeof(TextureBufferView*), 
+			"Can't bind tbo to slot " + std::to_string(_locationIndex) + ". Maximum number of slots is " + std::to_string(sizeof(s_boundTBOs) / sizeof(TextureBufferView*)));
 
-		if (s_boundTBOs[locationIndex] != this)
+		if (s_boundTBOs[_locationIndex] != this)
 		{
-            GL_CALL(glActiveTexture, locationIndex); 
+            GL_CALL(glActiveTexture, _locationIndex); 
 			GL_CALL(glBindTexture, GL_TEXTURE_BUFFER, m_textureObject);
-			s_boundTBOs[locationIndex] = this;
+			s_boundTBOs[_locationIndex] = this;
 		}
 
 	}

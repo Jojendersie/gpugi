@@ -127,6 +127,9 @@
     <ClCompile Include="glhelper\texturebuffer.cpp">
       <Filter>code\glhelper</Filter>
     </ClCompile>
+    <ClCompile Include="glhelper\structuredbuffer.cpp">
+      <Filter>code\glhelper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -220,6 +223,9 @@
     <ClInclude Include="glhelper\texturebuffer.hpp">
       <Filter>code\glhelper</Filter>
     </ClInclude>
+    <ClInclude Include="glhelper\structuredbuffer.hpp">
+      <Filter>code\glhelper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="glhelper\uniformbuffer.inl">
@@ -245,6 +251,9 @@
     </None>
     <None Include="shader\raytrace.glsl">
       <Filter>shader</Filter>
+    </None>
+    <None Include="glhelper\structuredbuffer.inl">
+      <Filter>code\glhelper</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -1,15 +1,12 @@
 #pragma once
 
 #include "gl.hpp"
-#include "shaderdatametainfo.hpp"
 
 #include "../utilities/utils.hpp"
 #include "../utilities/assert.hpp"
 #include "textureformats.hpp"
 #include "buffer.hpp"
 
-#include <initializer_list>
-#include <algorithm>
 #include <memory>
 
 namespace gl
@@ -22,12 +19,12 @@ namespace gl
 		TextureBufferView();
 		~TextureBufferView();
 			
-        /// Allocate the memory and copy the data to GPU.
+        /// Bind the buffer data to this TextureBuffer.
 		Result Init(std::shared_ptr<Buffer> _buffer,
             TextureFormat _format);
 
 		/// Binds buffer if not already bound.
-		void BindBuffer(GLuint locationIndex);
+		void BindBuffer(GLuint _locationIndex) const;
 
         /// Get the internal bound buffer resource.
         std::shared_ptr<Buffer> GetBuffer() const   { return m_buffer; }
@@ -37,6 +34,6 @@ namespace gl
         std::shared_ptr<Buffer> m_buffer;
 
 		/// Currently bound TBOs - number is arbitrary!
-		static TextureBufferView* s_boundTBOs[16];
+		static const TextureBufferView* s_boundTBOs[16];
 	};
 }

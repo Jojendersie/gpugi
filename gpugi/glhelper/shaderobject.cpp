@@ -1,5 +1,6 @@
 ﻿#include "shaderobject.hpp"
 #include "uniformbuffer.hpp"
+#include "structuredbuffer.hpp"
 
 #include "../utilities/logger.hpp"
 #include "../utilities/pathutils.hpp"
@@ -499,6 +500,24 @@ namespace gl
 			return FAILURE;
 
 		ubo.BindBuffer(it->second.iBufferBinding);
+
+		return SUCCEEDED;
+	}
+
+	Result ShaderObject::BindSSBO(const gl::StructuredBufferView& _ssbo)
+	{
+		return BindSSBO(_ssbo, _ssbo.GetBufferName());
+	}
+
+	Result ShaderObject::BindSSBO(const gl::StructuredBufferView& _ssbo, const std::string& _SSBOName)
+	{
+		auto storageBufferInfoIterator = GetShaderStorageBufferInfo().find(_SSBOName);
+		if(storageBufferInfoIterator == GetShaderStorageBufferInfo().end())
+		{
+			LOG_ERROR("Shader \"" + GetName() + "\" doesn't contain a storage buffer meta block info with the name \"" + _SSBOName + "\"!");
+			return FAILURE;
+		}
+		_ssbo.BindBuffer( storageBufferInfoIterator->second.iBufferBinding );
 
 		return SUCCEEDED;
 	}
