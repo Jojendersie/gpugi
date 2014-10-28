@@ -7,6 +7,7 @@
 
 #include "policy.hpp"
 #include <mutex>
+#include <sstream>
 
 namespace Logger {
 
@@ -51,47 +52,67 @@ namespace Logger {
 /// \brief Write an info/warning on level 0
 #if (LOG_LEVEL == 0)
 #	ifdef LOG_NO_LOCALIZATION
-#		define LOG_LVL0(_message) Logger::g_logger.Write("Level 0 ", (_message))
+#		define LOG_LVL0(_message) do {\
+			std::stringstream str; str << _message; \ 
+Logger::g_logger.Write("Level 0 ", str.str()); } while(false)
 #	else
-#		define LOG_LVL0(_message) Logger::g_logger.Write(__FILE__, __FUNCTION__, __LINE__, "Level 0 ", (_message))
+#		define LOG_LVL0(_message) do {\
+			std::stringstream str; str << _message; \
+			Logger::g_logger.Write(__FILE__, __FUNCTION__, __LINE__, "Level 0 ", str.str()); } while(false)
 #	endif
 #else
-#	define LOG_LVL0(...)
+#	define LOG_LVL0(...) do {} while(false)
 #endif
 
 /// \brief Write an info/warning if level 0 or 1 is active
 #if (LOG_LEVEL <= 1)
 #	ifdef LOG_NO_LOCALIZATION
-#		define LOG_LVL1(_message) Logger::g_logger.Write("Level 1 ", (_message))
+#		define LOG_LVL1(_message) do {\
+			std::stringstream str; str << _message; \
+			Logger::g_logger.Write("Level 1 ", str.str()); } while(false)
 #	else
-#		define LOG_LVL1(_message) Logger::g_logger.Write(__FILE__, __FUNCTION__, __LINE__, "Level 1 ", (_message))
+#		define LOG_LVL1(_message) do {\
+			std::stringstream str; str << _message; \
+			Logger::g_logger.Write(__FILE__, __FUNCTION__, __LINE__, "Level 1 ", str.str()); } while(false)
 #	endif
 #else
-#	define LOG_LVL1(...)
+#	define LOG_LVL1(...) do {} while(false)
 #endif
 
 /// \brief Write an info/warning if level 0, 1 or 2 is active
 #if (LOG_LEVEL <= 2)
 #	ifdef LOG_NO_LOCALIZATION
-#		define LOG_LVL2(_message) Logger::g_logger.Write("Level 2 ", (_message))
+#		define LOG_LVL2(_message) do {\
+			std::stringstream str; str << _message; \
+			Logger::g_logger.Write("Level 2 ", str.str()); } while(false)
 #	else
-#		define LOG_LVL2(_message) Logger::g_logger.Write(__FILE__, __FUNCTION__, __LINE__, "Level 2 ", (_message))
+#		define LOG_LVL2(_message) do {\
+			std::stringstream str; str << _message; \
+		    Logger::g_logger.Write(__FILE__, __FUNCTION__, __LINE__, "Level 2 ", str.str()); } while(false)
 #	endif
 #else
-#	define LOG_LVL2(...)
+#	define LOG_LVL2(...) do {} while(false)
 #endif
 
 /// \brief Write an error message - active on all levels.
 #ifdef LOG_NO_LOCALIZATION
-#	define LOG_ERROR(_message) Logger::g_logger.Write("Error   ", (_message))
+#	define LOG_ERROR(_message) do {\
+			std::stringstream str; str << _message; \
+			Logger::g_logger.Write("Error   ", str.str()); } while(false)
 #else
-#	define LOG_ERROR(_message) Logger::g_logger.Write(__FILE__, __FUNCTION__, __LINE__, "Error   ", (_message))
+#	define LOG_ERROR(_message) do {\
+			std::stringstream str; str << _message; \
+			Logger::g_logger.Write(__FILE__, __FUNCTION__, __LINE__, "Error   ", str.str()); } while(false)
 #endif
 
 /// \brief Write an error message and than throw an exception with the
 ///		message string.
 #ifdef LOG_NO_LOCALIZATION
-#	define LOG_CRITICAL(_message) {Logger::g_logger.Write("Critical", (_message)); throw (_message);}
+#	define LOG_CRITICAL(_message) do {\
+			std::stringstream str; str << _message; \
+			{Logger::g_logger.Write("Critical", str.str()); throw (str.str());} while(false)
 #else
-#	define LOG_CRITICAL(_message) {Logger::g_logger.Write(__FILE__, __FUNCTION__, __LINE__, "Critical", (_message)); throw (_message);}
+#	define LOG_CRITICAL(_message) do {\
+			std::stringstream str; str << _message; \
+			Logger::g_logger.Write(__FILE__, __FUNCTION__, __LINE__, "Critical", str.str()); throw (str.str());} while(false)
 #endif

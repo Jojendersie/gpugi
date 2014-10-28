@@ -20,10 +20,15 @@ namespace Details
 }
 
 #ifdef _DEBUG
+	#include <sstream>
+
 	/// Default assert macro for all our needs. Use this instead of <cassert>
 	#define Assert(condition, errorMessage) do { \
 		if((condition) == false) \
-		{   ::Details::AssertHandler(__FILE__, __LINE__, __FUNCTION__, #condition, (errorMessage)); \
+		{   \
+			std::stringstream str; \
+			str << errorMessage; \
+			::Details::AssertHandler(__FILE__, __LINE__, __FUNCTION__, #condition, str.str()); \
 			DEBUG_BREAK; } \
 		} while(false)
 #else
