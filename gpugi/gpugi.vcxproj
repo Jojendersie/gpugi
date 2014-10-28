@@ -158,6 +158,7 @@
     <ClCompile Include="glhelper\shaderobject.cpp" />
     <ClCompile Include="glhelper\texture.cpp" />
     <ClCompile Include="glhelper\texture2d.cpp" />
+    <ClCompile Include="glhelper\texturebuffer.cpp" />
     <ClCompile Include="glhelper\textureformats.cpp" />
     <ClCompile Include="glhelper\uniformbuffer.cpp" />
     <ClCompile Include="hdrimage.cpp" />
@@ -188,6 +189,7 @@
     <ClInclude Include="glhelper\shaderobject.hpp" />
     <ClInclude Include="glhelper\texture.hpp" />
     <ClInclude Include="glhelper\texture2d.hpp" />
+    <ClInclude Include="glhelper\texturebuffer.hpp" />
     <ClInclude Include="glhelper\textureformats.hpp" />
     <ClInclude Include="glhelper\uniformbuffer.hpp" />
     <ClInclude Include="hdrimage.hpp" />

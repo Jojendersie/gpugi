@@ -124,6 +124,9 @@
     <ClCompile Include="glhelper\buffer.cpp">
       <Filter>code\glhelper</Filter>
     </ClCompile>
+    <ClCompile Include="glhelper\texturebuffer.cpp">
+      <Filter>code\glhelper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -212,6 +215,9 @@
       <Filter>code\scene</Filter>
     </ClInclude>
     <ClInclude Include="glhelper\buffer.hpp">
+      <Filter>code\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\texturebuffer.hpp">
       <Filter>code\glhelper</Filter>
     </ClInclude>
   </ItemGroup>

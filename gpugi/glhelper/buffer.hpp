@@ -53,6 +53,8 @@ namespace gl
         /// Uses Map() and Unmap() internally (usage not recommended)
         void Get( std::uint32_t _offset, std::uint32_t _numBytes, void* _data );
 
+        BufferId GetBufferId() const { return m_bufferObject; }
+
     private:
         BufferId m_bufferObject;
         std::uint32_t m_sizeInBytes;
