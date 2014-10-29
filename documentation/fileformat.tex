@@ -1,0 +1,127 @@
+\documentclass[english,10pt,a4paper,twocolumn,colorscheme=green]{orarticle}
+
+
+\usepackage{listings}
+\lstset{
+	language=C++,
+	commentstyle=\color{darkgreen}\textit,
+	frame=single,
+	tabsize=4,
+	keywordstyle=\color{blue}\bfseries,
+	basicstyle=\lst@ifdisplaystyle\scriptsize\else\ttfamily\fi,
+	morekeywords={uint16, uint32, Vec2, Vec3}
+}
+
+\begin{document}
+
+	\titlehead{\begin{minipage}{0.5\linewidth}
+		\begin{center}
+		Otto-von-Guericke-University Magdeburg\\
+		Faculty of Computer Science\\
+		ISG - Computational Visualistics
+		\end{center}
+	\end{minipage}}
+%	\subject{File Format Documentation}
+	\title{The *.rawscene Format from GPUGI Project\\Version 1.0}
+	\authors{Johannes Jendersie}
+	\abstract{Abstract}{
+		This is a complete overview about the contents of *.rawscene format. The file contains a list of different arrays. Each array has a name where some must exist in the file and some are optional.
+	}
+	\thispagestyle{empty}
+	\maketitle
+	
+	
+	
+	% ************************************************************************ %
+	\section{General Array Chunks}
+	
+	The file contains an arbitrary number of structured arrays. Each is introduced by the following header.
+	
+	\begin{lstlisting}
+struct
+{
+	char name[32];
+	uint32 numElements;
+	uint32 elementSize;
+};
+	\end{lstlisting}
+	
+	The \lstinline|name| defines what kind of data is to be expected. The names are always lower case. A name and the associated structure should not change. Certain chunks are guaranteed to be existent e.g. "vertices". The optional ones are marked with surrounding [] in the title.
+	
+	If the loader does not support one data chunk it can be skipped. The number of bytes to the next header can be determined by \lstinline|numElements * elementSize|.
+	
+	% ************************************************************************ %
+	\subsection{Vertices}
+	
+	The data for all geometry. There is exact one such array. Different objects
+	or materials are not distinguished here.
+	\begin{lstlisting}
+struct Vertex
+{
+	Vec3 position;
+	Vec3 normal;
+	Vec2 texcoord;
+};
+	\end{lstlisting}
+	
+	% ************************************************************************ %
+	\subsection{Triangles}
+	
+	Kind of an index buffer. Three succeeding indices form a triangle. There may be invalid triangles with two or three equal indices. These are added for padding purposes of the hierarchy assignment.
+	\begin{lstlisting}
+struct Triangle
+{
+	uint32 indices[3];
+};
+	\end{lstlisting}
+	The \lstinline|elementSize| in the header is not that of a Triangle. It is a multiple of \lstinline|sizeof(Triangle)| and denotes the block size for hierarchies. The mentioned padding is used to fill the blocks. So once an invalid triangle occurs all following till the next block will be invalid too.
+	
+	% ************************************************************************ %
+	\subsection{Material}
+	There are two arrays for the material association: "materialref" and "materialassociation". "materialref" contains on entry for each material. The stored names reference material descriptors in an additional plain text file.
+	
+	"materialassociation" has one entry for each triangle and represents an index into the "materialref" array.
+	\begin{lstlisting}
+struct MaterialRef
+{
+	char material[32];
+};
+
+struct MaterialAssociation
+{
+	uint16 materialID;
+};
+	\end{lstlisting}
+	
+	% ************************************************************************ %
+	\subsection{[Hierarchy]}
+	A potential n-ary tree. To iterate over all children of a node go to the \lstinline|firstChild| and follow the \lstinline|escape| pointer as long as the parent is equal. To iterate through the whole tree follow the \lstinline|firstChild| to a leaf (see next note) and each time you reach a leaf go to \lstinline|escape|.
+	
+	The first bit (most significant bit) of \lstinline|firstChild| denotes if the child is a leaf. In case it is set the remaining 31 bit are a block index in the "triangles" buffer. One leaf can contain more than one triangle which is encoded in the \lstinline|elementSize| of the "triangles" header. Unused triangles are filled with invalid indices (all the same).
+	\begin{lstlisting}
+struct Node
+{
+	uint32 parent;
+	uint32 firstChild;
+	uint32 escape;
+};
+	\end{lstlisting}
+	
+	% ************************************************************************ %
+	\subsection{[Bounding Geometry]}
+	There are different types of bounding volumes for the hierarchy nodes: "bounding\_aabox", "bounding\_sphere". The number of elements in "hierarchy" and this array must be equal (This includes that "hierarchy" must exist).
+	\begin{lstlisting}
+struct Sphere
+{
+	Vec3 center;
+	float radius;
+};
+
+struct Box
+{
+	Vec3 min;
+	Vec3 max;
+};
+	\end{lstlisting}		
+		
+\end{document}
