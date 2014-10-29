@@ -24,7 +24,7 @@ namespace gl
             READ = GL_MAP_READ_BIT,       ///< CPU sided read via mapping
          //   PERSISTENT = GL_PERSISTENT_BIT, ///< Allows the buffer object to be mapped in such a way that it can be used while it is mapped. Requires READ or WRITE flag und manual barriers.
          //   COHERENT = GL_COHERENT_BIT,   ///< Allows reads from and writes to a persistent buffer to be coherent with OpenGL, without an explicit barrier. Without this flag, you must use an explicit barrier to achieve coherency. You must use the persistent bit when using this bit.
-            SUB_DATA_UPDATE = 16
+            SUB_DATA_UPDATE = GL_DYNAMIC_STORAGE_BIT	///< Makes set and get available
         };
 
         /// Create and allocate the buffer

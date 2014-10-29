@@ -18,7 +18,7 @@ namespace gl
 
 	UniformBuffer::~UniformBuffer(void)
 	{
-		glDeleteBuffers(1, &m_BufferObject);
+		GL_CALL(glDeleteBuffers, 1, &m_BufferObject);
 	}
 
 	Result UniformBuffer::Init(std::uint32_t bufferSizeBytes, const std::string& bufferName)

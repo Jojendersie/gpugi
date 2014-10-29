@@ -34,7 +34,7 @@ namespace gl {
         if( m_mapAccess == 0 )
             LOG_ERROR( "The buffer was not created with READ or WRITE flag. Unable to map memory!" );
         else
-            return glMapNamedBufferRange(m_bufferObject, _offset, _numBytes, GLbitfield(m_mapAccessBits));
+            return GL_RET_CALL(glMapNamedBufferRange, m_bufferObject, _offset, _numBytes, GLbitfield(m_mapAccessBits));
         return nullptr;
     }
 

@@ -111,14 +111,15 @@ namespace gl
 
 
 		template<typename GlFunction>
-		GLuint CheckedGLCall_Ret(const char* openGLFunctionName, GlFunction openGLFunction) __GL_CALL_HANDLING_RET(openGLFunctionName, openGLFunction);
+		auto CheckedGLCall_Ret(const char* openGLFunctionName, GlFunction openGLFunction) -> decltype(openGLFunction()) __GL_CALL_HANDLING_RET(openGLFunctionName, openGLFunction);
 		template<typename GlFunction, typename Arg0>
-		GLuint CheckedGLCall_Ret(const char* openGLFunctionName, GlFunction openGLFunction, Arg0 arg0) __GL_CALL_HANDLING_RET(openGLFunctionName, openGLFunction, arg0);
+		auto CheckedGLCall_Ret(const char* openGLFunctionName, GlFunction openGLFunction, Arg0 arg0) -> decltype(openGLFunction(arg0)) __GL_CALL_HANDLING_RET(openGLFunctionName, openGLFunction, arg0);
 		template<typename GlFunction, typename Arg0, typename Arg1>
-		GLuint CheckedGLCall_Ret(const char* openGLFunctionName, GlFunction openGLFunction, Arg0 arg0, Arg1 arg1) __GL_CALL_HANDLING_RET(openGLFunctionName, openGLFunction, arg0, arg1);
+		auto CheckedGLCall_Ret(const char* openGLFunctionName, GlFunction openGLFunction, Arg0 arg0, Arg1 arg1) -> decltype(openGLFunction(arg0, arg1)) __GL_CALL_HANDLING_RET(openGLFunctionName, openGLFunction, arg0, arg1);
 		template<typename GlFunction, typename Arg0, typename Arg1, typename Arg2>
-		GLuint CheckedGLCall_Ret(const char* openGLFunctionName, GlFunction openGLFunction, Arg0 arg0, Arg1 arg1, Arg2 arg2) __GL_CALL_HANDLING_RET(openGLFunctionName, openGLFunction, arg0, arg1, arg2);
-
+		auto CheckedGLCall_Ret(const char* openGLFunctionName, GlFunction openGLFunction, Arg0 arg0, Arg1 arg1, Arg2 arg2) -> decltype(openGLFunction(arg0, arg1, arg2)) __GL_CALL_HANDLING_RET(openGLFunctionName, openGLFunction, arg0, arg1, arg2);
+		template<typename GlFunction, typename Arg0, typename Arg1, typename Arg2, typename Arg3>
+		auto CheckedGLCall_Ret(const char* openGLFunctionName, GlFunction openGLFunction, Arg0 arg0, Arg1 arg1, Arg2 arg2, Arg3 arg3) -> decltype(openGLFunction(arg0, arg1, arg2, arg3)) __GL_CALL_HANDLING_RET(openGLFunctionName, openGLFunction, arg0, arg1, arg2, arg3);
 	}
 
 	// Remove internal call handling helper macro.
@@ -132,4 +133,8 @@ namespace gl
 	/// There are a few functions that have a return value (glGet, glIsX, glCreateShader, glCreateProgram). Use this macro for those.
 #define GL_RET_CALL(OpenGLFunction, ...) \
 	::gl::Details::CheckedGLCall_Ret(#OpenGLFunction, OpenGLFunction, __VA_ARGS__)
+
+	/// There is another set of functions which a few functions that have a return value (glGet, glIsX, glCreateShader, glCreateProgram). Use this macro for those.
+//#define GL_RET_CALL(OpenGLFunction, ...) \
+//	::gl::Details::CheckedGLCall_Ret(#OpenGLFunction, OpenGLFunction, __VA_ARGS__)
 }

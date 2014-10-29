@@ -14,7 +14,7 @@ namespace gl
 
 	TextureBufferView::~TextureBufferView()
 	{
-        glDeleteTextures(1, &m_textureObject);
+        GL_CALL(glDeleteTextures, 1, &m_textureObject);
 	}
 
     Result TextureBufferView::Init(std::shared_ptr<Buffer> _buffer,
