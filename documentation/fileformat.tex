@@ -8,6 +8,7 @@
 	frame=single,
 	tabsize=4,
 	keywordstyle=\color{blue}\bfseries,
+	stringstyle=\color[gray]{0.4},
 	basicstyle=\lst@ifdisplaystyle\scriptsize\else\ttfamily\fi,
 	morekeywords={uint16, uint32, Vec2, Vec3}
 }
@@ -52,6 +53,7 @@ struct
 	
 	% ************************************************************************ %
 	\subsection{Vertices}
+	\lstinline|header.name == "vertices"|
 	
 	The data for all geometry. There is exact one such array. Different objects
 	or materials are not distinguished here.
@@ -66,8 +68,9 @@ struct Vertex
 	
 	% ************************************************************************ %
 	\subsection{Triangles}
+	\lstinline|header.name == "triangles"|
 	
-	Kind of an index buffer. Three succeeding indices form a triangle. There may be invalid triangles with two or three equal indices. These are added for padding purposes of the hierarchy assignment.
+	Kind of an index buffer. Three succeeding indices form a triangle. There may be invalid triangles with three equal indices (all 0). These are added for padding purposes of the hierarchy assignment.
 	\begin{lstlisting}
 struct Triangle
 {
@@ -78,7 +81,10 @@ struct Triangle
 	
 	% ************************************************************************ %
 	\subsection{Material}
-	There are two arrays for the material association: "materialref" and "materialassociation". "materialref" contains on entry for each material. The stored names reference material descriptors in an additional plain text file.
+	\lstinline|header.name == "materialref"|\\
+	\lstinline|header.name == "materialassociation"|
+	
+	"materialref" contains on entry for each material. The stored names reference material descriptors in an additional plain text file.
 	
 	"materialassociation" has one entry for each triangle and represents an index into the "materialref" array.
 	\begin{lstlisting}
@@ -94,10 +100,12 @@ struct MaterialAssociation
 	\end{lstlisting}
 	
 	% ************************************************************************ %
-	\subsection{[Hierarchy]}
+	\subsection{Hierarchy [Optional]}
+	\lstinline|header.name == "hierarchy"|
+	
 	A potential n-ary tree. To iterate over all children of a node go to the \lstinline|firstChild| and follow the \lstinline|escape| pointer as long as the parent is equal. To iterate through the whole tree follow the \lstinline|firstChild| to a leaf (see next note) and each time you reach a leaf go to \lstinline|escape|.
 	
-	The first bit (most significant bit) of \lstinline|firstChild| denotes if the child is a leaf. In case it is set the remaining 31 bit are a block index in the "triangles" buffer. One leaf can contain more than one triangle which is encoded in the \lstinline|elementSize| of the "triangles" header. Unused triangles are filled with invalid indices (all the same).
+	The first bit (most significant bit) of \lstinline|firstChild| denotes if the child is a leaf. In case it is set the remaining 31 bit are a block index in the "triangles" buffer. One leaf can contain more than one triangle which is encoded in the \lstinline|elementSize| of the "triangles" header. Unused triangles are filled with invalid indices (all three 0).
 	\begin{lstlisting}
 struct Node
 {
@@ -108,8 +116,11 @@ struct Node
 	\end{lstlisting}
 	
 	% ************************************************************************ %
-	\subsection{[Bounding Geometry]}
-	There are different types of bounding volumes for the hierarchy nodes: "bounding\_aabox", "bounding\_sphere". The number of elements in "hierarchy" and this array must be equal (This includes that "hierarchy" must exist).
+	\subsection{Bounding Geometry [Depends on Hierarchy]}
+	\lstinline|header.name == "bounding_aabox"|\\
+	\lstinline|header.name == "bounding_sphere"|
+	
+	Exact one geometry array must exist if "hierarchy" exists. The number of elements in "hierarchy" and this array must be equal. There are different types of bounding volumes for the hierarchy nodes.
 	\begin{lstlisting}
 struct Sphere
 {

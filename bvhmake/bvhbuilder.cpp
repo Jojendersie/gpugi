@@ -18,7 +18,7 @@ T hard_cast(F _from)
 }
 
 
-const FileDecl::Triangle FileDecl::INVALID_TRIANGLE = {{0xffffffff, 0xffffffff, 0xffffffff}};
+const FileDecl::Triangle FileDecl::INVALID_TRIANGLE = {{0x0, 0x0, 0x0}};
 
 
 BVHBuilder::BVHBuilder() :
@@ -227,6 +227,7 @@ void BVHBuilder::BuildBVH()
 
     // Build now
     uint32 root = (*m_buildMethod)();
+	Assert( root == 0, "The root must be always the first node! Resort or allocte in perorder." );
 }
 
 void BVHBuilder::ExportBVH( std::ofstream& _file )

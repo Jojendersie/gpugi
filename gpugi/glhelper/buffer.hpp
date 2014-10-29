@@ -20,6 +20,7 @@ namespace gl
         /// Flags for the (optimized) buffer creation.
         enum class Usage
         {
+			IMMUTABLE = 0,
             WRITE = GL_MAP_WRITE_BIT,      ///< CPU sided write via mapping
             READ = GL_MAP_READ_BIT,       ///< CPU sided read via mapping
          //   PERSISTENT = GL_PERSISTENT_BIT, ///< Allows the buffer object to be mapped in such a way that it can be used while it is mapped. Requires READ or WRITE flag und manual barriers.
