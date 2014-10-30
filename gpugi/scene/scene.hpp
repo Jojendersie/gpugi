@@ -58,6 +58,9 @@ private:
 	uint32_t m_numInnerNodes;
 	ε::Types3D m_bvType;
 
+	/// "sizeof" for different geometry
+	size_t size(ε::Types3D _type);
+
 	void LoadVertices( std::ifstream& _file, const FileDecl::NamedArray& _header );
 	void LoadTriangles( std::ifstream& _file, const FileDecl::NamedArray& _header );
 	void LoadMatRef( std::ifstream& _file, const FileDecl::NamedArray& _header );

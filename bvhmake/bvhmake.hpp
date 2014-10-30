@@ -121,9 +121,8 @@ public:
     /// \brief A tree node which should be used from any build method
     struct Node
     {
-        uint32 left;            ///< Index of the left child in the node pool
+        uint32 left;            ///< Index of the left child in the node pool. The first bit denotes if the children is a leaf. In this case right is undefined
         uint32 right;           ///< Index of the right child in the node pool
-        uint32 flags;           ///< 1 if left points to the leave array, right nowhere
     };
 
     uint32 GetTriangleCount() const { return m_triangleCount; }
@@ -182,4 +181,7 @@ private:
     void ExportVertices( std::ofstream& _file,
         const struct aiNode* _node,
         const ε::Mat4x4& _transformation );
+
+	/// \brief Converts Node(s) to FileDecl::Node(s)
+	void RecursiveWriteHierarchy( std::ofstream& _file, uint32 _this, uint32 _parent, uint32 _escape );
 };

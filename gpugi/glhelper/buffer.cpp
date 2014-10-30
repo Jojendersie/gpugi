@@ -17,15 +17,25 @@ namespace gl {
 
     Buffer::~Buffer()
     {
-        GL_CALL(glDeleteBuffers, 1, &m_bufferObject);
+		if( m_bufferObject != 0xffffffff )
+			GL_CALL(glDeleteBuffers, 1, &m_bufferObject);
     }
+
+	Buffer::Buffer( Buffer&& _rValue ) :
+		m_bufferObject(_rValue.m_bufferObject),
+		m_sizeInBytes(_rValue.m_sizeInBytes),
+		m_mapAccess(_rValue.m_mapAccess),
+		m_mapAccessBits(_rValue.m_mapAccessBits)
+	{
+		_rValue.m_bufferObject = 0xffffffff;
+	}
 
     void* Buffer::Map()
     {
         if( m_mapAccess == 0 )
             LOG_ERROR( "The buffer was not created with READ or WRITE flag. Unable to map memory!" );
         else
-            return glMapNamedBuffer(m_bufferObject, m_mapAccess);
+            return GL_RET_CALL(glMapNamedBuffer, m_bufferObject, m_mapAccess);
         return nullptr;
     }
 

@@ -2,12 +2,13 @@
 #include "filedef.hpp"
 #include "fitmethods/aaboxfit.hpp"
 #include "buildmethods/kdtree.hpp"
+#include "../gpugi/utilities/assert.hpp"
 #include <assimp/matrix4x4.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/material.h>
 #include <fstream>
-#include "../gpugi/utilities/assert.hpp"
+#include <stack>
 
 // Helper method to transform Assimp types into something useful.
 template<typename T, typename F>
@@ -120,20 +121,18 @@ bool BVHBuilder::LoadSceneWithAssimp( const char* _file )
 void BVHBuilder::ExportGeometry( std::ofstream& _file )
 {
     // Prepare file headers and find out how much space is required
-    FileDecl::NamedArray indexHeader;
+    //FileDecl::NamedArray indexHeader;
     FileDecl::NamedArray vertexHeader;
-    strcpy( indexHeader.name, "triangles" );
     strcpy( vertexHeader.name, "vertices" );
-    indexHeader.elementSize = sizeof(FileDecl::Triangle);
     vertexHeader.elementSize = sizeof(FileDecl::Vertex);
-    indexHeader.numElements = 0;
+    uint32 numTriangles = 0;
     vertexHeader.numElements = 0;
-    CountGeometry( m_scene->mRootNode, vertexHeader.numElements, indexHeader.numElements );
+    CountGeometry( m_scene->mRootNode, vertexHeader.numElements, numTriangles );
 
     // Allocate space for positions and index buffer (these are required for
     // the hierarchy build algorithm).
     m_positions.reset( new ε::Vec3[vertexHeader.numElements] );
-    m_triangles.reset( new uint[indexHeader.numElements * 3] );
+    m_triangles.reset( new uint32[numTriangles * 3] );
     m_triangleCount = 0;
     // TODO Materials
 
@@ -141,8 +140,6 @@ void BVHBuilder::ExportGeometry( std::ofstream& _file )
     // as well as m_triangles
     _file.write( (const char*)&vertexHeader, sizeof(FileDecl::NamedArray) );
     ExportVertices( _file, m_scene->mRootNode, ε::identity4x4() );
-//    _file.write( (const char*)&indexHeader, sizeof(FileDecl::NamedArray) );
-//    _file.write( (const char*)&m_triangles[0], sizeof(uint) * indexHeader.numElements * 3 );
 
     // This is not required anymore, make place for the algorithms
     m_importer.FreeScene();
@@ -254,17 +251,15 @@ void BVHBuilder::ExportBVH( std::ofstream& _file )
     default: Assert( false, "Current geometry cannot be stored!" ); break;
     }
 
-    // Meta information header (contains number of maximum triangle count per leaf)
-    //FileDecl::NamedArray leafSizeHeader;
-    //strcpy( leafSizeHeader.name, "leafnodesize" );
-    //leafSizeHeader.elementSize = sizeof(FileDecl::Triangle) * FileDecl::Leaf::NUM_PRIMITIVES;
-    //leafSizeHeader.numElements = 0;
+	// Write the bounding volumes sequentially
+    _file.write( (const char*)&bvHeader, sizeof(FileDecl::NamedArray) );
+    _file.write( (const char*)m_bvbuffer, bvHeader.elementSize * bvHeader.numElements );
 
-    // Write the hierarchy as it is in the memory
+	// Write the hierarchy as it is in the memory
     _file.write( (const char*)&treeHeader, sizeof(FileDecl::NamedArray) );
-    _file.write( (const char*)m_nodes, treeHeader.elementSize * treeHeader.numElements );
+	RecursiveWriteHierarchy( _file, 0, 0, 0 );
 
-    // write a "resorted index buffer" to file
+    // Write a "resorted index buffer" to file
     _file.write( (const char*)&indexHeader, sizeof(FileDecl::NamedArray) );
     _file.write( (const char*)m_leaves, indexHeader.elementSize * indexHeader.numElements );
 }
@@ -304,5 +299,31 @@ uint32 BVHBuilder::GetNewLeaf()
 uint32 BVHBuilder::GetNewNode()
 {
     Assert( m_innerNodeCount < m_maxInnerNodeCount, "Out-of-Bounds. The builder's estimation for the inner node count was to small!" );
+	Assert( !(m_innerNodeCount & 0x80000000), "Scene too large. The first bit is reserved as flag." );
     return m_innerNodeCount++;
+}
+
+void BVHBuilder::RecursiveWriteHierarchy( std::ofstream& _file, uint32 _this, uint32 _parent, uint32 _escape )
+{
+	FileDecl::Node node;
+	node.firstChild = m_nodes[_this].left;
+	node.parent = _parent;
+	node.escape = _escape;
+	_file.write( (const char*)&node, sizeof(FileDecl::Node) );
+	if( !(m_nodes[_this].left & 0x80000000) )
+	{
+		RecursiveWriteHierarchy( _file, m_nodes[_this].left, _this, m_nodes[_this].right );
+		RecursiveWriteHierarchy( _file, m_nodes[_this].right, _this, _escape );
+	}
+
+	// Use the processor stack to find the right escape pointer
+/*	static uint32 escape = 0;
+	// Push (oldEscape) is stored on the stack automatically and escape is the
+	// top of the stack.
+	uint32 oldEscape = escape;
+	escape = m_nodes[_this].right;
+	RecursiveWriteHierarchy( _file, m_nodes[_this].left, _this );
+	// Pop
+	escape = oldEscape;
+	RecursiveWriteHierarchy( _file, m_nodes[_this].right, _this );*/
 }

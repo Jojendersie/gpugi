@@ -106,8 +106,7 @@ uint32 BuildKdtree::Build( const std::unique_ptr<uint32[]>* _sorted, Vec3* _cent
         // Allocate a new node pointing to this leaf
         uint32 nodeIdx = m_manager->GetNewNode();
 	    BVHBuilder::Node& node = m_manager->GetNode( nodeIdx );
-        node.flags = 1;
-        node.left = leafIdx;
+        node.left = 0x80000000 | leafIdx;
 
         // Compute a bounding volume for the new node
         (*fit)( leafIdx, nodeIdx );

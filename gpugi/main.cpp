@@ -63,7 +63,7 @@ public:
 		// Load command script if there's a parameter
 		if (argc > 1)
 			m_scriptProcessing.RunScript(argv[1]);
-        else m_scene = std::make_shared<Scene>( Scene( "" ) );
+        else m_scene = std::make_shared<Scene>( "../scenes/box1.rawscene" );
 
 		// Init console input.
 		m_scriptProcessing.StartConsoleWindowThread();

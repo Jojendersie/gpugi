@@ -33,6 +33,11 @@ namespace gl
 
         ~Buffer();
 
+		/// Requires manual move implementation to invalidate the m_bufferObject id
+		/// before the destructor is called (the standard move deletes the resource
+		/// here)
+		Buffer( Buffer&& _rValue );
+
         /// Clear this buffer
         // Requires format data
         //void Clear(,,,);
@@ -62,5 +67,9 @@ namespace gl
         std::uint32_t m_sizeInBytes;
         GLenum m_mapAccess;     ///< READ_ONLY, WRITE_ONLY or READ_WRITE
         Usage m_mapAccessBits;  ///< The newer glMapBufferRange requires the same bits as the construction
+
+		// Non copy able
+		Buffer( const Buffer& );
+		void operator = ( const Buffer& );
     };
 }

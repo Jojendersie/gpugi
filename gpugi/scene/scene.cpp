@@ -9,9 +9,12 @@ Scene::Scene( const std::string& _file ) :
 	m_numTrianglesPerLeaf(0),
 	m_bvType( ε::Types3D::NUM_TYPES )	// invalid type so far
 {
-	std::ifstream file( _file );
-	if( file.bad() )
+	std::ifstream file( _file, std::ios_base::binary );
+	if( file.fail() )
+	{
 		LOG_ERROR( "Cannot open scene file \"" + _file + "\"!" );
+		return;
+	}
 
 	// First find the bounding volume header. Otherwise the hierarchy
 	// cannot be build correctly.
@@ -30,16 +33,15 @@ Scene::Scene( const std::string& _file ) :
 		return;
 	}
 	if( m_bvType == ε::Types3D::BOX )
-		m_hierarchyBuffer = std::make_shared<gl::Buffer>(gl::Buffer( sizeof(TreeNode<ε::Box>) * m_numInnerNodes, gl::Buffer::Usage::WRITE ));
+		m_hierarchyBuffer = std::make_shared<gl::Buffer>( uint32(sizeof(TreeNode<ε::Box>) * m_numInnerNodes), gl::Buffer::Usage::WRITE );
 	else if( m_bvType == ε::Types3D::SPHERE )
-		m_hierarchyBuffer = std::make_shared<gl::Buffer>(gl::Buffer( sizeof(TreeNode<ε::Sphere>) * m_numInnerNodes, gl::Buffer::Usage::WRITE ));
-    
+		m_hierarchyBuffer = std::make_shared<gl::Buffer>( uint32(sizeof(TreeNode<ε::Sphere>) * m_numInnerNodes), gl::Buffer::Usage::WRITE );
+
 	// Read one data array after another. The order is undefined.
 	file.seekg( 0 );
-	while( !file.eof() )
+	FileDecl::NamedArray header;
+	while( file.read( reinterpret_cast<char*>(&header), sizeof(header) ) )
 	{
-		FileDecl::NamedArray header;
-		file.read( reinterpret_cast<char*>(&header), sizeof(header) );
 		if(strcmp(header.name, "vertices") == 0) LoadVertices(file, header);
 		else if(strcmp(header.name, "triangles") == 0) LoadTriangles(file, header);
 		else if(strcmp(header.name, "materialref") == 0) LoadMatRef(file, header);
@@ -47,16 +49,29 @@ Scene::Scene( const std::string& _file ) :
 		else if(strcmp(header.name, "hierarchy") == 0) LoadHierarchy(file, header);
 		else if(strcmp(header.name, "bounding_aabox") == 0) LoadBoundingVolumes(file, header);
 		else if(strcmp(header.name, "bounding_sphere") == 0) LoadBoundingVolumes(file, header);
+		Assert( !file.fail(), "Failed to load the last block correctly." );
 	}
 
 	if( m_numTrianglesPerLeaf == 0 )
 		LOG_ERROR("Did not find a \"triangles\" buffer in" + _file + "!");
 	if( m_vertexBuffer == nullptr )
 		LOG_ERROR("Did not find a \"vertices\" buffer in" + _file + "!");
+	if( m_hierarchyBuffer == nullptr )
+		LOG_ERROR("Did not find a \"hierarchy\" buffer in" + _file + "!");
 }
 
 Scene::~Scene()
 {
+}
+
+size_t Scene::size(ε::Types3D _type)
+{
+	static size_t s_sizes[] = {sizeof(ε::Sphere), 0/*sizeof(ε::Plane)*/, sizeof(ε::Box),
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/*sizeof(ε::OBox), sizeof(ε::Disc), sizeof(ε::Triangle),
+		sizeof(ε::Thetrahedron), sizeof(ε::Ray), sizeof(ε::Line), sizeof(ε::Frustum),
+		sizeof(ε::PyramidFrustum), sizeof(ε::Ellipsoid), sizeof(ε::OEllipsoid),
+		sizeof(ε::Capsule)*/};
+	return s_sizes[int(_type)];
 }
 
 void Scene::LoadVertices( std::ifstream& _file, const FileDecl::NamedArray& _header )
@@ -64,9 +79,11 @@ void Scene::LoadVertices( std::ifstream& _file, const FileDecl::NamedArray& _hea
 	Assert( _header.elementSize == sizeof(Vertex), "Format seems to contain other vertices." );
 
 	// Vertices can be loaded directly.
-	m_vertexBuffer = std::make_shared<gl::Buffer>(gl::Buffer( _header.elementSize * _header.numElements, gl::Buffer::Usage::WRITE ));
+	m_vertexBuffer = std::make_shared<gl::Buffer>(uint32(_header.elementSize * _header.numElements), gl::Buffer::Usage::WRITE );
 	void* dest = m_vertexBuffer->Map();
+	//_file.seekg( _header.elementSize * _header.numElements, std::ios_base::cur );
 	_file.read( (char*)dest, _header.elementSize * _header.numElements );
+	if(_file.fail()) LOG_ERROR("Why?");
 	m_vertexBuffer->Unmap();
 }
 
@@ -76,7 +93,7 @@ void Scene::LoadTriangles( std::ifstream& _file, const FileDecl::NamedArray& _he
 	m_numTrianglesPerLeaf = _header.elementSize/sizeof(FileDecl::Triangle);
 	if( m_triangleBuffer == nullptr )
 	{
-		m_triangleBuffer = std::make_shared<gl::Buffer>(gl::Buffer( m_numTrianglesPerLeaf * sizeof(Triangle) * _header.numElements, gl::Buffer::Usage::WRITE ));
+		m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_numTrianglesPerLeaf * sizeof(Triangle) * _header.numElements), gl::Buffer::Usage::WRITE );
 	} else
 		Assert( m_triangleBuffer->GetSize() == m_numTrianglesPerLeaf * sizeof(Triangle) * _header.numElements, "The first defined triangle count differs from the current one!" );
 	Triangle* dest = (Triangle*)m_triangleBuffer->Map();
@@ -107,7 +124,7 @@ void Scene::LoadMatAssocialtion( std::ifstream& _file, const FileDecl::NamedArra
 	// Triangles must be converted: the material id must be added from another chunk.
 	if( m_triangleBuffer == nullptr )
 	{
-		m_triangleBuffer = std::make_shared<gl::Buffer>(gl::Buffer( sizeof(Triangle) * _header.numElements, gl::Buffer::Usage::WRITE ));
+		m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(sizeof(Triangle) * _header.numElements), gl::Buffer::Usage::WRITE );
 	} else
 		Assert( m_triangleBuffer->GetSize() == sizeof(Triangle) * _header.numElements, "The first defined triangle count differs from the current one!" );
 	Triangle* dest = (Triangle*)m_triangleBuffer->Map();
@@ -123,13 +140,14 @@ void Scene::LoadMatAssocialtion( std::ifstream& _file, const FileDecl::NamedArra
 void Scene::LoadHierarchy( std::ifstream& _file, const FileDecl::NamedArray& _header )
 {
 	// Read element wise and copy the tree structure
-	TreeNode<ε::Box>* dest = (TreeNode<ε::Box>*)m_hierarchyBuffer->Map();
-	for(uint32_t i = 0; i < _header.numElements; ++i,++dest)
+	uint32 nodeSize = uint32(size(m_bvType) + 2 * sizeof(uint32));
+	char* dest = (char*)m_hierarchyBuffer->Map();
+	for(uint32_t i = 0; i < _header.numElements; ++i,dest+=nodeSize)
 	{
 		FileDecl::Node node;
 		_file.read( (char*)&node, sizeof(FileDecl::Node) );
-		dest->firstChild = node.firstChild;
-		dest->escape = node.escape;
+		((TreeNode<char>*)dest)->firstChild = node.firstChild;
+		((TreeNode<char>*)dest)->escape = node.escape;
 	}
 	m_hierarchyBuffer->Unmap();
 }
