@@ -67,53 +67,57 @@ namespace gl
 	{
 		std::string debSource, debType, debSev;
 
-		if (_source == GL_DEBUG_SOURCE_API_ARB)
+		if (_source == GL_DEBUG_SOURCE_API)
 			debSource = "OpenGL";
-		else if (_source == GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB)
+		else if (_source == GL_DEBUG_SOURCE_WINDOW_SYSTEM)
 			debSource = "Windows";
-		else if (_source == GL_DEBUG_SOURCE_SHADER_COMPILER_ARB)
+		else if (_source == GL_DEBUG_SOURCE_SHADER_COMPILER)
 			debSource = "Shader Compiler";
-		else if (_source == GL_DEBUG_SOURCE_THIRD_PARTY_ARB)
+		else if (_source == GL_DEBUG_SOURCE_THIRD_PARTY)
 			debSource = "Third Party";
-		else if (_source == GL_DEBUG_SOURCE_APPLICATION_ARB)
+		else if (_source == GL_DEBUG_SOURCE_APPLICATION)
 			debSource = "Application";
-		else if (_source == GL_DEBUG_SOURCE_OTHER_ARB)
+		else if (_source == GL_DEBUG_SOURCE_OTHER)
 			debSource = "Other";
 
-		if (_type == GL_DEBUG_TYPE_ERROR_ARB)
+		if (_type == GL_DEBUG_TYPE_ERROR)
 		{
 			debType = "error";
 		}
-		else if (_type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB)
+		else if (_type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR)
 		{
 			debType = "deprecated behavior";
 		}
-		else if (_type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB)
+		else if (_type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR)
 		{
 			debType = "undefined behavior";
 		}
-		else if (_type == GL_DEBUG_TYPE_PORTABILITY_ARB)
+		else if (_type == GL_DEBUG_TYPE_PORTABILITY)
 		{
 			debType = "portability";
 		}
-		else if (_type == GL_DEBUG_TYPE_PERFORMANCE_ARB)
+		else if (_type == GL_DEBUG_TYPE_PERFORMANCE)
 		{
 			debType = "performance";
 		}
-		else if (_type == GL_DEBUG_TYPE_OTHER_ARB)
+		else if (_type == GL_DEBUG_TYPE_OTHER)
 		{
 			debType = "message";
 		}
 
-		if (_severity == GL_DEBUG_SEVERITY_MEDIUM_ARB)
+		if (_severity == GL_DEBUG_SEVERITY_HIGH)
+			debSev = "high";
+		else if (_severity == GL_DEBUG_SEVERITY_MEDIUM)
 			debSev = "medium";
-		else if (_severity == GL_DEBUG_SEVERITY_LOW_ARB)
+		else if (_severity == GL_DEBUG_SEVERITY_LOW)
 			debSev = "low";
-
+		else if (_severity == GL_DEBUG_SEVERITY_NOTIFICATION)
+			debSev = "note";
+		
 		std::string logMessage = debSource + ": " + debType + "(" + debSev + ") " + std::to_string(_id) + ": " + _message;
-		if (_type == GL_DEBUG_TYPE_ERROR_ARB || _type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB)
+		if (_type == GL_DEBUG_TYPE_ERROR || _type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR)
 			LOG_ERROR(logMessage);
-		else if (_type == GL_DEBUG_TYPE_PERFORMANCE_ARB)
+		else if (_type == GL_DEBUG_TYPE_PERFORMANCE)
 			LOG_LVL1(logMessage);
 		else
 			LOG_LVL2(logMessage);
@@ -121,10 +125,11 @@ namespace gl
 
 	void ActivateGLDebugOutput(DebugSeverity level)
 	{
-		GL_CALL(glEnable, GL_DEBUG_OUTPUT);
-		GL_CALL(glEnable, GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		// Enabling
 		switch (level)
 		{
+		case DebugSeverity::NOTIFICATION:
+			GL_CALL(glDebugMessageControl, GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_TRUE);
 		case DebugSeverity::LOW:
 			GL_CALL(glDebugMessageControl, GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW, 0, nullptr, GL_TRUE);
 		case DebugSeverity::MEDIUM:
@@ -132,7 +137,19 @@ namespace gl
 		case DebugSeverity::HIGH:
 			GL_CALL(glDebugMessageControl, GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
 		}
+		// Disabling
+		switch (level)
+		{
+		case DebugSeverity::HIGH:
+			GL_CALL(glDebugMessageControl, GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, nullptr, GL_FALSE);
+		case DebugSeverity::MEDIUM:
+			GL_CALL(glDebugMessageControl, GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW, 0, nullptr, GL_FALSE);
+		case DebugSeverity::LOW:
+			GL_CALL(glDebugMessageControl, GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+		}
 
+		GL_CALL(glEnable, GL_DEBUG_OUTPUT);
+		GL_CALL(glEnable, GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		GL_CALL(glDebugMessageCallback, &GLDebugOutput, nullptr);
 	}
 }

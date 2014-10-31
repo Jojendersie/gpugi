@@ -27,6 +27,7 @@ namespace gl
 
 	enum class DebugSeverity
 	{
+		NOTIFICATION,
 		LOW,
 		MEDIUM,
 		HIGH
