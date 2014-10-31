@@ -12,6 +12,6 @@ public:
 
 private:
 	gl::ShaderObject m_testshader;
-	gl::UniformBuffer m_testubo;
+	gl::UniformBufferView m_testubo;
 };
 

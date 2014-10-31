@@ -232,6 +232,9 @@
     <ClInclude Include="glhelper\structuredbuffer.hpp">
       <Filter>code\glhelper</Filter>
     </ClInclude>
+    <ClInclude Include="utilities\flagoperators.hpp">
+      <Filter>code\utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="glhelper\uniformbuffer.inl">
@@ -257,9 +260,6 @@
     </None>
     <None Include="shader\raytrace.glsl">
       <Filter>shader</Filter>
-    </None>
-    <None Include="glhelper\structuredbuffer.inl">
-      <Filter>code\glhelper</Filter>
     </None>
   </ItemGroup>
 </Project>

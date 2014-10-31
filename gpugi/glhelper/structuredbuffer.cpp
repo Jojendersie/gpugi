@@ -1,6 +1,9 @@
 #include "structuredbuffer.hpp"
 #include "shaderobject.hpp"
+#include "buffer.hpp"
 #include "../utilities/logger.hpp"
+#include "../utilities/flagoperators.hpp"
+
 
 namespace gl
 {
@@ -15,24 +18,21 @@ namespace gl
 	{
 	}
 
-    Result StructuredBufferView::Init(std::shared_ptr<gl::Buffer> _buffer,
-            const std::string& _name)
+    Result StructuredBufferView::Init(std::shared_ptr<gl::Buffer> _buffer, const std::string& _name)
     {
         m_buffer = _buffer;
+		m_name = _name;
 
         return SUCCEEDED;
     }
 
-	void StructuredBufferView::BindBuffer(GLuint _locationIndex) const
+	void StructuredBufferView::BindBuffer(GLuint _locationIndex)
 	{
 		Assert(_locationIndex < sizeof(s_boundSSBOs) / sizeof(StructuredBufferView*), 
-			"Can't bind tbo to slot " + std::to_string(_locationIndex) + ". Maximum number of slots is " + std::to_string(sizeof(s_boundSSBOs) / sizeof(StructuredBufferView*)));
+			"Can't bind shader object buffer to slot " << _locationIndex << ". Maximum number of slots is " << sizeof(s_boundSSBOs) / sizeof(StructuredBufferView*));
 
-        if( m_mappedBuffer )
-        {
-            m_buffer->Unmap();
-            m_mappedBuffer = nullptr;
-        }
+		if (m_buffer->m_mappedData != nullptr && static_cast<GLenum>(m_buffer->m_usageFlags & Buffer::Usage::MAP_PERSISTENT) == 0)
+			m_buffer->Unmap();
 
 		if (s_boundSSBOs[_locationIndex] != this)
 		{

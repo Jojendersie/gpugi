@@ -13,6 +13,9 @@
 
 namespace gl
 {
+	class UniformBufferView;
+	class StructuredBufferView;
+
 	/// Easy to use wrapper for OpenGL shader.
 	class ShaderObject
 	{
@@ -57,14 +60,14 @@ namespace gl
 		// (Setting of ordinary global uniform variables is explicitly not supported! You can still handle this yourself using the available Meta-Info)
 
 		/// Binds an ubo by name
-		Result BindUBO(class UniformBuffer& ubo, const std::string& sUBOName);
+		Result BindUBO(UniformBufferView& ubo, const std::string& sUBOName);
 		/// Binds an ubo by its intern buffer name
-		Result BindUBO(UniformBuffer& ubo);
+		Result BindUBO(UniformBufferView& ubo);
 
 		/// Binds a shader storage buffer by name
-		Result BindSSBO(const class StructuredBufferView& _ssbo, const std::string& _SSBOName);
+		Result BindSSBO(StructuredBufferView& _ssbo, const std::string& _SSBOName);
 		/// Binds a shader storage buffer by its intern buffer name
-		Result BindSSBO(const class StructuredBufferView& _ssbo);
+		Result BindSSBO(StructuredBufferView& _ssbo);
 
 
 		/// The set of active user-defined inputs to the first shader stage in this program. 

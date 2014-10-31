@@ -206,6 +206,7 @@
     <ClInclude Include="Time\Stopwatch.h" />
     <ClInclude Include="Time\Time.h" />
     <ClInclude Include="utilities\assert.hpp" />
+    <ClInclude Include="utilities\flagoperators.hpp" />
     <ClInclude Include="utilities\logger.hpp" />
     <ClInclude Include="utilities\loggerinit.hpp" />
     <ClInclude Include="utilities\random.hpp" />
@@ -215,7 +216,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="glhelper\shaderdatametainfo.inl" />
-    <None Include="glhelper\structuredbuffer.inl" />
     <None Include="glhelper\uniformbuffer.inl" />
     <None Include="shader\displayHDR.frag" />
     <None Include="shader\pathtracer.frag" />

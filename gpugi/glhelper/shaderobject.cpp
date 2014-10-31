@@ -488,12 +488,12 @@ namespace gl
 		s_currentlyActiveShaderObject = this;
 	}
 
-	Result ShaderObject::BindUBO(UniformBuffer& ubo)
+	Result ShaderObject::BindUBO(UniformBufferView& ubo)
 	{
 		return BindUBO(ubo, ubo.GetBufferName());
 	}
 
-	Result ShaderObject::BindUBO(UniformBuffer& ubo, const std::string& sUBOName)
+	Result ShaderObject::BindUBO(UniformBufferView& ubo, const std::string& sUBOName)
 	{
 		auto it = m_UniformBlockInfos.find(sUBOName);
 		if (it != m_UniformBlockInfos.end())
@@ -504,12 +504,12 @@ namespace gl
 		return SUCCEEDED;
 	}
 
-	Result ShaderObject::BindSSBO(const gl::StructuredBufferView& _ssbo)
+	Result ShaderObject::BindSSBO(gl::StructuredBufferView& _ssbo)
 	{
 		return BindSSBO(_ssbo, _ssbo.GetBufferName());
 	}
 
-	Result ShaderObject::BindSSBO(const gl::StructuredBufferView& _ssbo, const std::string& _SSBOName)
+	Result ShaderObject::BindSSBO(gl::StructuredBufferView& _ssbo, const std::string& _SSBOName)
 	{
 		auto storageBufferInfoIterator = GetShaderStorageBufferInfo().find(_SSBOName);
 		if(storageBufferInfoIterator == GetShaderStorageBufferInfo().end())

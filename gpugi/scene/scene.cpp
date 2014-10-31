@@ -33,9 +33,9 @@ Scene::Scene( const std::string& _file ) :
 		return;
 	}
 	if( m_bvType == ε::Types3D::BOX )
-		m_hierarchyBuffer = std::make_shared<gl::Buffer>( uint32(sizeof(TreeNode<ε::Box>) * m_numInnerNodes), gl::Buffer::Usage::WRITE );
+		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Box>) * m_numInnerNodes), gl::Buffer::Usage::MAP_WRITE);
 	else if( m_bvType == ε::Types3D::SPHERE )
-		m_hierarchyBuffer = std::make_shared<gl::Buffer>( uint32(sizeof(TreeNode<ε::Sphere>) * m_numInnerNodes), gl::Buffer::Usage::WRITE );
+		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Sphere>) * m_numInnerNodes), gl::Buffer::Usage::MAP_WRITE);
 
 	// Read one data array after another. The order is undefined.
 	file.seekg( 0 );
@@ -79,7 +79,7 @@ void Scene::LoadVertices( std::ifstream& _file, const FileDecl::NamedArray& _hea
 	Assert( _header.elementSize == sizeof(Vertex), "Format seems to contain other vertices." );
 
 	// Vertices can be loaded directly.
-	m_vertexBuffer = std::make_shared<gl::Buffer>(uint32(_header.elementSize * _header.numElements), gl::Buffer::Usage::WRITE );
+	m_vertexBuffer = std::make_shared<gl::Buffer>(uint32(_header.elementSize * _header.numElements), gl::Buffer::Usage::MAP_WRITE );
 	void* dest = m_vertexBuffer->Map();
 	//_file.seekg( _header.elementSize * _header.numElements, std::ios_base::cur );
 	_file.read( (char*)dest, _header.elementSize * _header.numElements );
@@ -93,7 +93,7 @@ void Scene::LoadTriangles( std::ifstream& _file, const FileDecl::NamedArray& _he
 	m_numTrianglesPerLeaf = _header.elementSize/sizeof(FileDecl::Triangle);
 	if( m_triangleBuffer == nullptr )
 	{
-		m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_numTrianglesPerLeaf * sizeof(Triangle) * _header.numElements), gl::Buffer::Usage::WRITE );
+		m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_numTrianglesPerLeaf * sizeof(Triangle) * _header.numElements), gl::Buffer::Usage::MAP_WRITE );
 	} else
 		Assert( m_triangleBuffer->GetSize() == m_numTrianglesPerLeaf * sizeof(Triangle) * _header.numElements, "The first defined triangle count differs from the current one!" );
 	Triangle* dest = (Triangle*)m_triangleBuffer->Map();
@@ -124,7 +124,7 @@ void Scene::LoadMatAssocialtion( std::ifstream& _file, const FileDecl::NamedArra
 	// Triangles must be converted: the material id must be added from another chunk.
 	if( m_triangleBuffer == nullptr )
 	{
-		m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(sizeof(Triangle) * _header.numElements), gl::Buffer::Usage::WRITE );
+		m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(sizeof(Triangle) * _header.numElements), gl::Buffer::Usage::MAP_WRITE );
 	} else
 		Assert( m_triangleBuffer->GetSize() == sizeof(Triangle) * _header.numElements, "The first defined triangle count differs from the current one!" );
 	Triangle* dest = (Triangle*)m_triangleBuffer->Map();

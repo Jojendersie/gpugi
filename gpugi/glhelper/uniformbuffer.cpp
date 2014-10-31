@@ -1,57 +1,69 @@
 #include "uniformbuffer.hpp"
 #include "shaderobject.hpp"
+#include "buffer.hpp"
 #include "../utilities/logger.hpp"
+#include "../utilities/flagoperators.hpp"
 
 namespace gl
 {
-	UniformBuffer* UniformBuffer::s_boundUBOs[16];
+	UniformBufferView* UniformBufferView::s_boundUBOs[16];
 
-	UniformBuffer::UniformBuffer() :
-		m_BufferObject(9999),
-		m_uiBufferSizeBytes(0),
+	UniformBufferView::UniformBufferView() :
 		m_variables(),
-		m_sBufferName(""),
-		m_bufferDirtyRangeEnd(0),
-		m_bufferDirtyRangeStart(0)
+		m_bufferName("")
 	{
 	}
 
-	UniformBuffer::~UniformBuffer(void)
+	UniformBufferView::~UniformBufferView()
 	{
-		GL_CALL(glDeleteBuffers, 1, &m_BufferObject);
 	}
 
-	Result UniformBuffer::Init(std::uint32_t bufferSizeBytes, const std::string& bufferName)
+	Result UniformBufferView::Init(std::shared_ptr<Buffer> _buffer, const std::string& _bufferName)
 	{
-		m_sBufferName = bufferName;
-		m_uiBufferSizeBytes = bufferSizeBytes;
-
-		m_bufferData.reset(new int8_t[bufferSizeBytes]);
-		m_bufferDirtyRangeEnd = m_bufferDirtyRangeStart = 0;
-
-		GL_CALL(glCreateBuffers, 1, &m_BufferObject);
-		// TODO: Using mapping could be faster! http://www.gamedev.net/topic/622685-constant-buffer-updatesubresource-vs-map/
-		GL_CALL(glNamedBufferStorage, m_BufferObject, static_cast<GLsizeiptr>(bufferSizeBytes), nullptr, GL_DYNAMIC_STORAGE_BIT);
-
-		return SUCCEEDED;
-	}
-
-	Result UniformBuffer::Init(const gl::ShaderObject& shader, const std::string& bufferName)
-	{
-		auto uniformBufferInfoIterator = shader.GetUniformBufferInfo().find(bufferName);
-		if (uniformBufferInfoIterator == shader.GetUniformBufferInfo().end())
+		if (static_cast<std::uint32_t>(_buffer->GetUsageFlags() & Buffer::Usage::MAP_WRITE))
 		{
-			LOG_ERROR("Shader \"" + shader.GetName() + "\" doesn't contain a uniform buffer meta block info with the name \"" + bufferName + "\"!");
+			LOG_ERROR("Uniform buffer need at least Buffer::Usage::WRITE!");
+			return FAILURE;
+		}
+		else
+		{
+			m_bufferName = _bufferName;
+			m_buffer = _buffer;
+			return SUCCEEDED;
+		}
+	}
+
+	Result UniformBufferView::Init(std::uint32_t _bufferSizeBytes, const std::string& _bufferName, Buffer::Usage _bufferUsage)
+	{
+		if (static_cast<std::uint32_t>(_bufferUsage & Buffer::Usage::MAP_WRITE) == 0)
+		{
+			LOG_ERROR("Uniform buffer need at least Buffer::Usage::WRITE!");
+			return FAILURE;
+		}
+		else
+		{
+			m_bufferName = _bufferName;
+			m_buffer.reset(new Buffer(_bufferSizeBytes, _bufferUsage));
+			return SUCCEEDED;
+		}
+	}
+
+	Result UniformBufferView::Init(const gl::ShaderObject& _shader, const std::string& _bufferName, Buffer::Usage _bufferUsage)
+	{
+		auto uniformBufferInfoIterator = _shader.GetUniformBufferInfo().find(_bufferName);
+		if (uniformBufferInfoIterator == _shader.GetUniformBufferInfo().end())
+		{
+			LOG_ERROR("Shader \"" + _shader.GetName() + "\" doesn't contain a uniform buffer meta block info with the name \"" + _bufferName + "\"!");
 			return FAILURE;
 		}
 
 		for (auto it = uniformBufferInfoIterator->second.Variables.begin(); it != uniformBufferInfoIterator->second.Variables.end(); ++it)
 			m_variables.emplace(it->first, Variable(it->second, this));
 
-		return Init(uniformBufferInfoIterator->second.iBufferDataSizeByte, bufferName);
+		return Init(uniformBufferInfoIterator->second.iBufferDataSizeByte, _bufferName, _bufferUsage);
 	}
 
-	Result UniformBuffer::Init(std::initializer_list<const gl::ShaderObject*> metaInfos, const std::string& bufferName)
+	Result UniformBufferView::Init(std::initializer_list<const gl::ShaderObject*> metaInfos, const std::string& bufferName, Buffer::Usage bufferUsage)
 	{
 		Assert(metaInfos.size() != 0, "Meta info lookup list is empty!");
 
@@ -73,17 +85,18 @@ namespace gl
 
 			if (!initialized)
 			{
-				Result result = Init(**metaInfos.begin(), bufferName);
+				Result result = Init(**metaInfos.begin(), bufferName, bufferUsage);
 				if (result == SUCCEEDED)
 					initialized = true;
+				
 				continue;
 			}
 
 			// Sanity check.
-			if (uniformBufferInfoIterator->second.iBufferDataSizeByte != m_uiBufferSizeBytes)
+			if (uniformBufferInfoIterator->second.iBufferDataSizeByte != m_buffer->GetSize())
 			{
-				LOG_LVL2("ShaderObject \"" + (*shaderObjectIt)->GetName() + "\" in list for uniform buffer \"" + bufferName + "\" initialization gives size " +
-					std::to_string(uniformBufferInfoIterator->second.iBufferDataSizeByte) + ", first shader gave size " + std::to_string(m_uiBufferSizeBytes) + "! Skiping..");
+				LOG_LVL2("ShaderObject \"" << (*shaderObjectIt)->GetName() << "\" in list for uniform buffer \"" << bufferName << "\" initialization gives size " <<
+						uniformBufferInfoIterator->second.iBufferDataSizeByte << ", first shader gave size " << m_buffer->GetSize() << "! Skiping..");
 				continue;
 			}
 
@@ -109,32 +122,37 @@ namespace gl
 			}
 		}
 
-		return SUCCEEDED;
+		return m_buffer != nullptr ? SUCCEEDED : FAILURE;
 	}
 
-	void UniformBuffer::UpdateGPUData()
+	void UniformBufferView::BindBuffer(GLuint locationIndex)
 	{
-		if (m_bufferDirtyRangeEnd <= m_bufferDirtyRangeStart)
-			return;
+		Assert(locationIndex < sizeof(s_boundUBOs) / sizeof(UniformBufferView*), 
+			"Can't bind ubo to slot " + std::to_string(locationIndex) + ". Maximum number of slots is " + std::to_string(sizeof(s_boundUBOs) / sizeof(UniformBufferView*)));
 
-		// TODO: Mapping could be faster! http://www.gamedev.net/topic/622685-constant-buffer-updatesubresource-vs-map/
-		// See also here: https://www.opengl.org/wiki/Buffer_Object#Mapping .. can get rather complicated with all that syncing..
-		GL_CALL(glNamedBufferSubData, m_BufferObject, m_bufferDirtyRangeStart, m_bufferDirtyRangeEnd - m_bufferDirtyRangeStart, m_bufferData.get() + m_bufferDirtyRangeStart);
-
-		m_bufferDirtyRangeEnd = std::numeric_limits<std::uint32_t>::min();
-		m_bufferDirtyRangeStart = std::numeric_limits<std::uint32_t>::max();
-	}
-
-	void UniformBuffer::BindBuffer(GLuint locationIndex)
-	{
-		Assert(locationIndex < sizeof(s_boundUBOs) / sizeof(UniformBuffer*), 
-			"Can't bind ubo to slot " + std::to_string(locationIndex) + ". Maximum number of slots is " + std::to_string(sizeof(s_boundUBOs) / sizeof(UniformBuffer*)));
+		if (m_buffer->m_mappedData != nullptr && static_cast<GLenum>(m_buffer->m_usageFlags & Buffer::Usage::MAP_PERSISTENT) == 0)
+			m_buffer->Unmap();
 
 		if (s_boundUBOs[locationIndex] != this)
 		{
-			GL_CALL(glBindBufferBase, GL_UNIFORM_BUFFER, locationIndex, m_BufferObject);
+			GL_CALL(glBindBufferBase, GL_UNIFORM_BUFFER, locationIndex, m_buffer->GetBufferId());
 			s_boundUBOs[locationIndex] = this;
 		}
 
 	}
+
+	void UniformBufferView::Set(const void* _data, std::uint32_t _offset, std::uint32_t _dataSize)
+	{
+		Assert(m_buffer != nullptr, "Uniform buffer " << m_bufferName << " is not initialized");
+		Assert(_dataSize != 0, "Given size to set for uniform data is 0.");
+		Assert(_offset + _dataSize <= m_buffer->GetSize(), "Data block doesn't fit into uniform buffer.");
+		Assert(_data != nullptr, "Data to copy into uniform is nullptr.");
+
+
+		Assert(m_buffer->m_mappedData != nullptr, "Buffer is not mapped!");
+		Assert(m_buffer->m_mappedDataOffset <= _offset && m_buffer->m_mappedDataOffset + m_buffer->m_mappedDataSize >= _dataSize + _offset, "Buffer mapping range is not sufficient.");
+
+		memcpy(static_cast<std::uint8_t*>(m_buffer->m_mappedData) + _offset, reinterpret_cast<const char*>(_data), _dataSize);
+	}
+
 }

@@ -20,6 +20,8 @@ void TestRenderer::SetCamera(const Camera& _camera)
 {
 	ei::Vec3 camU, camV, camW;
 	_camera.ComputeCameraParams(camU, camV, camW);
+
+	m_testubo.GetBuffer()->Map();
 	m_testubo["CameraU"].Set(camU);
 	m_testubo["CameraV"].Set(camV);
 	m_testubo["CameraW"].Set(camW);
@@ -28,8 +30,9 @@ void TestRenderer::SetCamera(const Camera& _camera)
 
 void TestRenderer::Draw()
 {
+	m_testubo.GetBuffer()->Map();
 	m_testubo["Time"].Set(static_cast<float>(ezTime::Now().GetSeconds()));
-	m_testubo.UpdateGPUData();
+	m_testubo.GetBuffer()->Unmap();
 	m_testubo.BindBuffer(0);
 
 	m_backbuffer->BindImage(0, gl::Texture::ImageAccess::WRITE);
