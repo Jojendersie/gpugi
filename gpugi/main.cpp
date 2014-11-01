@@ -10,6 +10,7 @@
 
 #include "renderer/testrenderer.hpp"
 #include "renderer/referencerenderer.hpp"
+//#include "renderer/debugrenderer.hpp"
 
 #include "camera/interactivecamera.hpp"
 
@@ -63,7 +64,11 @@ public:
 		// Load command script if there's a parameter
 		if (argc > 1)
 			m_scriptProcessing.RunScript(argv[1]);
-        else m_scene = std::make_shared<Scene>( "../scenes/box1.rawscene" );
+		else
+		{
+			m_scene = std::make_shared<Scene>("../scenes/box1.rawscene");
+			m_renderer->SetScene(m_scene);
+		}
 
 		// Init console input.
 		m_scriptProcessing.StartConsoleWindowThread();

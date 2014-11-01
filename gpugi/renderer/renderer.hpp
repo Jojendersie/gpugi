@@ -11,6 +11,7 @@ namespace gl
 	class Texture2D;
 }
 class Camera;
+class Scene;
 
 class Renderer
 {
@@ -18,6 +19,8 @@ public:
 	virtual ~Renderer();
 
 	gl::Texture2D& GetBackbuffer() { return *m_backbuffer; }
+
+	virtual void SetScene(std::shared_ptr<Scene> _scene) = 0;
 
 	/// Sets camera. May result in a scene reset!
 	virtual void SetCamera(const Camera& camera)=0;

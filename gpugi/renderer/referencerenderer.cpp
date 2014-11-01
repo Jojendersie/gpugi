@@ -5,9 +5,12 @@
 
 #include "../glhelper/texture2d.hpp"
 #include "../glhelper/screenalignedtriangle.hpp"
+#include "../glhelper/structuredbuffer.hpp"
+
 #include "../Time/Time.h"
 
 #include "../camera/camera.hpp"
+#include "../scene/scene.hpp"
 
 #include <ei/matrix.hpp>
 
@@ -52,6 +55,35 @@ void ReferenceRenderer::SetCamera(const Camera& _camera)
 
 	m_iterationCount = 0;
 	m_backbuffer->ClearToZero(0);
+}
+
+
+void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
+{
+	m_scene = _scene;
+
+	// Check shader compability.
+	auto shaderNodeSize = m_pathtracerShader.GetShaderStorageBufferInfo().at("HierarchyBuffer").iBufferDataSizeByte; //Variables.at("Nodes").iArrayStride;
+	Assert(shaderNodeSize == sizeof(Scene::TreeNode<ei::Box>), "Shader tree node is " << shaderNodeSize << "bytes big but expected were " << sizeof(Scene::TreeNode<ei::Box>) << "bytes");
+	auto shaderVertexSize = m_pathtracerShader.GetShaderStorageBufferInfo().at("VertexBuffer").iBufferDataSizeByte; //.Variables.at("Vertices").iArrayStride;
+	Assert(shaderVertexSize == sizeof(FileDecl::Vertex), "Shader vertex is " << shaderVertexSize << "bytes big but expected were " << sizeof(FileDecl::Vertex) << "bytes");
+	auto shaderLeafSize = m_pathtracerShader.GetShaderStorageBufferInfo().at("LeafBuffer").iBufferDataSizeByte; //.Variables.at("Leafs").iArrayStride;
+	auto expectedLeafSize = sizeof(Scene::Triangle) * m_scene->GetNumTrianglesPerLeaf();
+	Assert(shaderLeafSize == expectedLeafSize, "Shader leaf is " << shaderLeafSize << "bytes big but expected were " << expectedLeafSize << "bytes");
+
+
+	// Bind buffer
+	m_hierarchyBuffer.reset(new gl::StructuredBufferView());
+	m_hierarchyBuffer->Init(m_scene->GetHierarchyBuffer(), "HierarchyBuffer");
+	m_pathtracerShader.BindSSBO(*m_hierarchyBuffer);
+
+	m_vertexBuffer.reset(new gl::StructuredBufferView());
+	m_vertexBuffer->Init(m_scene->GetVertexBuffer(), "VertexBuffer");
+	m_pathtracerShader.BindSSBO(*m_vertexBuffer);
+
+	m_leafBuffer.reset(new gl::StructuredBufferView());
+	m_leafBuffer->Init(m_scene->GetTriangleBuffer(), "LeafBuffer");
+	m_pathtracerShader.BindSSBO(*m_leafBuffer);
 }
 
 void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)

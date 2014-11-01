@@ -223,6 +223,7 @@
     <None Include="shader\raytrace.glsl" />
     <None Include="shader\screenTri.vert" />
     <None Include="shader\testcompute.comp" />
+    <None Include="shader\testraytrace.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

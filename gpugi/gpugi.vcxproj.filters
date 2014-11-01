@@ -258,6 +258,9 @@
     <None Include="shader\random.glsl">
       <Filter>shader</Filter>
     </None>
+    <None Include="shader\testraytrace.glsl">
+      <Filter>shader</Filter>
+    </None>
     <None Include="shader\raytrace.glsl">
       <Filter>shader</Filter>
     </None>

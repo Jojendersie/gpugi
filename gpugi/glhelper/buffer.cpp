@@ -15,10 +15,11 @@ namespace gl
 		m_mappedDataSize(0),
 		m_mappedData(nullptr)
     {
-		Assert(static_cast<uint32_t>(m_usageFlags & Usage::EXPLICIT_FLUSH) == 0 ||
-			   (static_cast<uint32_t>(m_usageFlags & Usage::MAP_PERSISTENT) &&
-			    static_cast<uint32_t>(m_usageFlags & Usage::EXPLICIT_FLUSH)), "EXPLICIT_FLUSH only valid in combination with PERSISTENT");
-		
+		Assert(static_cast<uint32_t>(m_usageFlags & Usage::EXPLICIT_FLUSH) == 0 || static_cast<uint32_t>(m_usageFlags & Usage::MAP_PERSISTENT) > 0,
+			   "EXPLICIT_FLUSH only valid in combination with PERSISTENT");
+		Assert(static_cast<uint32_t>(m_usageFlags & Usage::MAP_COHERENT) == 0 || static_cast<uint32_t>(m_usageFlags & Usage::MAP_PERSISTENT) > 0,
+			   "MAP_COHERENT only valid in combination with PERSISTENT");
+
 
         GL_CALL(glCreateBuffers, 1, &m_bufferObject);
         GL_CALL(glNamedBufferStorage, m_bufferObject, _sizeInBytes, _data, static_cast<GLbitfield>(_usageFlags));
@@ -34,6 +35,8 @@ namespace gl
 			m_glMapAccess |= GL_MAP_PERSISTENT_BIT;
 			if (static_cast<uint32_t>(m_usageFlags & Usage::EXPLICIT_FLUSH) > 0)
 				m_glMapAccess |= GL_MAP_FLUSH_EXPLICIT_BIT;
+			if (static_cast<uint32_t>(m_usageFlags & Usage::MAP_COHERENT) > 0)
+				m_glMapAccess |= GL_MAP_COHERENT_BIT;
 
 			// Persistent buffers do not need to be unmapped!
 			Map();

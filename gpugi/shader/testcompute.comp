@@ -11,7 +11,7 @@ layout(binding = 0, std140) uniform TestUBO
 	float Time;
 };
 
-#include "raytrace.glsl"
+#include "testraytrace.glsl"
 
 #define LOCAL_SIZE 32
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;

@@ -33,8 +33,10 @@ namespace gl
             MAP_PERSISTENT = GL_MAP_PERSISTENT_BIT, 
 			/// Only valid in combination with MAP_PERSISTENT. If active, glFlushMappedBufferRange can used instead of barrier.
 			EXPLICIT_FLUSH = GL_MAP_FLUSH_EXPLICIT_BIT,
-
-         //   COHERENT = GL_COHERENT_BIT,   ///< Allows reads from and writes to a persistent buffer to be coherent with OpenGL, without an explicit barrier. Without this flag, you must use an explicit barrier to achieve coherency. You must use the persistent bit when using this bit.
+			/// Only valid in combination with MAP_PERSISTENT.
+			/// Allows reads from and writes to a persistent buffer to be coherent with OpenGL, without an explicit barrier.
+			/// Without this flag, you must use an explicit barrier to achieve coherency. You must use the persistent bit when using this bit.
+            MAP_COHERENT = GL_MAP_COHERENT_BIT,   
 
             SUB_DATA_UPDATE = GL_DYNAMIC_STORAGE_BIT	///< Makes set and get available
         };
