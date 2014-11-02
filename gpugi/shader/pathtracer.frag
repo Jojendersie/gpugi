@@ -54,8 +54,8 @@ float TraceRay(in Ray ray, out vec3 normal)
 				{
 					// Load triangle.
 					Triangle triangle = Leafs[currentNodeIndex].triangles[i];
-					//if(triangle.Vertices.x == triangle.Vertices.y)
-					//	continue;
+					if(triangle.Vertices.x == triangle.Vertices.y) // Last test if optimization or perf decline: 02.11.14
+						continue;
 
 					// Load vertex positions
 					vec3 positions[3];
