@@ -112,7 +112,7 @@ void ScriptProcessing::ParseCommand(std::string _commandLine, bool _fromScriptFi
 			if (argumentList.size() != 1)
 				LOG_ERROR("The waitSeconds command expects a single number as argument.");
 			else
-				m_scriptWaitSeconds = argumentList[0];
+				m_scriptWaitSeconds = argumentList[0].As<float>();
 			return;
 		}
 		else if (name == "waitIterations")
@@ -120,7 +120,7 @@ void ScriptProcessing::ParseCommand(std::string _commandLine, bool _fromScriptFi
 			if (argumentList.size() != 1)
 				LOG_ERROR("The waitIterations command expects a single number as argument.");
 			else
-				m_scriptWaitIterations = static_cast<unsigned int>(argumentList[0]);
+				m_scriptWaitIterations = argumentList[0].As<unsigned int>();
 			return;
 		}
 	}
@@ -133,8 +133,8 @@ void ScriptProcessing::ParseCommand(std::string _commandLine, bool _fromScriptFi
 		{
 			std::cout << "{";
 			for (size_t i = 0; i < currentValue.size() - 1; ++i)
-				std::cout << std::to_string(currentValue[i]) << ", ";
-			std::cout << std::to_string(currentValue[currentValue.size() - 1]) << " }\n";
+				std::cout << currentValue[i].As<std::string>() << ", ";
+			std::cout << currentValue[currentValue.size() - 1].As<std::string>() << " }\n";
 		}
 		else
 		{

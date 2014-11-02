@@ -37,8 +37,8 @@ OutputWindow::OutputWindow() :
 #endif
 
 	auto resolutionParam = GlobalConfig::GetParameter("resolution");
-	unsigned int width = static_cast<unsigned int>(resolutionParam[0]);
-	unsigned int height = static_cast<unsigned int>(resolutionParam[1]);
+	unsigned int width = resolutionParam[0].As<int>();
+	unsigned int height = resolutionParam[1].As<int>();
 
 	window = glfwCreateWindow(width, height, "<Add fancy title here>", nullptr, nullptr);
 	if (!window)
@@ -47,7 +47,7 @@ OutputWindow::OutputWindow() :
 		throw std::exception("Failed to create glfw window!");
 	}
 
-	GlobalConfig::AddListener("resolution", "outputwindow", [=](const GlobalConfig::ParameterType& p){ ChangeWindowSize(ei::IVec2(static_cast<int>(p[0]), static_cast<int>(p[1]))); });
+	GlobalConfig::AddListener("resolution", "outputwindow", [=](const GlobalConfig::ParameterType& p){ ChangeWindowSize(ei::IVec2(p[0].As<int>(), p[1].As<int>())); });
 	GlobalConfig::AddParameter("srgb", { 1.0f }, "If >0 the output window will perform an srgb conversion. Does not affect (hdr)screenshots!");
 
 	glfwMakeContextCurrent(window);
@@ -139,7 +139,7 @@ void OutputWindow::SetTitle(const std::string& windowTitle)
 
 void OutputWindow::DisplayHDRTexture(gl::Texture2D& texture)
 {
-	bool srgboutput = GlobalConfig::GetParameter("srgb")[0] > 0.0f;
+	bool srgboutput = GlobalConfig::GetParameter("srgb")[0].As<bool>();
 	if (srgboutput)
 		glEnable(GL_FRAMEBUFFER_SRGB);
 

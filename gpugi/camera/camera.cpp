@@ -29,13 +29,13 @@ void Camera::ConnectToGlobalConfig()
 	}
 
 	GlobalConfig::AddParameter("cameraPos", { m_position.x, m_position.y, m_position.z }, "Global camera's position");
-	GlobalConfig::AddListener("cameraPos", "global camera", [=](const GlobalConfig::ParameterType& p){ this->SetPosition(ei::Vec3(p[0], p[1], p[2])); });
+	GlobalConfig::AddListener("cameraPos", "global camera", [=](const GlobalConfig::ParameterType& p){ this->SetPosition(ei::Vec3(p[0].As<float>(), p[1].As<float>(), p[2].As<float>())); });
 
 	GlobalConfig::AddParameter("cameraLookAt", { m_lookat.x, m_lookat.y, m_lookat.z }, "Global camera's look at");
-	GlobalConfig::AddListener("cameraLookAt", "global camera", [=](const GlobalConfig::ParameterType& p){ this->SetLookAt(ei::Vec3(p[0], p[1], p[2])); });
+	GlobalConfig::AddListener("cameraLookAt", "global camera", [=](const GlobalConfig::ParameterType& p){ this->SetLookAt(ei::Vec3(p[0].As<float>(), p[1].As<float>(), p[2].As<float>())); });
 
 	GlobalConfig::AddParameter("cameraFOV", { m_hfov }, "Global camera's horizontal FOV");
-	GlobalConfig::AddListener("cameraFOV", "global camera", [=](const GlobalConfig::ParameterType& p){ this->SetHFov(p[0]); });
+	GlobalConfig::AddListener("cameraFOV", "global camera", [=](const GlobalConfig::ParameterType& p){ this->SetHFov(p[0].As<float>()); });
 
 	m_connectedToGlobalConfig = true;
 	s_anyCameraConnectedToGlobalConfig = true;

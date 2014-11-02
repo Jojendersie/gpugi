@@ -213,6 +213,7 @@
     <ClInclude Include="utilities\pathutils.hpp" />
     <ClInclude Include="utilities\policy.hpp" />
     <ClInclude Include="utilities\utils.hpp" />
+    <ClInclude Include="utilities\variant.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="glhelper\shaderdatametainfo.inl" />

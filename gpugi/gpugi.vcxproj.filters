@@ -235,6 +235,9 @@
     <ClInclude Include="utilities\flagoperators.hpp">
       <Filter>code\utilities</Filter>
     </ClInclude>
+    <ClInclude Include="utilities\variant.hpp">
+      <Filter>code\utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="glhelper\uniformbuffer.inl">

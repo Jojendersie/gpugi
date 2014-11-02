@@ -38,7 +38,7 @@ public:
 		Logger::g_logger.Initialize(new Logger::FilePolicy("log.txt"));
 
 		// Add a few fundamental global parameters/events.
-		GlobalConfig::AddParameter("pause", { 0.0f }, "Set to <=0 to pause drawing. Input will still work.");
+		GlobalConfig::AddParameter("pause", { false }, "Set to true to pause drawing. Input will still work.");
 		GlobalConfig::AddParameter("resolution", { 1024, 768 }, "The window's width and height.");
 		GlobalConfig::AddParameter("help", {}, "Dumps all available parameter/events to the command window.");
 		GlobalConfig::AddListener("help", "HelpDumpFunc", [](const GlobalConfig::ParameterType&) { std::cout << GlobalConfig::GetEntryDescriptions() << std::endl; });
@@ -50,12 +50,19 @@ public:
 		m_window.reset(new OutputWindow());
 
 		// Create "global" camera.
-		m_camera.reset(new InteractiveCamera(m_window->GetGLFWWindow(), ei::Vec3(0.0f), ei::Vec3(0.0f, 0.0f, 1.0f), GlobalConfig::GetParameter("resolution")[0] / GlobalConfig::GetParameter("resolution")[1], 70.0f));
+		m_camera.reset(new InteractiveCamera(m_window->GetGLFWWindow(), ei::Vec3(0.0f), ei::Vec3(0.0f, 0.0f, 1.0f), 
+							GlobalConfig::GetParameter("resolution")[0].As<float>() / GlobalConfig::GetParameter("resolution")[1].As<int>(), 70.0f));
 		m_camera->ConnectToGlobalConfig();
-		GlobalConfig::AddListener("resolution", "global camera aspect", [=](const GlobalConfig::ParameterType& p) { this->m_camera->SetAspectRatio(p[0] / p[1]); this->m_renderer->SetCamera(*m_camera); });
-		GlobalConfig::AddListener("cameraPos", "update renderer cam", [=](const GlobalConfig::ParameterType& p){ this->m_renderer->SetCamera(*m_camera); });
-		GlobalConfig::AddListener("cameraLookAt", "update renderer cam", [=](const GlobalConfig::ParameterType& p){ this->m_renderer->SetCamera(*m_camera); });
-		GlobalConfig::AddListener("cameraFOV", "update renderer cam", [=](const GlobalConfig::ParameterType& p){ this->m_renderer->SetCamera(*m_camera); });
+		GlobalConfig::AddListener("resolution", "global camera aspect", [=](const GlobalConfig::ParameterType& p) {
+			m_camera->SetAspectRatio(p[0].As<float>() / p[1].As<float>());
+			m_renderer->SetCamera(*m_camera);
+		});
+		auto updateCamera = [=](const GlobalConfig::ParameterType& p){
+			this->m_renderer->SetCamera(*m_camera);
+		};
+		GlobalConfig::AddListener("cameraPos", "update renderer cam", updateCamera);
+		GlobalConfig::AddListener("cameraLookAt", "update renderer cam", updateCamera);
+		GlobalConfig::AddListener("cameraFOV", "update renderer cam", updateCamera);
 
 		// Renderer...
 		LOG_LVL2("Init renderer ...");
@@ -97,7 +104,7 @@ public:
 			mainLoopStopWatch.Resume();
 
 			Update(timeSinceLastUpdate);
-			if (GlobalConfig::GetParameter("pause")[0] <= 0.0f)
+			if (!GlobalConfig::GetParameter("pause")[0].As<bool>())
 				Draw();
 		}
 	}

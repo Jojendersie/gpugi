@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
+#include "../utilities/variant.hpp"
 
 
 /// Primitive system for global config parameters.
@@ -10,10 +11,10 @@
 /// Missuse as event system is appreciated - just specify an empty vector for an command.
 namespace GlobalConfig
 {
-	typedef std::function<void(const std::vector<float>&)> SetFunc;
-	typedef std::function<std::vector<float>()> GetFunc;
+	typedef std::vector<Variant<float, int, bool, std::string>> ParameterType;
+	typedef std::function<void(const ParameterType&)> SetFunc;
+	typedef std::function<ParameterType()> GetFunc;
 	typedef SetFunc ListenerFunc;
-	typedef std::vector<float> ParameterType;
 
 	/// Adds a new global parameter.
 	///

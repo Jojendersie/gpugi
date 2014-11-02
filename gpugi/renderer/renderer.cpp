@@ -4,8 +4,8 @@
 
 Renderer::Renderer() : m_iterationCount(0)
 {
-	CreateBackbuffer(ei::UVec2(static_cast<std::uint32_t>(GlobalConfig::GetParameter("resolution")[0]), static_cast<std::uint32_t>(GlobalConfig::GetParameter("resolution")[1])));
-	GlobalConfig::AddListener("resolution", "renderer", [=](const GlobalConfig::ParameterType& p){ this->OnResize(ei::UVec2(static_cast<std::uint32_t>(p[0]), static_cast<std::uint32_t>(p[1]))); });
+	CreateBackbuffer(ei::UVec2(GlobalConfig::GetParameter("resolution")[0].As<int>(), GlobalConfig::GetParameter("resolution")[1].As<int>()));
+	GlobalConfig::AddListener("resolution", "renderer", [=](const GlobalConfig::ParameterType& p){ this->OnResize(ei::UVec2(p[0].As<int>(), p[1].As<int>())); });
 }
 
 
