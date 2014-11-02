@@ -22,13 +22,16 @@ layout(binding = 2, std140) uniform PerIteration
 	uint FrameSeed;
 };
 
-layout(location = 0) in vec2 vs_out_texcoord;
-layout(location = 0, index = 0) out vec4 FragColor;
 
 #define MAX_NUM_BOUNCES 1
 #define RAY_HIT_EPSILON 0.01
 #define RAY_MAX 3.40282347e+38
 //#define RUSSIAN_ROULETTE
+
+//uint numBoxesVisited = 0;
+
+layout(binding = 0, rgba32f) restrict writeonly uniform image2D OutputTexture; // attention! No coherent flag set!
+
 
 void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, out Triangle outTriangle)
 {
@@ -40,13 +43,15 @@ void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, o
 		// Load entire node.
 		Node currentNode = Nodes[currentNodeIndex];
 
+		//++numBoxesVisited;
+
 		float newHit;
 		if(IntersectBox(ray, invRayDir, currentNode.BoundingBoxMin, currentNode.BoundingBoxMax, newHit) && newHit <= rayLength)
 		{
 			uint childCode = currentNode.FirstChild;
 			currentNodeIndex = childCode & uint(0x7FFFFFFF);  // Most significant bit tells us is this is a leaf.
 		
-			// It is a leaf
+			// If it is a leaf ...
 			if(currentNodeIndex != childCode)
 			{
 				for(int i=0; i<TRIANGLES_PER_LEAF; ++i)
@@ -72,7 +77,6 @@ void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, o
 						outBarycentricCoord = newBarycentricCoord;
 						// Cannot return yet, there might be a triangle that is hit before this one!
 					}
-					
 				}
 				currentNodeIndex = currentNode.Escape;
 			}
@@ -85,9 +89,11 @@ void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, o
 	} while(currentNodeIndex != 0);
 }
 
+#define LOCAL_SIZE 32
+layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
 void main()
-{	
-	uvec2 gridPosition = uvec2(vs_out_texcoord * BackbufferSize); // [0, BackbufferSize[
+{
+	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
 	uint randomSeed = InitRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
 	vec2 screenCoord = (Random2(randomSeed) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
 
@@ -147,5 +153,6 @@ void main()
 		ray.Direction = SampleUnitHemisphere(Random2(randomSeed), U, V, hitNormal);
 	}
 
-	FragColor = vec4(color, 1.0);
+	imageStore(OutputTexture, gridPosition, vec4(color, 1.0));
+	//FragColor = vec4(color, 1.0); //vec4(vec3(float(numBoxesVisited) * 0.001), 1.0);
 }

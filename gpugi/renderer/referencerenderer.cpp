@@ -17,11 +17,15 @@
 
 ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 	m_pathtracerShader("pathtracer"),
+	m_blendShader("blend"),
 	m_backbufferFBO(gl::FramebufferObject::Attachment(m_backbuffer.get()))
 {
-	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/screenTri.vert");
-	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/pathtracer.frag");
+	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer.comp");
 	m_pathtracerShader.CreateProgram();
+
+	m_blendShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/screenTri.vert");
+	m_blendShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/displayHDR.frag");
+	m_blendShader.CreateProgram();
 
 	m_globalConstUBO.Init(m_pathtracerShader, "GlobalConst");
 	m_globalConstUBO.GetBuffer()->Map();
@@ -36,6 +40,8 @@ ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 	m_perIterationUBO["FrameSeed"].Set(WangHash(0));
 	m_perIterationUBO.BindBuffer(2);
 
+
+	m_iterationBuffer.reset(new gl::Texture2D(m_backbuffer->GetWidth(), m_backbuffer->GetHeight(), gl::TextureFormat::RGBA32F, 1, 0));
 	
 	// Additive blending.
 	glBlendFunc(GL_ONE, GL_ONE);
@@ -89,6 +95,8 @@ void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
 void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)
 {
 	Renderer::OnResize(_newSize);
+
+	m_iterationBuffer.reset(new gl::Texture2D(_newSize.x, _newSize.y, gl::TextureFormat::RGBA32F, 1, 0));
 	
 	m_globalConstUBO.GetBuffer()->Map();
 	m_globalConstUBO["BackbufferSize"].Set(_newSize);
@@ -100,16 +108,34 @@ void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)
 
 void ReferenceRenderer::Draw()
 {
-	m_backbufferFBO.Bind(false);
-	glEnable(GL_BLEND);
+	{
+		m_iterationBuffer->BindImage(0, gl::Texture::ImageAccess::WRITE);
 
-	m_pathtracerShader.Activate();
-	m_screenTri.Draw();
+		m_pathtracerShader.Activate();
+		GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / 32, m_backbuffer->GetHeight() / 32, 1);
 
-	m_backbufferFBO.BindBackBuffer();
-	glDisable(GL_BLEND);
+		// Ensure that all future fetches will use the modified data.
+		// See https://www.opengl.org/wiki/Memory_Model#Ensuring_visibility
+		GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT);
+	}
 
-	++m_iterationCount;
-	m_perIterationUBO["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
-	GL_CALL(glFlushMappedNamedBufferRange, m_perIterationUBO.GetBuffer()->GetBufferId(), static_cast<GLintptr>(0), m_perIterationUBO.GetBuffer()->GetSize());
+
+	{
+		++m_iterationCount;
+		m_perIterationUBO["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
+		GL_CALL(glFlushMappedNamedBufferRange, m_perIterationUBO.GetBuffer()->GetBufferId(), static_cast<GLintptr>(0), m_perIterationUBO.GetBuffer()->GetSize());
+	}
+
+	{
+		m_backbufferFBO.Bind(false);
+		glEnable(GL_BLEND);
+
+		m_iterationBuffer->Bind(0);
+		m_blendShader.Activate();
+
+		m_screenTri.Draw();
+
+		glDisable(GL_BLEND);
+		m_backbufferFBO.BindBackBuffer();
+	}
 }
