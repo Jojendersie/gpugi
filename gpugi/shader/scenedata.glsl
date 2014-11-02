@@ -22,7 +22,7 @@ vec2 GetVec(PackVec2 v) { return vec2(v.x, v.y); }
 
 struct Vertex
 {
-	PackVec3 Position;
+	vec3 Position;
 	PackVec3 Normal;
 	PackVec2 Texcoord;
 };
@@ -37,27 +37,27 @@ struct Leaf
 	Triangle triangles[TRIANGLES_PER_LEAF];
 };
 
+#if NODE_TYPE == NODE_TYPE_BOX
 struct Node
 {
+	vec3 BoundingBoxMin;
 	uint FirstChild;	// The most significant bit determines if the child is a leaf (1)
+	vec3 BoundingBoxMax;
 	uint Escape;  		// Where to go next when this node was not hit? If 0 there is nowhere to go.
-#if NODE_TYPE == NODE_TYPE_BOX
-	PackVec3 BoundingBoxMin;
-    PackVec3 BoundingBoxMax;
+};
 #else
 	#error "No node type defined"
 #endif
-};
 
-layout (shared, binding=0) restrict readonly buffer HierarchyBuffer 
+layout (std430, binding=0) restrict readonly buffer HierarchyBuffer 
 {
 	Node[] Nodes;
 };
-layout (shared, binding=1) restrict readonly buffer VertexBuffer 
+layout (std430, binding=1) restrict readonly buffer VertexBuffer 
 {
 	Vertex[] Vertices;
 };
-layout (shared, binding=2) restrict readonly buffer LeafBuffer 
+layout (std430, binding=2) restrict readonly buffer LeafBuffer 
 {
 	Leaf[] Leafs;
 };

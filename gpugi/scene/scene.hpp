@@ -18,13 +18,30 @@ public:
     ~Scene();
 
 	/// Inner node struct on GPU side
+	/// Specialized for optimal GPU alignment.
 	template<typename T>
-	struct TreeNode
+	struct TreeNode {	};
+	template<>
+	struct TreeNode<ei::Box>
 	{
+		ei::Vec3 min;
+		uint32 firstChild;	///< Index of the first child, others are reached by the child's escape. 0 is the invalid index.
+
+		ei::Vec3 max;
+		uint32 escape;		///< Index of the next node when this completed. 0 is the invalid index.
+	};
+	template<>
+	struct TreeNode<ei::Sphere>
+	{
+		ei::Vec3 center;
+		float radius;
+		
 		uint32 firstChild;	///< Index of the first child, others are reached by the child's escape. 0 is the invalid index.
 		uint32 escape;		///< Index of the next node when this completed. 0 is the invalid index.
-		T boundingVolume;	///< The bounding volume is part of this node. Load different shader dependent of the type
+		
+		uint32 padding[2]; ///< Seems to be necessary
 	};
+
 
 	/// "Index buffer content": UVec4 with 3 vertex indices and a material index
 	struct Triangle

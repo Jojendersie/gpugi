@@ -137,18 +137,32 @@ void Scene::LoadMatAssocialtion( std::ifstream& _file, const FileDecl::NamedArra
 	m_triangleBuffer->Unmap();
 }
 
+template<typename BVType>
+void LoadHierachyHelper(char* _dest, std::ifstream& _file, const FileDecl::NamedArray& _header)
+{
+	Scene::TreeNode<BVType>* dest = reinterpret_cast<Scene::TreeNode<BVType>*>(_dest);
+	for (uint32_t i = 0; i < _header.numElements; ++i, ++dest)
+	{
+		FileDecl::Node node;
+		_file.read((char*)&node, sizeof(FileDecl::Node));
+
+		dest->firstChild = node.firstChild;
+		dest->escape = node.escape;
+	}
+}
+
 void Scene::LoadHierarchy( std::ifstream& _file, const FileDecl::NamedArray& _header )
 {
 	// Read element wise and copy the tree structure
-	uint32 nodeSize = uint32(size(m_bvType) + 2 * sizeof(uint32));
 	char* dest = (char*)m_hierarchyBuffer->Map();
-	for(uint32_t i = 0; i < _header.numElements; ++i,dest+=nodeSize)
-	{
-		FileDecl::Node node;
-		_file.read( (char*)&node, sizeof(FileDecl::Node) );
-		((TreeNode<char>*)dest)->firstChild = node.firstChild;
-		((TreeNode<char>*)dest)->escape = node.escape;
-	}
+	
+	if (m_bvType == ε::Types3D::BOX)
+		LoadHierachyHelper<ei::Box>(dest, _file, _header);
+	else if (m_bvType == ε::Types3D::SPHERE)
+		LoadHierachyHelper<ei::Sphere>(dest, _file, _header);
+	else
+		LOG_ERROR("Unimplemented bvh type!");
+
 	m_hierarchyBuffer->Unmap();
 }
 
@@ -158,13 +172,26 @@ void Scene::LoadBoundingVolumes( std::ifstream& _file, const FileDecl::NamedArra
 	if( m_bvType == ε::Types3D::BOX )
 	{
 		TreeNode<ε::Box>* dest = (TreeNode<ε::Box>*)m_hierarchyBuffer->Map();
-		for(uint32_t i = 0; i < _header.numElements; ++i,++dest)
-			_file.read( (char*)&dest->boundingVolume, sizeof(ε::Box) );
-	} else if( m_bvType == ε::Types3D::SPHERE )
+		for (uint32_t i = 0; i < _header.numElements; ++i, ++dest)
+		{
+			ε::Box buffer;
+			_file.read(reinterpret_cast<char*>(&buffer), sizeof(ε::Box));
+			dest->max = buffer.max;
+			dest->min = buffer.min;
+		}
+	}
+	else if( m_bvType == ε::Types3D::SPHERE )
 	{
 		TreeNode<ε::Sphere>* dest = (TreeNode<ε::Sphere>*)m_hierarchyBuffer->Map();
-		for(uint32_t i = 0; i < _header.numElements; ++i,++dest)
-			_file.read( (char*)&dest->boundingVolume, sizeof(ε::Sphere) );
+		for (uint32_t i = 0; i < _header.numElements; ++i, ++dest)
+		{
+			ε::Sphere buffer;
+			_file.read(reinterpret_cast<char*>(&buffer), sizeof(ε::Sphere));
+			dest->center = buffer.center;
+			dest->radius = buffer.radius;
+		}
 	}
+	else
+		LOG_ERROR("Unimplemented bvh type!");
 	m_hierarchyBuffer->Unmap();
 }

@@ -32,15 +32,19 @@ layout(location = 0, index = 0) out vec4 FragColor;
 
 float TraceRay(in Ray ray, out vec3 normal)
 {
-	// Load node
 	uint currentNodeIndex = 0;
+
 	float rayHit = RAY_MAX;
+	vec3 invRayDir = 1.0 / ray.Direction;
+
 	do {
-		uint escape = Nodes[currentNodeIndex].Escape;
+		// Load entire node.
+		Node currentNode = Nodes[currentNodeIndex];
+
 		float newHit;
-		if(IntersectBox(ray, GetVec(Nodes[currentNodeIndex].BoundingBoxMin), GetVec(Nodes[currentNodeIndex].BoundingBoxMax), newHit) && newHit <= rayHit)
+		if(IntersectBox(ray, invRayDir, currentNode.BoundingBoxMin, currentNode.BoundingBoxMax, newHit) && newHit <= rayHit)
 		{
-			uint childCode = Nodes[currentNodeIndex].FirstChild;
+			uint childCode = currentNode.FirstChild;
 			currentNodeIndex = childCode & uint(0x7FFFFFFF);  // Most significant bit tells us is this is a leaf.
 		
 			// It is a leaf
@@ -55,9 +59,9 @@ float TraceRay(in Ray ray, out vec3 normal)
 
 					// Load vertex positions
 					vec3 positions[3];
-					positions[0] = GetVec(Vertices[triangle.Vertices.x].Position);
-					positions[1] = GetVec(Vertices[triangle.Vertices.y].Position);
-					positions[2] = GetVec(Vertices[triangle.Vertices.z].Position);
+					positions[0] = Vertices[triangle.Vertices.x].Position;
+					positions[1] = Vertices[triangle.Vertices.y].Position;
+					positions[2] = Vertices[triangle.Vertices.z].Position;
 
 					// Check hit.
 					vec3 newNormal;
@@ -68,14 +72,15 @@ float TraceRay(in Ray ray, out vec3 normal)
 						normal = newNormal;
 						// Cannot return yet, there might be a triangle that is hit before this one!
 					}
+					
 				}
-				currentNodeIndex = escape;
+				currentNodeIndex = currentNode.Escape;
 			}
 		}
 		// No hit, go to escape pointer and repeat.
 		else
 		{
-			currentNodeIndex = escape;
+			currentNodeIndex = currentNode.Escape;
 		}
 	} while(currentNodeIndex != 0);
 

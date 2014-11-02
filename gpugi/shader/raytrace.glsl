@@ -8,11 +8,10 @@ struct Ray
 	vec3 Direction;
 };
 
-bool IntersectBox(Ray ray, vec3 aabbMin, vec3 aabbMax, out float firstHit)
+bool IntersectBox(Ray ray, vec3 invRayDir, vec3 aabbMin, vec3 aabbMax, out float firstHit)
 {
-	vec3 invR = 1.0 / ray.Direction;
-	vec3 tbot = invR * (aabbMin - ray.Origin);
-	vec3 ttop = invR * (aabbMax - ray.Origin);
+	vec3 tbot = invRayDir * (aabbMin - ray.Origin);
+	vec3 ttop = invRayDir * (aabbMax - ray.Origin);
 	vec3 tmin = min(ttop, tbot);
 	vec3 tmax = max(ttop, tbot);
 	vec2 t = max(tmin.xx, tmin.yz);
@@ -20,6 +19,10 @@ bool IntersectBox(Ray ray, vec3 aabbMin, vec3 aabbMax, out float firstHit)
 	t = min(tmax.xx, tmax.yz);
 	float lastHit = min(t.x, t.y);
 	return firstHit <= lastHit;
+}
+bool IntersectBox(Ray ray, vec3 aabbMin, vec3 aabbMax, out float firstHit)
+{
+	return IntersectBox(ray, vec3(1.0) / ray.Direction, aabbMin, aabbMax, firstHit);
 }
 
 
