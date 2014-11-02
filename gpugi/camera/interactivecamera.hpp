@@ -23,10 +23,7 @@ public:
 	bool Update(ezTime timeSinceLastFrame);
 
 private:
-	void RotFromLookat();
-
 	GLFWwindow* m_window;
-	double m_rotX, m_rotY;
 	float m_rotSpeed, m_moveSpeed;
 	double m_lastMousePosX, m_lastMousePosY;
 
