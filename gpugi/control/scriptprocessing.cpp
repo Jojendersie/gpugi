@@ -89,11 +89,9 @@ void ScriptProcessing::ParseCommand(std::string _commandLine, bool _fromScriptFi
 			else
 				paramlistPart = _commandLine.substr(lastComma + 1, nextComma - lastComma - 1);
 
-			float value = 0.0f;
 			try
 			{
-				value = std::stof(paramlistPart);
-				argumentList.push_back(value);
+				argumentList.push_back(GlobalConfig::ParameterElementType(paramlistPart));
 			}
 			catch (...)
 			{

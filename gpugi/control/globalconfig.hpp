@@ -11,7 +11,8 @@
 /// Missuse as event system is appreciated - just specify an empty vector for an command.
 namespace GlobalConfig
 {
-	typedef std::vector<Variant<float, int, bool, std::string>> ParameterType;
+	typedef Variant<float, int, bool, std::string> ParameterElementType;
+	typedef std::vector<ParameterElementType> ParameterType;
 	typedef std::function<void(const ParameterType&)> SetFunc;
 	typedef std::function<ParameterType()> GetFunc;
 	typedef SetFunc ListenerFunc;

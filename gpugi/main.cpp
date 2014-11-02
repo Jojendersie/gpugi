@@ -67,15 +67,17 @@ public:
 		// Renderer...
 		LOG_LVL2("Init renderer ...");
 		m_renderer.reset(new ReferenceRenderer(*m_camera));
+		GlobalConfig::AddParameter("sceneFilename", { std::string("") }, "Change this value to load a new scene.");
+		GlobalConfig::AddListener("sceneFilename", "LoadScene", [=](const GlobalConfig::ParameterType p) {
+			std::string sceneFilename = p[0].As<std::string>();
+			std::cout << "Loading scene " << sceneFilename;
+			m_scene = std::make_shared<Scene>(sceneFilename);
+			m_renderer->SetScene(m_scene);
+		});
 
 		// Load command script if there's a parameter
 		if (argc > 1)
 			m_scriptProcessing.RunScript(argv[1]);
-		else
-		{
-			m_scene = std::make_shared<Scene>("../scenes/box1.rawscene");
-			m_renderer->SetScene(m_scene);
-		}
 
 		// Init console input.
 		m_scriptProcessing.StartConsoleWindowThread();
