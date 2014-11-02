@@ -30,11 +30,10 @@ layout(location = 0, index = 0) out vec4 FragColor;
 #define RAY_MAX 3.40282347e+38
 //#define RUSSIAN_ROULETTE
 
-float TraceRay(in Ray ray, out vec3 normal)
+void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, out Triangle outTriangle)
 {
 	uint currentNodeIndex = 0;
 
-	float rayHit = RAY_MAX;
 	vec3 invRayDir = 1.0 / ray.Direction;
 
 	do {
@@ -42,7 +41,7 @@ float TraceRay(in Ray ray, out vec3 normal)
 		Node currentNode = Nodes[currentNodeIndex];
 
 		float newHit;
-		if(IntersectBox(ray, invRayDir, currentNode.BoundingBoxMin, currentNode.BoundingBoxMax, newHit) && newHit <= rayHit)
+		if(IntersectBox(ray, invRayDir, currentNode.BoundingBoxMin, currentNode.BoundingBoxMax, newHit) && newHit <= rayLength)
 		{
 			uint childCode = currentNode.FirstChild;
 			currentNodeIndex = childCode & uint(0x7FFFFFFF);  // Most significant bit tells us is this is a leaf.
@@ -64,12 +63,13 @@ float TraceRay(in Ray ray, out vec3 normal)
 					positions[2] = Vertices[triangle.Vertices.z].Position;
 
 					// Check hit.
-					vec3 newNormal;
-					float newHit, newBeta, newGamma;
-					if(IntersectTriangle(ray, positions[0], positions[1], positions[2], newHit, newBeta, newGamma, newNormal) && newHit < rayHit)
+					vec3 triangleNormal;
+					float newHit; vec3 newBarycentricCoord;
+					if(IntersectTriangle(ray, positions[0], positions[1], positions[2], newHit, newBarycentricCoord, triangleNormal) && newHit < rayLength)
 					{
-						rayHit = newHit;
-						normal = newNormal;
+						rayLength = newHit;
+						outTriangle = triangle;
+						outBarycentricCoord = newBarycentricCoord;
 						// Cannot return yet, there might be a triangle that is hit before this one!
 					}
 					
@@ -83,8 +83,6 @@ float TraceRay(in Ray ray, out vec3 normal)
 			currentNodeIndex = currentNode.Escape;
 		}
 	} while(currentNodeIndex != 0);
-
-	return rayHit;
 }
 
 void main()
@@ -93,53 +91,60 @@ void main()
 	uint randomSeed = InitRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
 	vec2 screenCoord = (Random2(randomSeed) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
 
-	Ray cameraRay;
-	cameraRay.Origin = CameraPosition;
-	cameraRay.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
+	Ray ray;
+	ray.Origin = CameraPosition;
+	ray.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
 
-	const vec3 lightDir = normalize(vec3(1.0, 1.0, 0.0));
 	vec3 color = vec3(0.0);
 	vec3 rayColor = vec3(1.0);
 
 	for(int i=0; i<MAX_NUM_BOUNCES; ++i)
 	{
-		vec3 normal;
-		float rayHit = TraceRay(cameraRay, normal);
+		// Trace ray.
+		Triangle triangle;
+		vec3 barycentricCoord;
+		float rayHit = RAY_MAX;
+		TraceRay(ray, rayHit, barycentricCoord, triangle);
 		if(rayHit == RAY_MAX)
 			break;
 
-		color = vec3(normalize(abs(normal))); // vec3(rayHit * 0.01);
-/*
+		// Compute hit normal.
+		vec3 hitNormal = normalize(GetVec(Vertices[triangle.Vertices.x].Normal) * barycentricCoord.x + 
+						 		   GetVec(Vertices[triangle.Vertices.y].Normal) * barycentricCoord.y +
+								   GetVec(Vertices[triangle.Vertices.z].Normal) * barycentricCoord.z); 
+
+		// Compute hit color.
+		vec3 hitColor = vec3(0.7); // TODO
 #ifdef RUSSIAN_ROULETTE
-		float notAbsorption = dot(intersect.sphere.col, vec3(0.333333));
-		rayColor *= intersect.sphere.col / notAbsorption; // Only change in spectrum, no energy loss.
+		float hitLuminance = GetLuminance(hitColor);
+		rayColor *= hitColor / hitLuminance; // Only change in spectrum, no energy loss.
 #else
-		rayColor *= intersect.sphere.col; // Absorption, not via Russion Roulette, but by color multiplication.
+		rayColor *= hitColor; // Absorption, not via Russion Roulette, but by color multiplication.
 #endif
 
-		
-		// Add direct light - DIRECTIONAL TEST LIGHT ATM
-		cameraRay.Origin = cameraRay.Origin + (intersect.t - RAY_HIT_EPSILON) * cameraRay.direction;
-		vec3 hitNormal = vec3(0, 1, 0); //normalize(cameraRay.Origin - intersect.sphere.pos);
-		intersect.t = 1.0e+30;
-		cameraRay.Direction = lightDir;
-		TraceRay(cameraRay, intersect);
-		if(intersect.t >= 1.0e+30)
-			color += rayColor * saturate(dot(lightDir, hitNormal)); // 1/PI is BRDF, rayColor incoming L
+
+		// Add direct light - FIXED POINT LIGHT ATM
+		const vec3 lightPos = vec3(0, 2, 0);
+		ray.Origin = ray.Origin + (rayHit - RAY_HIT_EPSILON) * ray.Direction;
+		ray.Direction = lightPos - ray.Origin;
+
+		float lightDist = length(ray.Direction);
+		ray.Direction /= lightDist;
+		rayHit = lightDist;
+
+		TraceRay(ray, rayHit, barycentricCoord, triangle);
+		if(rayHit == lightDist)
+			color += rayColor * saturate(dot(ray.Direction, hitNormal)); // 1/PI is BRDF, rayColor incoming L
 
 #ifdef RUSSIAN_ROULETTE
-		if(Random(randomSeed) > notAbsorption)
+		if(Random(randomSeed) > hitLuminance)
 			break;
 #endif
 
 		// Bounce ray.
 		vec3 U, V;
 		CreateONB(hitNormal, U, V);
-		cameraRay.direction = SampleUnitHemisphere(Random2(randomSeed), U, V, hitNormal);
-		intersect.t = 1.0e+30;
-		intersect.sphere = sphere[4];
-
-		*/
+		ray.Direction = SampleUnitHemisphere(Random2(randomSeed), U, V, hitNormal);
 	}
 
 	FragColor = vec4(color, 1.0);

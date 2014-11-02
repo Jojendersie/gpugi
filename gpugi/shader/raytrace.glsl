@@ -33,9 +33,9 @@ bool IntersectBox(Ray ray, vec3 aabbMin, vec3 aabbMax, out float firstHit)
 // -> "Möller and Trumbore" seems to be fastest under all conditions
 //
 // Optix comes with two variantes: A branchless and a early exit.
-// This is the branchless variant. It is basically "Möller and Trumbore" but with some clever reordering.
+// This is an adaption the branchless variant. It is basically "Möller and Trumbore" but with some clever reordering.
 bool IntersectTriangle(Ray ray, vec3 p0, vec3 p1, vec3 p2, 
-						out float hit, out float beta, out float gamma, out vec3 triangleNormal)
+						out float hit, out vec3 barycentricCoord, out vec3 triangleNormal)
 {
 	const vec3 e0 = p1 - p0;
 	const vec3 e1 = p0 - p2;
@@ -44,15 +44,10 @@ bool IntersectTriangle(Ray ray, vec3 p0, vec3 p1, vec3 p2,
 	const vec3 e2 = ( 1.0 / dot( triangleNormal, ray.Direction ) ) * ( p0 - ray.Origin );
 	const vec3 i  = cross( ray.Direction, e2 );
 
-	beta  = dot( i, e1 );
-	gamma = dot( i, e0 );
+	barycentricCoord.y = dot( i, e1 );
+	barycentricCoord.z = dot( i, e0 );
+	barycentricCoord.x = 1.0 - (barycentricCoord.z + barycentricCoord.y);
 	hit   = dot( triangleNormal, e2 );
 
-	return  /*(hit < ray.tmax) && */ (hit > INTERSECT_EPSILON) && (beta >= 0.0) && (gamma >= 0.0) && (beta + gamma <= 1.0);
-}
-bool IntersectTriangle(Ray ray, vec3 p0, vec3 p1, vec3 p2, 
-							out float hit, out float beta, out float gamma)
-{
-	vec3 triangleNormal;
-	return IntersectTriangle(ray, p0, p1, p2, hit, beta, gamma, triangleNormal);
+	return  /*(hit < ray.tmax) && */ (hit > INTERSECT_EPSILON) && all(greaterThanEqual(barycentricCoord, vec3(0.0)));
 }

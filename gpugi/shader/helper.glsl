@@ -56,3 +56,9 @@ vec3 SamplePhongLobe(vec2 randomSample, float exponent, vec3 U, vec3 V, vec3 W)
 
 	return x*U + y*V + z*W;
 }
+
+float GetLuminance(vec3 rgb)
+{
+	const vec3 W = vec3(0.2125, 0.7154, 0.0721);
+	return dot(rgb, W);
+}
