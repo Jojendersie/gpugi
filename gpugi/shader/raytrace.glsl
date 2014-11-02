@@ -18,8 +18,8 @@ bool IntersectBox(Ray ray, vec3 aabbMin, vec3 aabbMax, out float firstHit)
 	vec2 t = max(tmin.xx, tmin.yz);
 	firstHit = max(t.x, t.y);
 	t = min(tmax.xx, tmax.yz);
-	float t1 = min(t.x, t.y);
-	return firstHit <= t1;
+	float lastHit = min(t.x, t.y);
+	return firstHit <= lastHit;
 }
 
 

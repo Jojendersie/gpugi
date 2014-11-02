@@ -27,27 +27,32 @@ layout(location = 0, index = 0) out vec4 FragColor;
 
 #define MAX_NUM_BOUNCES 1
 #define RAY_HIT_EPSILON 0.01
+#define RAY_MAX 3.40282347e+38
 //#define RUSSIAN_ROULETTE
 
 float TraceRay(in Ray ray, out vec3 normal)
 {
 	// Load node
 	uint currentNodeIndex = 0;
+	float rayHit = RAY_MAX;
 	do {
-		float rayHit;
-		if(IntersectBox(ray, GetVec(Nodes[currentNodeIndex].BoundingBoxMin), GetVec(Nodes[currentNodeIndex].BoundingBoxMax), rayHit))
+		uint escape = Nodes[currentNodeIndex].Escape;
+		float newHit;
+		if(IntersectBox(ray, GetVec(Nodes[currentNodeIndex].BoundingBoxMin), GetVec(Nodes[currentNodeIndex].BoundingBoxMax), newHit) && newHit <= rayHit)
 		{
-			uint parentNodeIndex = currentNodeIndex;
 			uint childCode = Nodes[currentNodeIndex].FirstChild;
 			currentNodeIndex = childCode & uint(0x7FFFFFFF);  // Most significant bit tells us is this is a leaf.
 		
 			// It is a leaf
 			if(currentNodeIndex != childCode)
 			{
-				/*for(int i=0; i<TRIANGLES_PER_LEAF; ++i)
+				for(int i=0; i<TRIANGLES_PER_LEAF; ++i)
 				{
 					// Load triangle.
 					Triangle triangle = Leafs[currentNodeIndex].triangles[i];
+					//if(triangle.Vertices.x == triangle.Vertices.y)
+					//	continue;
+
 					// Load vertex positions
 					vec3 positions[3];
 					positions[0] = GetVec(Vertices[triangle.Vertices.x].Position);
@@ -55,25 +60,26 @@ float TraceRay(in Ray ray, out vec3 normal)
 					positions[2] = GetVec(Vertices[triangle.Vertices.z].Position);
 
 					// Check hit.
-					float beta, gamma;
-					if(IntersectTriangle(ray, positions[0], positions[1], positions[2], rayHit, beta, gamma, normal))
+					vec3 newNormal;
+					float newHit, newBeta, newGamma;
+					if(IntersectTriangle(ray, positions[0], positions[1], positions[2], newHit, newBeta, newGamma, newNormal) && newHit < rayHit)
 					{
-						return rayHit;
+						rayHit = newHit;
+						normal = newNormal;
+						// Cannot return yet, there might be a triangle that is hit before this one!
 					}
 				}
-				currentNodeIndex = Nodes[parentNodeIndex].Escape; */
-
-				return rayHit;
+				currentNodeIndex = escape;
 			}
 		}
 		// No hit, go to escape pointer and repeat.
 		else
 		{
-			currentNodeIndex = Nodes[currentNodeIndex].Escape;
+			currentNodeIndex = escape;
 		}
 	} while(currentNodeIndex != 0);
 
-	return -1.0f;
+	return rayHit;
 }
 
 void main()
@@ -94,10 +100,10 @@ void main()
 	{
 		vec3 normal;
 		float rayHit = TraceRay(cameraRay, normal);
-		if(rayHit < RAY_HIT_EPSILON)
+		if(rayHit == RAY_MAX)
 			break;
 
-		color = vec3(rayHit*0.01); //vec3(normalize(abs(normal)));
+		color = vec3(normalize(abs(normal))); // vec3(rayHit * 0.01);
 /*
 #ifdef RUSSIAN_ROULETTE
 		float notAbsorption = dot(intersect.sphere.col, vec3(0.333333));
