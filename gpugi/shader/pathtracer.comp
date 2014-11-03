@@ -26,7 +26,7 @@ layout(binding = 2, std140) uniform PerIteration
 #define MAX_NUM_BOUNCES 4
 #define RAY_HIT_EPSILON 0.01
 #define RAY_MAX 3.40282347e+38
-//#define RUSSIAN_ROULETTE
+#define RUSSIAN_ROULETTE
 
 uint numBoxesVisited = 0;
 uint numTrianglesVisited = 0;
@@ -123,7 +123,7 @@ void main()
 								   GetVec(Vertices[triangle.Vertices.z].Normal) * barycentricCoord.z); 
 
 		// Compute hit color.
-		vec3 hitColor = vec3(0.7); // TODO
+		vec3 hitColor = vec3(Random(randomSeed)); // TODO
 #ifdef RUSSIAN_ROULETTE
 		float hitLuminance = GetLuminance(hitColor);
 		rayColor *= hitColor / hitLuminance; // Only change in spectrum, no energy loss.

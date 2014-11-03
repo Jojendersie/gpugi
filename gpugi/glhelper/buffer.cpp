@@ -24,13 +24,13 @@ namespace gl
         GL_CALL(glCreateBuffers, 1, &m_bufferObject);
         GL_CALL(glNamedBufferStorage, m_bufferObject, _sizeInBytes, _data, static_cast<GLbitfield>(_usageFlags));
 
-		if (static_cast<uint32_t>(m_usageFlags & Usage::MAP_READ) > 0)
+		if (any(m_usageFlags & Usage::MAP_READ))
 			m_glMapAccess = static_cast<uint32_t>(m_usageFlags & Usage::MAP_WRITE) > 0 ? GL_READ_WRITE : GL_READ_ONLY;
         else
 			m_glMapAccess = static_cast<uint32_t>(m_usageFlags & Usage::MAP_WRITE) > 0 ? GL_WRITE_ONLY : 0;
 
 
-		if (static_cast<uint32_t>(m_usageFlags & Usage::MAP_PERSISTENT))
+		if (any(m_usageFlags & Usage::MAP_PERSISTENT))
 		{
 			m_glMapAccess |= GL_MAP_PERSISTENT_BIT;
 			if (static_cast<uint32_t>(m_usageFlags & Usage::EXPLICIT_FLUSH) > 0)
@@ -101,7 +101,7 @@ namespace gl
 		}
 
 		// Persistent mapped buffers need no unmapping
-		else if (static_cast<GLenum>(m_usageFlags & Usage::MAP_PERSISTENT))
+		else if (any(m_usageFlags & Usage::MAP_PERSISTENT))
 		{
 			LOG_LVL2("Buffer has MAP_PERSISTENT flag and no EXPLICIT_FLUSH flag, unmaps are withouat any effect!");
 		}
@@ -114,10 +114,20 @@ namespace gl
 		}
     }
 
+	void Buffer::Flush()
+	{
+		if(any(m_usageFlags & Usage::EXPLICIT_FLUSH))
+		{
+			// Flush only the part which was used.
+			GL_CALL(glFlushMappedNamedBufferRange, m_bufferObject,
+				m_mappedDataOffset, m_mappedDataSize);
+		}
+	}
+
 
 	void Buffer::Set(const void* _data, std::uint32_t _numBytes, std::uint32_t _offset)
     {
-		if (static_cast<GLenum>(m_usageFlags & Usage::SUB_DATA_UPDATE))
+		if (any(m_usageFlags & Usage::SUB_DATA_UPDATE))
 			LOG_ERROR("The buffer was not created with the SUB_DATA_UPDATE flag. Unable to set memory!");
 		else if (m_mappedData != NULL && (static_cast<GLenum>(m_usageFlags & Usage::MAP_PERSISTENT)))
 			LOG_ERROR("Unable to set memory for currently mapped buffer that was created without the PERSISTENT flag.");
@@ -127,7 +137,7 @@ namespace gl
 
 	void Buffer::Get(void* _data, std::uint32_t _offset, std::uint32_t _numBytes)
     {
-		if (static_cast<GLenum>(m_usageFlags & Usage::SUB_DATA_UPDATE))
+		if (any(m_usageFlags & Usage::SUB_DATA_UPDATE))
 			LOG_ERROR("The buffer was not created with the SUB_DATA_UPDATE flag. Unable to get memory!");
 		else if (m_mappedData != NULL && (static_cast<GLenum>(m_usageFlags & Usage::MAP_PERSISTENT)))
 			LOG_ERROR("Unable to get memory for currently mapped buffer that was created without the PERSISTENT flag.");

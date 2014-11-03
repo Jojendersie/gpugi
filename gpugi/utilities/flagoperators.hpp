@@ -56,5 +56,16 @@ inline ASSERTED_ENUM_TYPE operator ~ (EnumT _lhs)
 	return static_cast<ASSERTED_ENUM_TYPE>(~static_cast<INT_TYPE>(_lhs));
 }
 
+/// \brief Check if any bit is set.
+/// \details It is not possible to implement casting for enums because these
+///		operators can only be declared as member.
+///		The best work around is a short check function.
+/// \return true if != 0
+template<typename EnumT>
+inline typename std::enable_if<std::is_enum<EnumT>::value, bool>::type any(EnumT _arg)
+{
+	return static_cast<INT_TYPE>(_arg) != 0;
+}
+
 #undef INT_TYPE
 #undef ASSERTED_ENUM_TYPE

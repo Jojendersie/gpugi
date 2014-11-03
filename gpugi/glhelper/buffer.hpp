@@ -83,6 +83,10 @@ namespace gl
 		/// Either via glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT) or glFlushMappedBufferRange.)
         void Unmap();
 
+		/// Explicit flush as long as EXPLICIT_FLUSH flag is set. Otherwise this function
+		/// has no effect.
+		void Flush();
+
         /// Use glBufferSubData to update a range in the buffer.
 		/// \remarks
 		///		The Map methods are usually faster.

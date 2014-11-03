@@ -37,6 +37,7 @@ ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 	SetCamera(_initialCamera);
 
 	m_perIterationUBO.Init(m_pathtracerShader, "PerIteration", gl::Buffer::Usage::MAP_PERSISTENT | gl::Buffer::Usage::MAP_WRITE | gl::Buffer::Usage::EXPLICIT_FLUSH);
+	m_perIterationUBO.GetBuffer()->Map();
 	m_perIterationUBO["FrameSeed"].Set(WangHash(0));
 	m_perIterationUBO.BindBuffer(2);
 
@@ -123,8 +124,10 @@ void ReferenceRenderer::Draw()
 
 	{
 		++m_iterationCount;
+		m_perIterationUBO.GetBuffer()->Map();
 		m_perIterationUBO["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
-		GL_CALL(glFlushMappedNamedBufferRange, m_perIterationUBO.GetBuffer()->GetBufferId(), static_cast<GLintptr>(0), m_perIterationUBO.GetBuffer()->GetSize());
+		m_perIterationUBO.GetBuffer()->Flush();
+		//m_perIterationUBO.GetBuffer()->Unmap();
 	}
 
 	/*{
