@@ -48,7 +48,7 @@ OutputWindow::OutputWindow() :
 	}
 
 	GlobalConfig::AddListener("resolution", "outputwindow", [=](const GlobalConfig::ParameterType& p){ ChangeWindowSize(ei::IVec2(p[0].As<int>(), p[1].As<int>())); });
-	GlobalConfig::AddParameter("srgb", { 1.0f }, "If >0 the output window will perform an srgb conversion. Does not affect (hdr)screenshots!");
+	GlobalConfig::AddParameter("srgb", { true }, "If true the output window will perform an srgb conversion. Does not affect (hdr)screenshots!");
 
 	glfwMakeContextCurrent(window);
 

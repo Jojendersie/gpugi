@@ -112,14 +112,22 @@ namespace Details
 	{ static bool Cast(const bool& from) { return from; } };
 
 	// From string specializations.
-	template<> struct VariantCast<std::string, unsigned int>
-	{ static unsigned int Cast(const std::string& from) { return static_cast<unsigned int>(std::stoi(from)); } };
-	template<> struct VariantCast<std::string, int>
-	{ static int Cast(const std::string& from) { return std::stoi(from); } };
-	template<> struct VariantCast<std::string, float>
-	{ static float Cast(const std::string& from) { return std::stof(from); } };
-	template<> struct VariantCast<std::string, double>
-	{ static double Cast(const std::string& from) { return std::stod(from); } };
+	template<> struct VariantCast < std::string, unsigned int >
+	{
+		static unsigned int Cast(const std::string& from) { try { return static_cast<unsigned int>(std::stoi(from)); } catch (...) { return 0; } }
+	};
+	template<> struct VariantCast < std::string, int >
+	{
+		static int Cast(const std::string& from) { try { return std::stoi(from); } catch (...) { return 0; } }
+	};
+	template<> struct VariantCast < std::string, float >
+	{
+		static float Cast(const std::string& from) { try { return std::stof(from); } catch (...) { return 0; } }
+	};
+	template<> struct VariantCast < std::string, double >
+	{
+		static double Cast(const std::string& from) { try { return std::stod(from); } catch (...) { return 0; } }
+	};
 	template<> struct VariantCast<std::string, bool>
 	{
 		static bool Cast(const std::string& from)
