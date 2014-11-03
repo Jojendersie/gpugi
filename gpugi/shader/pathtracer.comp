@@ -23,7 +23,7 @@ layout(binding = 2, std140) uniform PerIteration
 };
 
 
-#define MAX_NUM_BOUNCES 4
+#define MAX_NUM_BOUNCES 16
 #define RAY_HIT_EPSILON 0.01
 #define RAY_MAX 3.40282347e+38
 #define RUSSIAN_ROULETTE
@@ -126,6 +126,8 @@ void main()
 		vec3 hitColor = vec3(Random(randomSeed)); // TODO
 #ifdef RUSSIAN_ROULETTE
 		float hitLuminance = GetLuminance(hitColor);
+		if(Random(randomSeed) > hitLuminance)
+			break;
 		rayColor *= hitColor / hitLuminance; // Only change in spectrum, no energy loss.
 #else
 		rayColor *= hitColor; // Absorption, not via Russion Roulette, but by color multiplication.
@@ -144,11 +146,6 @@ void main()
 		TraceRay(ray, rayHit, barycentricCoord, triangle);
 		if(rayHit == lightDist)
 			color += rayColor * saturate(dot(ray.Direction, hitNormal)); // 1/PI is BRDF, rayColor incoming L
-
-#ifdef RUSSIAN_ROULETTE
-		if(Random(randomSeed) > hitLuminance)
-			break;
-#endif
 
 		// Bounce ray.
 		vec3 U, V;
