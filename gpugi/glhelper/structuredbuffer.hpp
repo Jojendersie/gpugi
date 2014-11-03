@@ -12,12 +12,12 @@ namespace gl
 
 	/// Large buffers with cached index access for the GP.
 	/// OpenGL name: shader storage buffer object (SSBO)
-	class StructuredBufferView
+	class ShaderStorageBufferView
 	{
 	public:
 		/// Create the buffer
-		StructuredBufferView();
-		~StructuredBufferView();
+		ShaderStorageBufferView();
+		~ShaderStorageBufferView();
 
 		/// Bind the buffer data to this structured TextureBuffer.
 		/// \param [in] _name Name used in shader programs if explicit binding
@@ -39,6 +39,6 @@ namespace gl
 		std::string m_name;
 
 		/// Currently bound SSBOs - number is arbitrary!
-		static const StructuredBufferView* s_boundSSBOs[16];
+		static const ShaderStorageBufferView* s_boundSSBOs[16];
 	};
 }

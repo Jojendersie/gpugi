@@ -246,22 +246,28 @@
     <None Include="glhelper\shaderdatametainfo.inl">
       <Filter>code\glhelper</Filter>
     </None>
-    <None Include="shader\screenTri.vert">
+    <None Include="shader\scenedata.glsl">
       <Filter>shader</Filter>
     </None>
-    <None Include="shader\displayHDR.frag">
+    <None Include="shader\screenTri.vert">
       <Filter>shader</Filter>
     </None>
     <None Include="shader\testcompute.comp">
       <Filter>shader</Filter>
     </None>
-    <None Include="shader\pathtracer.frag">
+    <None Include="shader\testraytrace.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\displayHDR.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\helper.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\pathtracer.comp">
       <Filter>shader</Filter>
     </None>
     <None Include="shader\random.glsl">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\testraytrace.glsl">
       <Filter>shader</Filter>
     </None>
     <None Include="shader\raytrace.glsl">

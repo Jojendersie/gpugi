@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "ei/matrix.hpp"
+#include "../gpugi/utilities/assert.hpp"
 
 namespace FileDecl
 {
@@ -31,7 +32,13 @@ namespace FileDecl
     };
 
     extern const Triangle INVALID_TRIANGLE;
-    inline bool IsTriangleValid(const Triangle& _triangle) { return _triangle.vertices[0] != 0xffffffff; }
+    inline bool IsTriangleValid(const Triangle& _triangle)
+	{
+		Assert( (_triangle.vertices[0] != _triangle.vertices[1] && _triangle.vertices[0] != _triangle.vertices[2] && _triangle.vertices[2] != _triangle.vertices[1])
+			|| (_triangle.vertices[0] == _triangle.vertices[1] && _triangle.vertices[0] == _triangle.vertices[2]), 
+			"Invalid case!" );
+		return _triangle.vertices[0] != _triangle.vertices[1];
+	}
 
     /// \brief Element type for material lists (array: materials).
     struct Material

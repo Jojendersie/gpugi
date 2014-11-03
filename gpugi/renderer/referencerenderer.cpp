@@ -79,15 +79,15 @@ void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
 
 
 	// Bind buffer
-	m_hierarchyBuffer.reset(new gl::StructuredBufferView());
+	m_hierarchyBuffer.reset(new gl::ShaderStorageBufferView());
 	m_hierarchyBuffer->Init(m_scene->GetHierarchyBuffer(), "HierarchyBuffer");
 	m_pathtracerShader.BindSSBO(*m_hierarchyBuffer);
 
-	m_vertexBuffer.reset(new gl::StructuredBufferView());
+	m_vertexBuffer.reset(new gl::ShaderStorageBufferView());
 	m_vertexBuffer->Init(m_scene->GetVertexBuffer(), "VertexBuffer");
 	m_pathtracerShader.BindSSBO(*m_vertexBuffer);
 
-	m_leafBuffer.reset(new gl::StructuredBufferView());
+	m_leafBuffer.reset(new gl::ShaderStorageBufferView());
 	m_leafBuffer->Init(m_scene->GetTriangleBuffer(), "LeafBuffer");
 	m_pathtracerShader.BindSSBO(*m_leafBuffer);
 }
@@ -109,7 +109,8 @@ void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)
 void ReferenceRenderer::Draw()
 {
 	{
-		m_iterationBuffer->BindImage(0, gl::Texture::ImageAccess::WRITE);
+		//m_iterationBuffer->BindImage(0, gl::Texture::ImageAccess::WRITE);
+		m_backbuffer->BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
 
 		m_pathtracerShader.Activate();
 		GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / 32, m_backbuffer->GetHeight() / 32, 1);
@@ -126,7 +127,7 @@ void ReferenceRenderer::Draw()
 		GL_CALL(glFlushMappedNamedBufferRange, m_perIterationUBO.GetBuffer()->GetBufferId(), static_cast<GLintptr>(0), m_perIterationUBO.GetBuffer()->GetSize());
 	}
 
-	{
+	/*{
 		m_backbufferFBO.Bind(false);
 		glEnable(GL_BLEND);
 
@@ -137,5 +138,5 @@ void ReferenceRenderer::Draw()
 
 		glDisable(GL_BLEND);
 		m_backbufferFBO.BindBackBuffer();
-	}
+	}*/
 }

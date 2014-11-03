@@ -18,7 +18,7 @@ namespace gl
     {
     public:
 		friend class UniformBufferView;
-		friend class StructuredBufferView;
+		friend class ShaderStorageBufferView;
 
         /// Flags for the (optimized) buffer creation.
         enum class Usage

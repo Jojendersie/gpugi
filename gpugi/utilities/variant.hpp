@@ -113,7 +113,7 @@ namespace Details
 
 	// From string specializations.
 	template<> struct VariantCast<std::string, unsigned int>
-	{ static int Cast(const std::string& from) { return static_cast<unsigned int>(std::stoi(from)); } };
+	{ static unsigned int Cast(const std::string& from) { return static_cast<unsigned int>(std::stoi(from)); } };
 	template<> struct VariantCast<std::string, int>
 	{ static int Cast(const std::string& from) { return std::stoi(from); } };
 	template<> struct VariantCast<std::string, float>

@@ -23,14 +23,15 @@ layout(binding = 2, std140) uniform PerIteration
 };
 
 
-#define MAX_NUM_BOUNCES 1
+#define MAX_NUM_BOUNCES 4
 #define RAY_HIT_EPSILON 0.01
 #define RAY_MAX 3.40282347e+38
 //#define RUSSIAN_ROULETTE
 
-//uint numBoxesVisited = 0;
+uint numBoxesVisited = 0;
+uint numTrianglesVisited = 0;
 
-layout(binding = 0, rgba32f) restrict writeonly uniform image2D OutputTexture; // attention! No coherent flag set!
+layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
 
 void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, out Triangle outTriangle)
@@ -43,7 +44,7 @@ void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, o
 		// Load entire node.
 		Node currentNode = Nodes[currentNodeIndex];
 
-		//++numBoxesVisited;
+		++numBoxesVisited;
 
 		float newHit;
 		if(IntersectBox(ray, invRayDir, currentNode.BoundingBoxMin, currentNode.BoundingBoxMax, newHit) && newHit <= rayLength)
@@ -60,6 +61,8 @@ void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, o
 					Triangle triangle = Leafs[currentNodeIndex].triangles[i];
 					if(triangle.Vertices.x == triangle.Vertices.y) // Last test if optimization or perf decline: 02.11.14
 						continue;
+						
+					++numTrianglesVisited;
 
 					// Load vertex positions
 					vec3 positions[3];
@@ -153,6 +156,9 @@ void main()
 		ray.Direction = SampleUnitHemisphere(Random2(randomSeed), U, V, hitNormal);
 	}
 
-	imageStore(OutputTexture, gridPosition, vec4(color, 1.0));
+	vec4 final = vec4(color, 1.0);
+	//vec4 final = vec4(vec3(float(numBoxesVisited) * 0.001), 1.0);
+	final += imageLoad(OutputTexture, gridPosition);
+	imageStore(OutputTexture, gridPosition, final);
 	//FragColor = vec4(color, 1.0); //vec4(vec3(float(numBoxesVisited) * 0.001), 1.0);
 }

@@ -6,7 +6,7 @@
 
 namespace gl
 {
-	class StructuredBufferView;
+	class ShaderStorageBufferView;
 }
 
 class ReferenceRenderer : public Renderer
@@ -34,9 +34,9 @@ private:
 	gl::UniformBufferView m_cameraUBO;
 	gl::UniformBufferView m_perIterationUBO;
 
-	std::unique_ptr<gl::StructuredBufferView> m_hierarchyBuffer;
-	std::unique_ptr<gl::StructuredBufferView> m_vertexBuffer;
-	std::unique_ptr<gl::StructuredBufferView> m_leafBuffer;
+	std::unique_ptr<gl::ShaderStorageBufferView> m_hierarchyBuffer;
+	std::unique_ptr<gl::ShaderStorageBufferView> m_vertexBuffer;
+	std::unique_ptr<gl::ShaderStorageBufferView> m_leafBuffer;
 
 	std::shared_ptr<Scene> m_scene;
 };

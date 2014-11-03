@@ -504,12 +504,12 @@ namespace gl
 		return SUCCEEDED;
 	}
 
-	Result ShaderObject::BindSSBO(gl::StructuredBufferView& _ssbo)
+	Result ShaderObject::BindSSBO(gl::ShaderStorageBufferView& _ssbo)
 	{
 		return BindSSBO(_ssbo, _ssbo.GetBufferName());
 	}
 
-	Result ShaderObject::BindSSBO(gl::StructuredBufferView& _ssbo, const std::string& _SSBOName)
+	Result ShaderObject::BindSSBO(gl::ShaderStorageBufferView& _ssbo, const std::string& _SSBOName)
 	{
 		auto storageBufferInfoIterator = GetShaderStorageBufferInfo().find(_SSBOName);
 		if(storageBufferInfoIterator == GetShaderStorageBufferInfo().end())

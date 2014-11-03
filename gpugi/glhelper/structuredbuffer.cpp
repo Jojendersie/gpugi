@@ -7,18 +7,18 @@
 
 namespace gl
 {
-	const StructuredBufferView* StructuredBufferView::s_boundSSBOs[16];
+	const ShaderStorageBufferView* ShaderStorageBufferView::s_boundSSBOs[16];
 
-	StructuredBufferView::StructuredBufferView()
+	ShaderStorageBufferView::ShaderStorageBufferView()
 	{
         // No additional resources required
 	}
 
-	StructuredBufferView::~StructuredBufferView()
+	ShaderStorageBufferView::~ShaderStorageBufferView()
 	{
 	}
 
-    Result StructuredBufferView::Init(std::shared_ptr<gl::Buffer> _buffer, const std::string& _name)
+    Result ShaderStorageBufferView::Init(std::shared_ptr<gl::Buffer> _buffer, const std::string& _name)
     {
         m_buffer = _buffer;
 		m_name = _name;
@@ -26,10 +26,10 @@ namespace gl
         return SUCCEEDED;
     }
 
-	void StructuredBufferView::BindBuffer(GLuint _locationIndex)
+	void ShaderStorageBufferView::BindBuffer(GLuint _locationIndex)
 	{
-		Assert(_locationIndex < sizeof(s_boundSSBOs) / sizeof(StructuredBufferView*), 
-			"Can't bind shader object buffer to slot " << _locationIndex << ". Maximum number of slots is " << sizeof(s_boundSSBOs) / sizeof(StructuredBufferView*));
+		Assert(_locationIndex < sizeof(s_boundSSBOs) / sizeof(ShaderStorageBufferView*), 
+			"Can't bind shader object buffer to slot " << _locationIndex << ". Maximum number of slots is " << sizeof(s_boundSSBOs) / sizeof(ShaderStorageBufferView*));
 
 		if (m_buffer->m_mappedData != nullptr && static_cast<GLenum>(m_buffer->m_usageFlags & Buffer::Usage::MAP_PERSISTENT) == 0)
 			m_buffer->Unmap();

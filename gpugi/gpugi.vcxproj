@@ -219,9 +219,11 @@
     <None Include="glhelper\shaderdatametainfo.inl" />
     <None Include="glhelper\uniformbuffer.inl" />
     <None Include="shader\displayHDR.frag" />
-    <None Include="shader\pathtracer.frag" />
+    <None Include="shader\helper.glsl" />
+    <None Include="shader\pathtracer.comp" />
     <None Include="shader\random.glsl" />
     <None Include="shader\raytrace.glsl" />
+    <None Include="shader\scenedata.glsl" />
     <None Include="shader\screenTri.vert" />
     <None Include="shader\testcompute.comp" />
     <None Include="shader\testraytrace.glsl" />
