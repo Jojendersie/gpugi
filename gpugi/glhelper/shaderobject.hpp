@@ -99,6 +99,14 @@ namespace gl
 		const ShaderStorageInfos& GetShaderStorageBufferInfo() const    { return m_ShaderStorageInfos; }
 
 
+		/// Returns a binary representation of the shader.
+		///
+		/// See http://docs.gl/gl4/glGetProgramBinary
+		/// \attention It is driver specific!
+		/// \param _binaryFormat
+		///   A token that specifies the format of the binary data.
+		std::vector<char> GetProgramBinary(GLenum& _binaryFormat);
+
 		/// Global event for changed shader files.
 		/// All Shader Objects will register upon this event. If any shader file is changed, just broadcast here!
 		// TODO - not yet reimplemented

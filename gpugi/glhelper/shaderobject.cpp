@@ -636,6 +636,19 @@ namespace gl
 		}
 	}
 
+	std::vector<char> ShaderObject::GetProgramBinary(GLenum& _binaryFormat)
+	{
+		Assert(m_program != 0, "Program not yet compiled.");
+		GLint binarySize = 0;
+		GL_CALL(glGetProgramiv, m_program, GL_PROGRAM_BINARY_LENGTH, &binarySize);
+		std::vector<char> data;
+		data.resize(binarySize);
+
+		GL_CALL(glGetProgramBinary, m_program, static_cast<GLsizei>(data.size()), nullptr, &_binaryFormat, data.data());
+		
+		return data;
+	}
+
 	/* void ShaderObject::ResetShaderBinding()
 	 {
 	 glUseProgram(0);

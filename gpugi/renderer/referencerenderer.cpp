@@ -14,6 +14,7 @@
 
 #include <ei/matrix.hpp>
 
+#include <fstream>
 
 ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 	m_pathtracerShader("pathtracer"),
@@ -22,6 +23,17 @@ ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 {
 	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer.comp");
 	m_pathtracerShader.CreateProgram();
+
+	// Save shader binary.
+	{
+		GLenum binaryFormat;
+		auto binary = m_pathtracerShader.GetProgramBinary(binaryFormat);
+		char* data = binary.data();
+		std::ofstream shaderBinaryFile("pathtracer_binary.txt");
+		shaderBinaryFile.write(data, binary.size());
+		shaderBinaryFile.close();
+	}
+
 
 	m_blendShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/screenTri.vert");
 	m_blendShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/displayHDR.frag");
