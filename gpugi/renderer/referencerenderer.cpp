@@ -114,7 +114,7 @@ void ReferenceRenderer::Draw()
 		m_backbuffer->BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
 
 		m_pathtracerShader.Activate();
-		GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / 32, m_backbuffer->GetHeight() / 32, 1);
+		GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / 16, m_backbuffer->GetHeight() / 16, 1);
 
 		// Ensure that all future fetches will use the modified data.
 		// See https://www.opengl.org/wiki/Memory_Model#Ensuring_visibility

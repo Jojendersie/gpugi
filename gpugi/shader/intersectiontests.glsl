@@ -1,4 +1,3 @@
-#include "scenedata.glsl"
 
 #define INTERSECT_EPSILON 0.0001
 

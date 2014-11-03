@@ -1,0 +1,5 @@
+sceneFilename = ../scenes/box1.rawscene
+cameraPos= 0.0, 1.5, 3.0
+cameraLookAt = 0.0, 1.5, 2.0
+cameraFOV = 67
+resolution = 1024, 768
