@@ -33,8 +33,18 @@
 *.user
 *.suo
 
+# Latex
+*.aux
+*.log
+*.pdf
+*.gz
+
 # Build directories
 /x64
 /gpugi/x64
 /bvhmake/x64
 log.txt
+
+# Our stuff
+/scenes
+*.pfm
