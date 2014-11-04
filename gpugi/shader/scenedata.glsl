@@ -53,3 +53,10 @@ struct Node
 #else
 	#error "No node type defined"
 #endif */
+
+struct Material
+{
+	vec3 Fresnel0;	// Fist precomputed coefficient for fresnel approximation (rgb)
+	float pad;
+	vec3 Fresnel1;	// Second precomputed coefficient for fresnel approximation (rgb)
+};

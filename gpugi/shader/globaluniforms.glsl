@@ -15,3 +15,8 @@ layout(binding = 2, std140) uniform PerIteration
 {
 	uint FrameSeed;
 };
+
+layout(binding = 3, std140) uniform UMaterials
+{
+	Material Materials[4];
+};

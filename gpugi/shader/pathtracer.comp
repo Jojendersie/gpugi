@@ -4,8 +4,8 @@
 #include "intersectiontests.glsl"
 #include "random.glsl"
 #include "helper.glsl"
-#include "materials.glsl"
 #include "globaluniforms.glsl"
+#include "materials.glsl"
 
 
 #define MAX_NUM_BOUNCES 16
