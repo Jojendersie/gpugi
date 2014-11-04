@@ -9,6 +9,9 @@
 #include <assimp/material.h>
 #include <fstream>
 #include <stack>
+#include <iostream>
+
+using namespace Jo::Files;
 
 // Helper method to transform Assimp types into something useful.
 template<typename T, typename F>
@@ -115,6 +118,19 @@ bool BVHBuilder::LoadSceneWithAssimp( const char* _file )
 	);
 
 	return m_scene != nullptr;
+}
+
+
+void BVHBuilder::LoadMaterials( const std::string& _materialFileName )
+{
+	if( Utils::Exists(_materialFileName) )
+	{
+		// Simply read in the file. It is kept as it is.
+		HDDFile file( _materialFileName );
+		m_materials.Read( file );
+		std::cerr << "Loaded " << _materialFileName << std::endl;
+	} else
+		std::cerr << "No json material file yet." << std::endl;
 }
 
 
@@ -263,6 +279,85 @@ void BVHBuilder::ExportBVH( std::ofstream& _file )
     _file.write( (const char*)&indexHeader, sizeof(FileDecl::NamedArray) );
     _file.write( (const char*)m_leaves, indexHeader.elementSize * indexHeader.numElements );
 }
+
+
+void BVHBuilder::ExportMaterials( std::ofstream& _file, const std::string& _materialFileName )
+{
+	if( !m_scene->HasMaterials() )
+	{
+		std::cerr << "The scene has no materials to export!";
+		return;
+	}
+
+	for( uint i = 0; i < m_scene->mNumMaterials; ++i )
+	{
+		// Get name and check if the material was imported before
+		aiString aiName;
+		auto mat = m_scene->mMaterials[i];
+		mat->Get( AI_MATKEY_NAME, aiName );
+		std::string name = aiName.C_Str();
+		if( m_materials.RootNode.HasChild( name ) )
+			continue;
+
+		// The current material was not imported before do it now
+		auto& matNode = m_materials.RootNode.Add( name, MetaFileWrapper::ElementType::NODE, 0 );
+		// Load diffuse
+		if( mat->GetTexture( aiTextureType_DIFFUSE, 0, &aiName ) == AI_SUCCESS )
+		{
+			matNode[std::string("diffuseTex")] = aiName.C_Str();
+		} else {
+			auto& diff = matNode.Add( "diffuse", MetaFileWrapper::ElementType::FLOAT, 3 );
+			aiColor3D color = aiColor3D( 0.0f, 0.0f, 0.0f );
+			mat->Get( AI_MATKEY_COLOR_DIFFUSE, color );
+			diff[0] = color.r;
+			diff[1] = color.g;
+			diff[2] = color.b;
+		}
+
+		// Load specular
+		if( mat->GetTexture( aiTextureType_SPECULAR, 0, &aiName ) == AI_SUCCESS )
+		{
+			matNode[std::string("reflectivenessTex")] = aiName.C_Str();
+		} else
+		if( mat->GetTexture( aiTextureType_SHININESS, 0, &aiName ) == AI_SUCCESS )
+		{
+			matNode[std::string("reflectivenessTex")] = aiName.C_Str();
+		} else {
+			auto& refl = matNode.Add( "reflectiveness", MetaFileWrapper::ElementType::FLOAT, 4 );
+			aiColor3D color = aiColor3D( 0.0f, 0.0f, 0.0f );
+			float shininess = 1.0f;
+			if( mat->Get( AI_MATKEY_COLOR_REFLECTIVE, color ) != AI_SUCCESS )
+				mat->Get( AI_MATKEY_COLOR_SPECULAR, color );
+			mat->Get( AI_MATKEY_SHININESS, shininess );
+			refl[0] = color.r;
+			refl[1] = color.g;
+			refl[2] = color.b;
+			refl[3] = shininess;
+		}
+
+		// Without knowledge use simple defaults
+		auto& refrN = matNode.Add( "refractionIndexN", MetaFileWrapper::ElementType::FLOAT, 3 );
+		auto& refrR = matNode.Add( "refractionIndexR", MetaFileWrapper::ElementType::FLOAT, 3 );
+		refrN[0] = refrN[1] = refrN[2] = 1.45f;
+		refrR[0] = refrR[1] = refrR[2] = 0.0f;
+
+		// Load opacity
+		if( mat->GetTexture( aiTextureType_OPACITY, 0, &aiName ) == AI_SUCCESS )
+		{
+			matNode[std::string("opacityTex")] = aiName.C_Str();
+		} else {
+			auto& opactiy = matNode.Add( "opacity", MetaFileWrapper::ElementType::FLOAT, 3 );
+			float value = 1.0f;
+			mat->Get( AI_MATKEY_OPACITY, value );
+			opactiy[0] = value;
+			opactiy[1] = value;
+			opactiy[2] = value;
+		}
+	}
+
+	m_materials.Write( HDDFile(_materialFileName, HDDFile::OVERWRITE), Format::JSON );
+}
+
 
 ε::Triangle BVHBuilder::GetTriangle( uint32 _index ) const
 {

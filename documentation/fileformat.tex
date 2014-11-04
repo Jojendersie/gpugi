@@ -1,5 +1,5 @@
 \documentclass[english,10pt,a4paper,twocolumn,colorscheme=green]{orarticle}
-
+\usepackage{hyperref}
 
 \usepackage{listings}
 \lstset{
@@ -142,19 +142,18 @@ struct Box
 	Materials are not stored in the binary format to make them better exchangeable. They are defined in a second file with the same name as the scene file, but with *.json ending.
 	\begin{lstlisting}
 {
-  "Materials": [
-	{
-		"name": "example",
+  	"ExampleMaterial": 
+  	{
 		"diffuse": [0.5, 0.5, 0.5],
 		"reflectiveness": [1.0, 1.0, 1.0, 5.0],
-		"refractionIndex": [1.3, 1.0, 0.75],
+		"refractionIndexN": [1.3, 1.0, 0.75],
+		"refractionIndexK": [3.0, 3.3, 3.9],
 		"opacity": [1.0, 1.0, 1.0]
-	},		
+  	},		
 	... more materials
-  ]
 }
 	\end{lstlisting}
-	Each data except \lstinline|"refractionIndex"|, and \lstinline|"name"| comes in two variants: One without \lstinline|"Tex"| suffix (must be a RGB constant) and one with this suffix containing a file name of a RGB texture. One of both must exist. If both are given only the texture is used.
+	Each data except \lstinline|"refractionIndexN"| and \lstinline|"refractionIndexK"| comes in two variants: One without \lstinline|"Tex"| suffix (must be a RGB constant) and one with this suffix containing (e.g. \lstinline|"diffuseTex"|) a file name of a RGB texture. One of both must exist. If both are given only the texture is used.
 	
 	\subsection{Intended Interpretation}
 	The light is divided into components of different reflection pattern.
@@ -168,4 +167,46 @@ struct Box
 	\lstinline|"refractionIndex"|: Controls the Fresnel-function. This cannot be a texture.
 	
 	\lstinline|"opacity"|: From all light which passed the Fresnel surface the opaque part is passed to the diffuse term. The remainder is refracted with a cosine lobe. %Physically this is something like $scattering/dx$. $e^{-d \cdot (1/(1-opacity)-1)}$ is refracted, where $d$ is the length of the path through the material, and the remainder is the part which remains for diffuse/absorption.
+	
+	\subsection{Example Refraction Indices}
+	For most materials you need to set the complex refraction indices $N = n + i \cdot k$. To get a feeling for the behavior look at the \href{	http://de.wikipedia.org/wiki/Fresnelsche\_Formeln\#mediaviewer/File:Fresnel\_reflection\_coefficients\_\%28DE\%29.svg}{picture from wikipedia}. Both coefficients are given for 3 RGB related wavelengths: R-610nm, G-546nm, B-436nm. I found no real source which maps pure RGB colors to wavelengths. The factors are derived from a multitude of RGB curve-pictures.
+	
+	There is an online database for refraction indices: http://refractiveindex.info/.
+	From this here are some example materials.
+	
+	\begin{tabular}{|r|l|l|l|}
+		\hline
+		& R-610nm & G-546nm & B-436nm\\
+		\hline
+		Water n & 1.3320 & 1.3332 & 1.3376\\
+		k & 1.2100e-8 & 1.8576e-9 & 1.1768e-9\\
+		\hline
+		Ethanol n & 1.3610 & 1.3631 & 1.3693\\
+		k & 0.0000 & 0.0000 & 0.0000\\
+		\hline
+		Glass (BK7) n & 1.5159 & 1.5187 & 1.5267\\
+		k & 1.1221e-8 & 6.9658e-9 & 1.1147e-8\\
+		\hline
+		Silver n & 0.15337 & 0.14461 & 0.13535\\
+		k & 3.6381 & 3.1595 & 2.2550\\
+		\hline
+		Gold n & 0.22437 & 0.44553 & 1.4513\\
+		k & 3.0219 & 2.2995 & 1.4513\\
+		\hline
+		Chromium n & 3.1940 & 2.7602 & 1.9166\\
+		k & 4.2664 & 4.1903 & 3.7858\\
+		\hline
+		Iron n & 2.8920 & 2.9404 & 2.5075\\
+		k & 3.3380 & 2.9279 & 2.7250\\
+		\hline
+		Calcite n & 1.6570 & 1.6616 & 1.6749\\
+		k & 0.0000 & 0.0000 & 0.0000\\
+		\hline
+		Quartz n & 1.4577 & 1.4601 & 1.4667\\
+		k & 0.0000 & 0.0000 & 0.0000\\
+		\hline
+		Cellulose n & 1.4692 & 1.4722 & 1.4810\\
+		k & 0.0000 & 0.0000 & 0.0000\\
+		\hline
+	\end{tabular}
 \end{document}

@@ -92,6 +92,7 @@ int main( int _numArgs, const char** _args )
     // Try to create output files before spending time for Assimp
     std::string sceneName = PathUtils::GetFilename(std::string(_args[1]));
     sceneName.erase( sceneName.find_last_of( '.' ) );
+	std::string materialFileName = outputPath + '/' + sceneName + ".json";
     sceneName = outputPath + '/' + sceneName + ".rawscene";
     std::ofstream sceneOut( sceneName, std::ofstream::binary );
     if( sceneOut.bad() )
@@ -100,8 +101,9 @@ int main( int _numArgs, const char** _args )
         return 2;
     } else
         std::cerr << "Opened scene file for output: " << sceneName << std::endl;
+
     // The material file is a json which already might contain stuff load that first.
-    // TODO
+    builder.LoadMaterials( materialFileName );
 
     std::cerr << "Loading with Assimp..." << std::endl;
     if( !builder.LoadSceneWithAssimp( _args[1] ) )
@@ -110,7 +112,11 @@ int main( int _numArgs, const char** _args )
         return 3;
     }
 
-    // Export geometry must be first because it organizes the data for the
+	// Material before geom. because geom. deletes the assimp scene.
+	std::cerr << "Exporting materials..." << std::endl;
+	builder.ExportMaterials( sceneOut, materialFileName );
+
+	// Export geometry must be first because it organizes the data for the
     // other calls
     std::cerr << "Exporting geometry..." << std::endl;
     builder.ExportGeometry( sceneOut );

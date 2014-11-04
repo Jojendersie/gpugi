@@ -5,6 +5,7 @@
 #include <assimp/importer.hpp>
 #include <ei/3dtypes.hpp>
 #include <memory>
+#include <jofilelib.hpp>
 
 #include "filedef.hpp"
 class BVHBuilder;
@@ -106,8 +107,15 @@ public:
     ///     fill the array of bounding volumes with it.
     FitMethod* GetFitMethod()  { return m_fitMethod; }
 
-    /// \brief Returns success or not.
+	/// \brief Import all with assimp and preprocess.
+    /// \returns Success or not.
     bool LoadSceneWithAssimp( const char* _file );
+
+	/// \brief Load a material file.
+	/// \details Without loading all materials are derived from the assimp
+	///		import. Materials from the given file override the assimp materials
+	///		if both have the same name.
+	void LoadMaterials( const std::string& _materialFileName );
 
     /// \brief Write the vertex, triangle and material arrays to file
     void ExportGeometry( std::ofstream& _file );
@@ -117,6 +125,10 @@ public:
 
     /// \brief Write the bounding volume hierarchy to file.
     void ExportBVH( std::ofstream& _file );
+
+	/// \brief Create the "materialref", the "materialassociation" arrays
+	///		and import new material entries for the json file.
+	void ExportMaterials( std::ofstream& _file, const std::string& _materialFileName );
 
     /// \brief A tree node which should be used from any build method
     struct Node
@@ -155,6 +167,7 @@ public:
     Node& GetNode( uint32 _index ) { return m_nodes[_index]; }
 
 private:
+	Jo::Files::MetaFileWrapper m_materials;
     BuildMethod* m_buildMethod;
     FitMethod* m_fitMethod;
     std::unordered_map<std::string, BuildMethod*> m_buildMethods;
