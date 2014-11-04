@@ -13,126 +13,20 @@
 #define RAY_MAX 3.40282347e+38
 #define RUSSIAN_ROULETTE
 
-uint numBoxesVisited = 0;
-uint numTrianglesVisited = 0;
-
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
 
-void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, out Triangle outTriangle)
-{
-	uint currentNodeIndex = 0;
+// Debug variables for traceray.
+/*#define TRACERAY_DEBUG_VARS
+uint numBoxesVisited = 0;
+uint numTrianglesVisited = 0;*/
 
-	vec3 invRayDir = 1.0 / ray.Direction;
+// Two versions of trace ray.
+#include "pathtracer_traceray.glsl"
+#define ANY_HIT
+#include "pathtracer_traceray.glsl"
+#undef ANY_HIT
 
-	do {
-		// Load entire node.
-		Node currentNode = Nodes[currentNodeIndex];
-
-		++numBoxesVisited;
-
-		float newHit;
-		if(IntersectBox(ray, invRayDir, currentNode.BoundingBoxMin, currentNode.BoundingBoxMax, newHit) && newHit <= rayLength)
-		{
-			uint childCode = currentNode.FirstChild;
-			currentNodeIndex = childCode & uint(0x7FFFFFFF);  // Most significant bit tells us is this is a leaf.
-		
-			// If it is a leaf ...
-			if(currentNodeIndex != childCode)
-			{
-				for(int i=0; i<TRIANGLES_PER_LEAF; ++i)
-				{
-					// Load triangle.
-					Triangle triangle = Leafs[currentNodeIndex].triangles[i];
-					if(triangle.Vertices.x == triangle.Vertices.y) // Last test if optimization or perf decline: 02.11.14
-						continue;
-						
-					++numTrianglesVisited;
-
-					// Load vertex positions
-					vec3 positions[3];
-					positions[0] = Vertices[triangle.Vertices.x].Position;
-					positions[1] = Vertices[triangle.Vertices.y].Position;
-					positions[2] = Vertices[triangle.Vertices.z].Position;
-
-					// Check hit.
-					vec3 triangleNormal;
-					float newHit; vec3 newBarycentricCoord;
-					if(IntersectTriangle(ray, positions[0], positions[1], positions[2], newHit, newBarycentricCoord, triangleNormal) && newHit < rayLength)
-					{
-						rayLength = newHit;
-						outTriangle = triangle;
-						outBarycentricCoord = newBarycentricCoord;
-						// Cannot return yet, there might be a triangle that is hit before this one!
-					}
-				}
-				currentNodeIndex = currentNode.Escape;
-			}
-		}
-		// No hit, go to escape pointer and repeat.
-		else
-		{
-			currentNodeIndex = currentNode.Escape;
-		}
-	} while(currentNodeIndex != 0);
-}
-
-bool AnyIntersection(in Ray ray, inout float rayLength)
-{
-	uint currentNodeIndex = 0;
-
-	vec3 invRayDir = 1.0 / ray.Direction;
-
-	do {
-		// Load entire node.
-		Node currentNode = Nodes[currentNodeIndex];
-
-		++numBoxesVisited;
-
-		float newHit;
-		if(IntersectBox(ray, invRayDir, currentNode.BoundingBoxMin, currentNode.BoundingBoxMax, newHit) && newHit <= rayLength)
-		{
-			uint childCode = currentNode.FirstChild;
-			currentNodeIndex = childCode & uint(0x7FFFFFFF);  // Most significant bit tells us is this is a leaf.
-		
-			// If it is a leaf ...
-			if(currentNodeIndex != childCode)
-			{
-				for(int i=0; i<TRIANGLES_PER_LEAF; ++i)
-				{
-					// Load triangle.
-					Triangle triangle = Leafs[currentNodeIndex].triangles[i];
-					if(triangle.Vertices.x == triangle.Vertices.y) // Last test if optimization or perf decline: 02.11.14
-						continue;
-						
-					++numTrianglesVisited;
-
-					// Load vertex positions
-					vec3 positions[3];
-					positions[0] = Vertices[triangle.Vertices.x].Position;
-					positions[1] = Vertices[triangle.Vertices.y].Position;
-					positions[2] = Vertices[triangle.Vertices.z].Position;
-
-					// Check hit.
-					vec3 triangleNormal;
-					float newHit; vec3 newBarycentricCoord;
-					if(IntersectTriangle(ray, positions[0], positions[1], positions[2], newHit, newBarycentricCoord, triangleNormal) && newHit < rayLength)
-					{
-						// The any-intersect can return immediately
-						return true;
-					}
-				}
-				currentNodeIndex = currentNode.Escape;
-			}
-		}
-		// No hit, go to escape pointer and repeat.
-		else
-		{
-			currentNodeIndex = currentNode.Escape;
-		}
-	} while(currentNodeIndex != 0);
-	return false;
-}
 
 #define LOCAL_SIZE 16
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
@@ -160,9 +54,16 @@ void main()
 			break;
 
 		// Compute hit normal.
-		vec3 hitNormal = normalize(GetVec(Vertices[triangle.Vertices.x].Normal) * barycentricCoord.x + 
-						 		   GetVec(Vertices[triangle.Vertices.y].Normal) * barycentricCoord.y +
-								   GetVec(Vertices[triangle.Vertices.z].Normal) * barycentricCoord.z); 
+		vec3 vnormal0 = vec3(texelFetch(VertexBuffer, triangle.x * 2).w, texelFetch(VertexBuffer, triangle.x * 2 + 1).xy);
+		vec3 vnormal1 = vec3(texelFetch(VertexBuffer, triangle.y * 2).w, texelFetch(VertexBuffer, triangle.y * 2 + 1).xy);
+		vec3 vnormal2 = vec3(texelFetch(VertexBuffer, triangle.z * 2).w, texelFetch(VertexBuffer, triangle.z * 2 + 1).xy);
+		vec3 hitNormal = normalize(vnormal0 * barycentricCoord.x + 
+						 		   vnormal1 * barycentricCoord.y +
+								   vnormal2 * barycentricCoord.z);
+
+	/*	vec3 hitNormal = normalize(GetVec(Vertices[triangle.x].Normal) * barycentricCoord.x + 
+						 		   GetVec(Vertices[triangle.y].Normal) * barycentricCoord.y +
+								   GetVec(Vertices[triangle.z].Normal) * barycentricCoord.z); */
 
 		// Compute hit color.
 		vec3 hitColor = vec3(Random(randomSeed)); // TODO
@@ -185,9 +86,7 @@ void main()
 		ray.Direction /= lightDist;
 		rayHit = lightDist;
 
-		//TraceRay(ray, rayHit, barycentricCoord, triangle);
-		//if(rayHit == lightDist)
-		if(!AnyIntersection(ray, rayHit))
+		if(!TraceRayAnyHit(ray, rayHit))
 			color += rayColor * saturate(dot(ray.Direction, hitNormal)); // 1/PI is BRDF, rayColor incoming L
 
 		// Bounce ray.

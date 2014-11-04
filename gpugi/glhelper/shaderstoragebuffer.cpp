@@ -1,4 +1,4 @@
-#include "structuredbuffer.hpp"
+#include "shaderstoragebuffer.hpp"
 #include "shaderobject.hpp"
 #include "buffer.hpp"
 #include "../utilities/logger.hpp"

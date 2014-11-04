@@ -5,7 +5,7 @@
 
 #include "../glhelper/texture2d.hpp"
 #include "../glhelper/screenalignedtriangle.hpp"
-#include "../glhelper/structuredbuffer.hpp"
+#include "../glhelper/texturebuffer.hpp"
 
 #include "../Time/Time.h"
 
@@ -82,27 +82,27 @@ void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
 	m_scene = _scene;
 
 	// Check shader compability.
-	auto shaderNodeSize = m_pathtracerShader.GetShaderStorageBufferInfo().at("HierarchyBuffer").iBufferDataSizeByte; //Variables.at("Nodes").iArrayStride;
-	Assert(shaderNodeSize == sizeof(Scene::TreeNode<ei::Box>), "Shader tree node is " << shaderNodeSize << "bytes big but expected were " << sizeof(Scene::TreeNode<ei::Box>) << "bytes");
-	auto shaderVertexSize = m_pathtracerShader.GetShaderStorageBufferInfo().at("VertexBuffer").iBufferDataSizeByte; //.Variables.at("Vertices").iArrayStride;
-	Assert(shaderVertexSize == sizeof(FileDecl::Vertex), "Shader vertex is " << shaderVertexSize << "bytes big but expected were " << sizeof(FileDecl::Vertex) << "bytes");
-	auto shaderLeafSize = m_pathtracerShader.GetShaderStorageBufferInfo().at("LeafBuffer").iBufferDataSizeByte; //.Variables.at("Leafs").iArrayStride;
-	auto expectedLeafSize = sizeof(Scene::Triangle) * m_scene->GetNumTrianglesPerLeaf();
-	Assert(shaderLeafSize == expectedLeafSize, "Shader leaf is " << shaderLeafSize << "bytes big but expected were " << expectedLeafSize << "bytes");
+	//auto shaderNodeSize = m_pathtracerShader.GetShaderStorageBufferInfo().at("HierarchyBuffer").iBufferDataSizeByte; //Variables.at("Nodes").iArrayStride;
+	//Assert(shaderNodeSize == sizeof(Scene::TreeNode<ei::Box>), "Shader tree node is " << shaderNodeSize << "bytes big but expected were " << sizeof(Scene::TreeNode<ei::Box>) << "bytes");
+	//auto shaderVertexSize = m_pathtracerShader.GetShaderStorageBufferInfo().at("VertexBuffer").iBufferDataSizeByte; //.Variables.at("Vertices").iArrayStride;
+	//Assert(shaderVertexSize == sizeof(FileDecl::Vertex), "Shader vertex is " << shaderVertexSize << "bytes big but expected were " << sizeof(FileDecl::Vertex) << "bytes");
+	//auto shaderLeafSize = m_pathtracerShader.GetShaderStorageBufferInfo().at("LeafBuffer").iBufferDataSizeByte; //.Variables.at("Leafs").iArrayStride;
+	//auto expectedLeafSize = sizeof(Scene::Triangle) * m_scene->GetNumTrianglesPerLeaf();
+	//Assert(shaderLeafSize == expectedLeafSize, "Shader leaf is " << shaderLeafSize << "bytes big but expected were " << expectedLeafSize << "bytes");
 
 
 	// Bind buffer
-	m_hierarchyBuffer.reset(new gl::ShaderStorageBufferView());
-	m_hierarchyBuffer->Init(m_scene->GetHierarchyBuffer(), "HierarchyBuffer");
-	m_pathtracerShader.BindSSBO(*m_hierarchyBuffer);
+	m_triangleBuffer.reset(new gl::TextureBufferView());
+	m_triangleBuffer->Init(m_scene->GetTriangleBuffer(), gl::TextureBufferFormat::RGBA32I);
+	m_triangleBuffer->BindBuffer(0);
 
-	m_vertexBuffer.reset(new gl::ShaderStorageBufferView());
-	m_vertexBuffer->Init(m_scene->GetVertexBuffer(), "VertexBuffer");
-	m_pathtracerShader.BindSSBO(*m_vertexBuffer);
+	m_vertexBuffer.reset(new gl::TextureBufferView());
+	m_vertexBuffer->Init(m_scene->GetVertexBuffer(), gl::TextureBufferFormat::RGBA32F);
+	m_vertexBuffer->BindBuffer(1);
 
-	m_leafBuffer.reset(new gl::ShaderStorageBufferView());
-	m_leafBuffer->Init(m_scene->GetTriangleBuffer(), "LeafBuffer");
-	m_pathtracerShader.BindSSBO(*m_leafBuffer);
+	m_hierarchyBuffer.reset(new gl::TextureBufferView());
+	m_hierarchyBuffer->Init(m_scene->GetHierarchyBuffer(), gl::TextureBufferFormat::RGBA32F);
+	m_hierarchyBuffer->BindBuffer(2);
 }
 
 void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)
@@ -132,7 +132,6 @@ void ReferenceRenderer::Draw()
 		// See https://www.opengl.org/wiki/Memory_Model#Ensuring_visibility
 		GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT);
 	}
-
 
 	{
 		++m_iterationCount;

@@ -17,14 +17,11 @@ namespace gl
         GL_CALL(glDeleteTextures, 1, &m_textureObject);
 	}
 
-    Result TextureBufferView::Init(std::shared_ptr<Buffer> _buffer,
-            TextureFormat _format)
+    Result TextureBufferView::Init(std::shared_ptr<Buffer> _buffer, TextureBufferFormat _format)
     {
         m_buffer = _buffer;
-        GL_CALL(glTextureBuffer,
-            m_textureObject,
-            TextureFormatToGLSizedInternal[int(_format)],
-            _buffer->GetBufferId());
+        GL_CALL(glTextureBuffer, m_textureObject, 
+			static_cast<GLenum>(_format), _buffer->GetBufferId());
 
         return SUCCEEDED;
     }
@@ -36,7 +33,7 @@ namespace gl
 
 		if (s_boundTBOs[_locationIndex] != this)
 		{
-            GL_CALL(glActiveTexture, _locationIndex); 
+            GL_CALL(glActiveTexture, GL_TEXTURE0 + _locationIndex); 
 			GL_CALL(glBindTexture, GL_TEXTURE_BUFFER, m_textureObject);
 			s_boundTBOs[_locationIndex] = this;
 		}

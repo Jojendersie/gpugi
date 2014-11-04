@@ -20,8 +20,7 @@ namespace gl
 		~TextureBufferView();
 			
         /// Bind the buffer data to this TextureBuffer.
-		Result Init(std::shared_ptr<Buffer> _buffer,
-            TextureFormat _format);
+		Result Init(std::shared_ptr<Buffer> _buffer, TextureBufferFormat _format);
 
 		/// Binds buffer if not already bound.
 		void BindBuffer(GLuint _locationIndex) const;

@@ -114,7 +114,6 @@
     <ClCompile Include="renderer\referencerenderer.cpp">
       <Filter>code\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="glhelper\framebufferobject.cpp" />
     <ClCompile Include="utilities\random.cpp">
       <Filter>code\utilities</Filter>
     </ClCompile>
@@ -130,7 +129,10 @@
     <ClCompile Include="glhelper\texturebuffer.cpp">
       <Filter>code\glhelper</Filter>
     </ClCompile>
-    <ClCompile Include="glhelper\structuredbuffer.cpp">
+    <ClCompile Include="glhelper\framebufferobject.cpp">
+      <Filter>code\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="glhelper\shaderstoragebuffer.cpp">
       <Filter>code\glhelper</Filter>
     </ClCompile>
   </ItemGroup>
@@ -213,7 +215,6 @@
     <ClInclude Include="renderer\referencerenderer.hpp">
       <Filter>code\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="glhelper\framebufferobject.hpp" />
     <ClInclude Include="utilities\random.hpp">
       <Filter>code\utilities</Filter>
     </ClInclude>
@@ -229,14 +230,17 @@
     <ClInclude Include="glhelper\texturebuffer.hpp">
       <Filter>code\glhelper</Filter>
     </ClInclude>
-    <ClInclude Include="glhelper\structuredbuffer.hpp">
-      <Filter>code\glhelper</Filter>
-    </ClInclude>
     <ClInclude Include="utilities\flagoperators.hpp">
       <Filter>code\utilities</Filter>
     </ClInclude>
     <ClInclude Include="utilities\variant.hpp">
       <Filter>code\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\framebufferobject.hpp">
+      <Filter>code\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\shaderstoragebuffer.hpp">
+      <Filter>code\glhelper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -245,6 +249,27 @@
     </None>
     <None Include="glhelper\shaderdatametainfo.inl">
       <Filter>code\glhelper</Filter>
+    </None>
+    <None Include="shader\globaluniforms.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\helper.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\intersectiontests.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\materials.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\pathtracer.comp">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\pathtracer_traceray.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\random.glsl">
+      <Filter>shader</Filter>
     </None>
     <None Include="shader\scenedata.glsl">
       <Filter>shader</Filter>
@@ -259,18 +284,6 @@
       <Filter>shader</Filter>
     </None>
     <None Include="shader\displayHDR.frag">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\helper.glsl">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\pathtracer.comp">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\random.glsl">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\raytrace.glsl">
       <Filter>shader</Filter>
     </None>
   </ItemGroup>
