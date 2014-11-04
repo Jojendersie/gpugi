@@ -5,7 +5,7 @@
 
 #include "../glhelper/texture2d.hpp"
 #include "../glhelper/screenalignedtriangle.hpp"
-#include "../glhelper/structuredbuffer.hpp"
+#include "../glhelper/texturebuffer.hpp"
 
 #include "../Time/Time.h"
 
@@ -92,33 +92,17 @@ void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
 
 
 	// Bind buffer
-	/*m_hierarchyBuffer.reset(new gl::ShaderStorageBufferView());
-	m_hierarchyBuffer->Init(m_scene->GetHierarchyBuffer(), "HierarchyBuffer");
-	m_pathtracerShader.BindSSBO(*m_hierarchyBuffer);*/
+	m_triangleBuffer.reset(new gl::TextureBufferView());
+	m_triangleBuffer->Init(m_scene->GetTriangleBuffer(), gl::TextureBufferFormat::RGBA32I);
+	m_triangleBuffer->BindBuffer(0);
 
-	/*m_vertexBuffer.reset(new gl::ShaderStorageBufferView());
-	m_vertexBuffer->Init(m_scene->GetVertexBuffer(), "VertexBuffer");
-	m_pathtracerShader.BindSSBO(*m_vertexBuffer);*/
+	m_vertexBuffer.reset(new gl::TextureBufferView());
+	m_vertexBuffer->Init(m_scene->GetVertexBuffer(), gl::TextureBufferFormat::RGBA32F);
+	m_vertexBuffer->BindBuffer(1);
 
-	/*m_leafBuffer.reset(new gl::ShaderStorageBufferView());
-	m_leafBuffer->Init(m_scene->GetTriangleBuffer(), "LeafBuffer");
-	m_pathtracerShader.BindSSBO(*m_leafBuffer); */
-
-
-	GLuint textures[3];
-	glGenTextures(3, textures);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_BUFFER, textures[0]);
-	glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32I, m_scene->GetTriangleBuffer()->GetBufferId());
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_BUFFER, textures[1]);
-	glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, m_scene->GetVertexBuffer()->GetBufferId());
-
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_BUFFER, textures[2]);
-	glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, m_scene->GetHierarchyBuffer()->GetBufferId());
+	m_hierarchyBuffer.reset(new gl::TextureBufferView());
+	m_hierarchyBuffer->Init(m_scene->GetHierarchyBuffer(), gl::TextureBufferFormat::RGBA32F);
+	m_hierarchyBuffer->BindBuffer(2);
 }
 
 void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)

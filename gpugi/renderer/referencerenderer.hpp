@@ -6,7 +6,7 @@
 
 namespace gl
 {
-	class ShaderStorageBufferView;
+	class TextureBufferView;
 }
 
 class ReferenceRenderer : public Renderer
@@ -34,9 +34,9 @@ private:
 	gl::UniformBufferView m_cameraUBO;
 	gl::UniformBufferView m_perIterationUBO;
 
-//	std::unique_ptr<gl::TextureBufferView> m_hierarchyBuffer;
-//	std::unique_ptr<gl::TextureBufferView> m_vertexBuffer;
-//	std::unique_ptr<gl::TextureBufferView> m_leafBuffer;
+	std::unique_ptr<gl::TextureBufferView> m_hierarchyBuffer;
+	std::unique_ptr<gl::TextureBufferView> m_vertexBuffer;
+	std::unique_ptr<gl::TextureBufferView> m_triangleBuffer;
 
 	std::shared_ptr<Scene> m_scene;
 };

@@ -1,6 +1,6 @@
 ﻿#include "shaderobject.hpp"
 #include "uniformbuffer.hpp"
-#include "structuredbuffer.hpp"
+#include "shaderstoragebuffer.hpp"
 
 #include "../utilities/logger.hpp"
 #include "../utilities/pathutils.hpp"

@@ -157,7 +157,7 @@
     <ClCompile Include="glhelper\samplerobject.cpp" />
     <ClCompile Include="glhelper\screenalignedtriangle.cpp" />
     <ClCompile Include="glhelper\shaderobject.cpp" />
-    <ClCompile Include="glhelper\structuredbuffer.cpp" />
+    <ClCompile Include="glhelper\shaderstoragebuffer.cpp" />
     <ClCompile Include="glhelper\texture.cpp" />
     <ClCompile Include="glhelper\texture2d.cpp" />
     <ClCompile Include="glhelper\texturebuffer.cpp" />
@@ -190,7 +190,7 @@
     <ClInclude Include="glhelper\screenalignedtriangle.hpp" />
     <ClInclude Include="glhelper\shaderdatametainfo.hpp" />
     <ClInclude Include="glhelper\shaderobject.hpp" />
-    <ClInclude Include="glhelper\structuredbuffer.hpp" />
+    <ClInclude Include="glhelper\shaderstoragebuffer.hpp" />
     <ClInclude Include="glhelper\texture.hpp" />
     <ClInclude Include="glhelper\texture2d.hpp" />
     <ClInclude Include="glhelper\texturebuffer.hpp" />
@@ -219,10 +219,13 @@
     <None Include="glhelper\shaderdatametainfo.inl" />
     <None Include="glhelper\uniformbuffer.inl" />
     <None Include="shader\displayHDR.frag" />
+    <None Include="shader\globaluniforms.glsl" />
     <None Include="shader\helper.glsl" />
+    <None Include="shader\intersectiontests.glsl" />
+    <None Include="shader\materials.glsl" />
     <None Include="shader\pathtracer.comp" />
+    <None Include="shader\pathtracer_traceray.glsl" />
     <None Include="shader\random.glsl" />
-    <None Include="shader\raytrace.glsl" />
     <None Include="shader\scenedata.glsl" />
     <None Include="shader\screenTri.vert" />
     <None Include="shader\testcompute.comp" />
