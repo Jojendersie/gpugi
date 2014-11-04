@@ -22,7 +22,7 @@ vec4 saturate(vec4 x)
 void CreateONB(in vec3 n, out vec3 U, out vec3 V)
 {
 	U = cross(n, vec3(0.0, 1.0, 0.0));
-	if (abs(U.x) < 0.001f && abs(U.y) < 0.001f && abs(U.z) < 0.001f)
+	if (all(lessThan(abs(U), vec3(0.0001))))
 		U = cross(n, vec3(1.0, 0.0, 0.0));
 	U = normalize(U);
 	V = cross(n, U);

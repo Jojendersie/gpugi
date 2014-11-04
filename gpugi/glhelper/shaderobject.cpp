@@ -73,8 +73,10 @@ namespace gl
 		return result;
 	}
 
+	/// \param _beforeIncludedFiles
+	///		Does not include THIS file, but all files before.
 	std::string ShaderObject::ReadShaderFromFile(const std::string& shaderFilename, const std::string& prefixCode,
-												std::unordered_set<std::string>& includedFiles, unsigned int fileIndex)
+												std::unordered_set<std::string>& _beforeIncludedFiles, unsigned int fileIndex)
 	{
 		// open file
 		std::ifstream file(shaderFilename.c_str());
@@ -133,8 +135,10 @@ namespace gl
 			}
 		}
 
-		// push into file list to prevent circular includes
-		includedFiles.insert(shaderFilename);
+		// By adding this file to a NEW list of included files we allow multiple inclusion of the same file but disallow cycles.
+		// Including the same file multiple times may be useful in some cases!
+		auto includedFilesNew = _beforeIncludedFiles;
+		includedFilesNew.emplace(shaderFilename);
 
 		// parse all include tags
 		size_t includePos = sourceCode.find("#include", parseCursorPos);
@@ -169,15 +173,15 @@ namespace gl
 			std::string includeCommand = sourceCode.substr(quotMarksFirst + 1, stringLength);
 			std::string includeFile = PathUtils::AppendPath(relativePath, includeCommand);
 
-			// check if already included
-			if (shaderFilename.find(includeFile) != std::string::npos)
+			// Check if already included, to avoid cycles.
+			if (_beforeIncludedFiles.find(includeFile) != _beforeIncludedFiles.end())
 			{
 				sourceCode.replace(includePos, includePos - quotMarksLast + 1, "\n");
 				// just do nothing...
 			}
 			else
 			{
-				insertionBuffer = ReadShaderFromFile(includeFile, "", includedFiles, ++lastFileIndex);
+				insertionBuffer = ReadShaderFromFile(includeFile, "", includedFilesNew, ++lastFileIndex);
 				insertionBuffer += "\n#line " + std::to_string(parseCursorOriginalFileNumber + 1) + " " + std::to_string(fileIndex); // whitespace replaces #include!
 				sourceCode.replace(includePos, quotMarksLast - includePos + 1, insertionBuffer);
 
