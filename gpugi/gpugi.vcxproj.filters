@@ -114,7 +114,6 @@
     <ClCompile Include="renderer\referencerenderer.cpp">
       <Filter>code\renderer</Filter>
     </ClCompile>
-    <ClCompile Include="glhelper\framebufferobject.cpp" />
     <ClCompile Include="utilities\random.cpp">
       <Filter>code\utilities</Filter>
     </ClCompile>
@@ -131,6 +130,9 @@
       <Filter>code\glhelper</Filter>
     </ClCompile>
     <ClCompile Include="glhelper\structuredbuffer.cpp">
+      <Filter>code\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="glhelper\framebufferobject.cpp">
       <Filter>code\glhelper</Filter>
     </ClCompile>
   </ItemGroup>
@@ -213,7 +215,6 @@
     <ClInclude Include="renderer\referencerenderer.hpp">
       <Filter>code\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="glhelper\framebufferobject.hpp" />
     <ClInclude Include="utilities\random.hpp">
       <Filter>code\utilities</Filter>
     </ClInclude>
@@ -237,6 +238,9 @@
     </ClInclude>
     <ClInclude Include="utilities\variant.hpp">
       <Filter>code\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelper\framebufferobject.hpp">
+      <Filter>code\glhelper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

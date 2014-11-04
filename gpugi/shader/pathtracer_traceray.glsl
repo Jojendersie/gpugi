@@ -7,22 +7,23 @@
 	void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, out Triangle outTriangle)
 #endif
 {
-	uint currentNodeIndex = 0;
+	int currentNodeIndex = 0;
 	vec3 invRayDir = 1.0 / ray.Direction;
 
 	do {
 		// Load entire node.
-		Node currentNode = Nodes[currentNodeIndex];
+		vec4 currentNode0 = texelFetch(HierachyBuffer, currentNodeIndex * 2);
+		vec4 currentNode1 = texelFetch(HierachyBuffer, currentNodeIndex * 2 + 1);
 
 		#ifdef TRACERAY_DEBUG_VARS
 			++numBoxesVisited;
 		#endif
 
 		float newHit;
-		if(IntersectBox(ray, invRayDir, currentNode.BoundingBoxMin, currentNode.BoundingBoxMax, newHit) && newHit <= rayLength)
+		if(IntersectBox(ray, invRayDir, currentNode0.xyz, currentNode1.xyz, newHit) && newHit <= rayLength)
 		{
-			uint childCode = currentNode.FirstChild;
-			currentNodeIndex = childCode & uint(0x7FFFFFFF);  // Most significant bit tells us is this is a leaf.
+			uint childCode = floatBitsToUint(currentNode0.w);
+			currentNodeIndex = int(childCode & uint(0x7FFFFFFF));  // Most significant bit tells us is this is a leaf.
 		
 			// If it is a leaf ...
 			if(currentNodeIndex != childCode)
@@ -30,8 +31,8 @@
 				for(int i=0; i<TRIANGLES_PER_LEAF; ++i)
 				{
 					// Load triangle.
-					Triangle triangle = Leafs[currentNodeIndex].triangles[i];
-					if(triangle.Vertices.x == triangle.Vertices.y) // Last test if optimization or perf decline: 02.11.14
+					Triangle triangle = texelFetch(TriangleBuffer, int(TRIANGLES_PER_LEAF * currentNodeIndex + i));
+					if(triangle.x == triangle.y) // Last test if optimization or perf decline: 02.11.14
 						continue;
 						
 					#ifdef TRACERAY_DEBUG_VARS
@@ -40,9 +41,9 @@
 
 					// Load vertex positions
 					vec3 positions[3];
-					positions[0] = Vertices[triangle.Vertices.x].Position;
-					positions[1] = Vertices[triangle.Vertices.y].Position;
-					positions[2] = Vertices[triangle.Vertices.z].Position;
+					positions[0] = texelFetch(VertexBuffer, triangle.x * 2).xyz;//Vertices[triangle.x].Position;
+					positions[1] = texelFetch(VertexBuffer, triangle.y * 2).xyz;//Vertices[triangle.y].Position;
+					positions[2] = texelFetch(VertexBuffer, triangle.z * 2).xyz;//Vertices[triangle.z].Position;
 
 					// Check hit.
 					vec3 triangleNormal;
@@ -59,13 +60,13 @@
 						#endif
 					}
 				}
-				currentNodeIndex = currentNode.Escape;
+				currentNodeIndex = floatBitsToInt(currentNode1.w);
 			}
 		}
 		// No hit, go to escape pointer and repeat.
 		else
 		{
-			currentNodeIndex = currentNode.Escape;
+			currentNodeIndex = floatBitsToInt(currentNode1.w);
 		}
 	} while(currentNodeIndex != 0);
 
