@@ -89,14 +89,17 @@ void main()
 
 			ray.Direction = sampleData.xyz - ray.Origin;
 
-			float lightDist = length(ray.Direction);
+			float lightDistSq = dot(ray.Direction, ray.Direction);
+			float lightDist = sqrt(lightDistSq);
 			ray.Direction /= lightDist;
 			rayHit = lightDist;
 
 			if(!TraceRayAnyHit(ray, rayHit))
 			{
-				float lightIntensity = saturate(dot(ray.Direction, hitNormal)) * lightSampleWeight;
-				color += SharedExponentDecode(floatBitsToUint(sampleData.w)) * rayColor * lightIntensity; 
+				vec3 brdf = vec3(1.0); // / pi
+				vec3 illuminance = (lightSampleWeight *		// Divide by p for Montecarlo
+					saturate(dot(ray.Direction, hitNormal)) / lightDistSq) * SharedExponentDecode(floatBitsToUint(sampleData.w));
+				color += illuminance * rayColor * brdf; 
 			}
 		}
 
