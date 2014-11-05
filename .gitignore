@@ -46,5 +46,7 @@
 log.txt
 
 # Our stuff
-/scenes
+*.max
+*.rawscene
 *.pfm
+*.mtl
