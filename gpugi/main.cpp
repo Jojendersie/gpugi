@@ -147,8 +147,8 @@ private:
 
 	std::string UIntToMinLengthString(int _number, int _minDigits)
 	{
-		int zeros = std::max(0, _minDigits - static_cast<int>(ceil(log10(_number))));
-		std::string out = std::string("0", zeros) + std::to_string(_number);
+		int zeros = std::max(0, _minDigits - static_cast<int>(ceil(log10(_number+1))));
+		std::string out = std::string(zeros, '0') + std::to_string(_number);
 		return out;
 	}
 

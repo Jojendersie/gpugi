@@ -33,3 +33,20 @@ float GetLuminance(vec3 rgb)
 	const vec3 W = vec3(0.2125, 0.7154, 0.0721);
 	return dot(rgb, W);
 }
+
+// Source http://www.malteclasen.de/zib/index4837.html?p=37
+uint SharedExponentEncode(vec3 value)
+{
+	value = value / 65536.0;
+	vec3 exponent = clamp(ceil(log2(value)), -128.0, 127.0);
+	float commonExponent = max(max(exponent.r, exponent.g), exponent.b);
+	float range = exp2(commonExponent);
+	vec3 mantissa = clamp(value / range, 0.0, 1.0);
+	return packUnorm4x8(vec4(mantissa, (commonExponent + 128.0) / 256.0));
+}
+vec3 SharedExponentDecode(uint encoded)
+{
+	vec4 encodedUnpacked = unpackUnorm4x8(encoded);
+	float exponent = encodedUnpacked.a * 256.0 - 128.0;
+	return (exp2(exponent) * 65536.0) * encodedUnpacked.rgb;
+}

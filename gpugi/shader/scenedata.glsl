@@ -55,6 +55,11 @@ struct Node
 	#error "No node type defined"
 #endif */
 
+layout(binding=3) uniform samplerBuffer LightSampleBuffer;
+/*
+vec4 -> rgb: position, a: shared exponent color
+*/
+
 struct Material
 {
 	uvec2 diffuseTexHandle;

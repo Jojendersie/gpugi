@@ -24,7 +24,7 @@ protected:
 private:
 	gl::ScreenAlignedTriangle m_screenTri;
 
-	std::unique_ptr<gl::Texture2D> m_iterationBuffer;
+	//std::unique_ptr<gl::Texture2D> m_iterationBuffer;
 	gl::FramebufferObject m_backbufferFBO;
 
 	gl::ShaderObject m_pathtracerShader;
@@ -38,6 +38,11 @@ private:
 	std::unique_ptr<gl::TextureBufferView> m_vertexBuffer;
 	std::unique_ptr<gl::TextureBufferView> m_triangleBuffer;
 
+	static const unsigned int m_maxNumLightSamples;
+	std::unique_ptr<gl::TextureBufferView> m_lightSampleBuffer;
+
 	std::shared_ptr<Scene> m_scene;
+
+	
 };
 
