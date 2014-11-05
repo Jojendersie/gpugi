@@ -135,6 +135,9 @@
     <ClCompile Include="glhelper\shaderstoragebuffer.cpp">
       <Filter>code\glhelper</Filter>
     </ClCompile>
+    <ClCompile Include="utilities\color.cpp">
+      <Filter>code\utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -241,6 +244,9 @@
     </ClInclude>
     <ClInclude Include="glhelper\shaderstoragebuffer.hpp">
       <Filter>code\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\color.hpp">
+      <Filter>code\utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

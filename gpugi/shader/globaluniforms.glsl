@@ -14,6 +14,7 @@ layout(binding = 1, std140) uniform Camera
 layout(binding = 2, std140) uniform PerIteration
 {
 	uint FrameSeed;
+	uint NumLightSamples;
 };
 
 layout(binding = 3, std140) uniform UMaterials

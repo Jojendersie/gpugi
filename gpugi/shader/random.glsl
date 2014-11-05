@@ -12,15 +12,21 @@ uint InitRandomSeed(uint frameSeed, uint invocationID)
 	return seed;
 }
 
-float Random(inout uint seed)
+uint RandomUInt(inout uint seed)
 {
 	// Xorshift32
 	seed ^= (seed << 13);
 	seed ^= (seed >> 17);
 	seed ^= (seed << 5);
 	
-	return float(seed % 8388593) / 8388593.0;
+	return seed;
 }
+
+float Random(inout uint seed)
+{
+	return float(RandomUInt(seed) % 8388593) / 8388593.0;
+}
+
 
 vec2 Random2(inout uint seed)
 {

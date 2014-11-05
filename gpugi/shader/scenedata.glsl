@@ -54,6 +54,11 @@ struct Node
 	#error "No node type defined"
 #endif */
 
+layout(binding=3) uniform samplerBuffer LightSampleBuffer;
+/*
+vec4 -> rgb: position, a: shared exponent color
+*/
+
 struct Material
 {
 	vec3 Fresnel0;	// Fist precomputed coefficient for fresnel approximation (rgb)

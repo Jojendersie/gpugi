@@ -7,6 +7,7 @@
 #include "globaluniforms.glsl"
 #include "materials.glsl"
 
+#define NUM_LIGHT_SAMPLES 1
 
 #define MAX_NUM_BOUNCES 16
 #define RAY_HIT_EPSILON 0.01
@@ -43,6 +44,8 @@ void main()
 	vec3 color = vec3(0.0);
 	vec3 rayColor = vec3(1.0);
 
+	const float lightSampleWeight = float(NumLightSamples) / NUM_LIGHT_SAMPLES; // This could be a uniform!
+
 	for(int i=0; i<MAX_NUM_BOUNCES; ++i)
 	{
 		// Trace ray.
@@ -77,17 +80,25 @@ void main()
 #endif
 
 
-		// Add direct light - FIXED POINT LIGHT ATM
-		const vec3 lightPos = vec3(0, 2, 0);
+		// Connect to random light samples.
 		ray.Origin = ray.Origin + (rayHit - RAY_HIT_EPSILON) * ray.Direction;
-		ray.Direction = lightPos - ray.Origin;
+		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
+		{
+			int sampleIndex = int(RandomUInt(randomSeed) % NumLightSamples);
+			vec4 sampleData = texelFetch(LightSampleBuffer, sampleIndex);
 
-		float lightDist = length(ray.Direction);
-		ray.Direction /= lightDist;
-		rayHit = lightDist;
+			ray.Direction = sampleData.xyz - ray.Origin;
 
-		if(!TraceRayAnyHit(ray, rayHit))
-			color += rayColor * saturate(dot(ray.Direction, hitNormal)); // 1/PI is BRDF, rayColor incoming L
+			float lightDist = length(ray.Direction);
+			ray.Direction /= lightDist;
+			rayHit = lightDist;
+
+			if(!TraceRayAnyHit(ray, rayHit))
+			{
+				float lightIntensity = saturate(dot(ray.Direction, hitNormal)) * lightSampleWeight;
+				color += SharedExponentDecode(floatBitsToUint(sampleData.w)) * rayColor * lightIntensity; 
+			}
+		}
 
 		// Bounce ray.
 		vec3 U, V;

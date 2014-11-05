@@ -173,6 +173,7 @@
     <ClCompile Include="Time\Implementation\Stopwatch.cpp" />
     <ClCompile Include="Time\Implementation\Time.cpp" />
     <ClCompile Include="utilities\assert.cpp" />
+    <ClCompile Include="utilities\color.cpp" />
     <ClCompile Include="utilities\logger.cpp" />
     <ClCompile Include="utilities\random.cpp" />
     <ClCompile Include="utilities\pathutils.cpp" />
@@ -206,6 +207,7 @@
     <ClInclude Include="Time\Stopwatch.h" />
     <ClInclude Include="Time\Time.h" />
     <ClInclude Include="utilities\assert.hpp" />
+    <ClInclude Include="utilities\color.hpp" />
     <ClInclude Include="utilities\flagoperators.hpp" />
     <ClInclude Include="utilities\logger.hpp" />
     <ClInclude Include="utilities\loggerinit.hpp" />
