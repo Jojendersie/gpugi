@@ -1,4 +1,5 @@
 //#extension GL_ARB_enhanced_layouts : require
+#extension GL_ARB_bindless_texture : require
 
 #define NODE_TYPE_BOX 0
 //#define NODE_TYPE_SPHERE 1
@@ -56,7 +57,12 @@ struct Node
 
 struct Material
 {
+	uvec2 diffuseTexHandle;
+	uvec2 opacityTexHandle;
+	uvec2 reflectivenessTexHandle;
+	vec2 padding0;
 	vec3 Fresnel0;	// Fist precomputed coefficient for fresnel approximation (rgb)
-	float pad;
+	float RefractionIndexAvg;
 	vec3 Fresnel1;	// Second precomputed coefficient for fresnel approximation (rgb)
+	float padding1;
 };
