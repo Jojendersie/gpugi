@@ -137,7 +137,6 @@ void BVHBuilder::LoadMaterials( const std::string& _materialFileName )
 void BVHBuilder::ExportGeometry( std::ofstream& _file )
 {
     // Prepare file headers and find out how much space is required
-    //FileDecl::NamedArray indexHeader;
     FileDecl::NamedArray vertexHeader;
     strcpy( vertexHeader.name, "vertices" );
     vertexHeader.elementSize = sizeof(FileDecl::Vertex);
@@ -148,9 +147,8 @@ void BVHBuilder::ExportGeometry( std::ofstream& _file )
     // Allocate space for positions and index buffer (these are required for
     // the hierarchy build algorithm).
     m_positions.reset( new ε::Vec3[vertexHeader.numElements] );
-    m_triangles.reset( new uint32[numTriangles * 3] );
+    m_triangles.reset( new uint32[numTriangles * 4] );
     m_triangleCount = 0;
-    // TODO Materials
 
     // Export vertices directly streams to the file and fills m_positions
     // as well as m_triangles
@@ -184,16 +182,27 @@ void BVHBuilder::ExportVertices( std::ofstream& _file,
     for( unsigned i = 0; i < _node->mNumMeshes; ++i )
 	{
 		const aiMesh* mesh = m_scene->mMeshes[ _node->mMeshes[i] ];
-        // TODO create a material entry
+
+        // Find a material entry_
+		aiString aiName;
+		m_scene->mMaterials[mesh->mMaterialIndex]->Get( AI_MATKEY_NAME, aiName );
+		std::string materialName = aiName.C_Str();
+		uint materialIndex = 0;
+		while(materialIndex < m_materials.RootNode.Size()
+			&& m_materials.RootNode[materialIndex].GetName() != materialName)
+			++materialIndex;
+		if( materialIndex == m_materials.RootNode.Size() )
+			std::cerr << "Could not find the mesh material" << std::endl;
 
         // Add each triangle to the output array
 		for( unsigned t = 0; t < mesh->mNumFaces; ++t )
 		{
 			const aiFace& face = mesh->mFaces[t];
 			Assert( face.mNumIndices == 3, "This is a triangle importer!" );
-            m_triangles[m_triangleCount*3 + 0] = face.mIndices[0] + m_vertexCount;
-            m_triangles[m_triangleCount*3 + 1] = face.mIndices[1] + m_vertexCount;
-            m_triangles[m_triangleCount*3 + 2] = face.mIndices[2] + m_vertexCount;
+            m_triangles[m_triangleCount*4 + 0] = face.mIndices[0] + m_vertexCount;
+            m_triangles[m_triangleCount*4 + 1] = face.mIndices[1] + m_vertexCount;
+            m_triangles[m_triangleCount*4 + 2] = face.mIndices[2] + m_vertexCount;
+			m_triangles[m_triangleCount*4 + 3] = materialIndex;
             ++m_triangleCount;
         }
 
@@ -337,7 +346,7 @@ void BVHBuilder::ExportMaterials( std::ofstream& _file, const std::string& _mate
 
 		// Without knowledge use simple defaults
 		auto& refrN = matNode.Add( "refractionIndexN", MetaFileWrapper::ElementType::FLOAT, 3 );
-		auto& refrR = matNode.Add( "refractionIndexR", MetaFileWrapper::ElementType::FLOAT, 3 );
+		auto& refrR = matNode.Add( "refractionIndexK", MetaFileWrapper::ElementType::FLOAT, 3 );
 		refrN[0] = refrN[1] = refrN[2] = 1.45f;
 		refrR[0] = refrR[1] = refrR[2] = 0.0f;
 
@@ -353,17 +362,45 @@ void BVHBuilder::ExportMaterials( std::ofstream& _file, const std::string& _mate
 			opactiy[1] = value;
 			opactiy[2] = value;
 		}
+
+		// Load emissivity
+		{
+			auto& emissivity = matNode.Add( "emissivity", MetaFileWrapper::ElementType::FLOAT, 3 );
+			aiColor3D color = aiColor3D( 0.0f, 0.0f, 0.0f );
+			mat->Get( AI_MATKEY_COLOR_EMISSIVE, color );
+			emissivity[0] = color.r;
+			emissivity[1] = color.g;
+			emissivity[2] = color.b;
+		}
 	}
 
 	m_materials.Write( HDDFile(_materialFileName, HDDFile::OVERWRITE), Format::JSON );
+
+	// Create the materialref table
+	FileDecl::NamedArray materialHeader;
+    strcpy( materialHeader.name, "materialref" );
+    materialHeader.elementSize = sizeof(FileDecl::Material);
+    materialHeader.numElements = static_cast<uint32>(m_materials.RootNode.Size());
+
+    _file.write( (const char*)&materialHeader, sizeof(FileDecl::NamedArray) );
+	for( uint i = 0; i < materialHeader.numElements; ++i )
+	{
+		size_t len = m_materials.RootNode[i].GetName().length();
+		if( len > 31 ) {
+			std::cerr << "Material name to long: shortening.";
+		}
+		FileDecl::Material mat;
+		_snprintf(mat.material, 32, m_materials.RootNode[i].GetName().c_str());
+		_file.write( (const char*)&mat, sizeof(FileDecl::Material) );
+	}
 }
 
 
 ε::Triangle BVHBuilder::GetTriangle( uint32 _index ) const
 {
-    return ε::Triangle( m_positions[ m_triangles[_index * 3 + 0] ],
-                        m_positions[ m_triangles[_index * 3 + 1] ],
-                        m_positions[ m_triangles[_index * 3 + 2] ]
+    return ε::Triangle( m_positions[ m_triangles[_index * 4 + 0] ],
+                        m_positions[ m_triangles[_index * 4 + 1] ],
+                        m_positions[ m_triangles[_index * 4 + 2] ]
         );
 }
 
@@ -378,9 +415,10 @@ void BVHBuilder::ExportMaterials( std::ofstream& _file, const std::string& _mate
 FileDecl::Triangle BVHBuilder::GetTriangleIdx( uint32 _index ) const
 {
     FileDecl::Triangle t;
-    t.vertices[0] = m_triangles[_index * 3 + 0];
-    t.vertices[1] = m_triangles[_index * 3 + 1];
-    t.vertices[2] = m_triangles[_index * 3 + 2];
+    t.vertices[0] = m_triangles[_index * 4 + 0];
+    t.vertices[1] = m_triangles[_index * 4 + 1];
+    t.vertices[2] = m_triangles[_index * 4 + 2];
+	t.material = m_triangles[_index * 4 + 3];
     return t;
 }
 

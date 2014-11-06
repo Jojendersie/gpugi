@@ -18,6 +18,13 @@ namespace gl
 			GL_CALL(glTextureStorage2DMultisample, m_textureHandle, m_numMSAASamples, gl::TextureFormatToGLSizedInternal[static_cast<unsigned int>(format)], m_width, m_height, GL_FALSE);
 	}
 
+	Texture2D::Texture2D(std::uint32_t _width, std::uint32_t _height, TextureFormat _format, const void* _data, TextureSetDataFormat _dataFormat, TextureSetDataType _dataType, std::uint32_t _numMSAASamples) :
+		Texture2D(_width, _height, _format, 1, _numMSAASamples)
+	{
+		GL_CALL(glTextureSubImage2D, m_textureHandle, 0, 0, 0, m_width, m_height, 
+				static_cast<GLenum>(_dataFormat), static_cast<GLenum>(_dataType), _data);
+	}
+
 	std::unique_ptr<Texture2D> Texture2D::LoadFromFile(const std::string& _filename, bool _generateMipMaps, bool _sRGB)
 	{
 		int texSizeX = -1;

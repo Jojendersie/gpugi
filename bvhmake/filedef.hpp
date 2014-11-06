@@ -28,7 +28,7 @@ namespace FileDecl
     struct Triangle
     {
         uint32 vertices[3]; ///< Indices of the vertices (array: vertices)
-    //    uint32 material;    ///< ID of the material (array: materials)
+        uint32 material;    ///< ID of the material (array: materialref)
     };
 
     extern const Triangle INVALID_TRIANGLE;
@@ -40,12 +40,12 @@ namespace FileDecl
 		return _triangle.vertices[0] != _triangle.vertices[1];
 	}
 
-    /// \brief Element type for material lists (array: materials).
+    /// \brief Element type for material lists (array: materialref).
     struct Material
     {
         char material[32];  ///< Name of a material in an external material file
-        uint32 firstVertex; ///< Index in (array: triangles) where the set of triangles with this material begins
-        uint32 lastVertex;  ///< Index in (array: triangles) where the set of triangles with this material ends
+//        uint32 firstVertex; ///< Index in (array: triangles) where the set of triangles with this material begins
+        //uint32 lastVertex;  ///< Index in (array: triangles) where the set of triangles with this material ends
     };
 
     /// \brief Element type for hierarchical nodes (array: hierarchy).

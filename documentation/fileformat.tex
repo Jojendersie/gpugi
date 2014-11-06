@@ -23,7 +23,7 @@
 		\end{center}
 	\end{minipage}}
 %	\subject{File Format Documentation}
-	\title{The *.rawscene Format from GPUGI Project\\Version 1.0}
+	\title{The *.rawscene Format from GPUGI Project\\Version 1.1}
 	\authors{Johannes Jendersie}
 	\abstract{Abstract}{
 		This is a complete overview about the contents of *.rawscene format. The file contains a list of different arrays. Each array has a name where some must exist in the file and some are optional.
@@ -75,29 +75,26 @@ struct Vertex
 struct Triangle
 {
 	uint32 indices[3];
+	uint32 material;
 };
 	\end{lstlisting}
 	The \lstinline|elementSize| in the header is not that of a Triangle. It is a multiple of \lstinline|sizeof(Triangle)| and denotes the block size for hierarchies. The mentioned padding is used to fill the blocks. So once an invalid triangle occurs all following till the next block will be invalid too.
 	
+	\lstinline|material| has one entry for each triangle and represents an index into the "materialref" array.
+	
 	% ************************************************************************ %
 	\subsection{Material}
-	\lstinline|header.name == "materialref"|\\
-	\lstinline|header.name == "materialassociation"|
+	\lstinline|header.name == "materialref"|
 	
-	"materialref" contains on entry for each material. The stored names reference material descriptors in an additional plain text file.
+	\lstinline|"materialref"| contains on entry for each material. The stored names reference material descriptors in an additional plain text file.
 	
-	"materialassociation" has one entry for each triangle and represents an index into the "materialref" array.
 	\begin{lstlisting}
 struct MaterialRef
 {
 	char material[32];
 };
-
-struct MaterialAssociation
-{
-	uint16 materialID;
-};
 	\end{lstlisting}
+	The material itself is stored in a manual editable json file see section \ref{sec:materialjson}.
 	
 	% ************************************************************************ %
 	\subsection{Hierarchy [Optional]}
@@ -139,6 +136,7 @@ struct Box
 		
 	% ************************************************************************ %
 	\section{Material File}
+	\label{sec:materialjson}
 	Materials are not stored in the binary format to make them better exchangeable. They are defined in a second file with the same name as the scene file, but with *.json ending.
 	\begin{lstlisting}
 {
@@ -148,12 +146,13 @@ struct Box
 		"reflectiveness": [1.0, 1.0, 1.0, 5.0],
 		"refractionIndexN": [1.3, 1.0, 0.75],
 		"refractionIndexK": [3.0, 3.3, 3.9],
-		"opacity": [1.0, 1.0, 1.0]
+		"opacity": [1.0, 1.0, 1.0],
+		"emissivity": [5.0, 5.0, 4.5]
   	},		
 	... more materials
 }
 	\end{lstlisting}
-	Each data except \lstinline|"refractionIndexN"| and \lstinline|"refractionIndexK"| comes in two variants: One without \lstinline|"Tex"| suffix (must be a RGB constant) and one with this suffix containing (e.g. \lstinline|"diffuseTex"|) a file name of a RGB texture. One of both must exist. If both are given only the texture is used.
+	Each data except\lstinline|"emissivity"|, \lstinline|"refractionIndexN"| and \lstinline|"refractionIndexK"| comes in two variants: One without \lstinline|"Tex"| suffix (must be a RGB constant) and one with this suffix containing (e.g. \lstinline|"diffuseTex"|) a file name of a RGB texture. One of both must exist. If both are given only the texture is used.
 	
 	\subsection{Intended Interpretation}
 	The light is divided into components of different reflection pattern.
@@ -167,6 +166,8 @@ struct Box
 	\lstinline|"refractionIndex"|: Controls the Fresnel-function. This cannot be a texture.
 	
 	\lstinline|"opacity"|: From all light which passed the Fresnel surface the opaque part is passed to the diffuse term. The remainder is refracted with a cosine lobe. %Physically this is something like $scattering/dx$. $e^{-d \cdot (1/(1-opacity)-1)}$ is refracted, where $d$ is the length of the path through the material, and the remainder is the part which remains for diffuse/absorption.
+	
+	\lstinline|"emissivity"|: Luminance HDR value. This is unequal zero for light sources.
 	
 	\subsection{Example Refraction Indices}
 	For most materials you need to set the complex refraction indices $N = n + i \cdot k$. To get a feeling for the behavior look at the \href{	http://de.wikipedia.org/wiki/Fresnelsche\_Formeln\#mediaviewer/File:Fresnel\_reflection\_coefficients\_\%28DE\%29.svg}{picture from wikipedia}. Both coefficients are given for 3 RGB related wavelengths: R-610nm, G-546nm, B-436nm. I found no real source which maps pure RGB colors to wavelengths. The factors are derived from a multitude of RGB curve-pictures.
@@ -209,4 +210,12 @@ struct Box
 		k & 0.0000 & 0.0000 & 0.0000\\
 		\hline
 	\end{tabular}
+	
+	\subsection{Changelog}
+	\subsubsection{Version 1.1}
+	\begin{itemize}
+		\item Added \lstinline|"emissivity"| to material json
+		\item Removed \lstinline|"materialassociation"| array
+		\item Put the material index directly in the triangle buffer
+	\end{itemize}
 \end{document}

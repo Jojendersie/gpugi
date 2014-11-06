@@ -130,7 +130,7 @@ namespace Files {
 			~Node();
 
 			uint64_t Size() const				{ return m_numElements; }
-			std::string GetName() const			{ return m_name; }
+			const std::string& GetName() const	{ return m_name; }
 			ElementType GetType() const			{ return m_type; }
 
 			/// \brief Set the nodes name. This might influence internal search structures.

@@ -11,6 +11,7 @@ namespace gl
 	public:
 		/// \param uiNumMipLevels   -1 for full chain, 0 and 1 have same result
 		Texture2D(std::uint32_t width, std::uint32_t height, TextureFormat format, std::int32_t numMipLevels = 1, std::uint32_t numMSAASamples = 0);
+		Texture2D(std::uint32_t _width, std::uint32_t _height, TextureFormat _format, const void* _data, TextureSetDataFormat _dataFormat, TextureSetDataType _dataType, std::uint32_t _numMSAASamples = 0);
 
 		/// \brief Loads texture from file using stb_image
 		///
