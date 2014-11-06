@@ -8,7 +8,8 @@
 #endif
 {
 	int currentNodeIndex = 0;
-	int currentLeafIndex;
+	int currentLeafIndex = 0; // For highly arcane, currently unknown reasons an initial value gives a distinct performance improvement: 10ms!!
+								//
 	vec3 invRayDir = 1.0 / ray.Direction;
 	bool nextIsLeafNode = false;
 
@@ -50,7 +51,7 @@
 		{
 			// Load triangle.
 			Triangle triangle = texelFetch(TriangleBuffer, currentLeafIndex);
-			if(triangle.x == triangle.y)
+			if(triangle.x == triangle.y) // Last check if this is condition helps perf: 05.11 (testscene.txt), GK104
 			{
 				nextIsLeafNode = false;
 			} else {		
@@ -80,6 +81,7 @@
 				}
 
 				++currentLeafIndex;
+				nextIsLeafNode = (currentLeafIndex % TRIANGLES_PER_LEAF) != 0;
 			}
 		}
 		
