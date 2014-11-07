@@ -65,9 +65,9 @@ struct Material
 	uvec2 diffuseTexHandle;
 	uvec2 opacityTexHandle;
 	uvec2 reflectivenessTexHandle;
-	vec2 padding0;
+	vec2 emissivityRG;
 	vec3 Fresnel0;	// Fist precomputed coefficient for fresnel approximation (rgb)
 	float RefractionIndexAvg;
 	vec3 Fresnel1;	// Second precomputed coefficient for fresnel approximation (rgb)
-	float padding1;
+	float emissivityB;
 };

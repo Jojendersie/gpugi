@@ -33,6 +33,7 @@ private:
 	gl::UniformBufferView m_globalConstUBO;
 	gl::UniformBufferView m_cameraUBO;
 	gl::UniformBufferView m_perIterationUBO;
+	gl::UniformBufferView m_materialUBO;
 
 	std::unique_ptr<gl::TextureBufferView> m_hierarchyBuffer;
 	std::unique_ptr<gl::TextureBufferView> m_vertexBuffer;

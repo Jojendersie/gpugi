@@ -19,5 +19,7 @@ layout(binding = 2, std140) uniform PerIteration
 
 layout(binding = 3, std140) uniform UMaterials
 {
-	Material Materials[4];
+	// Minimal assererted UBO size: 16KB
+	// Material size 64 Byte -> up to 256 materials.
+	Material Materials[256];
 };

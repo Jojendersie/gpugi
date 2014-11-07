@@ -90,6 +90,7 @@ public:
 	std::shared_ptr<gl::Buffer> GetVertexBuffer() const		{ return m_vertexBuffer; }
 	std::shared_ptr<gl::Buffer> GetTriangleBuffer() const	{ return m_triangleBuffer; }
 	std::shared_ptr<gl::Buffer> GetHierarchyBuffer() const	{ return m_hierarchyBuffer; }
+	const std::vector<Material>& GetMaterials() const		{ return m_materials; }
 
 	/// The bvh uses ε:: geometries. Which one can change with the files.
 	ε::Types3D GetBoundingVolumeType() const	{ return m_bvType; }
@@ -130,11 +131,11 @@ private:
 
 	/// Load/create textures and read the other texture parameters.
 	void LoadMaterial( const Jo::Files::MetaFileWrapper::Node& _material );
-	/// Load texture from file
+	/// Load texture from file and makes it resident
 	uint64 GetBindlessHandle( const std::string& _name );
-	/// Create RGB8 texture with single data value
+	/// Create RGB8 texture with single data value and makes it resident
 	uint64 GetBindlessHandle( const ε::Vec3& _data );
-	/// Create RGBA32F texture with single data value
+	/// Create RGBA32F texture with single data value and makes it resident
 	uint64 GetBindlessHandle( const ε::Vec4& _data );
 };
 

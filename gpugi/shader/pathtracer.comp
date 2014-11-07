@@ -56,32 +56,23 @@ void main()
 		if(rayHit == RAY_MAX)
 			break;
 
-		// Compute hit normal.
-		vec3 vnormal0 = vec3(texelFetch(VertexBuffer, triangle.x * 2).w, texelFetch(VertexBuffer, triangle.x * 2 + 1).xy);
-		vec3 vnormal1 = vec3(texelFetch(VertexBuffer, triangle.y * 2).w, texelFetch(VertexBuffer, triangle.y * 2 + 1).xy);
-		vec3 vnormal2 = vec3(texelFetch(VertexBuffer, triangle.z * 2).w, texelFetch(VertexBuffer, triangle.z * 2 + 1).xy);
+		// Compute hit normal and texture coordinate.
+		vec4 vdata0 = texelFetch(VertexBuffer, triangle.x * 2 + 1);
+		vec4 vdata1 = texelFetch(VertexBuffer, triangle.y * 2 + 1);
+		vec4 vdata2 = texelFetch(VertexBuffer, triangle.z * 2 + 1);
+		vec3 vnormal0 = vec3(texelFetch(VertexBuffer, triangle.x * 2).w, vdata0.xy);
+		vec3 vnormal1 = vec3(texelFetch(VertexBuffer, triangle.y * 2).w, vdata1.xy);
+		vec3 vnormal2 = vec3(texelFetch(VertexBuffer, triangle.z * 2).w, vdata2.xy);
 		vec3 hitNormal = normalize(vnormal0 * barycentricCoord.x + 
 						 		   vnormal1 * barycentricCoord.y +
 								   vnormal2 * barycentricCoord.z);
-
-	/*	vec3 hitNormal = normalize(GetVec(Vertices[triangle.x].Normal) * barycentricCoord.x + 
-						 		   GetVec(Vertices[triangle.y].Normal) * barycentricCoord.y +
-								   GetVec(Vertices[triangle.z].Normal) * barycentricCoord.z); */
-
-		// Compute hit color.
-		vec3 hitColor = vec3(Random(randomSeed)); // TODO
-#ifdef RUSSIAN_ROULETTE
-		float hitLuminance = GetLuminance(hitColor);
-		if(Random(randomSeed) > hitLuminance)
-			break;
-		rayColor *= hitColor / hitLuminance; // Only change in spectrum, no energy loss.
-#else
-		rayColor *= hitColor; // Absorption, not via Russion Roulette, but by color multiplication.
-#endif
-
+		vec2 hitTexcoord = vdata0.zw * barycentricCoord.x + 
+						   vdata1.zw * barycentricCoord.y +
+						   vdata2.zw * barycentricCoord.z;
 
 		// Connect to random light samples.
 		ray.Origin = ray.Origin + (rayHit - RAY_HIT_EPSILON) * ray.Direction;
+		vec3 incidentDirection = ray.Direction;
 		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
 		{
 			int sampleIndex = int(RandomUInt(randomSeed) % NumLightSamples);
@@ -96,17 +87,28 @@ void main()
 
 			if(!TraceRayAnyHit(ray, rayHit))
 			{
-				vec3 brdf = vec3(1.0); // / pi
+				vec3 brdf = BRDF(incidentDirection, ray.Direction, triangle.w, hitNormal, hitTexcoord); // / pi
 				vec3 illuminance = (lightSampleWeight *		// Divide by p for Montecarlo
 					saturate(dot(ray.Direction, hitNormal)) / lightDistSq) * SharedExponentDecode(floatBitsToUint(sampleData.w));
 				color += illuminance * rayColor * brdf; 
 			}
 		}
 
-		// Bounce ray.
-		vec3 U, V;
-		CreateONB(hitNormal, U, V);
-		ray.Direction = SampleUnitHemisphere(Random2(randomSeed), U, V, hitNormal);
+		// Bounce ray if not the last iteration.
+		if(i+1 < MAX_NUM_BOUNCES)
+		{
+			vec3 U, V, weight;
+			CreateONB(hitNormal, U, V);
+			ray.Direction = SampleBRDF(incidentDirection, triangle.w, randomSeed, U, V, hitNormal, hitTexcoord, weight);
+#ifdef RUSSIAN_ROULETTE
+			float hitLuminance = GetLuminance(weight);
+			if(Random(randomSeed) > hitLuminance)
+				break;
+			rayColor *= weight / hitLuminance; // Only change in spectrum, no energy loss.
+#else
+			rayColor *= weight; // Absorption, not via Russion Roulette, but by color multiplication.
+#endif
+		}
 	}
 
 	vec4 final = vec4(color, 1.0);

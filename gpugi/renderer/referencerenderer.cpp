@@ -57,11 +57,14 @@ ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 	m_perIterationUBO["NumLightSamples"].Set(m_maxNumLightSamples); // todo
 	m_perIterationUBO.BindBuffer(2);
 
+	m_materialUBO.Init(m_pathtracerShader, "UMaterials");
+	m_materialUBO.BindBuffer(3);
+
 	//m_iterationBuffer.reset(new gl::Texture2D(m_backbuffer->GetWidth(), m_backbuffer->GetHeight(), gl::TextureFormat::RGBA32F, 1, 0));
 
 	// Test light samples
 	unsigned int red = ColorUtils::SharedExponentEncode(ei::Vec3(0.8f, 0.2f, 0.02f));
-	unsigned int white = ColorUtils::SharedExponentEncode(ei::Vec3(0.3f, 0.3f, 0.3f));
+	unsigned int white = ColorUtils::SharedExponentEncode(ei::Vec3(2.3f, 2.3f, 2.3f));
 	unsigned int blue = ColorUtils::SharedExponentEncode(ei::Vec3(0.1f, 0.4f, 0.8f));
 	ei::Vec4 testLights[m_maxNumLightSamples] =
 	{
@@ -123,6 +126,10 @@ void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
 	m_hierarchyBuffer.reset(new gl::TextureBufferView());
 	m_hierarchyBuffer->Init(m_scene->GetHierarchyBuffer(), gl::TextureBufferFormat::RGBA32F);
 	m_hierarchyBuffer->BindBuffer(2);
+
+	// Upload materials / set textures
+	m_materialUBO.GetBuffer()->Map();
+	m_materialUBO.Set(&m_scene->GetMaterials().front(), 0, uint32_t(m_scene->GetMaterials().size() * sizeof(Scene::Material)));
 }
 
 void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)

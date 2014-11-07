@@ -85,6 +85,11 @@ Scene::Scene( const std::string& _file ) :
 
 Scene::~Scene()
 {
+	// Make all textures non resident
+	for( auto& it : m_textures )
+	{
+		uint64 handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it.second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+	}
 }
 
 size_t Scene::size(ε::Types3D _type)
@@ -251,8 +256,8 @@ void Scene::LoadMaterial( const Jo::Files::MetaFileWrapper::Node& _material )
 			ε::Vec3(_material[s_opacity][0].Get(1.0f), _material[s_opacity][1].Get(1.0f), _material[s_opacity][2].Get(1.0f)));
 		// Load or create specular texture
 		if(_material.HasChild(s_specularTex))
-			mat.opacityTexHandle = GetBindlessHandle(_material[s_specularTex]);
-		else mat.opacityTexHandle = GetBindlessHandle(
+			mat.reflectivenessTexHandle = GetBindlessHandle(_material[s_specularTex]);
+		else mat.reflectivenessTexHandle = GetBindlessHandle(
 			ε::Vec4(_material[s_specular][0].Get(1.0f), _material[s_specular][1].Get(1.0f), _material[s_specular][2].Get(1.0f), _material[s_specular][3].Get(1.0f)));
 	} catch(const std::string& _msg ) {
 		LOG_ERROR("Failed to load the material. Exception: " + _msg);
@@ -264,40 +269,55 @@ void Scene::LoadMaterial( const Jo::Files::MetaFileWrapper::Node& _material )
 
 uint64 Scene::GetBindlessHandle( const std::string& _name )
 {
+	uint64 handle;
 	auto it = m_textures.find(_name);
 	if( it == m_textures.end() )
 	{
 		it = m_textures.insert( std::pair<std::string, std::unique_ptr<gl::Texture2D>>(
 			_name, gl::Texture2D::LoadFromFile(_name, false)) ).first;
-	}
+		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+		// Make permanently resident
+		GL_CALL(glMakeTextureHandleResidentARB, handle);
+	} else
+		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
 	
-	return GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+	return handle;
 }
 
 uint64 Scene::GetBindlessHandle( const ε::Vec3& _data )
 {
+	uint64 handle;
 	std::string genName = "gen" + std::to_string(_data.x) + '_' + std::to_string(_data.y) + '_' + std::to_string(_data.z);
 	auto it = m_textures.find(genName);
 	if( it == m_textures.end() )
 	{
 		it = m_textures.insert( std::pair<std::string, std::unique_ptr<gl::Texture2D>>(
 			genName, std::unique_ptr<gl::Texture2D>(new gl::Texture2D(1, 1, gl::TextureFormat::RGB8, &_data, gl::TextureSetDataFormat::RGB, gl::TextureSetDataType::FLOAT))) ).first;
-	}
+		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+		// Make permanently resident
+		GL_CALL(glMakeTextureHandleResidentARB, handle);
+	} else
+		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
 	
-	return GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+	return handle;
 }
 
 uint64 Scene::GetBindlessHandle( const ε::Vec4& _data )
 {
+	uint64 handle;
 	std::string genName = "gen" + std::to_string(_data.x) + '_' + std::to_string(_data.y) + '_' + std::to_string(_data.z) + '_' + std::to_string(_data.w);
 	auto it = m_textures.find(genName);
 	if( it == m_textures.end() )
 	{
 		it = m_textures.insert( std::pair<std::string, std::unique_ptr<gl::Texture2D>>(
 			genName, std::unique_ptr<gl::Texture2D>(new gl::Texture2D(1, 1, gl::TextureFormat::RGBA32F, &_data, gl::TextureSetDataFormat::RGBA, gl::TextureSetDataType::FLOAT))) ).first;
-	}
+		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+		// Make permanently resident
+		GL_CALL(glMakeTextureHandleResidentARB, handle);
+	} else
+		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
 	
-	return GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+	return handle;
 }
 
 void Scene::LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::unique_ptr<Vertex[]> _vertices )
