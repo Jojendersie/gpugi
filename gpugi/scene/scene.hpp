@@ -82,7 +82,7 @@ public:
 	///		buffers.
 	struct LightTriangle 
 	{
-		ε::Vec3 position[3];
+		ε::Triangle triangle;
 		ε::Vec3 normal[3];
 		ε::Vec3 luminance;
 	};
@@ -95,6 +95,7 @@ public:
 	ε::Types3D GetBoundingVolumeType() const	{ return m_bvType; }
 
 	uint32 GetNumTrianglesPerLeaf() const		{ return m_numTrianglesPerLeaf; }
+	uint32 GetNumTriangles() const				{ return m_triangleBuffer->GetSize() / sizeof(Triangle); }
 	uint32 GetNumInnerNodes() const				{ return m_numInnerNodes; }
 	uint32 GetNumLightTriangles() const			{ return static_cast<uint32>(m_lightTriangles.size()); }
 	const LightTriangle* GetLightTriangles() const	{ return m_lightTriangles.data(); }
@@ -116,14 +117,16 @@ private:
 	/// "sizeof" for different geometry
 	size_t size(ε::Types3D _type);
 
-	void LoadVertices( std::ifstream& _file, const FileDecl::NamedArray& _header );
-	void LoadTriangles( std::ifstream& _file, const FileDecl::NamedArray& _header );
+	std::unique_ptr<Vertex[]> LoadVertices( std::ifstream& _file, const FileDecl::NamedArray& _header );
+	std::unique_ptr<Triangle[]> LoadTriangles( std::ifstream& _file, const FileDecl::NamedArray& _header );
 	void LoadMatRef( std::ifstream& _file, const Jo::Files::MetaFileWrapper::Node& _materials, const FileDecl::NamedArray& _header );
 	void LoadHierarchy( std::ifstream& _file, const FileDecl::NamedArray& _header );
 	void LoadBoundingVolumes( std::ifstream& _file, const FileDecl::NamedArray& _header );
 	/// Analyzes the data and searches the emissive triangles. Requires the other
 	/// methods to be executed before.
-	void LoadLightSources( std::ifstream& _file );
+	/// \param _triangles Temporary double buffer of all triangles.
+	/// \param _vertices Temporary double buffer of all vertices.
+	void LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::unique_ptr<Vertex[]> _vertices );
 
 	/// Load/create textures and read the other texture parameters.
 	void LoadMaterial( const Jo::Files::MetaFileWrapper::Node& _material );
@@ -134,3 +137,7 @@ private:
 	/// Create RGBA32F texture with single data value
 	uint64 GetBindlessHandle( const ε::Vec4& _data );
 };
+
+// IDEA for out of core loading support:
+// once a header is found a cached reader is initialized to that point.
+// Both stream and random access should be done via cached reader.

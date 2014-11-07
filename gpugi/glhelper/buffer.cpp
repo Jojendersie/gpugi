@@ -84,7 +84,7 @@ namespace gl
 
 			if (m_mappedData == nullptr) // (still) already mapped?
 			{
-				m_mappedData = GL_RET_CALL(glMapNamedBufferRange, m_bufferObject, _offset, _numBytes, static_cast<GLbitfield>(m_usageFlags));
+				m_mappedData = GL_RET_CALL(glMapNamedBufferRange, m_bufferObject, _offset, _numBytes, static_cast<GLbitfield>(m_usageFlags & ~Usage::SUB_DATA_UPDATE));
 				m_mappedDataOffset = _offset;
 				m_mappedDataSize = _numBytes;
 			}

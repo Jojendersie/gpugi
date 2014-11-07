@@ -4,6 +4,8 @@
 #include "../glhelper/texture2d.hpp"
 #include "../utilities/logger.hpp"
 #include "../utilities/assert.hpp"
+#include "../utilities/flagoperators.hpp"
+#include "ei/3dfunctions.hpp"
 
 #include <fstream>
 
@@ -53,13 +55,17 @@ Scene::Scene( const std::string& _file ) :
 	else if( m_bvType == ε::Types3D::SPHERE )
 		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Sphere>) * m_numInnerNodes), gl::Buffer::Usage::MAP_WRITE);
 
+	// Hold double buffer to find light sources
+	std::unique_ptr<Vertex[]> tmpVertexBuffer;
+	std::unique_ptr<Triangle[]> tmpTriangleBuffer;
+
 	// Read one data array after another. The order is undefined.
 	file.seekg( 0 );
 	FileDecl::NamedArray header;
 	while( file.read( reinterpret_cast<char*>(&header), sizeof(header) ) )
 	{
-		if(strcmp(header.name, "vertices") == 0) LoadVertices(file, header);
-		else if(strcmp(header.name, "triangles") == 0) LoadTriangles(file, header);
+		if(strcmp(header.name, "vertices") == 0) tmpVertexBuffer = LoadVertices(file, header);
+		else if(strcmp(header.name, "triangles") == 0) tmpTriangleBuffer = LoadTriangles(file, header);
 		else if(strcmp(header.name, "materialref") == 0) LoadMatRef(file, materialFile.RootNode, header);
 		else if(strcmp(header.name, "hierarchy") == 0) LoadHierarchy(file, header);
 		else if(strcmp(header.name, "bounding_aabox") == 0) LoadBoundingVolumes(file, header);
@@ -72,7 +78,9 @@ Scene::Scene( const std::string& _file ) :
 	if( m_vertexBuffer == nullptr )
 		LOG_ERROR("Did not find a \"vertices\" buffer in" + _file + "!");
 	if( m_hierarchyBuffer == nullptr )
-		LOG_ERROR("Did not find a \"hierarchy\" buffer in" + _file + "!");	
+		LOG_ERROR("Did not find a \"hierarchy\" buffer in" + _file + "!");
+
+	LoadLightSources(std::move(tmpTriangleBuffer), std::move(tmpVertexBuffer));
 }
 
 Scene::~Scene()
@@ -89,29 +97,43 @@ size_t Scene::size(ε::Types3D _type)
 	return s_sizes[int(_type)];
 }
 
-void Scene::LoadVertices( std::ifstream& _file, const FileDecl::NamedArray& _header )
+std::unique_ptr<Scene::Vertex[]> Scene::LoadVertices( std::ifstream& _file, const FileDecl::NamedArray& _header )
 {
+	// Vertices can be loaded directly (same format).
 	Assert( _header.elementSize == sizeof(Vertex), "Format seems to contain other vertices." );
 
-	// Vertices can be loaded directly.
+	// Double buffer
+	std::unique_ptr<Vertex[]> vertexBuffer( new Vertex[_header.numElements] );
+	_file.read( (char*)&vertexBuffer[0], _header.elementSize * _header.numElements );
+	if(_file.fail()) LOG_ERROR("Why?");
+
+	// Copy to GPU
 	m_vertexBuffer = std::make_shared<gl::Buffer>(uint32(_header.elementSize * _header.numElements), gl::Buffer::Usage::MAP_WRITE );
 	void* dest = m_vertexBuffer->Map();
-	//_file.seekg( _header.elementSize * _header.numElements, std::ios_base::cur );
-	_file.read( (char*)dest, _header.elementSize * _header.numElements );
-	if(_file.fail()) LOG_ERROR("Why?");
+	memcpy( dest, &vertexBuffer[0], _header.elementSize * _header.numElements );
 	m_vertexBuffer->Unmap();
+
+	return std::move(vertexBuffer);
 }
 
-void Scene::LoadTriangles( std::ifstream& _file, const FileDecl::NamedArray& _header )
+std::unique_ptr<Scene::Triangle[]> Scene::LoadTriangles( std::ifstream& _file, const FileDecl::NamedArray& _header )
 {
-	// Triangles must be converted: the material id must be added from another chunk.
-	m_numTrianglesPerLeaf = _header.elementSize/sizeof(FileDecl::Triangle);
-	m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_numTrianglesPerLeaf * sizeof(Triangle) * _header.numElements), gl::Buffer::Usage::MAP_WRITE );
-	Triangle* dest = (Triangle*)m_triangleBuffer->Map();
 	// Mapping file<->GPU currently equal, read directly
 	Assert(sizeof(Triangle) == sizeof(FileDecl::Triangle), "File or triangle format changed. Load buffered!");
-	_file.read( (char*)dest, _header.numElements * _header.elementSize );
+
+	m_numTrianglesPerLeaf = _header.elementSize/sizeof(FileDecl::Triangle);
+
+	// Double buffer
+	std::unique_ptr<Triangle[]> triangleBuffer( new Triangle[m_numTrianglesPerLeaf * _header.numElements] );
+	_file.read( (char*)&triangleBuffer[0], _header.elementSize * _header.numElements );
+
+	// Copy to GPU
+	m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_numTrianglesPerLeaf * sizeof(Triangle) * _header.numElements), gl::Buffer::Usage::MAP_WRITE );
+	Triangle* dest = (Triangle*)m_triangleBuffer->Map();
+	memcpy( dest, &triangleBuffer[0], _header.numElements * _header.elementSize );
 	m_triangleBuffer->Unmap();
+
+	return std::move(triangleBuffer);
 }
 
 void Scene::LoadMatRef( std::ifstream& _file, const Jo::Files::MetaFileWrapper::Node& _materials, const FileDecl::NamedArray& _header )
@@ -278,33 +300,36 @@ uint64 Scene::GetBindlessHandle( const ε::Vec4& _data )
 	return GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
 }
 
-void Scene::LoadLightSources( std::ifstream& _file )
+void Scene::LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::unique_ptr<Vertex[]> _vertices )
 {
-	// TODO somehow read the buffers??
-	/*for(uint32_t i = 0; i < _header.numElements * m_numTrianglesPerLeaf; ++i,++dest)
+	// Read the buffers with SubDataGets (still faster than a second file read pass)
+	for(uint32_t i = 0; i < GetNumTriangles(); ++i)
 	{
-		// Mapping file<->GPU currently equal, read directly
-		Assert(sizeof(Triangle) == sizeof(FileDecl::Triangle), "File or triangle format changed. Load buffered!");
-		_file.read( (char*)dest, sizeof(Triangle) );
-		// Is this a light source triangle?
-		if( any(m_materials[dest->material].emissivityRG >= 0.0f)
-			|| (m_materials[dest->material].emissivityB >= 0.0f) )
+		// Is this a valid light source triangle?
+		if( _triangles[i].vertices[0] != _triangles[i].vertices[1]
+			&& (any(m_materials[_triangles[i].material].emissivityRG > 0.0f)
+			|| (m_materials[_triangles[i].material].emissivityB > 0.0f)) )
 		{
 			LightTriangle lightSource;
-			lightSource.luminance = ε::Vec3(m_materials[dest->material].emissivityRG, m_materials[dest->material].emissivityB);
-			// Get the 3 vertices from file
-			size_t oldOffset = _file.tellg();
+			lightSource.luminance = ε::Vec3(m_materials[_triangles[i].material].emissivityRG, m_materials[_triangles[i].material].emissivityB);
+			// Get the 3 vertices from vertex buffer
 			for(int j = 0; j < 3; ++j)
-			{
-				_file.seekg(m_fileVertexOffset + dest->vertices[i] * sizeof(Vertex));
-				Vertex v;
-				_file.read( (char*)&v, sizeof(Vertex) );
-				lightSource.position[i] = v.position;
-				lightSource.normal[i] = v.normal;
-			}
-			//lightSource.normal[0] = ;
-			_file.seekg(oldOffset);
+				lightSource.normal[j] = _vertices[_triangles[i].vertices[j]].normal;
+			lightSource.triangle.v0 = _vertices[_triangles[i].vertices[0]].position;
+			lightSource.triangle.v1 = _vertices[_triangles[i].vertices[1]].position;
+			lightSource.triangle.v2 = _vertices[_triangles[i].vertices[2]].position;
 			m_lightTriangles.push_back(lightSource);
+
+			// Compute the area
+			float newSum = ε::surface(lightSource.triangle);
+			if(!m_lightSummedArea.empty())
+				newSum += m_lightSummedArea.back();
+			m_lightSummedArea.push_back(newSum);
 		}
-	}*/
+	}
+
+	// Normalize the sum
+	float maxSum = m_lightSummedArea.back();
+	for(size_t i = 0; i < m_lightSummedArea.size(); ++i )
+		m_lightSummedArea[i] /= maxSum;
 }
