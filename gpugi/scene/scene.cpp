@@ -80,6 +80,10 @@ Scene::Scene( const std::string& _file ) :
 	if( m_hierarchyBuffer == nullptr )
 		LOG_ERROR("Did not find a \"hierarchy\" buffer in" + _file + "!");
 
+#ifdef _DEBUG || !NDEBUG
+	SanityCheck(tmpTriangleBuffer.get());
+#endif
+
 	LoadLightSources(std::move(tmpTriangleBuffer), std::move(tmpVertexBuffer));
 }
 
@@ -352,4 +356,18 @@ void Scene::LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::uniqu
 	float maxSum = m_lightSummedArea.back();
 	for(size_t i = 0; i < m_lightSummedArea.size(); ++i )
 		m_lightSummedArea[i] /= maxSum;
+}
+
+void Scene::SanityCheck(Triangle* _triangles)
+{
+	for(uint32_t i = 0; i < GetNumTriangles(); ++i)
+	{
+		if( _triangles[i].material >= GetNumMaterials() )
+			LOG_ERROR("Triangle with index " + std::to_string(i) + " reference a non existing material: " +
+					  std::to_string(_triangles[i].material) + "/" + std::to_string(GetNumMaterials()));
+		for(uint32_t j = 0; j < 3; ++j)
+			if( _triangles[i].vertices[j] >= GetNumVertices() )
+				LOG_ERROR("Triangle with index " + std::to_string(i) + " reference an invalid vertex: " +
+						  std::to_string(_triangles[i].vertices[j]) + "/" + std::to_string(GetNumVertices()));
+	}
 }

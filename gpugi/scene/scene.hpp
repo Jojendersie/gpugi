@@ -98,6 +98,8 @@ public:
 	uint32 GetNumTrianglesPerLeaf() const		{ return m_numTrianglesPerLeaf; }
 	uint32 GetNumTriangles() const				{ return m_triangleBuffer->GetSize() / sizeof(Triangle); }
 	uint32 GetNumInnerNodes() const				{ return m_numInnerNodes; }
+	uint32 GetNumMaterials() const				{ return static_cast<uint32>(m_materials.size()); }
+	uint32 GetNumVertices() const				{ return static_cast<uint32>(m_vertexBuffer->GetSize() / sizeof(Vertex)); }
 	uint32 GetNumLightTriangles() const			{ return static_cast<uint32>(m_lightTriangles.size()); }
 	const LightTriangle* GetLightTriangles() const	{ return m_lightTriangles.data(); }
 	// Normalized (to [0,1]) summed area for all light triangles
@@ -128,6 +130,9 @@ private:
 	/// \param _triangles Temporary double buffer of all triangles.
 	/// \param _vertices Temporary double buffer of all vertices.
 	void LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::unique_ptr<Vertex[]> _vertices );
+
+	/// Check references between indices, vertices and materials
+	void SanityCheck(Triangle* _triangles);
 
 	/// Load/create textures and read the other texture parameters.
 	void LoadMaterial( const Jo::Files::MetaFileWrapper::Node& _material );

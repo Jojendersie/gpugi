@@ -10,7 +10,7 @@
 #define NUM_LIGHT_SAMPLES 1
 
 #define MAX_NUM_BOUNCES 16
-#define RAY_HIT_EPSILON 0.01
+#define RAY_HIT_EPSILON 0.001
 #define RAY_MAX 3.40282347e+38
 #define RUSSIAN_ROULETTE
 
@@ -71,35 +71,38 @@ void main()
 						   vdata2.zw * barycentricCoord.z;
 
 		// Connect to random light samples.
-		ray.Origin = ray.Origin + (rayHit - RAY_HIT_EPSILON) * ray.Direction;
-		vec3 incidentDirection = ray.Direction;
+		Ray lightRay;
+		//lightRay.Origin = ray.Origin + (rayHit-RAY_HIT_EPSILON) * ray.Direction;
+		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray
 		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
 		{
 			int sampleIndex = int(RandomUInt(randomSeed) % NumLightSamples);
 			vec4 sampleData = texelFetch(LightSampleBuffer, sampleIndex);
 
-			ray.Direction = sampleData.xyz - ray.Origin;
+			lightRay.Direction = sampleData.xyz - ray.Origin;
 
-			float lightDistSq = dot(ray.Direction, ray.Direction);
+			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
 			float lightDist = sqrt(lightDistSq);
-			ray.Direction /= lightDist;
+			lightRay.Direction /= lightDist;
 			rayHit = lightDist;
+			lightRay.Origin = ray.Origin + RAY_HIT_EPSILON * lightRay.Direction;
 
-			if(!TraceRayAnyHit(ray, rayHit))
+			if(!TraceRayAnyHit(lightRay, rayHit))
 			{
-				vec3 brdf = BRDF(incidentDirection, ray.Direction, triangle.w, hitNormal, hitTexcoord); // / pi
+				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, hitNormal, hitTexcoord);
 				vec3 illuminance = (lightSampleWeight *		// Divide by p for Montecarlo
-					saturate(dot(ray.Direction, hitNormal)) / lightDistSq) * SharedExponentDecode(floatBitsToUint(sampleData.w));
+					saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * SharedExponentDecode(floatBitsToUint(sampleData.w));
 				color += illuminance * rayColor * brdf; 
 			}
 		}
 
 		// Bounce ray if not the last iteration.
-		if(i+1 < MAX_NUM_BOUNCES)
+		//if(i+1 < MAX_NUM_BOUNCES) // Not using is faster on GM107 on 10.11.
 		{
 			vec3 U, V, weight;
 			CreateONB(hitNormal, U, V);
-			ray.Direction = SampleBRDF(incidentDirection, triangle.w, randomSeed, U, V, hitNormal, hitTexcoord, weight);
+			ray.Direction = SampleBRDF(ray.Direction, triangle.w, randomSeed, U, V, hitNormal, hitTexcoord, weight);
+			ray.Origin = ray.Origin + RAY_HIT_EPSILON * sign(dot(ray.Direction, hitNormal)) * hitNormal;	// Go epsilon in sampling direction (refraction/reflection different)
 #ifdef RUSSIAN_ROULETTE
 			float hitLuminance = GetLuminance(weight);
 			if(Random(randomSeed) > hitLuminance)
