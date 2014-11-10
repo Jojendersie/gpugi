@@ -63,9 +63,9 @@ ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 	//m_iterationBuffer.reset(new gl::Texture2D(m_backbuffer->GetWidth(), m_backbuffer->GetHeight(), gl::TextureFormat::RGBA32F, 1, 0));
 
 	// Test light samples
-	unsigned int red = ColorUtils::SharedExponentEncode(ei::Vec3(0.8f, 0.2f, 0.02f));
-	unsigned int white = ColorUtils::SharedExponentEncode(ei::Vec3(2.3f, 2.3f, 2.3f));
-	unsigned int blue = ColorUtils::SharedExponentEncode(ei::Vec3(0.1f, 0.4f, 0.8f));
+	unsigned int red = ColorUtils::SharedExponentEncode(ei::Vec3(2.4f, 0.6f, 0.06f));
+	unsigned int white = ColorUtils::SharedExponentEncode(ei::Vec3(6.9f, 6.9f, 6.9f));
+	unsigned int blue = ColorUtils::SharedExponentEncode(ei::Vec3(0.3f, 1.2f, 2.4f));
 	ei::Vec4 testLights[m_maxNumLightSamples] =
 	{
 		ei::Vec4(1, 2, 0, *reinterpret_cast<float*>(&red)),

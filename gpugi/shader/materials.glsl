@@ -122,7 +122,7 @@ vec3 BRDF(vec3 incidentDirection, vec3 excidentDirection, int material, vec3 N, 
 	vec3 pdiffuse = prefract * opacity;
 	prefract *= 1.0 - opacity;
 	vec3 diffuse = textureLod(sampler2D(Materials[material].diffuseTexHandle), texcoord, 0.0).xyz;
-	excidentLight += pdiffuse * diffuse;// / pi?
+	excidentLight += pdiffuse * diffuse / 3.141592654;// / pi?
 
 	// Refract
 	float eta = cosTheta > 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg;
