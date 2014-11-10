@@ -34,15 +34,11 @@ struct Leaf
 };*/
 
 
-layout(binding=1) uniform samplerBuffer VertexBuffer;
-/*struct Vertex
-{
-	vec3 Position;
-	PackVec3 Normal;
-	PackVec2 Texcoord;
-};*/
+layout(binding=1) uniform samplerBuffer VertexPositionBuffer;
 
-layout(binding=2) uniform samplerBuffer HierachyBuffer;
+layout(binding=2) uniform samplerBuffer VertexInfoBuffer;
+
+layout(binding=3) uniform samplerBuffer HierachyBuffer;
 /*#if NODE_TYPE == NODE_TYPE_BOX
 struct Node
 {
@@ -55,10 +51,15 @@ struct Node
 	#error "No node type defined"
 #endif */
 
-layout(binding=3) uniform samplerBuffer LightSampleBuffer;
-/*
-vec4 -> rgb: position, a: shared exponent color
-*/
+layout(binding=4) uniform samplerBuffer LightSampleBuffer;
+/*struct LightSample
+{
+	ei::Vec3 position;
+	std::int16_t normalThetaCos;	// normal.z
+	std::int16_t normalPhi;			// atan(normal.xy)
+	ei::Vec3 luminance;
+	std::int32_t previousLightSample; ///< Will be set to -1 for all "initial" samples.
+};*/
 
 struct Material
 {

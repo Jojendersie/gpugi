@@ -56,7 +56,7 @@ Scene::Scene( const std::string& _file ) :
 		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Sphere>) * m_numInnerNodes), gl::Buffer::Usage::MAP_WRITE);
 
 	// Hold double buffer to find light sources
-	std::unique_ptr<Vertex[]> tmpVertexBuffer;
+	std::unique_ptr<FileDecl::Vertex[]> tmpVertexBuffer;
 	std::unique_ptr<Triangle[]> tmpTriangleBuffer;
 
 	// Read one data array after another. The order is undefined.
@@ -75,7 +75,7 @@ Scene::Scene( const std::string& _file ) :
 
 	if( m_numTrianglesPerLeaf == 0 )
 		LOG_ERROR("Did not find a \"triangles\" buffer in" + _file + "!");
-	if( m_vertexBuffer == nullptr )
+	if (m_vertexPositionBuffer == nullptr || m_vertexInfoBuffer == nullptr)
 		LOG_ERROR("Did not find a \"vertices\" buffer in" + _file + "!");
 	if( m_hierarchyBuffer == nullptr )
 		LOG_ERROR("Did not find a \"hierarchy\" buffer in" + _file + "!");
@@ -106,21 +106,33 @@ size_t Scene::size(ε::Types3D _type)
 	return s_sizes[int(_type)];
 }
 
-std::unique_ptr<Scene::Vertex[]> Scene::LoadVertices( std::ifstream& _file, const FileDecl::NamedArray& _header )
+std::unique_ptr<FileDecl::Vertex[]> Scene::LoadVertices(std::ifstream& _file, const FileDecl::NamedArray& _header)
 {
 	// Vertices can be loaded directly (same format).
-	Assert( _header.elementSize == sizeof(Vertex), "Format seems to contain other vertices." );
+	Assert(_header.elementSize == sizeof(FileDecl::Vertex), "Format seems to contain other vertices.");
 
 	// Double buffer
-	std::unique_ptr<Vertex[]> vertexBuffer( new Vertex[_header.numElements] );
-	_file.read( (char*)&vertexBuffer[0], _header.elementSize * _header.numElements );
-	if(_file.fail()) LOG_ERROR("Why?");
+	std::unique_ptr<FileDecl::Vertex[]> vertexBuffer(new FileDecl::Vertex[_header.numElements]);
+	_file.read((char*)&vertexBuffer[0], _header.elementSize * _header.numElements);
+	if (_file.fail()) LOG_ERROR("Why?");
 
 	// Copy to GPU
-	m_vertexBuffer = std::make_shared<gl::Buffer>(uint32(_header.elementSize * _header.numElements), gl::Buffer::Usage::MAP_WRITE );
-	void* dest = m_vertexBuffer->Map();
-	memcpy( dest, &vertexBuffer[0], _header.elementSize * _header.numElements );
-	m_vertexBuffer->Unmap();
+	m_vertexPositionBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(ei::Vec3) * _header.numElements), gl::Buffer::Usage::MAP_WRITE);
+	ei::Vec3* positionData = static_cast<ei::Vec3*>(m_vertexPositionBuffer->Map());
+	for (unsigned int v = 0; v < _header.numElements; ++v)
+		positionData[v] = vertexBuffer[v].position;
+	m_vertexPositionBuffer->Unmap();
+
+	m_vertexInfoBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(VertexInfo) * _header.numElements), gl::Buffer::Usage::MAP_WRITE);
+	VertexInfo* infoData = static_cast<VertexInfo*>(m_vertexInfoBuffer->Map());
+	for (unsigned int v = 0; v < _header.numElements; ++v)
+	{
+		infoData[v].normalAngles.x = atan2(vertexBuffer[v].normal.y, vertexBuffer[v].normal.x);
+		infoData[v].normalAngles.y = vertexBuffer[v].normal.z;
+		infoData[v].texcoord = vertexBuffer[v].texcoord;
+	}
+
+	m_vertexInfoBuffer->Unmap();
 
 	return std::move(vertexBuffer);
 }
@@ -324,7 +336,7 @@ uint64 Scene::GetBindlessHandle( const ε::Vec4& _data )
 	return handle;
 }
 
-void Scene::LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::unique_ptr<Vertex[]> _vertices )
+void Scene::LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::unique_ptr<FileDecl::Vertex[]> _vertices )
 {
 	// Read the buffers with SubDataGets (still faster than a second file read pass)
 	for(uint32_t i = 0; i < GetNumTriangles(); ++i)

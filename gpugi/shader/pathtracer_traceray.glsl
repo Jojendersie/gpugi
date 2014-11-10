@@ -61,9 +61,9 @@
 
 				// Load vertex positions
 				vec3 positions[3];
-				positions[0] = texelFetch(VertexBuffer, triangle.x * 2).xyz;//Vertices[triangle.x].Position;
-				positions[1] = texelFetch(VertexBuffer, triangle.y * 2).xyz;//Vertices[triangle.y].Position;
-				positions[2] = texelFetch(VertexBuffer, triangle.z * 2).xyz;//Vertices[triangle.z].Position;
+				positions[0] = texelFetch(VertexPositionBuffer, triangle.x).xyz;
+				positions[1] = texelFetch(VertexPositionBuffer, triangle.y).xyz;
+				positions[2] = texelFetch(VertexPositionBuffer, triangle.z).xyz;
 
 				// Check hit.
 				vec3 triangleNormal;

@@ -67,7 +67,7 @@ ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 	m_initialLightSampleBuffer->Init(
 		std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(LightTriangleSampler::LightSample) * m_numInitialLightSamples),
 					gl::Buffer::Usage::MAP_WRITE | gl::Buffer::Usage::MAP_PERSISTENT | gl::Buffer::Usage::EXPLICIT_FLUSH), gl::TextureBufferFormat::RGBA32F);
-	m_initialLightSampleBuffer->BindBuffer(3);
+	m_initialLightSampleBuffer->BindBuffer(4);
 
 
 	// Additive blending.
@@ -111,13 +111,17 @@ void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
 	m_triangleBuffer->Init(m_scene->GetTriangleBuffer(), gl::TextureBufferFormat::RGBA32I);
 	m_triangleBuffer->BindBuffer(0);
 
-	m_vertexBuffer.reset(new gl::TextureBufferView());
-	m_vertexBuffer->Init(m_scene->GetVertexBuffer(), gl::TextureBufferFormat::RGBA32F);
-	m_vertexBuffer->BindBuffer(1);
+	m_vertexPositionBuffer.reset(new gl::TextureBufferView());
+	m_vertexPositionBuffer->Init(m_scene->GetVertexPositionBuffer(), gl::TextureBufferFormat::RGB32F);
+	m_vertexPositionBuffer->BindBuffer(1);
+
+	m_vertexInfoBuffer.reset(new gl::TextureBufferView());
+	m_vertexInfoBuffer->Init(m_scene->GetVertexInfoBuffer(), gl::TextureBufferFormat::RGBA32F);
+	m_vertexInfoBuffer->BindBuffer(2);
 
 	m_hierarchyBuffer.reset(new gl::TextureBufferView());
 	m_hierarchyBuffer->Init(m_scene->GetHierarchyBuffer(), gl::TextureBufferFormat::RGBA32F);
-	m_hierarchyBuffer->BindBuffer(2);
+	m_hierarchyBuffer->BindBuffer(3);
 
 	// Upload materials / set textures
 	m_materialUBO.GetBuffer()->Map();

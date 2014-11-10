@@ -39,7 +39,8 @@ private:
 	gl::UniformBufferView m_materialUBO;
 
 	std::unique_ptr<gl::TextureBufferView> m_hierarchyBuffer;
-	std::unique_ptr<gl::TextureBufferView> m_vertexBuffer;
+	std::unique_ptr<gl::TextureBufferView> m_vertexPositionBuffer;
+	std::unique_ptr<gl::TextureBufferView> m_vertexInfoBuffer;
 	std::unique_ptr<gl::TextureBufferView> m_triangleBuffer;
 
 	unsigned int m_numInitialLightSamples;

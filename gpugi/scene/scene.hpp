@@ -54,11 +54,10 @@ public:
 		uint32 material;
 	};
 
-	/// Stored vertex data in file and GPU memory
-	struct Vertex
+	/// GPU representation of non-position vertex part (not as frequently needed)
+	struct VertexInfo
 	{
-		ε::Vec3 position;
-        ε::Vec3 normal;
+        ε::Vec2 normalAngles; // atan2(normal.y, normal.x), normal.z
         ε::Vec2 texcoord;
 	};
 
@@ -87,10 +86,11 @@ public:
 		ε::Vec3 luminance;
 	};
 
-	std::shared_ptr<gl::Buffer> GetVertexBuffer() const		{ return m_vertexBuffer; }
-	std::shared_ptr<gl::Buffer> GetTriangleBuffer() const	{ return m_triangleBuffer; }
-	std::shared_ptr<gl::Buffer> GetHierarchyBuffer() const	{ return m_hierarchyBuffer; }
-	const std::vector<Material>& GetMaterials() const		{ return m_materials; }
+	std::shared_ptr<gl::Buffer> GetVertexPositionBuffer() const	{ return m_vertexPositionBuffer; }
+	std::shared_ptr<gl::Buffer> GetVertexInfoBuffer() const		{ return m_vertexInfoBuffer; }
+	std::shared_ptr<gl::Buffer> GetTriangleBuffer() const		{ return m_triangleBuffer; }
+	std::shared_ptr<gl::Buffer> GetHierarchyBuffer() const		{ return m_hierarchyBuffer; }
+	const std::vector<Material>& GetMaterials() const			{ return m_materials; }
 
 	/// The bvh uses ε:: geometries. Which one can change with the files.
 	ε::Types3D GetBoundingVolumeType() const	{ return m_bvType; }
@@ -99,13 +99,15 @@ public:
 	uint32 GetNumTriangles() const				{ return m_triangleBuffer->GetSize() / sizeof(Triangle); }
 	uint32 GetNumInnerNodes() const				{ return m_numInnerNodes; }
 	uint32 GetNumMaterials() const				{ return static_cast<uint32>(m_materials.size()); }
-	uint32 GetNumVertices() const				{ return static_cast<uint32>(m_vertexBuffer->GetSize() / sizeof(Vertex)); }
+	uint32 GetNumVertices() const				{ return static_cast<uint32>(m_vertexPositionBuffer->GetSize() / sizeof(ei::Vec3)); }
 	uint32 GetNumLightTriangles() const			{ return static_cast<uint32>(m_lightTriangles.size()); }
 	const LightTriangle* GetLightTriangles() const	{ return m_lightTriangles.data(); }
 	// Normalized (to [0,1]) summed area for all light triangles
 	const float* GetLightSummedArea() const			{ return m_lightSummedArea.data(); }
+
 private:
-	std::shared_ptr<gl::Buffer> m_vertexBuffer;
+	std::shared_ptr<gl::Buffer> m_vertexPositionBuffer;
+	std::shared_ptr<gl::Buffer> m_vertexInfoBuffer;
 	std::shared_ptr<gl::Buffer> m_triangleBuffer;
 	std::shared_ptr<gl::Buffer> m_hierarchyBuffer;
 	std::vector<LightTriangle> m_lightTriangles;
@@ -120,7 +122,7 @@ private:
 	/// "sizeof" for different geometry
 	size_t size(ε::Types3D _type);
 
-	std::unique_ptr<Vertex[]> LoadVertices( std::ifstream& _file, const FileDecl::NamedArray& _header );
+	std::unique_ptr<FileDecl::Vertex[]> LoadVertices(std::ifstream& _file, const FileDecl::NamedArray& _header);
 	std::unique_ptr<Triangle[]> LoadTriangles( std::ifstream& _file, const FileDecl::NamedArray& _header );
 	void LoadMatRef( std::ifstream& _file, const Jo::Files::MetaFileWrapper::Node& _materials, const FileDecl::NamedArray& _header );
 	void LoadHierarchy( std::ifstream& _file, const FileDecl::NamedArray& _header );
@@ -129,7 +131,7 @@ private:
 	/// methods to be executed before.
 	/// \param _triangles Temporary double buffer of all triangles.
 	/// \param _vertices Temporary double buffer of all vertices.
-	void LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::unique_ptr<Vertex[]> _vertices );
+	void LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::unique_ptr<FileDecl::Vertex[]> _vertices );
 
 	/// Check references between indices, vertices and materials
 	void SanityCheck(Triangle* _triangles);
