@@ -3,6 +3,7 @@
 #include "renderer.hpp"
 #include "../glhelper/screenalignedtriangle.hpp"
 #include "../glhelper/framebufferobject.hpp"
+#include "../scene/lighttrianglesampler.hpp"
 
 namespace gl
 {
@@ -20,6 +21,8 @@ public:
 
 protected:
 	void OnResize(const ei::UVec2& newSize) override;
+
+	void PerIterationBufferUpdate();
 
 private:
 	gl::ScreenAlignedTriangle m_screenTri;
@@ -39,11 +42,11 @@ private:
 	std::unique_ptr<gl::TextureBufferView> m_vertexBuffer;
 	std::unique_ptr<gl::TextureBufferView> m_triangleBuffer;
 
-	static const unsigned int m_maxNumLightSamples;
-	std::unique_ptr<gl::TextureBufferView> m_lightSampleBuffer;
-
-	std::shared_ptr<Scene> m_scene;
+	unsigned int m_numInitialLightSamples;
+	std::unique_ptr<gl::TextureBufferView> m_initialLightSampleBuffer;
 
 	
+	std::shared_ptr<Scene> m_scene;
+	LightTriangleSampler m_lightTriangleSampler;
 };
 

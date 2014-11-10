@@ -29,3 +29,17 @@ std::uint64_t Xorshift(std::uint64_t rndState)
 	rndState ^= rndState >> 27;
 	return rndState * UINT64_C(2685821657736338717);
 }
+
+std::uint64_t Xorshift(std::uint64_t rndState, double& random01)
+{
+	rndState = Xorshift(rndState);
+	random01 = static_cast<double>(rndState % 900719925474099) / 900719925474099.0; // 2^53 (52bit mantissa!)
+	return rndState;
+}
+
+std::uint64_t Xorshift(std::uint64_t rndState, float& random01)
+{
+	rndState = Xorshift(rndState);
+	random01 = static_cast<float>(rndState % 8388593) / 8388593.0f;
+	return rndState;
+}
