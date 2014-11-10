@@ -11,18 +11,20 @@
 
 #include "../camera/camera.hpp"
 #include "../scene/scene.hpp"
+#include "../scene/lighttrianglesampler.hpp"
 
 #include <ei/matrix.hpp>
 
 #include <fstream>
-#include "../utilities/color.hpp"
+//#include "../utilities/color.hpp"
 
-const unsigned int ReferenceRenderer::m_maxNumLightSamples = 3;
 
 ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 	m_pathtracerShader("pathtracer"),
 	m_blendShader("blend"),
-	m_backbufferFBO(gl::FramebufferObject::Attachment(m_backbuffer.get()))
+	m_backbufferFBO(gl::FramebufferObject::Attachment(m_backbuffer.get())),
+
+	m_numInitialLightSamples(16)
 {
 	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer.comp");
 	m_pathtracerShader.CreateProgram();
@@ -37,46 +39,35 @@ ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 		shaderBinaryFile.close();
 	}
 
+	// Uniform buffers
+	{
+		m_blendShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/screenTri.vert");
+		m_blendShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/displayHDR.frag");
+		m_blendShader.CreateProgram();
 
-	m_blendShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/screenTri.vert");
-	m_blendShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/displayHDR.frag");
-	m_blendShader.CreateProgram();
+		m_globalConstUBO.Init(m_pathtracerShader, "GlobalConst");
+		m_globalConstUBO.GetBuffer()->Map();
+		m_globalConstUBO["BackbufferSize"].Set(ei::UVec2(m_backbuffer->GetWidth(), m_backbuffer->GetHeight()));
+		m_globalConstUBO.BindBuffer(0);
 
-	m_globalConstUBO.Init(m_pathtracerShader, "GlobalConst");
-	m_globalConstUBO.GetBuffer()->Map();
-	m_globalConstUBO["BackbufferSize"].Set(ei::UVec2(m_backbuffer->GetWidth(), m_backbuffer->GetHeight()));
-	m_globalConstUBO.BindBuffer(0);
+		m_cameraUBO.Init(m_pathtracerShader, "Camera");
+		m_cameraUBO.BindBuffer(1);
+		SetCamera(_initialCamera);
 
-	m_cameraUBO.Init(m_pathtracerShader, "Camera");
-	m_cameraUBO.BindBuffer(1);
-	SetCamera(_initialCamera);
+		m_perIterationUBO.Init(m_pathtracerShader, "PerIteration", gl::Buffer::Usage::MAP_PERSISTENT | gl::Buffer::Usage::MAP_WRITE | gl::Buffer::Usage::EXPLICIT_FLUSH);
+		m_perIterationUBO.BindBuffer(2);
 
-	m_perIterationUBO.Init(m_pathtracerShader, "PerIteration", gl::Buffer::Usage::MAP_PERSISTENT | gl::Buffer::Usage::MAP_WRITE | gl::Buffer::Usage::EXPLICIT_FLUSH);
-	m_perIterationUBO.GetBuffer()->Map();
-	m_perIterationUBO["FrameSeed"].Set(WangHash(0));
-	m_perIterationUBO["NumLightSamples"].Set(m_maxNumLightSamples); // todo
-	m_perIterationUBO.BindBuffer(2);
-
-	m_materialUBO.Init(m_pathtracerShader, "UMaterials");
-	m_materialUBO.BindBuffer(3);
+		m_materialUBO.Init(m_pathtracerShader, "UMaterials");
+		m_materialUBO.BindBuffer(3);
+	}
 
 	//m_iterationBuffer.reset(new gl::Texture2D(m_backbuffer->GetWidth(), m_backbuffer->GetHeight(), gl::TextureFormat::RGBA32F, 1, 0));
 
-	// Test light samples
-	unsigned int red = ColorUtils::SharedExponentEncode(ei::Vec3(2.4f, 0.6f, 0.06f));
-	unsigned int white = ColorUtils::SharedExponentEncode(ei::Vec3(6.9f, 6.9f, 6.9f));
-	unsigned int blue = ColorUtils::SharedExponentEncode(ei::Vec3(0.3f, 1.2f, 2.4f));
-	ei::Vec4 testLights[m_maxNumLightSamples] =
-	{
-		ei::Vec4(1, 2, 0, *reinterpret_cast<float*>(&red)),
-		ei::Vec4(0, 2, 0, *reinterpret_cast<float*>(&white)),
-		ei::Vec4(-1, 2, 0, *reinterpret_cast<float*>(&blue))
-	};
-	m_lightSampleBuffer.reset(new gl::TextureBufferView());
-	m_lightSampleBuffer->Init(
-		std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(float) * 4 * m_maxNumLightSamples), gl::Buffer::Usage::MAP_WRITE, &testLights),
-		gl::TextureBufferFormat::RGBA32F);
-	m_lightSampleBuffer->BindBuffer(3);
+	m_initialLightSampleBuffer.reset(new gl::TextureBufferView());
+	m_initialLightSampleBuffer->Init(
+		std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(LightTriangleSampler::LightSample) * m_numInitialLightSamples),
+					gl::Buffer::Usage::MAP_WRITE | gl::Buffer::Usage::MAP_PERSISTENT | gl::Buffer::Usage::EXPLICIT_FLUSH), gl::TextureBufferFormat::RGBA32F);
+	m_initialLightSampleBuffer->BindBuffer(3);
 
 
 	// Additive blending.
@@ -103,6 +94,7 @@ void ReferenceRenderer::SetCamera(const Camera& _camera)
 void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
 {
 	m_scene = _scene;
+	m_lightTriangleSampler.SetScene(m_scene);
 
 	// Check shader compability.
 	//auto shaderNodeSize = m_pathtracerShader.GetShaderStorageBufferInfo().at("HierarchyBuffer").iBufferDataSizeByte; //Variables.at("Nodes").iArrayStride;
@@ -130,6 +122,9 @@ void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
 	// Upload materials / set textures
 	m_materialUBO.GetBuffer()->Map();
 	m_materialUBO.Set(&m_scene->GetMaterials().front(), 0, uint32_t(m_scene->GetMaterials().size() * sizeof(Scene::Material)));
+
+	// Needs an update, to start with correct light samples.
+	PerIterationBufferUpdate();
 }
 
 void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)
@@ -146,8 +141,21 @@ void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)
 	m_backbuffer->ClearToZero(0);
 }
 
+void ReferenceRenderer::PerIterationBufferUpdate()
+{
+	m_perIterationUBO.GetBuffer()->Map();
+	m_perIterationUBO["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
+	m_perIterationUBO["NumLightSamples"].Set(m_numInitialLightSamples); // todo
+	m_perIterationUBO.GetBuffer()->Flush();
+
+	// There could be some performance gain in double/triple buffering this buffer.
+	m_lightTriangleSampler.GenerateRandomSamples(static_cast<LightTriangleSampler::LightSample*>(m_initialLightSampleBuffer->GetBuffer()->Map()), m_numInitialLightSamples);
+	m_initialLightSampleBuffer->GetBuffer()->Flush();
+}
+
 void ReferenceRenderer::Draw()
 {
+	++m_iterationCount;
 	{
 		//m_iterationBuffer->BindImage(0, gl::Texture::ImageAccess::WRITE);
 		m_backbuffer->BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
@@ -160,14 +168,7 @@ void ReferenceRenderer::Draw()
 		GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT);
 	}
 
-	{
-		++m_iterationCount;
-		m_perIterationUBO.GetBuffer()->Map();
-		m_perIterationUBO["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
-		m_perIterationUBO["NumLightSamples"].Set(m_maxNumLightSamples); // todo
-		m_perIterationUBO.GetBuffer()->Flush();
-		//m_perIterationUBO.GetBuffer()->Unmap();
-	}
+	PerIterationBufferUpdate();
 
 	/*{
 		m_backbufferFBO.Bind(false);

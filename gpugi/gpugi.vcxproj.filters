@@ -138,6 +138,9 @@
     <ClCompile Include="utilities\color.cpp">
       <Filter>code\utilities</Filter>
     </ClCompile>
+    <ClCompile Include="scene\lighttrianglesampler.cpp">
+      <Filter>code\scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -247,6 +250,9 @@
     </ClInclude>
     <ClInclude Include="utilities\color.hpp">
       <Filter>code\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="scene\lighttrianglesampler.hpp">
+      <Filter>code\scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

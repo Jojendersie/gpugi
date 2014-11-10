@@ -169,6 +169,7 @@
     <ClCompile Include="renderer\referencerenderer.cpp" />
     <ClCompile Include="renderer\renderer.cpp" />
     <ClCompile Include="renderer\testrenderer.cpp" />
+    <ClCompile Include="scene\lighttrianglesampler.cpp" />
     <ClCompile Include="scene\scene.cpp" />
     <ClCompile Include="Time\Implementation\Stopwatch.cpp" />
     <ClCompile Include="Time\Implementation\Time.cpp" />
@@ -202,6 +203,7 @@
     <ClInclude Include="renderer\referencerenderer.hpp" />
     <ClInclude Include="renderer\renderer.hpp" />
     <ClInclude Include="renderer\testrenderer.hpp" />
+    <ClInclude Include="scene\lighttrianglesampler.hpp" />
     <ClInclude Include="scene\scene.hpp" />
     <ClInclude Include="Time\Implementation\Time_inl.h" />
     <ClInclude Include="Time\Stopwatch.h" />

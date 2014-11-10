@@ -34,6 +34,7 @@ float GetLuminance(vec3 rgb)
 	return dot(rgb, W);
 }
 
+/*
 // Source http://www.malteclasen.de/zib/index4837.html?p=37
 uint SharedExponentEncode(vec3 value)
 {
@@ -50,3 +51,4 @@ vec3 SharedExponentDecode(uint encoded)
 	float exponent = encodedUnpacked.a * 256.0 - 128.0;
 	return (exp2(exponent) * 65536.0) * encodedUnpacked.rgb;
 }
+*/

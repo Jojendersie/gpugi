@@ -7,7 +7,7 @@
 #include "globaluniforms.glsl"
 #include "materials.glsl"
 
-#define NUM_LIGHT_SAMPLES 1
+#define NUM_LIGHT_SAMPLES 4
 
 #define MAX_NUM_BOUNCES 16
 #define RAY_HIT_EPSILON 0.001
@@ -77,9 +77,9 @@ void main()
 		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
 		{
 			int sampleIndex = int(RandomUInt(randomSeed) % NumLightSamples);
-			vec4 sampleData = texelFetch(LightSampleBuffer, sampleIndex);
+			vec4 lightSamplePosNorm = texelFetch(LightSampleBuffer, sampleIndex * 2);
 
-			lightRay.Direction = sampleData.xyz - ray.Origin;
+			lightRay.Direction = lightSamplePosNorm.xyz - ray.Origin;
 
 			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
 			float lightDist = sqrt(lightDistSq);
@@ -89,9 +89,10 @@ void main()
 
 			if(!TraceRayAnyHit(lightRay, rayHit))
 			{
+				vec4 lightSampleLumPrev = texelFetch(LightSampleBuffer, sampleIndex * 2 + 1);
 				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, hitNormal, hitTexcoord);
 				vec3 illuminance = (lightSampleWeight *		// Divide by p for Montecarlo
-					saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * SharedExponentDecode(floatBitsToUint(sampleData.w));
+					saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleLumPrev.xyz;
 				color += illuminance * rayColor * brdf; 
 			}
 		}
