@@ -49,7 +49,7 @@ void LightTriangleSampler::GenerateRandomSamples(LightSample* _destinationBuffer
 		_destinationBuffer->position += normal * _positionBias;// Move a bit along the normal to avoid intersection precision issues.
 
 		_destinationBuffer->normalThetaCos = static_cast<std::int16_t>(normal.z * std::numeric_limits<std::int16_t>().max());
-		_destinationBuffer->normalPhi = static_cast<std::int16_t>(atan2(normal.x, normal.y) * std::numeric_limits<std::int16_t>().max());
+		_destinationBuffer->normalPhi = static_cast<std::int16_t>(atan2(normal.y, normal.x) / ei::PI * std::numeric_limits<std::int16_t>().max());
 		_destinationBuffer->luminance = lightTriangle->luminance * sampleWeight; // Area factor is already contained, since it determines the sample probability.
 		_destinationBuffer->previousLightSample = -1;
 	}
