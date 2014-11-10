@@ -72,6 +72,10 @@ void main()
 		vec2 hitTexcoord = vdata0.zw * barycentricCoord.x + 
 						   vdata1.zw * barycentricCoord.y +
 						   vdata2.zw * barycentricCoord.z;
+		
+		vec4 reflectiveness = textureLod(sampler2D(Materials[triangle.w].reflectivenessTexHandle), hitTexcoord, 0.0);
+		vec3 opacity = textureLod(sampler2D(Materials[triangle.w].opacityTexHandle), hitTexcoord, 0.0).xyz;
+		vec3 diffuse = textureLod(sampler2D(Materials[triangle.w].diffuseTexHandle), hitTexcoord, 0.0).xyz;
 
 		// Connect to random light samples.
 		Ray lightRay;
@@ -93,7 +97,7 @@ void main()
 			if(!TraceRayAnyHit(lightRay, rayHit))
 			{
 				vec4 lightSampleLumPrev = texelFetch(LightSampleBuffer, sampleIndex * 2 + 1);
-				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, hitNormal, hitTexcoord);
+				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, reflectiveness, opacity, diffuse, hitNormal);
 				vec3 illuminance = (lightSampleWeight *		// Divide by p for Montecarlo
 					saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleLumPrev.xyz;
 				color += illuminance * rayColor * brdf; 
@@ -105,7 +109,7 @@ void main()
 		{
 			vec3 U, V, weight;
 			CreateONB(hitNormal, U, V);
-			ray.Direction = SampleBRDF(ray.Direction, triangle.w, randomSeed, U, V, hitNormal, hitTexcoord, weight);
+			ray.Direction = SampleBRDF(ray.Direction, triangle.w, reflectiveness, opacity, diffuse, randomSeed, U, V, hitNormal, weight);
 			ray.Origin = ray.Origin + RAY_HIT_EPSILON * sign(dot(ray.Direction, hitNormal)) * hitNormal;	// Go epsilon in sampling direction (refraction/reflection different)
 #ifdef RUSSIAN_ROULETTE
 			float hitLuminance = GetLuminance(weight);
