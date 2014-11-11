@@ -19,8 +19,8 @@ vec3 SampleUnitHemisphere(vec2 randomSample, vec3 U, vec3 V, vec3 W)
 // Sample Phong lobe relative to U, V, W frame
 vec3 SamplePhongLobe(vec2 randomSample, float exponent, vec3 U, vec3 V, vec3 W)
 {
+	float phi = PI_2 * randomSample.x;
 	float power = exp(log(randomSample.y) / (exponent+1.0f));
-	float phi = randomSample.x * 2.0 * PI;
 	float scale = sqrt(1.0 - power*power);
 
 	float x = cos(phi)*scale;
@@ -39,60 +39,77 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, vec4 reflectiveness, vec3 
 	//return SampleUnitHemisphere(Random2(seed), U, V, N);
 
 
+	// Probability model:
+	//      avgPReflect  
+	// 0         |    avgPDiffuse    1
+	// |---------|---------|---------|
+	//   Reflect |   Diff     Refr
+	//
+	// pathDecisionVar points now somewhere between 0 and 1.
+
+
 	// Compute reflection probabilities with rescaled fresnel approximation from:
 	// Fresnel Term Approximations for Metals
 	// ((n-1)²+k²) / ((n+1)²+k²) + 4n / ((n+1)²+k²) * (1-cos theta)^5
 	// = Fresnel0 + Fresnel1 * (1-cos theta)^5
 	float cosTheta = -dot(N, incidentDirection);
-	vec3 preflect = Materials[material].Fresnel0 + Materials[material].Fresnel1 * pow(saturate(1.0 - abs(cosTheta)), 5.0);
-	preflect *= reflectiveness.xyz;
-	float avgPReflect = (preflect.x + preflect.y + preflect.z) / 3.0;
-	if( avgPReflect > Random(seed) )
+
+	// Reflect
+	vec3 sampleDir = (2.0 * cosTheta) * N + incidentDirection; // later normalized, may not be final
+
+	// Random values later needed for sampling direction
+	vec2 randomSamples = Random2(seed);
+
+	// Reflection probability
+	vec3 preflectrefract = reflectiveness.xyz * (Materials[material].Fresnel1 * pow(saturate(1.0 - abs(cosTheta)), 5.0) + Materials[material].Fresnel0);
+	float avgPReflectRefract = (preflectrefract.x + preflectrefract.y + preflectrefract.z) / 3.0; // reflection (!) probability
+
+	// Propability for diffuse reflection (= probability of )
+	vec3 pdiffuse = -preflectrefract * opacity + opacity; // preflectrefract is reflection propability
+	float avgPDiffuse = (pdiffuse.x + pdiffuse.y + pdiffuse.z) / (3.0);
+
+	// Choose a random path type.
+	float pathDecisionVar = Random(seed);
+
+	// Refract:
+	if(avgPDiffuse < pathDecisionVar)
 	{
-		// Reflect
-		vec3 sampleDir = normalize(incidentDirection + (2.0 * cosTheta) * N);
-		// Normalize the probability
-		float phongNormalization = (reflectiveness.w + 2.0) / (reflectiveness.w + 1.0);
-		weight = preflect * (phongNormalization / avgPReflect);// * abs(cosTheta);
-		// Create phong sample in reflection direction
-		vec3 RU, RV;
-		CreateONB(sampleDir, RU, RV);
-		vec3 phongDir = SamplePhongLobe(Random2(seed), reflectiveness.w, RU, RV, sampleDir);
-		// Rejection sampling (crashes driver)
-		//while(dot(phongDir, N) <= 0)
-		//	phongDir = SamplePhongLobe(Random2(seed), reflectiveness.w, RU, RV, sampleDir);
-		return phongDir;
-	} else {
-		// Refract/Absorb/Diffus
-		float avgOpacity = (opacity.x + opacity.y + opacity.z) / 3.0;
-		if( avgOpacity > Random(seed) )
-		{
-			// Normalize the probability
-			vec3 pdiffuse = opacity - preflect * opacity;
-			float avgPDiffuse = (pdiffuse.x + pdiffuse.y + pdiffuse.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON);
-			weight = (diffuse * pdiffuse) / avgPDiffuse;
-			// Create diffuse sample
-			return SampleUnitHemisphere(Random2(seed), U, V, N);
-		} else {
-			// Refract
-			vec3 sampleDir;
-			float eta = cosTheta > 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg;
-			float sinTheta2Sq = eta * eta * (1.0f - cosTheta * cosTheta);
-			// Total reflection
-			if( sinTheta2Sq >= 1.0f )
-				sampleDir = normalize(incidentDirection + (2.0 * cosTheta) * N);
-			else sampleDir = normalize(eta * incidentDirection - (sign(cosTheta) * (eta * cosTheta + sqrt(saturate(1.0 - sinTheta2Sq)))) * N);
-			// Normalize the probability
-			vec3 prefract = (1.0 - preflect) * (1.0 - opacity);
-			float avgPRefract = (prefract.x + prefract.y + prefract.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON);
-			float phongNormalization = (reflectiveness.w + 2.0) / (reflectiveness.w + 1.0);
-			weight = prefract * (phongNormalization / avgPRefract);// * abs(cosTheta);
-			// Create phong sample in reflection direction
-			vec3 RU, RV;
-			CreateONB(sampleDir, RU, RV);
-			return SamplePhongLobe(Random2(seed), reflectiveness.w, RU, RV, sampleDir);
-		}
+		// Compute refraction direction.
+		float eta = cosTheta > 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg; // Is this a branch? And if yes, how to avoid it?
+		float sinTheta2Sq = eta * eta * (1.0f - cosTheta * cosTheta);
+		// Total reflection
+		if( sinTheta2Sq < 1.0f )
+			sampleDir = eta * incidentDirection - (sign(cosTheta) * (eta * cosTheta + sqrt(saturate(1.0 - sinTheta2Sq)))) * N;
+
+		// Refraction probability
+		preflectrefract = (1.0 - preflectrefract) * (1.0 - opacity);
+		avgPReflectRefract = (preflectrefract.x + preflectrefract.y + preflectrefract.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON); // refraction!
 	}
+	// Diffuse:
+	else if(avgPReflectRefract < pathDecisionVar)	
+	{
+		// Normalize the probability
+		weight = (diffuse * pdiffuse) / avgPDiffuse;
+		// Create diffuse sample
+		return SampleUnitHemisphere(randomSamples, U, V, N);
+	}
+
+	// Reflect: (shares this code with refract)
+
+	// Normalize the probability
+	float phongNormalization = (reflectiveness.w + 2.0) / (reflectiveness.w + 1.0);
+	weight = preflectrefract * (phongNormalization / avgPReflectRefract);// * abs(cosTheta);
+
+	// Create phong sample in reflection/refraction direction
+	sampleDir = normalize(sampleDir);
+	vec3 RU, RV;
+	CreateONB(sampleDir, RU, RV);
+	return SamplePhongLobe(randomSamples, reflectiveness.w, RU, RV, sampleDir);
+
+	// Rejection sampling (crashes driver)
+	//while(dot(phongDir, N) <= 0)
+	//	phongDir = SamplePhongLobe(Random2(seed), reflectiveness.w, RU, RV, sampleDir);
+	//return phongDir;
 }
 
 // Sample the custom surface BRDF for two known direction
