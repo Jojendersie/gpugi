@@ -1,3 +1,5 @@
+#define DIVISOR_EPSILON 1e-5
+
 // Sample hemisphere with cosine density.
 //    randomSample is a random number between 0-1
 vec3 SampleUnitHemisphere(vec2 randomSample, vec3 U, vec3 V, vec3 W)
@@ -50,8 +52,8 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, vec4 reflectiveness, vec3 
 		// Reflect
 		vec3 sampleDir = normalize(incidentDirection + 2 * cosTheta * N);
 		// Normalize the probability
-		float phongNormalization = (reflectiveness.w + 2.0) / 6.283185307;
-		weight = phongNormalization * preflect / avgPReflect;
+		float phongNormalization = (reflectiveness.w + 2.0) / (reflectiveness.w + 1.0);
+		weight = phongNormalization * preflect / avgPReflect;// * abs(cosTheta);
 		// Create phong sample in reflection direction
 		vec3 RU, RV;
 		CreateONB(sampleDir, RU, RV);
@@ -68,7 +70,7 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, vec4 reflectiveness, vec3 
 		{
 			// Normalize the probability
 			vec3 pdiffuse = (1.0 - preflect) * opacity;
-			float avgPDiffuse = (pdiffuse.x + pdiffuse.y + pdiffuse.z) / 3.0;
+			float avgPDiffuse = (pdiffuse.x + pdiffuse.y + pdiffuse.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON);
 			weight = (diffuse * pdiffuse) / avgPDiffuse;
 			// Create diffuse sample
 			return SampleUnitHemisphere(Random2(seed), U, V, N);
@@ -83,9 +85,9 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, vec4 reflectiveness, vec3 
 			else sampleDir = normalize(eta * incidentDirection - (sign(cosTheta) * (eta * cosTheta + sqrt(saturate(1.0 - sinTheta2Sq)))) * N);
 			// Normalize the probability
 			vec3 prefract = (1.0 - preflect) * (1.0 - opacity);
-			float avgPRefract = (prefract.x + prefract.y + prefract.z + 1e-5) / 3.00001;
-			float phongNormalization = (reflectiveness.w + 2.0) / 6.283185307;
-			weight = phongNormalization * prefract / avgPRefract;
+			float avgPRefract = (prefract.x + prefract.y + prefract.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON);
+			float phongNormalization = (reflectiveness.w + 2.0) / (reflectiveness.w + 1.0);
+			weight = phongNormalization * prefract / avgPRefract;// * abs(cosTheta);
 			// Create phong sample in reflection direction
 			vec3 RU, RV;
 			CreateONB(sampleDir, RU, RV);
