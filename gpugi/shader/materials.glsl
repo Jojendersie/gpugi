@@ -50,10 +50,10 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, vec4 reflectiveness, vec3 
 	if( avgPReflect > Random(seed) )
 	{
 		// Reflect
-		vec3 sampleDir = normalize(incidentDirection + 2 * cosTheta * N);
+		vec3 sampleDir = normalize(incidentDirection + (2.0 * cosTheta) * N);
 		// Normalize the probability
 		float phongNormalization = (reflectiveness.w + 2.0) / (reflectiveness.w + 1.0);
-		weight = phongNormalization * preflect / avgPReflect;// * abs(cosTheta);
+		weight = preflect * (phongNormalization / avgPReflect);// * abs(cosTheta);
 		// Create phong sample in reflection direction
 		vec3 RU, RV;
 		CreateONB(sampleDir, RU, RV);
@@ -62,14 +62,13 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, vec4 reflectiveness, vec3 
 		//while(dot(phongDir, N) <= 0)
 		//	phongDir = SamplePhongLobe(Random2(seed), reflectiveness.w, RU, RV, sampleDir);
 		return phongDir;
-		// TODO Resample in negative half space
 	} else {
 		// Refract/Absorb/Diffus
 		float avgOpacity = (opacity.x + opacity.y + opacity.z) / 3.0;
 		if( avgOpacity > Random(seed) )
 		{
 			// Normalize the probability
-			vec3 pdiffuse = (1.0 - preflect) * opacity;
+			vec3 pdiffuse = opacity - preflect * opacity;
 			float avgPDiffuse = (pdiffuse.x + pdiffuse.y + pdiffuse.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON);
 			weight = (diffuse * pdiffuse) / avgPDiffuse;
 			// Create diffuse sample
@@ -81,13 +80,13 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, vec4 reflectiveness, vec3 
 			float sinTheta2Sq = eta * eta * (1.0f - cosTheta * cosTheta);
 			// Total reflection
 			if( sinTheta2Sq >= 1.0f )
-				sampleDir = normalize(incidentDirection + 2 * cosTheta * N);
+				sampleDir = normalize(incidentDirection + (2.0 * cosTheta) * N);
 			else sampleDir = normalize(eta * incidentDirection - (sign(cosTheta) * (eta * cosTheta + sqrt(saturate(1.0 - sinTheta2Sq)))) * N);
 			// Normalize the probability
 			vec3 prefract = (1.0 - preflect) * (1.0 - opacity);
 			float avgPRefract = (prefract.x + prefract.y + prefract.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON);
 			float phongNormalization = (reflectiveness.w + 2.0) / (reflectiveness.w + 1.0);
-			weight = phongNormalization * prefract / avgPRefract;// * abs(cosTheta);
+			weight = prefract * (phongNormalization / avgPRefract);// * abs(cosTheta);
 			// Create phong sample in reflection direction
 			vec3 RU, RV;
 			CreateONB(sampleDir, RU, RV);
@@ -109,14 +108,14 @@ vec3 BRDF(vec3 incidentDirection, vec3 excidentDirection, int material, vec4 ref
 	vec3 preflect = Materials[material].Fresnel0 + Materials[material].Fresnel1 * pow(saturate(1.0 - abs(cosTheta)), 5.0);
 	preflect *= reflectiveness.xyz;
 	// Reflection vector
-	vec3 sampleDir = normalize(incidentDirection + 2 * cosTheta * N);
+	vec3 sampleDir = normalize(incidentDirection + (2.0 * cosTheta) * N);
 	float phongNormalization = (reflectiveness.w + 2.0) / 6.283185307;
-	excidentLight += phongNormalization * preflect * pow(max(0.0,dot(sampleDir, excidentDirection)), reflectiveness.w);
+	excidentLight += preflect * (phongNormalization * pow(max(0.0,dot(sampleDir, excidentDirection)), reflectiveness.w));
 
 	// Refract/Absorb/Diffus
 	vec3 prefract = 1.0 - preflect;
 	vec3 pdiffuse = prefract * opacity;
-	prefract *= 1.0 - opacity;
+	prefract = prefract - opacity * prefract;
 	excidentLight += pdiffuse * diffuse / 3.141592654;// / pi?
 
 	// Refract
@@ -126,7 +125,7 @@ vec3 BRDF(vec3 incidentDirection, vec3 excidentDirection, int material, vec4 ref
 	if( sinTheta2Sq < 1.0f )
 		sampleDir = normalize(eta * incidentDirection - (sign(cosTheta) * (eta * cosTheta + sqrt(saturate(1.0 - sinTheta2Sq)))) * N);
 	// else the sampleDir is again the reflection vector
-	excidentLight += phongNormalization * prefract * pow(max(0.0,dot(sampleDir, excidentDirection)), reflectiveness.w);
+	excidentLight += prefract * (phongNormalization * pow(max(0.0,dot(sampleDir, excidentDirection)), reflectiveness.w));
 	
 	return excidentLight;
 }
