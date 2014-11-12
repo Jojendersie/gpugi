@@ -16,13 +16,6 @@
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
-vec3 VertexNormalUnpack(in vec2 packedNormal)
-{
-	float sinPhi = sqrt(1.0 - packedNormal.y*packedNormal.y);
-	return vec3(cos(packedNormal.x)*sinPhi, sin(packedNormal.x)*sinPhi, packedNormal.y);
-}
-
-
 // Debug variables for traceray.
 /*#define TRACERAY_DEBUG_VARS
 uint numBoxesVisited = 0;
@@ -65,9 +58,9 @@ void main()
 		vec4 vdata0 = texelFetch(VertexInfoBuffer, triangle.x);
 		vec4 vdata1 = texelFetch(VertexInfoBuffer, triangle.y);
 		vec4 vdata2 = texelFetch(VertexInfoBuffer, triangle.z);
-		vec3 hitNormal = normalize(VertexNormalUnpack(vdata0.xy) * barycentricCoord.x + 
-						 		   VertexNormalUnpack(vdata1.xy) * barycentricCoord.y +
-								   VertexNormalUnpack(vdata2.xy) * barycentricCoord.z);
+		vec3 hitNormal = normalize(UnpackNormal(vdata0.xy) * barycentricCoord.x + 
+						 		   UnpackNormal(vdata1.xy) * barycentricCoord.y +
+								   UnpackNormal(vdata2.xy) * barycentricCoord.z);
 
 		vec2 hitTexcoord = vdata0.zw * barycentricCoord.x + 
 						   vdata1.zw * barycentricCoord.y +
@@ -87,7 +80,6 @@ void main()
 			vec4 lightSamplePosNorm = texelFetch(LightSampleBuffer, sampleIndex * 2);
 
 			lightRay.Direction = lightSamplePosNorm.xyz - ray.Origin;
-
 			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
 			float lightDist = sqrt(lightDistSq);
 			lightRay.Direction /= lightDist;
