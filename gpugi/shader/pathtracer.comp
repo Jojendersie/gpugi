@@ -70,7 +70,7 @@ void main()
 		vec3 opacity = textureLod(sampler2D(Materials[triangle.w].opacityTexHandle), hitTexcoord, 0.0).xyz;
 		vec3 diffuse = textureLod(sampler2D(Materials[triangle.w].diffuseTexHandle), hitTexcoord, 0.0).xyz;
 
-		// Connect to random light samples.
+		// Connect to random light samples ("Next Event Estimation")
 		Ray lightRay;
 		//lightRay.Origin = ray.Origin + (rayHit-RAY_HIT_EPSILON) * ray.Direction;
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray
@@ -99,9 +99,8 @@ void main()
 		// Bounce ray if not the last iteration.
 		//if(i+1 < MAX_NUM_BOUNCES) // Not using is faster on GM107 on 10.11.
 		{
-			vec3 U, V, weight;
-			CreateONB(hitNormal, U, V);
-			ray.Direction = SampleBRDF(ray.Direction, triangle.w, reflectiveness, opacity, diffuse, randomSeed, U, V, hitNormal, weight);
+			vec3 weight;
+			ray.Direction = SampleBRDF(ray.Direction, triangle.w, reflectiveness, opacity, diffuse, randomSeed, hitNormal, weight);
 			ray.Origin = ray.Origin + RAY_HIT_EPSILON * sign(dot(ray.Direction, hitNormal)) * hitNormal;	// Go epsilon in sampling direction (refraction/reflection different)
 #ifdef RUSSIAN_ROULETTE
 			float hitLuminance = GetLuminance(weight);

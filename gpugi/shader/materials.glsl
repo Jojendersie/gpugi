@@ -32,7 +32,7 @@ vec3 SamplePhongLobe(vec2 randomSample, float exponent, vec3 U, vec3 V, vec3 W)
 
 // Sample a direction from the custom surface BRDF
 // weight x/p for the monte carlo integral. x weights the color channles/is the brdf
-vec3 SampleBRDF(vec3 incidentDirection, int material, vec4 reflectiveness, vec3 opacity, vec3 diffuse, inout uint seed, vec3 U, vec3 V, vec3 N, out vec3 weight)
+vec3 SampleBRDF(vec3 incidentDirection, int material, vec4 reflectiveness, vec3 opacity, vec3 diffuse, inout uint seed, vec3 N, out vec3 weight)
 {
 	// THIS TWO LINES ARE ONLY HERE UNTIL THE OTHER STUFF RUNS
 	//weight = vec3(0.5);
@@ -91,6 +91,8 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, vec4 reflectiveness, vec3 
 		// Normalize the probability
 		weight = (diffuse * pdiffuse) / avgPDiffuse;
 		// Create diffuse sample
+		vec3 U, V;
+		CreateONB(N, U, V);
 		return SampleUnitHemisphere(randomSamples, U, V, N);
 	}
 
