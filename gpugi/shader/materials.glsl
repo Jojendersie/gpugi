@@ -62,7 +62,7 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, vec4 reflectiveness, vec3 
 
 	// Reflection probability
 	vec3 preflectrefract = reflectiveness.xyz * (Materials[material].Fresnel1 * pow(saturate(1.0 - abs(cosTheta)), 5.0) + Materials[material].Fresnel0);
-	float avgPReflectRefract = (preflectrefract.x + preflectrefract.y + preflectrefract.z) / 3.0; // reflection (!) probability
+	float avgPReflectRefract = (preflectrefract.x + preflectrefract.y + preflectrefract.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON); // reflection (!) probability
 
 	// Propability for diffuse reflection (= probability of )
 	vec3 pdiffuse = -preflectrefract * opacity + opacity; // preflectrefract is reflection propability
