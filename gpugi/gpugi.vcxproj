@@ -228,12 +228,12 @@
     <None Include="shader\intersectiontests.glsl" />
     <None Include="shader\materials.glsl" />
     <None Include="shader\pathtracer.comp" />
-    <None Include="shader\pathtracer_traceray.glsl" />
     <None Include="shader\random.glsl" />
     <None Include="shader\scenedata.glsl" />
     <None Include="shader\screenTri.vert" />
     <None Include="shader\testcompute.comp" />
     <None Include="shader\testraytrace.glsl" />
+    <None Include="shader\traceray.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

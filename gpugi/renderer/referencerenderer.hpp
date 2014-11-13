@@ -27,11 +27,9 @@ protected:
 private:
 	gl::ScreenAlignedTriangle m_screenTri;
 
-	//std::unique_ptr<gl::Texture2D> m_iterationBuffer;
 	gl::FramebufferObject m_backbufferFBO;
 
 	gl::ShaderObject m_pathtracerShader;
-	gl::ShaderObject m_blendShader;
 
 	gl::UniformBufferView m_globalConstUBO;
 	gl::UniformBufferView m_cameraUBO;

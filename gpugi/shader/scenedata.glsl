@@ -1,6 +1,3 @@
-//#extension GL_ARB_enhanced_layouts : require
-#extension GL_ARB_bindless_texture : require
-
 #define NODE_TYPE_BOX 0
 //#define NODE_TYPE_SPHERE 1
 #define NODE_TYPE NODE_TYPE_BOX
@@ -72,3 +69,17 @@ struct Material
 	vec3 Fresnel1;	// Second precomputed coefficient for fresnel approximation (rgb)
 	float emissivityB;
 };
+
+
+void GetTriangleHitInfo(Triangle triangle, vec3 barycentricCoord, out vec3 normal, out vec2 texcoord)
+{
+	vec4 vdata0 = texelFetch(VertexInfoBuffer, triangle.x);
+	vec4 vdata1 = texelFetch(VertexInfoBuffer, triangle.y);
+	vec4 vdata2 = texelFetch(VertexInfoBuffer, triangle.z);
+	normal = normalize(UnpackNormal(vdata0.xy) * barycentricCoord.x + 
+					   UnpackNormal(vdata1.xy) * barycentricCoord.y +
+					   UnpackNormal(vdata2.xy) * barycentricCoord.z);
+	texcoord = vdata0.zw * barycentricCoord.x + 
+				vdata1.zw * barycentricCoord.y +
+				vdata2.zw * barycentricCoord.z;
+}

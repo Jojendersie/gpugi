@@ -277,9 +277,6 @@
     <None Include="shader\pathtracer.comp">
       <Filter>shader</Filter>
     </None>
-    <None Include="shader\pathtracer_traceray.glsl">
-      <Filter>shader</Filter>
-    </None>
     <None Include="shader\random.glsl">
       <Filter>shader</Filter>
     </None>
@@ -296,6 +293,9 @@
       <Filter>shader</Filter>
     </None>
     <None Include="shader\displayHDR.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\traceray.glsl">
       <Filter>shader</Filter>
     </None>
   </ItemGroup>

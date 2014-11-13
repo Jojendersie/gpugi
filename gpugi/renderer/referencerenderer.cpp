@@ -13,15 +13,11 @@
 #include "../scene/scene.hpp"
 #include "../scene/lighttrianglesampler.hpp"
 
-#include <ei/matrix.hpp>
-
 #include <fstream>
-//#include "../utilities/color.hpp"
 
 
 ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 	m_pathtracerShader("pathtracer"),
-	m_blendShader("blend"),
 	m_backbufferFBO(gl::FramebufferObject::Attachment(m_backbuffer.get())),
 
 	m_numInitialLightSamples(16)
@@ -41,10 +37,6 @@ ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 
 	// Uniform buffers
 	{
-		m_blendShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/screenTri.vert");
-		m_blendShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/displayHDR.frag");
-		m_blendShader.CreateProgram();
-
 		m_globalConstUBO.Init(m_pathtracerShader, "GlobalConst");
 		m_globalConstUBO.GetBuffer()->Map();
 		m_globalConstUBO["BackbufferSize"].Set(ei::UVec2(m_backbuffer->GetWidth(), m_backbuffer->GetHeight()));
@@ -60,8 +52,6 @@ ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 		m_materialUBO.Init(m_pathtracerShader, "UMaterials");
 		m_materialUBO.BindBuffer(3);
 	}
-
-	//m_iterationBuffer.reset(new gl::Texture2D(m_backbuffer->GetWidth(), m_backbuffer->GetHeight(), gl::TextureFormat::RGBA32F, 1, 0));
 
 	m_initialLightSampleBuffer.reset(new gl::TextureBufferView());
 	m_initialLightSampleBuffer->Init(
@@ -96,16 +86,6 @@ void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
 	m_scene = _scene;
 	m_lightTriangleSampler.SetScene(m_scene);
 
-	// Check shader compability.
-	//auto shaderNodeSize = m_pathtracerShader.GetShaderStorageBufferInfo().at("HierarchyBuffer").iBufferDataSizeByte; //Variables.at("Nodes").iArrayStride;
-	//Assert(shaderNodeSize == sizeof(Scene::TreeNode<ei::Box>), "Shader tree node is " << shaderNodeSize << "bytes big but expected were " << sizeof(Scene::TreeNode<ei::Box>) << "bytes");
-	//auto shaderVertexSize = m_pathtracerShader.GetShaderStorageBufferInfo().at("VertexBuffer").iBufferDataSizeByte; //.Variables.at("Vertices").iArrayStride;
-	//Assert(shaderVertexSize == sizeof(FileDecl::Vertex), "Shader vertex is " << shaderVertexSize << "bytes big but expected were " << sizeof(FileDecl::Vertex) << "bytes");
-	//auto shaderLeafSize = m_pathtracerShader.GetShaderStorageBufferInfo().at("LeafBuffer").iBufferDataSizeByte; //.Variables.at("Leafs").iArrayStride;
-	//auto expectedLeafSize = sizeof(Scene::Triangle) * m_scene->GetNumTrianglesPerLeaf();
-	//Assert(shaderLeafSize == expectedLeafSize, "Shader leaf is " << shaderLeafSize << "bytes big but expected were " << expectedLeafSize << "bytes");
-
-
 	// Bind buffer
 	m_triangleBuffer.reset(new gl::TextureBufferView());
 	m_triangleBuffer->Init(m_scene->GetTriangleBuffer(), gl::TextureBufferFormat::RGBA32I);
@@ -135,8 +115,6 @@ void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)
 {
 	Renderer::OnResize(_newSize);
 
-	//m_iterationBuffer.reset(new gl::Texture2D(_newSize.x, _newSize.y, gl::TextureFormat::RGBA32F, 1, 0));
-	
 	m_globalConstUBO.GetBuffer()->Map();
 	m_globalConstUBO["BackbufferSize"].Set(_newSize);
 	m_globalConstUBO.GetBuffer()->Unmap();
@@ -166,24 +144,11 @@ void ReferenceRenderer::Draw()
 
 		m_pathtracerShader.Activate();
 		GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / 8, m_backbuffer->GetHeight() / 8, 1);
-
-		// Ensure that all future fetches will use the modified data.
-		// See https://www.opengl.org/wiki/Memory_Model#Ensuring_visibility
-		GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT);
 	}
 
 	PerIterationBufferUpdate();
 
-	/*{
-		m_backbufferFBO.Bind(false);
-		glEnable(GL_BLEND);
-
-		m_iterationBuffer->Bind(0);
-		m_blendShader.Activate();
-
-		m_screenTri.Draw();
-
-		glDisable(GL_BLEND);
-		m_backbufferFBO.BindBackBuffer();
-	}*/
+	// Ensure that all future fetches will use the modified data.
+	// See https://www.opengl.org/wiki/Memory_Model#Ensuring_visibility
+	GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT);
 }
