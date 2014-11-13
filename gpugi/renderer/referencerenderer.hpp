@@ -31,8 +31,6 @@ private:
 
 	gl::ShaderObject m_pathtracerShader;
 
-	gl::UniformBufferView m_globalConstUBO;
-	gl::UniformBufferView m_cameraUBO;
 	gl::UniformBufferView m_perIterationUBO;
 	gl::UniformBufferView m_materialUBO;
 

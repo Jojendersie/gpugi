@@ -23,7 +23,7 @@ public:
 	virtual void SetScene(std::shared_ptr<Scene> _scene) = 0;
 
 	/// Sets camera. May result in a scene reset!
-	virtual void SetCamera(const Camera& camera)=0;
+	virtual void SetCamera(const Camera& camera);
 
 	/// Performs a draw iteration.
 	virtual void Draw() = 0;
@@ -35,11 +35,16 @@ public:
 protected:
 	virtual void OnResize(const ei::UVec2& newSize);
 
+	void InitStandardUBOs(const gl::ShaderObject& _reflectionShader);
+
 	Renderer();
 
 	void CreateBackbuffer(const ei::UVec2& resolution);
 
 	std::unique_ptr<gl::Texture2D> m_backbuffer;
 	unsigned long m_iterationCount;
+
+	gl::UniformBufferView m_globalConstUBO;
+	gl::UniformBufferView m_cameraUBO;
 };
 

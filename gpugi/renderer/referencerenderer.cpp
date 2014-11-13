@@ -9,7 +9,6 @@
 
 #include "../Time/Time.h"
 
-#include "../camera/camera.hpp"
 #include "../scene/scene.hpp"
 #include "../scene/lighttrianglesampler.hpp"
 
@@ -37,15 +36,6 @@ ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 
 	// Uniform buffers
 	{
-		m_globalConstUBO.Init(m_pathtracerShader, "GlobalConst");
-		m_globalConstUBO.GetBuffer()->Map();
-		m_globalConstUBO["BackbufferSize"].Set(ei::UVec2(m_backbuffer->GetWidth(), m_backbuffer->GetHeight()));
-		m_globalConstUBO.BindBuffer(0);
-
-		m_cameraUBO.Init(m_pathtracerShader, "Camera");
-		m_cameraUBO.BindBuffer(1);
-		SetCamera(_initialCamera);
-
 		m_perIterationUBO.Init(m_pathtracerShader, "PerIteration", gl::Buffer::Usage::MAP_PERSISTENT | gl::Buffer::Usage::MAP_WRITE | gl::Buffer::Usage::EXPLICIT_FLUSH);
 		m_perIterationUBO.BindBuffer(2);
 
@@ -62,19 +52,14 @@ ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 
 	// Additive blending.
 	glBlendFunc(GL_ONE, GL_ONE);
+
+	InitStandardUBOs(m_pathtracerShader);
+	SetCamera(_initialCamera);
 }
 
 void ReferenceRenderer::SetCamera(const Camera& _camera)
 {
-	ei::Vec3 camU, camV, camW;
-	_camera.ComputeCameraParams(camU, camV, camW);
-
-	m_cameraUBO.GetBuffer()->Map();
-	m_cameraUBO["CameraU"].Set(camU);
-	m_cameraUBO["CameraV"].Set(camV);
-	m_cameraUBO["CameraW"].Set(camW);
-	m_cameraUBO["CameraPosition"].Set(_camera.GetPosition());
-	m_cameraUBO.GetBuffer()->Unmap();
+	Renderer::SetCamera(_camera);
 
 	m_iterationCount = 0;
 	m_backbuffer->ClearToZero(0);
@@ -114,10 +99,6 @@ void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
 void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)
 {
 	Renderer::OnResize(_newSize);
-
-	m_globalConstUBO.GetBuffer()->Map();
-	m_globalConstUBO["BackbufferSize"].Set(_newSize);
-	m_globalConstUBO.GetBuffer()->Unmap();
 	
 	m_iterationCount = 0;
 	m_backbuffer->ClearToZero(0);
