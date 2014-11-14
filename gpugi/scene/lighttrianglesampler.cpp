@@ -3,6 +3,8 @@
 #include "../utilities/random.hpp"
 #include "../utilities/assert.hpp"
 
+#include <algorithm>
+
 LightTriangleSampler::LightTriangleSampler() : m_randomSeed(123)
 {
 
@@ -21,15 +23,10 @@ void LightTriangleSampler::GenerateRandomSamples(LightSample* _destinationBuffer
 	{
 		float randomTriangle = 0;
 		m_randomSeed = Xorshift(m_randomSeed, randomTriangle);
-		const float* lightTriangleSummedArea = m_scene->GetLightSummedArea();
 
 		// Search triangle.
-		unsigned int triangleIdx = 0;
-		for (; triangleIdx < m_scene->GetNumLightTriangles(); ++lightTriangleSummedArea, ++triangleIdx)
-		{
-			if (randomTriangle < *lightTriangleSummedArea)
-				break;
-		}
+		const float* lightTriangleSummedArea = std::lower_bound(m_scene->GetLightSummedArea(), m_scene->GetLightSummedArea() + m_scene->GetNumLightTriangles(), randomTriangle);
+		unsigned int triangleIdx = static_cast<unsigned int>(lightTriangleSummedArea - m_scene->GetLightSummedArea());
 		Assert(triangleIdx < m_scene->GetNumLightTriangles(), "Impossible triangle index. Error in random number generator or light summed area table.");
 
 		// Compute random barycentric coordinates.
