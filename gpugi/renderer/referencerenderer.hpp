@@ -25,10 +25,6 @@ protected:
 	void PerIterationBufferUpdate();
 
 private:
-	gl::ScreenAlignedTriangle m_screenTri;
-
-	gl::FramebufferObject m_backbufferFBO;
-
 	gl::ShaderObject m_pathtracerShader;
 
 	gl::UniformBufferView m_perIterationUBO;

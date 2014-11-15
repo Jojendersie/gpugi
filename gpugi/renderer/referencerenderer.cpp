@@ -4,7 +4,6 @@
 #include "../utilities/flagoperators.hpp"
 
 #include "../glhelper/texture2d.hpp"
-#include "../glhelper/screenalignedtriangle.hpp"
 #include "../glhelper/texturebuffer.hpp"
 
 #include "../Time/Time.h"
@@ -17,8 +16,6 @@
 
 ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 	m_pathtracerShader("pathtracer"),
-	m_backbufferFBO(gl::FramebufferObject::Attachment(m_backbuffer.get())),
-
 	m_numInitialLightSamples(16)
 {
 	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer.comp");
@@ -119,13 +116,11 @@ void ReferenceRenderer::PerIterationBufferUpdate()
 void ReferenceRenderer::Draw()
 {
 	++m_iterationCount;
-	{
-		//m_iterationBuffer->BindImage(0, gl::Texture::ImageAccess::WRITE);
-		m_backbuffer->BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
+	
+	m_backbuffer->BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
 
-		m_pathtracerShader.Activate();
-		GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / 8, m_backbuffer->GetHeight() / 8, 1);
-	}
+	m_pathtracerShader.Activate();
+	GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / 8, m_backbuffer->GetHeight() / 8, 1);
 
 	PerIterationBufferUpdate();
 
