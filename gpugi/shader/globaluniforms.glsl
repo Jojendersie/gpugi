@@ -1,9 +1,9 @@
-layout(binding = 0, std140) uniform GlobalConst
+layout(binding = 0, shared) uniform GlobalConst
 {
 	uvec2 BackbufferSize;
 };
 
-layout(binding = 1, std140) uniform Camera
+layout(binding = 1, shared) uniform Camera
 {
 	vec3 CameraU;
 	vec3 CameraV;
@@ -11,13 +11,14 @@ layout(binding = 1, std140) uniform Camera
 	vec3 CameraPosition;
 };
 
-layout(binding = 2, std140) uniform PerIteration
+layout(binding = 2, shared) uniform PerIteration
 {
 	uint FrameSeed;
 	uint NumLightSamples;
+	uint NumRaysPerLightSample;
 };
 
-layout(binding = 3, std140) uniform UMaterials
+layout(binding = 3, shared) uniform UMaterials
 {
 	// Minimal assured UBO size: 16KB
 	// Material size 64 Byte -> up to 256 materials.
