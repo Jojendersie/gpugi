@@ -133,7 +133,7 @@ namespace Details
 		static bool Cast(const std::string& from)
 		{
 			std::string str = from;
-			std::remove_if(str.begin(), str.end(), ::isspace);
+			str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end());
 			std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 			return str == "true" || VariantCast<std::string, int>::Cast(str) > 0;
 		}

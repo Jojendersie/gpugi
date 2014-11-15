@@ -390,7 +390,7 @@ void BVHBuilder::ExportMaterials( std::ofstream& _file, const std::string& _mate
 			std::cerr << "Material name to long: shortening.";
 		}
 		FileDecl::Material mat;
-		_snprintf(mat.material, 32, m_materials.RootNode[i].GetName().c_str());
+		std::strncpy(mat.material, m_materials.RootNode[i].GetName().c_str(), 32);
 		_file.write( (const char*)&mat, sizeof(FileDecl::Material) );
 	}
 }

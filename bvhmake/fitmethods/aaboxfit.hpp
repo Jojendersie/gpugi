@@ -25,6 +25,6 @@ public:
 
     virtual float GetMax(uint32 _index, int _dim) const override
     {
-        return m_manager->GetBoundingVolume<ε::Box>(_index).min[_dim];
+        return m_manager->GetBoundingVolume<ε::Box>(_index).max[_dim];
     }
 };
