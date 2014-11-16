@@ -5,9 +5,9 @@
 vec3 SampleUnitHemisphere(vec2 randomSample, vec3 U, vec3 V, vec3 W)
 {
     float phi = PI_2 * randomSample.x;
-    float r = sqrt(randomSample.y);
-    float x = r * cos(phi);
-    float y = r * sin(phi);
+    float sinTheta = sqrt(randomSample.y); // sin(acos(sqrt(1-x)))
+    float x = sinTheta * cos(phi);
+    float y = sinTheta * sin(phi);
     float z = sqrt(saturate(1.0 - x*x - y*y));
 	//float z = 1.0 - x*x -y*y;
     //z = z > 0.0 ? sqrt(z) : 0.0;
@@ -128,7 +128,7 @@ vec3 BRDF(vec3 incidentDirection, vec3 excidentDirection, int material, vec4 ref
 	preflect *= reflectiveness.xyz;
 	// Reflection vector
 	vec3 sampleDir = normalize(incidentDirection + (2.0 * cosTheta) * N);
-	float phongNormalization = (reflectiveness.w + 2.0) / 6.283185307;
+	float phongNormalization = (reflectiveness.w + 2.0) / PI_2;
 	excidentLight += preflect * (phongNormalization * pow(max(0.0,dot(sampleDir, excidentDirection)), reflectiveness.w));
 
 	// Refract/Absorb/Diffus
