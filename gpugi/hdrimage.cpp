@@ -3,7 +3,7 @@
 #include <fstream>
 
 
-void WritePfm(const ei::Vec4* _data, const ei::IVec2& _size, const std::string& _filename)
+void WritePfm(const ei::Vec4* _data, const ei::IVec2& _size, const std::string& _filename, std::uint32_t _divisor)
 {
 	std::ofstream file(_filename.c_str(), std::ios::binary);
 	if(!file.bad() && !file.fail())
@@ -18,7 +18,7 @@ void WritePfm(const ei::Vec4* _data, const ei::IVec2& _size, const std::string& 
 		{
 			for (int x = 0; x < _size.x; ++x)
 			{
-				ei::Vec3 outV(v->x / v->a, v->y / v->a, v->z / v->a);
+				ei::Vec3 outV(v->x / _divisor, v->y / _divisor, v->z / _divisor);
 				file.write(reinterpret_cast<const char*>(&outV), sizeof(float) * 3);
 				++v;
 			}

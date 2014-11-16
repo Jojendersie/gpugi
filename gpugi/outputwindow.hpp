@@ -31,7 +31,7 @@ public:
 	/// Returns GLFW window.
 	GLFWwindow* GetGLFWWindow() { return window; }
 
-	void DisplayHDRTexture(gl::Texture2D& texture);
+	void DisplayHDRTexture(gl::Texture2D& texture, std::uint32_t _divisor);
 
 	void Present();
 

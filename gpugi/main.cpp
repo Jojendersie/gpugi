@@ -66,7 +66,6 @@ public:
 
 		// Renderer...
 		LOG_LVL2("Init renderer ...");
-		m_renderer.reset(new ReferenceRenderer(*m_camera));
 		GlobalConfig::AddParameter("sceneFilename", { std::string("") }, "Change this value to load a new scene.");
 		GlobalConfig::AddListener("sceneFilename", "LoadScene", [=](const GlobalConfig::ParameterType p) {
 			std::string sceneFilename = p[0].As<std::string>();
@@ -132,7 +131,7 @@ private:
 	{
 		m_renderer->Draw();
 
-		m_window->DisplayHDRTexture(m_renderer->GetBackbuffer());
+		m_window->DisplayHDRTexture(m_renderer->GetBackbuffer(), m_renderer->GetIterationCount());
 		m_window->Present();
 	}
 
@@ -161,7 +160,7 @@ private:
 		gl::Texture2D& backbuffer = m_renderer->GetBackbuffer();
 		std::unique_ptr<ei::Vec4[]> imageData(new ei::Vec4[backbuffer.GetWidth() * backbuffer.GetHeight()]);
 		backbuffer.ReadImage(0, gl::TextureReadFormat::RGBA, gl::TextureReadType::FLOAT, backbuffer.GetWidth() * backbuffer.GetHeight() * sizeof(ei::Vec4), imageData.get());
-		WritePfm(imageData.get(), ei::IVec2(backbuffer.GetWidth(), backbuffer.GetHeight()), filename);
+		WritePfm(imageData.get(), ei::IVec2(backbuffer.GetWidth(), backbuffer.GetHeight()), filename, m_renderer->GetIterationCount());
 		LOG_LVL1("Wrote screenshot \"" + filename + "\"");
 	}
 

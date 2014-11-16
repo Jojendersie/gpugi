@@ -137,14 +137,17 @@ void OutputWindow::SetTitle(const std::string& windowTitle)
 	glfwSetWindowTitle(window, windowTitle.c_str());
 }
 
-void OutputWindow::DisplayHDRTexture(gl::Texture2D& texture)
+void OutputWindow::DisplayHDRTexture(gl::Texture2D& texture, std::uint32_t _divisor)
 {
 	bool srgboutput = GlobalConfig::GetParameter("srgb")[0].As<bool>();
 	if (srgboutput)
 		glEnable(GL_FRAMEBUFFER_SRGB);
 
+
 	texture.Bind(0);
 	displayHDR.Activate();
+
+	glUniform1ui(0, _divisor);
 	screenTri->Draw();
 
 	if (srgboutput)
