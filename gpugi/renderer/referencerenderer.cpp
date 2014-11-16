@@ -105,7 +105,7 @@ void ReferenceRenderer::PerIterationBufferUpdate()
 {
 	m_perIterationUBO.GetBuffer()->Map();
 	m_perIterationUBO["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
-	m_perIterationUBO["NumLightSamples"].Set(m_numInitialLightSamples); // todo
+	m_perIterationUBO["NumLightSamples"].Set(static_cast<std::int32_t>(m_numInitialLightSamples)); // todo
 	m_perIterationUBO.GetBuffer()->Flush();
 
 	// There could be some performance gain in double/triple buffering this buffer.

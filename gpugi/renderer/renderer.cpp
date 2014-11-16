@@ -18,7 +18,7 @@ void Renderer::InitStandardUBOs(const gl::ShaderObject& _reflectionShader)
 {
 	m_globalConstUBO.Init(_reflectionShader, "GlobalConst");
 	m_globalConstUBO.GetBuffer()->Map();
-	m_globalConstUBO["BackbufferSize"].Set(ei::UVec2(m_backbuffer->GetWidth(), m_backbuffer->GetHeight()));
+	m_globalConstUBO["BackbufferSize"].Set(ei::IVec2(m_backbuffer->GetWidth(), m_backbuffer->GetHeight()));
 	m_globalConstUBO.BindBuffer(0);
 
 	m_cameraUBO.Init(_reflectionShader, "Camera");
@@ -48,6 +48,6 @@ void Renderer::OnResize(const ei::UVec2& _newSize)
 	CreateBackbuffer(_newSize);
 
 	m_globalConstUBO.GetBuffer()->Map();
-	m_globalConstUBO["BackbufferSize"].Set(_newSize);
+	m_globalConstUBO["BackbufferSize"].Set(ei::IVec2(_newSize.x, _newSize.y));
 	m_globalConstUBO.GetBuffer()->Unmap();
 }
