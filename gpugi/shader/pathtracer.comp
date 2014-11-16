@@ -81,11 +81,11 @@ void main()
 
 			if(!TraceRayAnyHit(lightRay, rayHit))
 			{
-				vec4 lightSampleLumPrev = texelFetch(LightSampleBuffer, sampleIndex * 2 + 1);
+				vec4 lightSampleFlux = texelFetch(LightSampleBuffer, sampleIndex * 2 + 1);
 				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, reflectiveness, opacity, diffuse, hitNormal);
-				vec3 illuminance = (lightSampleWeight *		// Divide by p for Montecarlo
-					saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleLumPrev.xyz;
-				color += illuminance * rayColor * brdf; 
+				vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
+								dot(lightRay.Direction, hitNormal) / lightDistSq) * lightSampleFlux.xyz;
+				color += irradiance * rayColor * brdf; 
 			}
 		}
 
