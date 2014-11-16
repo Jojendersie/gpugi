@@ -56,9 +56,8 @@ namespace gl
 	void Texture::ClearToZero(std::uint32_t _mipLevel)
 	{
 		Assert(m_numMipLevels > _mipLevel, "Miplevel " + std::to_string(_mipLevel) + " not available, texture has only " + std::to_string(m_numMipLevels) + " levels!");
-		
-		unsigned int zeroData[] = { 0, 0, 0, 0 }; // This the maximum known size per pixel.
-		GL_CALL(glClearTexImage, m_textureHandle, _mipLevel, gl::TextureFormatToGLBaseInternal[static_cast<unsigned int>(m_format)], GL_UNSIGNED_INT, zeroData);
+
+		GL_CALL(glClearTexImage, m_textureHandle, _mipLevel, gl::TextureFormatToGLBaseInternal[static_cast<unsigned int>(m_format)], GL_UNSIGNED_INT, nullptr);
 	}
 
 	void Texture::Bind(GLuint slotIndex)
