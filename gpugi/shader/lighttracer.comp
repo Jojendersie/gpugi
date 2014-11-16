@@ -40,9 +40,9 @@ layout(binding = 4, std140) uniform LightPathTrace
 
 // coherent is necessary!
 layout(binding = 0, rgba32f) coherent uniform image2D OutputTexture;
-layout(binding = 1, r32i) coherent uniform iimage2D LockTexture;
+layout(binding = 1, r32ui) coherent uniform uimage2D LockTexture;
 
-layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
 	uint randomSeed = InitRandomSeed(FrameSeed, gl_GlobalInvocationID.x);
@@ -112,19 +112,25 @@ void main()
 					// Add Sample.
 					ivec2 pixelCoord = ivec2((screenCoord*0.5 + vec2(0.5)) * BackbufferSize);
 
-					// Lock pixel
-					int lock = 0;
+					// Lock pixel - there is a lot you can do wrong!
+					// * ..due to shared command counter
+					// * ..due to buggy glsl optimizations
+					// -> Good overview: http://stackoverflow.com/questions/21538555/broken-glsl-spinlock-glsl-locks-compendium
+					bool hasWritten = false; // Do not use break; instead. There's a bug in the GLSL optimizer!
 					do {
-						lock = imageAtomicCompSwap(LockTexture, pixelCoord, 0, 1);
-					} while(lock == 1);
+						if(imageAtomicCompSwap(LockTexture, pixelCoord, uint(0), uint(1)) == 0)
+						{
+							memoryBarrier();
 
-					// Add sample
-					vec4 imageVal = imageLoad(OutputTexture, pixelCoord);
-					imageStore(OutputTexture, pixelCoord, vec4(imageVal.xyz + color, imageVal.w));
-					memoryBarrier(); // Ensure next one reads the previously written value
-
-					// Release Lock
-					imageAtomicExchange(LockTexture, pixelCoord, 0);
+							// Add sample
+							vec4 imageVal = imageLoad(OutputTexture, pixelCoord);
+							imageStore(OutputTexture, pixelCoord, vec4(imageVal.xyz + color, imageVal.w));
+							
+							// Release Lock
+							imageAtomicExchange(LockTexture, pixelCoord, 0);
+							hasWritten = true;
+						}
+					} while(!hasWritten);
 				}
 			}
 		}

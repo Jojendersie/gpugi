@@ -11,7 +11,7 @@
 #include "../scene/scene.hpp"
 #include "../scene/lighttrianglesampler.hpp"
 
-#define LOCAL_SIZE 256
+#define LOCAL_SIZE 64
 
 LightPathTracer::LightPathTracer(const Camera& _initialCamera) :
 	m_lighttraceShader("lighttracer"),
@@ -45,7 +45,6 @@ LightPathTracer::LightPathTracer(const Camera& _initialCamera) :
 	glBlendFunc(GL_ONE, GL_ONE);
 
 	InitStandardUBOs(m_lighttraceShader);
-	SetCamera(_initialCamera);
 }
 
 void LightPathTracer::SetCamera(const Camera& _camera)
@@ -94,7 +93,7 @@ void LightPathTracer::OnResize(const ei::UVec2& _newSize)
 	m_iterationCount = 0;
 	m_backbuffer->ClearToZero(0);
 
-	m_lockTexture.reset(new gl::Texture2D(_newSize.x, _newSize.y, gl::TextureFormat::R32I));
+	m_lockTexture.reset(new gl::Texture2D(_newSize.x, _newSize.y, gl::TextureFormat::R32UI));
 	m_lockTexture->ClearToZero(0);
 	m_lockTexture->BindImage(1, gl::Texture::ImageAccess::READ_WRITE);
 

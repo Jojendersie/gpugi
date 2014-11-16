@@ -26,7 +26,7 @@ namespace gl
 		/// Binds as image.
 		///
 		/// Without redundancy checking! Does not perform checks if texture format is valid (see http://docs.gl/gl4/glBindImageTexture)!
-		void BindImage(GLuint slotIndex, ImageAccess access) { BindImage(0, access, m_format); }
+		void BindImage(GLuint slotIndex, ImageAccess access) { BindImage(slotIndex, access, m_format); }
 		void BindImage(GLuint slotIndex, ImageAccess access, TextureFormat format);
 
 		/// Reads image via glGetImage (http://docs.gl/gl4/glGetTexImage)
