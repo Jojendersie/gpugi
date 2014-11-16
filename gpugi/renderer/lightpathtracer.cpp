@@ -13,7 +13,7 @@
 
 #define LOCAL_SIZE 64
 
-LightPathTracer::LightPathTracer(const Camera& _initialCamera) :
+LightPathTracer::LightPathTracer() :
 	m_lighttraceShader("lighttracer"),
 
 	m_numInitialLightSamples(256)
@@ -45,6 +45,12 @@ LightPathTracer::LightPathTracer(const Camera& _initialCamera) :
 	glBlendFunc(GL_ONE, GL_ONE);
 
 	InitStandardUBOs(m_lighttraceShader);
+}
+
+LightPathTracer::~LightPathTracer()
+{
+	gl::Texture::ResetImageBinding(0);
+	gl::Texture::ResetImageBinding(1);
 }
 
 void LightPathTracer::SetCamera(const Camera& _camera)
@@ -86,12 +92,13 @@ void LightPathTracer::SetScene(std::shared_ptr<Scene> _scene)
 	PerIterationBufferUpdate();
 }
 
-void LightPathTracer::OnResize(const ei::UVec2& _newSize)
+void LightPathTracer::SetScreenSize(const ei::IVec2& _newSize)
 {
-	Renderer::OnResize(_newSize);
+	Renderer::SetScreenSize(_newSize);
 	
 	m_iterationCount = 0;
-	m_backbuffer->ClearToZero(0);
+
+	m_backbuffer->BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
 
 	m_lockTexture.reset(new gl::Texture2D(_newSize.x, _newSize.y, gl::TextureFormat::R32UI));
 	m_lockTexture->ClearToZero(0);
@@ -123,8 +130,6 @@ void LightPathTracer::PerIterationBufferUpdate()
 void LightPathTracer::Draw()
 {
 	++m_iterationCount;
-	
-	m_backbuffer->BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
 
 	m_lighttraceShader.Activate();
 	GL_CALL(glDispatchCompute, m_numInitialLightSamples * m_numRaysPerLightSample / LOCAL_SIZE, 1, 1);

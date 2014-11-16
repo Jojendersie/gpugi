@@ -4,7 +4,7 @@
 namespace gl
 {
 
-	Texture* Texture::s_boundTextures[32];
+	Texture* Texture::s_boundTextures[Texture::m_numTextureBindings];
 
 	Texture::Texture(std::uint32_t width, std::uint32_t height, std::uint32_t depth, TextureFormat format, std::int32_t numMipLevels, std::uint32_t numMSAASamples) :
 		m_width(width),

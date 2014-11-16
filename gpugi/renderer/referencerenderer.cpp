@@ -14,7 +14,7 @@
 #include <fstream>
 
 
-ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
+ReferenceRenderer::ReferenceRenderer() :
 	m_pathtracerShader("pathtracer"),
 	m_numInitialLightSamples(16)
 {
@@ -51,8 +51,10 @@ ReferenceRenderer::ReferenceRenderer(const Camera& _initialCamera) :
 	glBlendFunc(GL_ONE, GL_ONE);
 
 	InitStandardUBOs(m_pathtracerShader);
-	SetCamera(_initialCamera);
 }
+
+ReferenceRenderer::~ReferenceRenderer()
+{}
 
 void ReferenceRenderer::SetCamera(const Camera& _camera)
 {
@@ -93,17 +95,14 @@ void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
 	PerIterationBufferUpdate();
 }
 
-void ReferenceRenderer::OnResize(const ei::UVec2& _newSize)
+void ReferenceRenderer::SetScreenSize(const ei::IVec2& _newSize)
 {
-	Renderer::OnResize(_newSize);
-	
+	Renderer::SetScreenSize(_newSize);
 	m_iterationCount = 0;
-	m_backbuffer->ClearToZero(0);
 }
 
 void ReferenceRenderer::PerIterationBufferUpdate()
 {
-	m_perIterationUBO.GetBuffer()->Map();
 	m_perIterationUBO["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
 	m_perIterationUBO["NumLightSamples"].Set(static_cast<std::int32_t>(m_numInitialLightSamples)); // todo
 	m_perIterationUBO.GetBuffer()->Flush();
@@ -123,6 +122,8 @@ void ReferenceRenderer::Draw()
 	GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / 8, m_backbuffer->GetHeight() / 8, 1);
 
 	PerIterationBufferUpdate();
+
+	m_backbuffer->ResetImageBinding(0);
 
 	// Ensure that all future fetches will use the modified data.
 	// See https://www.opengl.org/wiki/Memory_Model#Ensuring_visibility

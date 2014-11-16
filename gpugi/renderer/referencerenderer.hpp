@@ -13,14 +13,18 @@ namespace gl
 class ReferenceRenderer : public Renderer
 {
 public:
-	ReferenceRenderer(const Camera& _initialCamera);
-	
+	ReferenceRenderer();
+	~ReferenceRenderer();
+
+	std::string GetName() const override { return "Pathtracer"; }
+
 	void SetScene(std::shared_ptr<Scene> _scene) override;
 	void SetCamera(const Camera& _camera) override;
+	void SetScreenSize(const ei::IVec2& newSize) override;
+
 	void Draw() override;
 
 protected:
-	void OnResize(const ei::UVec2& newSize) override;
 
 	void PerIterationBufferUpdate();
 

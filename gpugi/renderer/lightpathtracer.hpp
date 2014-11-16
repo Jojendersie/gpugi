@@ -14,14 +14,18 @@ namespace gl
 class LightPathTracer : public Renderer
 {
 public:
-	LightPathTracer(const Camera& _initialCamera);
+	LightPathTracer();
+	virtual ~LightPathTracer();
 	
+	std::string GetName() const override  { return "Lighttracer"; }
+
 	void SetScene(std::shared_ptr<Scene> _scene) override;
 	void SetCamera(const Camera& _camera) override;
+	void SetScreenSize(const ei::IVec2& newSize) override;
+
 	void Draw() override;
 
 protected:
-	void OnResize(const ei::UVec2& newSize) override;
 
 	void PerIterationBufferUpdate();
 

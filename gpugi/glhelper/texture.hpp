@@ -10,7 +10,7 @@ namespace gl
 	{
 	public:
 		Texture(std::uint32_t width, std::uint32_t height, std::uint32_t depth, TextureFormat format, std::int32_t numMipLevels, std::uint32_t numMSAASamples = 0);
-		~Texture();
+		virtual ~Texture();
 
 		/// Binds texture to the given slot.
 		void Bind(GLuint slot);

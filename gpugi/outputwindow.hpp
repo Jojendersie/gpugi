@@ -37,6 +37,8 @@ public:
 
 	void SetTitle(const std::string& windowTitle);
 
+	ei::IVec2 GetResolution();
+
 private:
 	void GetGLFWKeystates();
 	

@@ -29,7 +29,6 @@
 	#include <windows.h>
 #endif
 
-
 class Application
 {
 public:
@@ -54,27 +53,41 @@ public:
 		m_camera.reset(new InteractiveCamera(m_window->GetGLFWWindow(), ei::Vec3(0.0f), ei::Vec3(0.0f, 0.0f, 1.0f), 
 							GlobalConfig::GetParameter("resolution")[0].As<float>() / GlobalConfig::GetParameter("resolution")[1].As<int>(), 70.0f));
 		m_camera->ConnectToGlobalConfig();
+		auto updateCamera = [=](const GlobalConfig::ParameterType& p){
+			if (m_renderer)
+				m_renderer->SetCamera(*m_camera);
+		};
 		GlobalConfig::AddListener("resolution", "global camera aspect", [=](const GlobalConfig::ParameterType& p) {
 			m_camera->SetAspectRatio(p[0].As<float>() / p[1].As<float>());
-			m_renderer->SetCamera(*m_camera);
+			updateCamera(p);
+			if (m_renderer)
+			{
+				m_renderer->SetCamera(*m_camera);
+				m_renderer->SetScreenSize(ei::IVec2(p[0].As<int>(), p[1].As<int>()));
+			}
 		});
-		auto updateCamera = [=](const GlobalConfig::ParameterType& p){
-			this->m_renderer->SetCamera(*m_camera);
-		};
+
 		GlobalConfig::AddListener("cameraPos", "update renderer cam", updateCamera);
 		GlobalConfig::AddListener("cameraLookAt", "update renderer cam", updateCamera);
 		GlobalConfig::AddListener("cameraFOV", "update renderer cam", updateCamera);
 
-		// Renderer...
-		LOG_LVL2("Init renderer ...");
-		m_renderer.reset(new LightPathTracer(*m_camera));//ReferenceRenderer(*m_camera));
+
+		// Renderer change function.
+		GlobalConfig::AddParameter("renderer", { 0 }, "Change this value to change the active renderer (resets previous results!).\n"
+													  "0: Pathtracer (\"ReferenceRenderer\"\n"
+													  "1: Lightpathtracer");
+		GlobalConfig::AddListener("renderer", "ChangeRenderer", std::bind(&Application::SwitchRenderer, this, std::placeholders::_1));
+
+		// Scene change functions.
 		GlobalConfig::AddParameter("sceneFilename", { std::string("") }, "Change this value to load a new scene.");
-		GlobalConfig::AddListener("sceneFilename", "LoadScene", [=](const GlobalConfig::ParameterType p) {
+		GlobalConfig::AddListener("sceneFilename", "LoadScene", [=](const GlobalConfig::ParameterType& p) {
 			std::string sceneFilename = p[0].As<std::string>();
 			std::cout << "Loading scene " << sceneFilename;
 			m_scene = std::make_shared<Scene>(sceneFilename);
-			m_renderer->SetScene(m_scene);
+			if (m_renderer)
+				m_renderer->SetScene(m_scene);
 		});
+
 
 		// Load command script if there's a parameter
 		if (argc > 1)
@@ -94,6 +107,36 @@ public:
 #endif
 
 		m_scriptProcessing.StopConsoleWindowThread();
+	}
+
+	void SwitchRenderer(const GlobalConfig::ParameterType& p)
+	{
+		glFlush();
+		switch (p[0].As<int>())
+		{
+		case 0:
+			LOG_LVL2("Switching to Pathtracer...");
+			delete m_renderer.release();
+			m_renderer.reset(new ReferenceRenderer());
+			break;
+
+		case 1:
+			LOG_LVL2("Switching to LightPathtracer...");
+			delete m_renderer.release();
+			m_renderer.reset(new LightPathTracer());
+			break;
+
+		default:
+			LOG_ERROR("Unknown renderer index!");
+			return;
+		}
+
+		m_renderer->SetScreenSize(m_window->GetResolution());
+		m_renderer->SetCamera(*m_camera);
+		if (m_scene)
+		{
+			m_renderer->SetScene(m_scene);
+		}
 	}
 
 	void Run()
@@ -121,16 +164,24 @@ private:
 
 		Input();
 
-		if (m_camera->Update(timeSinceLastUpdate))
-			m_renderer->SetCamera(*m_camera);
+		if (m_renderer)
+		{
+			if (m_camera->Update(timeSinceLastUpdate))
+				m_renderer->SetCamera(*m_camera);
 
 
-		m_window->SetTitle("iteration: " + std::to_string(m_renderer->GetIterationCount()) + " - time per frame " + 
-							std::to_string(timeSinceLastUpdate.GetMilliseconds()) + "ms (FPS: " + std::to_string(1.0f / timeSinceLastUpdate.GetSeconds()));
+			m_window->SetTitle(m_renderer->GetName() + " - iteration: " + std::to_string(m_renderer->GetIterationCount()) + " - time per frame " +
+				std::to_string(timeSinceLastUpdate.GetMilliseconds()) + "ms (FPS: " + std::to_string(1.0f / timeSinceLastUpdate.GetSeconds()) + ")");
+		}
+		else
+			m_window->SetTitle("No renderer!");
 	}
 
 	void Draw()
 	{
+		if (!m_renderer)
+			return;
+
 		m_renderer->Draw();
 
 		m_window->DisplayHDRTexture(m_renderer->GetBackbuffer(), m_renderer->GetIterationCount());
@@ -155,6 +206,9 @@ private:
 
 	void SaveImage()
 	{
+		if (!m_renderer)
+			return;
+
 		time_t t = time(0);   // get time now
 		struct tm* now = localtime(&t);
 		std::string filename = m_screenShotName + " " + UIntToMinLengthString(now->tm_mon+1, 2) + "." + UIntToMinLengthString(now->tm_mday, 2) + " " +

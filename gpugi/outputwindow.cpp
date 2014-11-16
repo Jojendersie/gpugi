@@ -64,7 +64,7 @@ OutputWindow::OutputWindow() :
 	glGetError();
 
 #ifdef _DEBUG
-	gl::ActivateGLDebugOutput(gl::DebugSeverity::LOW);
+	gl::ActivateGLDebugOutput(gl::DebugSeverity::NOTIFICATION);
 #endif
 	
 	// Disable V-Sync
@@ -157,4 +157,12 @@ void OutputWindow::DisplayHDRTexture(gl::Texture2D& texture, std::uint32_t _divi
 void OutputWindow::Present()
 {
 	glfwSwapBuffers(window);
+}
+
+
+ei::IVec2 OutputWindow::GetResolution()
+{
+	ei::IVec2 resolution;
+	glfwGetWindowSize(window, &resolution.x, &resolution.y);
+	return resolution;
 }
