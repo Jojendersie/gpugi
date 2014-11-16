@@ -57,15 +57,12 @@ void Camera::DisconnectFromGlobalConfig()
 
 void Camera::ComputeCameraParams(ei::Vec3& cameraU, ei::Vec3& cameraV, ei::Vec3& cameraW) const
 {
-	float ulen, vlen, wlen;
-	cameraW.x = m_lookat.x - m_position.x;
-	cameraW.y = m_lookat.y - m_position.y;  /* Do not normalize W -- it implies focal length */
-	cameraW.z = m_lookat.z - m_position.z;
+	float ulen, vlen;
+	cameraW = ei::normalize(m_lookat - m_position);
 
-	wlen = sqrtf(ei::dot(cameraW, cameraW));
 	cameraU = ei::normalize(ei::cross(cameraW, m_up));
 	cameraV = ei::normalize(ei::cross(cameraU, cameraW));
-	ulen = wlen * tanf(m_hfov / 2.0f * 3.14159265358979323846f / 180.0f);
+	ulen = tanf(m_hfov / 2.0f * 3.14159265358979323846f / 180.0f);
 	cameraU.x *= ulen;
 	cameraU.y *= ulen;
 	cameraU.z *= ulen;

@@ -111,7 +111,7 @@ void LightPathTracer::SetScreenSize(const ei::IVec2& _newSize)
 	m_lightpathtraceUBO.GetBuffer()->Map();
 	m_lightpathtraceUBO["NumInitialLightSamples"].Set(static_cast<std::int32_t>(m_numInitialLightSamples));
 	m_lightpathtraceUBO["NumRaysPerLightSample"].Set(static_cast<std::int32_t>(m_numRaysPerLightSample));
-	m_lightpathtraceUBO["LightRayPixelWeight"].Set(static_cast<float>(numPixels) / m_numRaysPerLightSample * ei::PI * 2.0f); // Multiplied with 2*PI to account for hemispherical lights!
+	m_lightpathtraceUBO["LightRayPixelWeight"].Set(1.0f / m_numRaysPerLightSample);
 	m_lightpathtraceUBO.GetBuffer()->Unmap();
 }
 

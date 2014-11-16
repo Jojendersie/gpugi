@@ -9,6 +9,7 @@ layout(binding = 1, shared) uniform Camera
 	vec3 CameraV;
 	vec3 CameraW;
 	vec3 CameraPosition;
+	float PixelArea;
 };
 
 layout(binding = 2, shared) uniform PerIteration

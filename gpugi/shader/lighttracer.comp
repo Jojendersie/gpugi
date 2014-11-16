@@ -51,7 +51,7 @@ void main()
 	// TODO: Force whole group to operate on the same initial sample and load the sample into sharedmem
 	Ray ray;
 	vec4 lightSamplePosNorm = texelFetch(LightSampleBuffer, lightSampleIndex * 2);
-	vec3 rayColor = texelFetch(LightSampleBuffer, lightSampleIndex * 2 + 1).rgb * LightRayPixelWeight;
+	vec3 rayFlux = texelFetch(LightSampleBuffer, lightSampleIndex * 2 + 1).rgb * LightRayPixelWeight;
 	ray.Origin = lightSamplePosNorm.xyz;
 
 	vec2 normalPacked = unpackSnorm2x16(floatBitsToUint(lightSamplePosNorm.w));
@@ -83,10 +83,11 @@ void main()
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
 		Ray cameraRay;
 		cameraRay.Direction = CameraPosition - ray.Origin;
-		if(dot(CameraW, cameraRay.Direction) < 0.0) // Camera faces point?
+		float camViewDotRay = -dot(CameraW, cameraRay.Direction);
+		if(camViewDotRay > 0.0) // Camera faces point?
 		{
-			vec3 proj = -cameraRay.Direction;
-			proj = vec3(dot(CameraU, proj), dot(CameraV, proj), dot(CameraW, proj));
+			// Compute screen coord for this ray.
+			vec3 proj = vec3(-dot(CameraU, cameraRay.Direction), -dot(CameraV, cameraRay.Direction), camViewDotRay);
 			vec2 screenCoord = proj.xy / proj.z;
 			screenCoord.x /= dot(CameraU,CameraU);
 			screenCoord.y /= dot(CameraV,CameraV);
@@ -99,15 +100,22 @@ void main()
 				cameraRay.Direction /= cameraDist;
 				cameraRay.Origin = cameraRay.Direction * RAY_HIT_EPSILON + ray.Origin;
 
-				// Hits camera.
+				// Hits *pinhole* camera
 				if(!TraceRayAnyHit(cameraRay, cameraDist))
 				{
-					// Compute pdf conversion factor from image plane area to surface area
-					float imageToSurfaceFactor = 1.0 / cameraDistSq; // most likely not entirely correct. TODO
+					// Compute pdf conversion factor from image plane area to surface area.
+					// The problem: A pixel sees more than only a point! -> photometric distance law (E = I cosTheta / d²) not applicable!
+					// -> We need the solid angle and the projected area of the pixel in this point!
+					// Formulas explained in (6.2) http://www.maw.dk/3d_graphics_projects/downloads/Bidirectional%20Path%20Tracing%202009.pdf
+					// Also a look into SmallVCM the is a good idea!
+					float cosAtCamera = camViewDotRay / cameraDist; // = dot(-cameraRay.Direction, CameraW);
+					vec3 pixelPos = CameraU * screenCoord.x + CameraV * screenCoord.y + CameraW;
+					float eyeToPixelDistSq = dot(pixelPos,pixelPos);
+					float fluxToRadiance = eyeToPixelDistSq / (cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
+					float fluxToIrradiance = fluxToRadiance * dot(cameraRay.Direction, hitNormal) * PI; // TODO: reason for *PI not entirely clear!
 
 					vec3 brdf = BRDF(ray.Direction, cameraRay.Direction, triangle.w, reflectiveness, opacity, diffuse, hitNormal);
-					float illuminance = saturate(dot(cameraRay.Direction, hitNormal)) * imageToSurfaceFactor;
-					vec3 color = rayColor * brdf * illuminance;
+					vec3 color = rayFlux * fluxToIrradiance * brdf;
 
 					// Add Sample.
 					ivec2 pixelCoord = ivec2((screenCoord*0.5 + vec2(0.5)) * BackbufferSize);
@@ -145,9 +153,9 @@ void main()
 			float hitLuminance = GetLuminance(weight);
 			if(Random(randomSeed) > hitLuminance)
 				break;
-			rayColor *= weight / hitLuminance; // Only change in spectrum, no energy loss.
+			rayFlux *= weight / hitLuminance; // Only change in spectrum, no energy loss.
 #else
-			rayColor *= weight; // Absorption, not via Russion Roulette, but by color multiplication.
+			rayFlux *= weight; // Absorption, not via Russion Roulette, but by color multiplication.
 #endif
 		}
 	}
