@@ -10,6 +10,7 @@
 
 #include "renderer/testrenderer.hpp"
 #include "renderer/referencerenderer.hpp"
+#include "renderer/lightpathtracer.hpp"
 //#include "renderer/debugrenderer.hpp"
 
 #include "camera/interactivecamera.hpp"
@@ -66,6 +67,7 @@ public:
 
 		// Renderer...
 		LOG_LVL2("Init renderer ...");
+		m_renderer.reset(new LightPathTracer(*m_camera));//ReferenceRenderer(*m_camera));
 		GlobalConfig::AddParameter("sceneFilename", { std::string("") }, "Change this value to load a new scene.");
 		GlobalConfig::AddListener("sceneFilename", "LoadScene", [=](const GlobalConfig::ParameterType p) {
 			std::string sceneFilename = p[0].As<std::string>();

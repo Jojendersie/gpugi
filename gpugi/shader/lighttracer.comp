@@ -1,0 +1,148 @@
+#version 450
+#extension GL_ARB_bindless_texture : require
+#extension GL_NV_shader_atomic_float : require
+
+#include "helper.glsl"
+#include "scenedata.glsl"
+#include "intersectiontests.glsl"
+#include "random.glsl"
+#include "globaluniforms.glsl"
+#include "materials.glsl"
+
+// Debug variables for traceray.
+/*#define TRACERAY_DEBUG_VARS
+uint numBoxesVisited = 0;
+uint numTrianglesVisited = 0;*/
+
+// Two versions of trace ray.
+#include "traceray.glsl"
+#define ANY_HIT
+#include "traceray.glsl"
+#undef ANY_HIT
+
+#define RAY_HIT_EPSILON 0.001
+#define RAY_MAX 3.40282347e+38
+
+#define MAX_PATHLENGTH 16
+#define RUSSIAN_ROULETTE
+
+layout(binding = 4, std140) uniform LightPathTrace
+{
+	int NumInitialLightSamples;
+	int NumRaysPerLightSample;
+	float LightRayPixelWeight; // (Total num pixels) / (Total num light rays) 
+};
+
+
+// The problem: There is no atomic vec4 operation, even with GL_NV_shader_atomic_float
+// The solution: (Spin)Locks for every output pixel. (http://stackoverflow.com/questions/10652862/glsl-semaphores)
+// A possible alternative solution: Gather all events in a "append buffer" and apply them via classic vertex scattering (point rendering) and blending
+
+// coherent is necessary!
+layout(binding = 0, rgba32f) coherent uniform image2D OutputTexture;
+layout(binding = 1, r32i) coherent uniform iimage2D LockTexture;
+
+layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+	uint randomSeed = InitRandomSeed(FrameSeed, gl_GlobalInvocationID.x);
+	int lightSampleIndex = int(gl_GlobalInvocationID.x / NumRaysPerLightSample);
+
+	// TODO: Force whole group to operate on the same initial sample and load the sample into sharedmem
+	Ray ray;
+	vec4 lightSamplePosNorm = texelFetch(LightSampleBuffer, lightSampleIndex * 2);
+	vec3 rayColor = texelFetch(LightSampleBuffer, lightSampleIndex * 2 + 1).rgb * LightRayPixelWeight;
+	ray.Origin = lightSamplePosNorm.xyz;
+
+	vec2 normalPacked = unpackSnorm2x16(floatBitsToUint(lightSamplePosNorm.w));
+	normalPacked.x *= PI;
+	vec3 normal = UnpackNormal(normalPacked);
+	vec3 U, V;
+	CreateONB(normal, U, V);
+	ray.Direction = SampleUnitHemisphere(Random2(randomSeed), U, V, normal);
+
+	for(int i=0; i<MAX_PATHLENGTH; ++i)
+	{
+		// Trace ray.
+		Triangle triangle;
+		vec3 barycentricCoord;
+		float rayHit = RAY_MAX;
+		TraceRay(ray, rayHit, barycentricCoord, triangle);
+		if(rayHit == RAY_MAX)
+			break;
+
+		// Compute hit normal and texture coordinate.
+		vec3 hitNormal; vec2 hitTexcoord;
+		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
+		// Get Material infos.
+		vec4 reflectiveness = textureLod(sampler2D(Materials[triangle.w].reflectivenessTexHandle), hitTexcoord, 0.0);
+		vec3 opacity = textureLod(sampler2D(Materials[triangle.w].opacityTexHandle), hitTexcoord, 0.0).xyz;
+		vec3 diffuse = textureLod(sampler2D(Materials[triangle.w].diffuseTexHandle), hitTexcoord, 0.0).xyz;
+
+		// Try to connect to camera.
+		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
+		Ray cameraRay;
+		cameraRay.Direction = CameraPosition - ray.Origin;
+		if(dot(CameraW, cameraRay.Direction) < 0.0) // Camera faces point?
+		{
+			vec3 proj = -cameraRay.Direction;
+			proj = vec3(dot(CameraU, proj), dot(CameraV, proj), dot(CameraW, proj));
+			vec2 screenCoord = proj.xy / proj.z;
+			screenCoord.x /= dot(CameraU,CameraU);
+			screenCoord.y /= dot(CameraV,CameraV);
+
+			// Valid screencoors
+			if(screenCoord.x >= -1.0 && screenCoord.x < 1.0 && screenCoord.y > -1.0 && screenCoord.y <= 1.0)
+			{
+				float cameraDistSq = dot(cameraRay.Direction, cameraRay.Direction);
+				float cameraDist = sqrt(cameraDistSq);
+				cameraRay.Direction /= cameraDist;
+				cameraRay.Origin = cameraRay.Direction * RAY_HIT_EPSILON + ray.Origin;
+
+				// Hits camera.
+				if(!TraceRayAnyHit(cameraRay, cameraDist))
+				{
+					// Compute pdf conversion factor from image plane area to surface area
+					float imageToSurfaceFactor = 1.0 / cameraDistSq; // most likely not entirely correct. TODO
+
+					vec3 brdf = BRDF(ray.Direction, cameraRay.Direction, triangle.w, reflectiveness, opacity, diffuse, hitNormal);
+					float illuminance = saturate(dot(cameraRay.Direction, hitNormal)) * imageToSurfaceFactor;
+					vec3 color = rayColor * brdf * illuminance;
+
+					// Add Sample.
+					ivec2 pixelCoord = ivec2((screenCoord*0.5 + vec2(0.5)) * BackbufferSize);
+
+					// Lock pixel
+					int lock = 0;
+					do {
+						lock = imageAtomicCompSwap(LockTexture, pixelCoord, 0, 1);
+					} while(lock == 1);
+
+					// Add sample
+					vec4 imageVal = imageLoad(OutputTexture, pixelCoord);
+					imageStore(OutputTexture, pixelCoord, vec4(imageVal.xyz + color, imageVal.w));
+					memoryBarrier(); // Ensure next one reads the previously written value
+
+					// Release Lock
+					imageAtomicExchange(LockTexture, pixelCoord, 0);
+				}
+			}
+		}
+
+		// Bounce ray if not the last iteration.
+		//if(i+1 < MAX_NUM_BOUNCES) // Not using is faster on GM107 on 10.11.
+		{
+			vec3 weight;
+			ray.Direction = SampleBRDF(ray.Direction, triangle.w, reflectiveness, opacity, diffuse, randomSeed, hitNormal, weight);
+			ray.Origin = ray.Origin + RAY_HIT_EPSILON * sign(dot(ray.Direction, hitNormal)) * hitNormal;	// Go epsilon in sampling direction (refraction/reflection different)
+#ifdef RUSSIAN_ROULETTE
+			float hitLuminance = GetLuminance(weight);
+			if(Random(randomSeed) > hitLuminance)
+				break;
+			rayColor *= weight / hitLuminance; // Only change in spectrum, no energy loss.
+#else
+			rayColor *= weight; // Absorption, not via Russion Roulette, but by color multiplication.
+#endif
+		}
+	}
+}

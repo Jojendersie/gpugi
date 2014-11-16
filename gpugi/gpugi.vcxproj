@@ -166,6 +166,7 @@
     <ClCompile Include="hdrimage.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="outputwindow.cpp" />
+    <ClCompile Include="renderer\lightpathtracer.cpp" />
     <ClCompile Include="renderer\referencerenderer.cpp" />
     <ClCompile Include="renderer\renderer.cpp" />
     <ClCompile Include="renderer\testrenderer.cpp" />
@@ -200,6 +201,7 @@
     <ClInclude Include="glhelper\uniformbuffer.hpp" />
     <ClInclude Include="hdrimage.hpp" />
     <ClInclude Include="outputwindow.hpp" />
+    <ClInclude Include="renderer\lightpathtracer.hpp" />
     <ClInclude Include="renderer\referencerenderer.hpp" />
     <ClInclude Include="renderer\renderer.hpp" />
     <ClInclude Include="renderer\testrenderer.hpp" />
@@ -226,6 +228,7 @@
     <None Include="shader\globaluniforms.glsl" />
     <None Include="shader\helper.glsl" />
     <None Include="shader\intersectiontests.glsl" />
+    <None Include="shader\lighttracer.comp" />
     <None Include="shader\materials.glsl" />
     <None Include="shader\pathtracer.comp" />
     <None Include="shader\random.glsl" />

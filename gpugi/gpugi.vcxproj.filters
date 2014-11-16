@@ -141,6 +141,9 @@
     <ClCompile Include="scene\lighttrianglesampler.cpp">
       <Filter>code\scene</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\lightpathtracer.cpp">
+      <Filter>code\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -254,6 +257,9 @@
     <ClInclude Include="scene\lighttrianglesampler.hpp">
       <Filter>code\scene</Filter>
     </ClInclude>
+    <ClInclude Include="renderer\lightpathtracer.hpp">
+      <Filter>code\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="glhelper\uniformbuffer.inl">
@@ -296,6 +302,9 @@
       <Filter>shader</Filter>
     </None>
     <None Include="shader\traceray.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\lighttracer.comp">
       <Filter>shader</Filter>
     </None>
   </ItemGroup>
