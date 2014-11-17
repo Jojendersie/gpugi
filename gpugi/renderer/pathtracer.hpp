@@ -10,11 +10,11 @@ namespace gl
 	class TextureBufferView;
 }
 
-class ReferenceRenderer : public Renderer
+class Pathtracer : public Renderer
 {
 public:
-	ReferenceRenderer();
-	~ReferenceRenderer();
+	Pathtracer();
+	~Pathtracer();
 
 	std::string GetName() const override { return "Pathtracer"; }
 

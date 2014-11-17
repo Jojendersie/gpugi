@@ -111,9 +111,6 @@
     <ClCompile Include="camera\camera.cpp">
       <Filter>code\camera</Filter>
     </ClCompile>
-    <ClCompile Include="renderer\referencerenderer.cpp">
-      <Filter>code\renderer</Filter>
-    </ClCompile>
     <ClCompile Include="utilities\random.cpp">
       <Filter>code\utilities</Filter>
     </ClCompile>
@@ -142,6 +139,12 @@
       <Filter>code\scene</Filter>
     </ClCompile>
     <ClCompile Include="renderer\lightpathtracer.cpp">
+      <Filter>code\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\bidirectionalpathtracer.cpp">
+      <Filter>code\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\pathtracer.cpp">
       <Filter>code\renderer</Filter>
     </ClCompile>
   </ItemGroup>
@@ -221,9 +224,6 @@
     <ClInclude Include="camera\camera.hpp">
       <Filter>code\camera</Filter>
     </ClInclude>
-    <ClInclude Include="renderer\referencerenderer.hpp">
-      <Filter>code\renderer</Filter>
-    </ClInclude>
     <ClInclude Include="utilities\random.hpp">
       <Filter>code\utilities</Filter>
     </ClInclude>
@@ -258,6 +258,12 @@
       <Filter>code\scene</Filter>
     </ClInclude>
     <ClInclude Include="renderer\lightpathtracer.hpp">
+      <Filter>code\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\bidirectionalpathtracer.hpp">
+      <Filter>code\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\pathtracer.hpp">
       <Filter>code\renderer</Filter>
     </ClInclude>
   </ItemGroup>

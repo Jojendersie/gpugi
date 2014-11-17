@@ -11,11 +11,11 @@ namespace gl
 }
 
 // Renderer that uses only light path -> camera connections to render the image.
-class LightPathTracer : public Renderer
+class LightPathtracer : public Renderer
 {
 public:
-	LightPathTracer();
-	virtual ~LightPathTracer();
+	LightPathtracer();
+	virtual ~LightPathtracer();
 	
 	std::string GetName() const override  { return "Lighttracer"; }
 

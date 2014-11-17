@@ -13,7 +13,7 @@
 
 #define LOCAL_SIZE 64
 
-LightPathTracer::LightPathTracer() :
+LightPathtracer::LightPathtracer() :
 	m_lighttraceShader("lighttracer"),
 
 	m_numInitialLightSamples(256)
@@ -47,13 +47,13 @@ LightPathTracer::LightPathTracer() :
 	InitStandardUBOs(m_lighttraceShader);
 }
 
-LightPathTracer::~LightPathTracer()
+LightPathtracer::~LightPathtracer()
 {
 	gl::Texture::ResetImageBinding(0);
 	gl::Texture::ResetImageBinding(1);
 }
 
-void LightPathTracer::SetCamera(const Camera& _camera)
+void LightPathtracer::SetCamera(const Camera& _camera)
 {
 	Renderer::SetCamera(_camera);
 
@@ -62,7 +62,7 @@ void LightPathTracer::SetCamera(const Camera& _camera)
 }
 
 
-void LightPathTracer::SetScene(std::shared_ptr<Scene> _scene)
+void LightPathtracer::SetScene(std::shared_ptr<Scene> _scene)
 {
 	m_scene = _scene;
 	m_lightTriangleSampler.SetScene(m_scene);
@@ -94,7 +94,7 @@ void LightPathTracer::SetScene(std::shared_ptr<Scene> _scene)
 	PerIterationBufferUpdate();
 }
 
-void LightPathTracer::SetScreenSize(const ei::IVec2& _newSize)
+void LightPathtracer::SetScreenSize(const ei::IVec2& _newSize)
 {
 	Renderer::SetScreenSize(_newSize);
 	
@@ -117,7 +117,7 @@ void LightPathTracer::SetScreenSize(const ei::IVec2& _newSize)
 	m_lightpathtraceUBO.GetBuffer()->Unmap();
 }
 
-void LightPathTracer::PerIterationBufferUpdate()
+void LightPathtracer::PerIterationBufferUpdate()
 {
 	m_perIterationUBO.GetBuffer()->Map();
 	m_perIterationUBO["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
@@ -129,7 +129,7 @@ void LightPathTracer::PerIterationBufferUpdate()
 	m_initialLightSampleBuffer->GetBuffer()->Flush();
 }
 
-void LightPathTracer::Draw()
+void LightPathtracer::Draw()
 {
 	++m_iterationCount;
 
