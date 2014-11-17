@@ -70,18 +70,20 @@ void LightPathTracer::SetScene(std::shared_ptr<Scene> _scene)
 	// Bind buffer
 	m_triangleBuffer.reset(new gl::TextureBufferView());
 	m_triangleBuffer->Init(m_scene->GetTriangleBuffer(), gl::TextureBufferFormat::RGBA32I);
-	m_triangleBuffer->BindBuffer(0);
 
 	m_vertexPositionBuffer.reset(new gl::TextureBufferView());
 	m_vertexPositionBuffer->Init(m_scene->GetVertexPositionBuffer(), gl::TextureBufferFormat::RGB32F);
-	m_vertexPositionBuffer->BindBuffer(1);
 
 	m_vertexInfoBuffer.reset(new gl::TextureBufferView());
 	m_vertexInfoBuffer->Init(m_scene->GetVertexInfoBuffer(), gl::TextureBufferFormat::RGBA32F);
-	m_vertexInfoBuffer->BindBuffer(2);
 
 	m_hierarchyBuffer.reset(new gl::TextureBufferView());
 	m_hierarchyBuffer->Init(m_scene->GetHierarchyBuffer(), gl::TextureBufferFormat::RGBA32F);
+
+	// Bind after creation of all, because bindings are overwritten during construction
+	m_triangleBuffer->BindBuffer(0);
+	m_vertexPositionBuffer->BindBuffer(1);
+	m_vertexInfoBuffer->BindBuffer(2);
 	m_hierarchyBuffer->BindBuffer(3);
 
 	// Upload materials / set textures
