@@ -9,7 +9,10 @@ namespace gl
 	TextureBufferView::TextureBufferView() :
 		m_textureObject(0)
 	{
-        GL_CALL(glCreateTextures, GL_TEXTURE_BUFFER, 1, &m_textureObject);
+		if(glCreateTextures)
+			GL_CALL(glCreateTextures, GL_TEXTURE_BUFFER, 1, &m_textureObject);
+		else
+			GL_CALL(glGenTextures, 1, &m_textureObject);
 	}
 
 	TextureBufferView::~TextureBufferView()
@@ -20,8 +23,15 @@ namespace gl
     Result TextureBufferView::Init(std::shared_ptr<Buffer> _buffer, TextureBufferFormat _format)
     {
         m_buffer = _buffer;
-        GL_CALL(glTextureBuffer, m_textureObject, 
-			static_cast<GLenum>(_format), _buffer->GetBufferId());
+		if(glTextureBuffer)
+		{
+			GL_CALL(glTextureBuffer, m_textureObject, 
+				static_cast<GLenum>(_format), _buffer->GetBufferId());
+		} else {
+			BindBuffer(0);
+			GL_CALL(glTexBuffer, GL_TEXTURE_BUFFER, 
+				static_cast<GLenum>(_format), _buffer->GetBufferId());
+		}
 
         return SUCCEEDED;
     }

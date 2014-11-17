@@ -6,9 +6,3 @@ resolution = 1024, 768
 
 
 renderer=0
-waitIterations=200
-screenshot
-
-renderer=1
-waitIterations=200
-screenshot

@@ -1,4 +1,4 @@
-#version 450
+#version 440
 
 // input
 layout(location = 0) in vec2 vs_in_position;
