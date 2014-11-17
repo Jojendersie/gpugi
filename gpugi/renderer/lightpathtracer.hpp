@@ -49,5 +49,7 @@ private:
 	
 	std::shared_ptr<Scene> m_scene;
 	LightTriangleSampler m_lightTriangleSampler;
+
+	static const unsigned int m_localSizeLightPathtracer;
 };
 

@@ -13,6 +13,7 @@
 
 #include <fstream>
 
+const ei::UVec2 Pathtracer::m_localSizePathtracer = ei::UVec2(8, 8);
 
 Pathtracer::Pathtracer() :
 	m_pathtracerShader("pathtracer"),
@@ -121,7 +122,7 @@ void Pathtracer::Draw()
 	m_backbuffer->BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
 
 	m_pathtracerShader.Activate();
-	GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / 8, m_backbuffer->GetHeight() / 8, 1);
+	GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / m_localSizePathtracer.x, m_backbuffer->GetHeight() / m_localSizePathtracer.y, 1);
 
 	PerIterationBufferUpdate();
 

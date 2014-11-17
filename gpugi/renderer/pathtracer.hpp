@@ -42,8 +42,9 @@ private:
 	unsigned int m_numInitialLightSamples;
 	std::unique_ptr<gl::TextureBufferView> m_initialLightSampleBuffer;
 
-	
 	std::shared_ptr<Scene> m_scene;
 	LightTriangleSampler m_lightTriangleSampler;
+
+	static const ei::UVec2 m_localSizePathtracer;
 };
 
