@@ -116,11 +116,16 @@ namespace gl
 
 	void Buffer::Flush()
 	{
-		if(any(m_usageFlags & Usage::EXPLICIT_FLUSH))
+		Flush(m_mappedDataOffset, m_mappedDataSize);
+	}
+
+	void Buffer::Flush(std::uint32_t _offset, std::uint32_t _numBytes)
+	{
+		if (any(m_usageFlags & Usage::EXPLICIT_FLUSH))
 		{
 			// Flush only the part which was used.
 			GL_CALL(glFlushMappedNamedBufferRange, m_bufferObject,
-				m_mappedDataOffset, m_mappedDataSize);
+				_offset, _numBytes);
 		}
 	}
 
