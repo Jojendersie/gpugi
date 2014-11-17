@@ -48,14 +48,13 @@ struct Node
 	#error "No node type defined"
 #endif */
 
-layout(binding=4) uniform samplerBuffer LightSampleBuffer;
+layout(binding=4) uniform samplerBuffer InitialLightSampleBuffer;
 /*struct LightSample
 {
 	ei::Vec3 position;
-	std::int16_t normalThetaCos;	// normal.z
-	std::int16_t normalPhi;			// atan(normal.xy)
+	float normalPhi;			// atan2(normal.y, normal.x)
 	ei::Vec3 luminance;
-	std::int32_t previousLightSample; ///< Will be set to -1 for all "initial" samples.
+	float normalThetaCos;	// normal.z
 };*/
 
 struct Material

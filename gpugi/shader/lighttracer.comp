@@ -1,6 +1,5 @@
 #version 440
 #extension GL_ARB_bindless_texture : require
-#extension GL_NV_shader_atomic_float : require
 
 #include "helper.glsl"
 #include "scenedata.glsl"
@@ -36,7 +35,7 @@ layout(binding = 4, std140) uniform LightPathTrace
 
 // The problem: There is no atomic vec4 operation, even with GL_NV_shader_atomic_float
 // The solution: (Spin)Locks for every output pixel. (http://stackoverflow.com/questions/10652862/glsl-semaphores)
-// A possible alternative solution: Gather all events in a "append buffer" and apply them via classic vertex scattering (point rendering) and blending
+// A possible alternative solution: Gather all events in an "append buffer" and apply them via classic vertex scattering (point rendering) and blending
 
 // coherent is necessary!
 layout(binding = 0, rgba32f) coherent uniform image2D OutputTexture;
@@ -50,13 +49,12 @@ void main()
 
 	// TODO: Force whole group to operate on the same initial sample and load the sample into sharedmem
 	Ray ray;
-	vec4 lightSamplePosNorm = texelFetch(LightSampleBuffer, lightSampleIndex * 2);
-	vec3 rayFlux = texelFetch(LightSampleBuffer, lightSampleIndex * 2 + 1).rgb * LightRayPixelWeight;
-	ray.Origin = lightSamplePosNorm.xyz;
+	vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2);
+	vec4 lightFlux_Norm1 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2 + 1);
+	vec3 rayFlux = lightFlux_Norm1.xyz * LightRayPixelWeight;
+	ray.Origin = lightSamplePos_Norm0.xyz;
 
-	vec2 normalPacked = unpackSnorm2x16(floatBitsToUint(lightSamplePosNorm.w));
-	normalPacked.x *= PI;
-	vec3 normal = UnpackNormal(normalPacked);
+	vec3 normal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightFlux_Norm1.w));
 	vec3 U, V;
 	CreateONB(normal, U, V);
 	ray.Direction = SampleUnitHemisphere(Random2(randomSeed), U, V, normal);
