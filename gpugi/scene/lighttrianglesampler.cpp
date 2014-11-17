@@ -17,7 +17,7 @@ void LightTriangleSampler::SetScene(std::shared_ptr<const Scene> _scene)
 
 void LightTriangleSampler::GenerateRandomSamples(LightSample* _destinationBuffer, unsigned int _numSamples, float _positionBias)
 {
-	float sampleWeight = 1.0f / _numSamples;
+	float sampleWeight = ei::PI * m_scene->GetLightAreaSum() / _numSamples;
 
 	for (unsigned int sampleIdx = 0; sampleIdx < _numSamples; ++sampleIdx, ++_destinationBuffer)
 	{
@@ -25,8 +25,8 @@ void LightTriangleSampler::GenerateRandomSamples(LightSample* _destinationBuffer
 		m_randomSeed = Xorshift(m_randomSeed, randomTriangle);
 
 		// Search triangle.
-		const float* lightTriangleSummedArea = std::lower_bound(m_scene->GetLightSummedArea(), m_scene->GetLightSummedArea() + m_scene->GetNumLightTriangles(), randomTriangle);
-		unsigned int triangleIdx = static_cast<unsigned int>(lightTriangleSummedArea - m_scene->GetLightSummedArea());
+		const float* lightTriangleSummedArea = std::lower_bound(m_scene->GetLightSummedAreaTable(), m_scene->GetLightSummedAreaTable() + m_scene->GetNumLightTriangles(), randomTriangle);
+		unsigned int triangleIdx = static_cast<unsigned int>(lightTriangleSummedArea - m_scene->GetLightSummedAreaTable());
 		Assert(triangleIdx < m_scene->GetNumLightTriangles(), "Impossible triangle index. Error in random number generator or light summed area table.");
 
 		// Compute random barycentric coordinates.

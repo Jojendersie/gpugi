@@ -367,9 +367,9 @@ void Scene::LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::uniqu
 	// Normalize the sum
 	if (!m_lightSummedArea.empty())
 	{
-		float maxSum = m_lightSummedArea.back();
+		m_lightAreaSum = m_lightSummedArea.back();
 		for (size_t i = 0; i < m_lightSummedArea.size(); ++i)
-			m_lightSummedArea[i] /= maxSum;
+			m_lightSummedArea[i] /= m_lightAreaSum;
 	}
 }
 

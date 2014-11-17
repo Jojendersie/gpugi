@@ -108,13 +108,18 @@ void main()
 					// -> We need the solid angle and the projected area of the pixel in this point!
 					// Formulas explained in (6.2) http://www.maw.dk/3d_graphics_projects/downloads/Bidirectional%20Path%20Tracing%202009.pdf
 					// Also a look into SmallVCM the is a good idea!
-					float cosAtCamera = camViewDotRay / cameraDist; // = dot(-cameraRay.Direction, CameraW);
-					vec3 pixelPos = CameraU * screenCoord.x + CameraV * screenCoord.y + CameraW;
-					float eyeToPixelDistSq = dot(pixelPos,pixelPos);
-					float fluxToRadiance = eyeToPixelDistSq / (cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
-					float fluxToIrradiance = fluxToRadiance * dot(cameraRay.Direction, hitNormal) * PI; // TODO: reason for *PI not entirely clear!
+					
+					// The distance to the image plane  is length(CameraW) == 1.
+					// 1/cos == length(pixelPos)
+					// vec3 pixelPos = CameraU * screenCoord.x + CameraV * screenCoord.y + CameraW;
+					
+					float cosAtCameraPow4 = camViewDotRay / cameraDist; // = dot(-cameraRay.Direction, CameraW);
+					cosAtCameraPow4 *= cosAtCameraPow4;
+					cosAtCameraPow4 *= cosAtCameraPow4;
+					float fluxToRadiance = 1.0 / (cosAtCameraPow4 * PixelArea * cameraDistSq);
+					float fluxToIrradiance = fluxToRadiance * dot(cameraRay.Direction, hitNormal);
 
-					vec3 brdf = BRDF(ray.Direction, cameraRay.Direction, triangle.w, reflectiveness, opacity, diffuse, hitNormal);
+					vec3 brdf = BRDF(cameraRay.Direction, ray.Direction, triangle.w, reflectiveness, opacity, diffuse, hitNormal);
 					vec3 color = rayFlux * fluxToIrradiance * brdf;
 
 					// Add Sample.

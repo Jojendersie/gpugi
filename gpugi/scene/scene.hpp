@@ -103,7 +103,8 @@ public:
 	uint32 GetNumLightTriangles() const			{ return static_cast<uint32>(m_lightTriangles.size()); }
 	const LightTriangle* GetLightTriangles() const	{ return m_lightTriangles.data(); }
 	// Normalized (to [0,1]) summed area for all light triangles
-	const float* GetLightSummedArea() const			{ return m_lightSummedArea.data(); }
+	const float* GetLightSummedAreaTable() const			{ return m_lightSummedArea.data(); }
+	float GetLightAreaSum() const				{ return m_lightAreaSum; }
 
 private:
 	std::shared_ptr<gl::Buffer> m_vertexPositionBuffer;
@@ -115,6 +116,7 @@ private:
 	std::vector<Material> m_materials;
 	uint32_t m_numTrianglesPerLeaf;
 	uint32_t m_numInnerNodes;
+	float m_lightAreaSum;
 	ε::Types3D m_bvType;
 	std::unordered_map<std::string, std::unique_ptr<gl::Texture2D>> m_textures;
 	const gl::SamplerObject& m_samplerLinearNoMipMap;
