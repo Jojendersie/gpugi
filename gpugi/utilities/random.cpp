@@ -43,3 +43,9 @@ std::uint64_t Xorshift(std::uint64_t rndState, float& random01)
 	random01 = static_cast<float>(rndState % 8388593) / 8388593.0f;
 	return rndState;
 }
+
+float Xorshift(std::uint64_t& _rndState, float _min, float _max)
+{
+	_rndState = Xorshift(_rndState);
+	return (static_cast<float>(_rndState % 8388593) / 8388593.0f) * (_max-_min) + _min;
+}
