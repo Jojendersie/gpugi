@@ -20,7 +20,8 @@ public:
     enum class BVType
     {
         AABOX,
-        SPHERE
+		SPHERE,
+        AAELLIPSOID
     };
 
     /// \param [inout] The builder holds the memory which is accessed by the method.
@@ -143,7 +144,7 @@ public:
 
     /// \brief Read/write access to bounding volumes
     template<typename T>
-    T& GetBoundingVolume( uint32 _index )   { assertlvl2(_index < m_maxInnerNodeCount, "Out-of-Bounds!"); return static_cast<T*>(m_bvbuffer)[_index]; }
+    T& GetBoundingVolume( uint32 _index )   { eiAssertWeak(_index < m_maxInnerNodeCount, "Out-of-Bounds!"); return static_cast<T*>(m_bvbuffer)[_index]; }
 
     /// \brief Read access to triangles.
     /// \details The triangle is constructed from index and vertex buffer on

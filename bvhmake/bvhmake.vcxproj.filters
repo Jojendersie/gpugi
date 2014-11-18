@@ -54,6 +54,9 @@
     <ClCompile Include="buildmethods\sweep.cpp">
       <Filter>code\buildmethods</Filter>
     </ClCompile>
+    <ClCompile Include="fitmethods\aaellipsoidfit.cpp">
+      <Filter>code\fitmethods</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bvhmake.hpp">
@@ -89,5 +92,16 @@
     <ClInclude Include="buildmethods\sweep.hpp">
       <Filter>code\buildmethods</Filter>
     </ClInclude>
+    <ClInclude Include="fitmethods\optimize.hpp">
+      <Filter>code\fitmethods</Filter>
+    </ClInclude>
+    <ClInclude Include="fitmethods\aaellipsoidfit.hpp">
+      <Filter>code\fitmethods</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fitmethods\optimize.inl">
+      <Filter>code\fitmethods</Filter>
+    </None>
   </ItemGroup>
 </Project>

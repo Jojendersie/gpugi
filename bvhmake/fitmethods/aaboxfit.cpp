@@ -11,10 +11,8 @@ void FitBox::operator()(uint32 _left, uint32 _right, uint32 _target) const
 
 void FitBox::operator()(FileDecl::Triangle* _tringles, uint32 _num, uint32 _target) const
 {
-   // FileDecl::Leaf& leaf = m_manager->GetLeaf( _leaf );
     Assert( IsTriangleValid(_tringles[0]),
         "Empty leaves not allowed." );
-    //Assert( leaf.numTriangles > 0, "Empty leaves not allowed." );
     // Box from first triangle
     ε::Box box( m_manager->GetTriangle(_tringles[0]) );
     // Add triangles successive

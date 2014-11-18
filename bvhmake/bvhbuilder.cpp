@@ -1,6 +1,7 @@
 ﻿#include "bvhmake.hpp"
 #include "filedef.hpp"
 #include "fitmethods/aaboxfit.hpp"
+#include "fitmethods/aaellipsoidfit.hpp"
 #include "buildmethods/kdtree.hpp"
 #include "buildmethods/sweep.hpp"
 #include "../gpugi/utilities/assert.hpp"
@@ -39,6 +40,7 @@ BVHBuilder::BVHBuilder() :
     m_buildMethods.insert( {"kdtree", new BuildKdtree(this)} );
 	m_buildMethods.insert( {"sweep", new BuildSweep(this)} );
     m_fitMethods.insert( {"aabox", new FitBox(this)} );
+	m_fitMethods.insert( {"ellipsoid", new FitEllipsoid(this)} );
 
     // Set defaults
     m_buildMethod = m_buildMethods["kdtree"];
@@ -242,8 +244,11 @@ void BVHBuilder::BuildBVH()
     case FitMethod::BVType::AABOX:
         m_bvbuffer = new ε::Box[m_maxInnerNodeCount];
         break;
-    case FitMethod::BVType::SPHERE:
+	case FitMethod::BVType::SPHERE:
         m_bvbuffer = new ε::Sphere[m_maxInnerNodeCount];
+        break;
+    case FitMethod::BVType::AAELLIPSOID:
+        m_bvbuffer = new ε::Ellipsoid[m_maxInnerNodeCount];
         break;
     default:
         break;
@@ -273,6 +278,9 @@ void BVHBuilder::ExportBVH( std::ofstream& _file )
         bvHeader.elementSize = sizeof(ε::Box);
         break;
     case FitMethod::BVType::SPHERE: strcpy( bvHeader.name, "bounding_sphere" );
+        bvHeader.elementSize = sizeof(ε::Sphere);
+        break;
+    case FitMethod::BVType::AAELLIPSOID: strcpy( bvHeader.name, "bounding_ellipsoid" );
         bvHeader.elementSize = sizeof(ε::Sphere);
         break;
     default: Assert( false, "Current geometry cannot be stored!" ); break;

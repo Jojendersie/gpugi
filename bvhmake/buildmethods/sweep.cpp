@@ -133,7 +133,7 @@ uint32 BuildSweep::Build( const std::unique_ptr<uint32[]>* _sorted, uint32 _min,
 		}
 
 		// Perform a split which resorts the arrays
-		assertlvl1(splitIndex < _max, "Unexpected split index.");
+		eiAssert(splitIndex < _max, "Unexpected split index.");
 		Split(_sorted, _min, _max, splitDimension, splitIndex);
 
 		// Go into recursion

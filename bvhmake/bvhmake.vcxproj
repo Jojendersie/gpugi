@@ -139,6 +139,7 @@
     <ClCompile Include="buildmethods\sweep.cpp" />
     <ClCompile Include="bvhbuilder.cpp" />
     <ClCompile Include="fitmethods\aaboxfit.cpp" />
+    <ClCompile Include="fitmethods\aaellipsoidfit.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -153,6 +154,11 @@
     <ClInclude Include="bvhmake.hpp" />
     <ClInclude Include="filedef.hpp" />
     <ClInclude Include="fitmethods\aaboxfit.hpp" />
+    <ClInclude Include="fitmethods\aaellipsoidfit.hpp" />
+    <ClInclude Include="fitmethods\optimize.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fitmethods\optimize.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
