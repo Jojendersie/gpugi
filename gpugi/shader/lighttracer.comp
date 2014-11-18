@@ -27,7 +27,6 @@ uint numTrianglesVisited = 0;*/
 
 layout(binding = 4, std140) uniform LightPathTrace
 {
-	int NumInitialLightSamples;
 	int NumRaysPerLightSample;
 	float LightRayPixelWeight; // (Total num pixels) / (Total num light rays) 
 };
