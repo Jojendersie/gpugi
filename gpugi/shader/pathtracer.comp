@@ -1,26 +1,4 @@
-#version 440
-#extension GL_ARB_bindless_texture : require
-
-#include "helper.glsl"
-#include "scenedata.glsl"
-#include "intersectiontests.glsl"
-#include "random.glsl"
-#include "globaluniforms.glsl"
-#include "materials.glsl"
-
-// Debug variables for traceray.
-/*#define TRACERAY_DEBUG_VARS
-uint numBoxesVisited = 0;
-uint numTrianglesVisited = 0;*/
-
-// Two versions of trace ray.
-#include "traceray.glsl"
-#define ANY_HIT
-#include "traceray.glsl"
-#undef ANY_HIT
-
-#define RAY_HIT_EPSILON 0.001
-#define RAY_MAX 3.40282347e+38
+#include "stdheader.glsl"
 
 #define NUM_LIGHT_SAMPLES 1
 #define MAX_PATHLENGTH 16
@@ -60,9 +38,7 @@ void main()
 		vec3 hitNormal; vec2 hitTexcoord;
 		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
 		// Get Material infos.
-		vec4 reflectiveness = textureLod(sampler2D(Materials[triangle.w].reflectivenessTexHandle), hitTexcoord, 0.0);
-		vec3 opacity = textureLod(sampler2D(Materials[triangle.w].opacityTexHandle), hitTexcoord, 0.0).xyz;
-		vec3 diffuse = textureLod(sampler2D(Materials[triangle.w].diffuseTexHandle), hitTexcoord, 0.0).xyz;
+		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
 
 		// Connect to random light samples ("Next Event Estimation")
 		Ray lightRay;
@@ -82,7 +58,7 @@ void main()
 			if(!TraceRayAnyHit(lightRay, rayHit))
 			{
 				vec3 lightSampleIntensity = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1).xyz;
-				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, reflectiveness, opacity, diffuse, hitNormal);
+				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
 				vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
 								dot(lightRay.Direction, hitNormal) / lightDistSq) * lightSampleIntensity;
 				color += irradiance * rayColor * brdf; 
@@ -93,7 +69,7 @@ void main()
 		//if(i+1 < MAX_NUM_BOUNCES) // Not using is faster on GM107 on 10.11.
 		{
 			vec3 weight;
-			ray.Direction = SampleBRDF(ray.Direction, triangle.w, reflectiveness, opacity, diffuse, randomSeed, hitNormal, weight);
+			ray.Direction = SampleBRDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, weight);
 			ray.Origin = ray.Origin + RAY_HIT_EPSILON * sign(dot(ray.Direction, hitNormal)) * hitNormal;	// Go epsilon in sampling direction (refraction/reflection different)
 #ifdef RUSSIAN_ROULETTE
 			float hitLuminance = GetLuminance(weight);
