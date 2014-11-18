@@ -1,11 +1,15 @@
-#include "lightpathtracer.hpp"
+#include "bidirectionalpathtracer.hpp"
 #include "../glhelper/texture2d.hpp"
 
-const unsigned int LightPathtracer::m_localSizeLightPathtracer = 8 * 8;
+const unsigned int BidirectionalPathtracer::m_localSizeLightPathtracer = 8*8;
+const ei::UVec2 BidirectionalPathtracer::m_localSizePathtracer = ei::UVec2(8, 8);
 
-LightPathtracer::LightPathtracer() :
-	m_lighttraceShader("lighttracer")
+BidirectionalPathtracer::BidirectionalPathtracer() :
+	m_lighttraceShader("lighttracer_bidir"),
+	m_pathtraceShader("pathtracer_bidir")
 {
+	m_pathtraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer.comp");
+	m_pathtraceShader.CreateProgram();
 	m_lighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp");
 	m_lighttraceShader.CreateProgram();
 
@@ -16,11 +20,11 @@ LightPathtracer::LightPathtracer() :
 	SetNumInitialLightSamples(256);
 }
 
-void LightPathtracer::SetScreenSize(const ei::IVec2& _newSize)
+void BidirectionalPathtracer::SetScreenSize(const ei::IVec2& _newSize)
 {
 	Renderer::SetScreenSize(_newSize);
 	m_backbuffer->BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
-	
+
 	m_iterationCount = 0;
 
 	m_lockTexture.reset(new gl::Texture2D(_newSize.x, _newSize.y, gl::TextureFormat::R32UI));
@@ -37,16 +41,22 @@ void LightPathtracer::SetScreenSize(const ei::IVec2& _newSize)
 	m_lightpathtraceUBO.GetBuffer()->Unmap();
 }
 
-void LightPathtracer::Draw()
+void BidirectionalPathtracer::Draw()
 {
-	++m_iterationCount;
+	m_iterationCount += 2;
 
 	m_lighttraceShader.Activate();
 	GL_CALL(glDispatchCompute, GetNumInitialLightSamples() * m_numRaysPerLightSample / m_localSizeLightPathtracer, 1, 1);
+
+	GL_CALL(glMemoryBarrier, GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+	m_pathtraceShader.Activate();
+	GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / m_localSizePathtracer.x, m_backbuffer->GetHeight() / m_localSizePathtracer.y, 1);
+
 
 	PerIterationBufferUpdate();
 
 	// Ensure that all future fetches will use the modified data.
 	// See https://www.opengl.org/wiki/Memory_Model#Ensuring_visibility
-	GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT);
+	GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }

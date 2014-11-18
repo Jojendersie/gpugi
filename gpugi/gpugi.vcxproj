@@ -170,7 +170,6 @@
     <ClCompile Include="renderer\lightpathtracer.cpp" />
     <ClCompile Include="renderer\pathtracer.cpp" />
     <ClCompile Include="renderer\renderer.cpp" />
-    <ClCompile Include="renderer\testrenderer.cpp" />
     <ClCompile Include="scene\lighttrianglesampler.cpp" />
     <ClCompile Include="scene\scene.cpp" />
     <ClCompile Include="Time\Implementation\Stopwatch.cpp" />
@@ -206,7 +205,6 @@
     <ClInclude Include="renderer\lightpathtracer.hpp" />
     <ClInclude Include="renderer\pathtracer.hpp" />
     <ClInclude Include="renderer\renderer.hpp" />
-    <ClInclude Include="renderer\testrenderer.hpp" />
     <ClInclude Include="scene\lighttrianglesampler.hpp" />
     <ClInclude Include="scene\scene.hpp" />
     <ClInclude Include="Time\Implementation\Time_inl.h" />
@@ -236,8 +234,7 @@
     <None Include="shader\random.glsl" />
     <None Include="shader\scenedata.glsl" />
     <None Include="shader\screenTri.vert" />
-    <None Include="shader\testcompute.comp" />
-    <None Include="shader\testraytrace.glsl" />
+    <None Include="shader\stdheader.glsl" />
     <None Include="shader\traceray.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -8,10 +8,9 @@
 #include "control/globalconfig.hpp"
 #include "control/scriptprocessing.hpp"
 
-#include "renderer/testrenderer.hpp"
 #include "renderer/pathtracer.hpp"
 #include "renderer/lightpathtracer.hpp"
-//#include "renderer/debugrenderer.hpp"
+#include "renderer/bidirectionalpathtracer.hpp"
 
 #include "camera/interactivecamera.hpp"
 
@@ -75,7 +74,8 @@ public:
 		// Renderer change function.
 		GlobalConfig::AddParameter("renderer", { 0 }, "Change this value to change the active renderer (resets previous results!).\n"
 													  "0: Pathtracer (\"ReferenceRenderer\"\n"
-													  "1: Lightpathtracer");
+													  "1: LightPathtracer\n"
+													  "2: BidirectionalPathtracer");
 		GlobalConfig::AddListener("renderer", "ChangeRenderer", std::bind(&Application::SwitchRenderer, this, std::placeholders::_1));
 
 		// Scene change functions.
@@ -124,6 +124,12 @@ public:
 			LOG_LVL2("Switching to LightPathtracer...");
 			delete m_renderer.release();
 			m_renderer.reset(new LightPathtracer());
+			break;
+
+		case 2:
+			LOG_LVL2("Switching to Bidirectional Pathtracer...");
+			delete m_renderer.release();
+			m_renderer.reset(new BidirectionalPathtracer());
 			break;
 
 		default:

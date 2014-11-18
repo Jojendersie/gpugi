@@ -11,18 +11,19 @@ namespace gl
 }
 
 // Renderer that uses only light path -> camera connections to render the image.
-class LightPathtracer : public Renderer
+class BidirectionalPathtracer : public Renderer
 {
 public:
-	LightPathtracer();
+	BidirectionalPathtracer();
 	
-	std::string GetName() const override  { return "Lighttracer"; }
+	std::string GetName() const override  { return "Bidirectional Pathtracer"; }
 
 	void SetScreenSize(const ei::IVec2& newSize) override;
 
 	void Draw() override;
 
 private:
+	gl::ShaderObject m_pathtraceShader;
 	gl::ShaderObject m_lighttraceShader;
 
 	std::unique_ptr<gl::Texture2D> m_lockTexture;
@@ -31,5 +32,6 @@ private:
 	gl::UniformBufferView m_lightpathtraceUBO;
 
 	static const unsigned int m_localSizeLightPathtracer;
+	static const ei::UVec2 m_localSizePathtracer;
 };
 

@@ -1,6 +1,7 @@
 layout(binding = 0, shared) uniform GlobalConst
 {
 	ivec2 BackbufferSize;
+	int NumInitialLightSamples;
 };
 
 layout(binding = 1, shared) uniform Camera
@@ -15,7 +16,6 @@ layout(binding = 1, shared) uniform Camera
 layout(binding = 2, shared) uniform PerIteration
 {
 	uint FrameSeed;
-	int NumLightSamples;
 };
 
 layout(binding = 3, shared) uniform UMaterials
