@@ -51,6 +51,9 @@
     <ClCompile Include="buildmethods\kdtree.cpp">
       <Filter>code\buildmethods</Filter>
     </ClCompile>
+    <ClCompile Include="buildmethods\sweep.cpp">
+      <Filter>code\buildmethods</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bvhmake.hpp">
@@ -81,6 +84,9 @@
       <Filter>code\fitmethods</Filter>
     </ClInclude>
     <ClInclude Include="buildmethods\kdtree.hpp">
+      <Filter>code\buildmethods</Filter>
+    </ClInclude>
+    <ClInclude Include="buildmethods\sweep.hpp">
       <Filter>code\buildmethods</Filter>
     </ClInclude>
   </ItemGroup>

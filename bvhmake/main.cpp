@@ -42,16 +42,16 @@ int main( int _numArgs, const char** _args )
     {
         std::cerr << "Expected at least one argument (the scene file to import)."
                      << std::endl << std::endl
-                  << "bvhmake.exe <scene file> m=[build method] g=[bounding"\
+                  << "bvhmake.exe <scene file> b=[build method] g=[bounding"\
                      "geometry type] o=[output directory]" << std::endl
                   << "  <scene file>: REQUIRED. Relative or absolute path and\n"\
                      "      file name. It is not possible to merge multiple files."
                      << std::endl
                   << "  b=[build method]: OPTIONAL. The valid arguments are:\n      "
-                     << builder.GetBuildMethods()
+                     << builder.GetBuildMethods() << std::endl
                      << "      The default is kdtree." << std::endl
-                  << "  g=[bounding geometry type]: OPTIONAL. The valid\n"\
-                     << builder.GetFitMethods()
+                  << "  g=[bounding geometry type]: OPTIONAL. The valid arguments are:\n      "\
+                     << builder.GetFitMethods() << std::endl
                      << "      The default is aabox." << std::endl
                   << "  o=[output directory]: OPTIONAL. A path where the scene\n"\
                      "      directory should be created. Otherwise the output is\n"\

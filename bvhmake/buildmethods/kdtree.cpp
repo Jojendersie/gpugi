@@ -89,14 +89,10 @@ uint32 BuildKdtree::Build( const std::unique_ptr<uint32[]>* _sorted, Vec3* _cent
     // Create a leaf if less than NUM_PRIMITIVES elements remain.
 	if( _max - _min < FileDecl::Leaf::NUM_PRIMITIVES )
 	{
-//		Assert( _sorted[0][_min] == _sorted[1][_min] && _sorted[0][_min] == _sorted[2][_min],
-//			"All sorted array should reference the same element!" );
-
         // Allocate a new leaf
         uint32 leafIdx = m_manager->GetNewLeaf();
         FileDecl::Leaf& leaf = m_manager->GetLeaf( leafIdx );
         // Fill it
-   //     leaf.numTriangles = _max - _min;
         FileDecl::Triangle* trianglesPtr = leaf.triangles;
         for( uint i = _min; i <= _max; ++i )
             *(trianglesPtr++) = m_manager->GetTriangleIdx( _sorted[0][i] );
@@ -109,7 +105,7 @@ uint32 BuildKdtree::Build( const std::unique_ptr<uint32[]>* _sorted, Vec3* _cent
         node.left = 0x80000000 | leafIdx;
 
         // Compute a bounding volume for the new node
-        (*fit)( leafIdx, nodeIdx );
+        (*fit)( trianglesPtr, _max - _min + 1, nodeIdx );
 
 		return nodeIdx;
 	}

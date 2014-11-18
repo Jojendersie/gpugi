@@ -8,7 +8,7 @@ public:
     FitBox(BVHBuilder* _manager) : FitMethod(_manager) {}
 
     virtual void operator()(uint32 _left, uint32 _right, uint32 _target) const override;
-    virtual void operator()(uint32 _leaf, uint32 _target) const override;
+    virtual void operator()(FileDecl::Triangle* _tringles, uint32 _num, uint32 _target) const override;
 
     virtual BVType Type() const override
     {

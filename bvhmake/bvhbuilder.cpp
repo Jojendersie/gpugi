@@ -2,6 +2,7 @@
 #include "filedef.hpp"
 #include "fitmethods/aaboxfit.hpp"
 #include "buildmethods/kdtree.hpp"
+#include "buildmethods/sweep.hpp"
 #include "../gpugi/utilities/assert.hpp"
 #include <assimp/matrix4x4.h>
 #include <assimp/scene.h>
@@ -36,6 +37,7 @@ BVHBuilder::BVHBuilder() :
 {
     // Register methods
     m_buildMethods.insert( {"kdtree", new BuildKdtree(this)} );
+	m_buildMethods.insert( {"sweep", new BuildSweep(this)} );
     m_fitMethods.insert( {"aabox", new FitBox(this)} );
 
     // Set defaults
