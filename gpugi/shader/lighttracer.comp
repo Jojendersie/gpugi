@@ -1,8 +1,5 @@
 #include "stdheader.glsl"
 
-#define MAX_PATHLENGTH 16
-#define RUSSIAN_ROULETTE
-
 layout(binding = 4, std140) uniform LightPathTrace
 {
 	int NumRaysPerLightSample;
@@ -121,20 +118,8 @@ void main()
 			}
 		}
 
-		// Bounce ray if not the last iteration.
-		//if(i+1 < MAX_NUM_BOUNCES) // Not using is faster on GM107 on 10.11.
-		{
-			vec3 weight;
-			ray.Direction = SampleBRDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, weight);
-			ray.Origin = ray.Origin + RAY_HIT_EPSILON * sign(dot(ray.Direction, hitNormal)) * hitNormal;	// Go epsilon in sampling direction (refraction/reflection different)
-#ifdef RUSSIAN_ROULETTE
-			float hitLuminance = GetLuminance(weight);
-			if(Random(randomSeed) > hitLuminance)
-				break;
-			rayFlux *= weight / hitLuminance; // Only change in spectrum, no energy loss.
-#else
-			rayFlux *= weight; // Absorption, not via Russion Roulette, but by color multiplication.
-#endif
-		}
+		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
+		if(!ContinuePath(rayFlux, ray, randomSeed, hitNormal, triangle.w, materialTexData))
+			break;
 	}
 }

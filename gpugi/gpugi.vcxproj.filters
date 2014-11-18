@@ -301,5 +301,8 @@
     <None Include="shader\traceray.glsl">
       <Filter>shader</Filter>
     </None>
+    <None Include="shader\stdheader.glsl">
+      <Filter>shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

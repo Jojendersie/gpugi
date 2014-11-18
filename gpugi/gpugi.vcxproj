@@ -234,6 +234,7 @@
     <None Include="shader\random.glsl" />
     <None Include="shader\scenedata.glsl" />
     <None Include="shader\screenTri.vert" />
+    <None Include="shader\stdheader.glsl" />
     <None Include="shader\traceray.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
