@@ -9,7 +9,7 @@
 #include "control/scriptprocessing.hpp"
 
 #include "renderer/testrenderer.hpp"
-#include "renderer/referencerenderer.hpp"
+#include "renderer/pathtracer.hpp"
 #include "renderer/lightpathtracer.hpp"
 //#include "renderer/debugrenderer.hpp"
 
@@ -117,13 +117,13 @@ public:
 		case 0:
 			LOG_LVL2("Switching to Pathtracer...");
 			delete m_renderer.release();
-			m_renderer.reset(new ReferenceRenderer());
+			m_renderer.reset(new Pathtracer());
 			break;
 
 		case 1:
 			LOG_LVL2("Switching to LightPathtracer...");
 			delete m_renderer.release();
-			m_renderer.reset(new LightPathTracer());
+			m_renderer.reset(new LightPathtracer());
 			break;
 
 		default:

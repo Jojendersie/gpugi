@@ -87,6 +87,9 @@ namespace gl
 		/// has no effect.
 		void Flush();
 
+		void Flush(std::uint32_t _offset, std::uint32_t _numBytes);
+
+
         /// Use glBufferSubData to update a range in the buffer.
 		/// \remarks
 		///		The Map methods are usually faster.

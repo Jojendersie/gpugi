@@ -10,11 +10,11 @@ namespace gl
 	class TextureBufferView;
 }
 
-class ReferenceRenderer : public Renderer
+class Pathtracer : public Renderer
 {
 public:
-	ReferenceRenderer();
-	~ReferenceRenderer();
+	Pathtracer();
+	~Pathtracer();
 
 	std::string GetName() const override { return "Pathtracer"; }
 
@@ -42,8 +42,9 @@ private:
 	unsigned int m_numInitialLightSamples;
 	std::unique_ptr<gl::TextureBufferView> m_initialLightSampleBuffer;
 
-	
 	std::shared_ptr<Scene> m_scene;
 	LightTriangleSampler m_lightTriangleSampler;
+
+	static const ei::UVec2 m_localSizePathtracer;
 };
 

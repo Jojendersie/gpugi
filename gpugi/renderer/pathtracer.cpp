@@ -1,4 +1,4 @@
-#include "referencerenderer.hpp"
+#include "pathtracer.hpp"
 
 #include "../utilities/random.hpp"
 #include "../utilities/flagoperators.hpp"
@@ -13,8 +13,9 @@
 
 #include <fstream>
 
+const ei::UVec2 Pathtracer::m_localSizePathtracer = ei::UVec2(8, 8);
 
-ReferenceRenderer::ReferenceRenderer() :
+Pathtracer::Pathtracer() :
 	m_pathtracerShader("pathtracer"),
 	m_numInitialLightSamples(16)
 {
@@ -53,10 +54,10 @@ ReferenceRenderer::ReferenceRenderer() :
 	InitStandardUBOs(m_pathtracerShader);
 }
 
-ReferenceRenderer::~ReferenceRenderer()
+Pathtracer::~Pathtracer()
 {}
 
-void ReferenceRenderer::SetCamera(const Camera& _camera)
+void Pathtracer::SetCamera(const Camera& _camera)
 {
 	Renderer::SetCamera(_camera);
 
@@ -65,7 +66,7 @@ void ReferenceRenderer::SetCamera(const Camera& _camera)
 }
 
 
-void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
+void Pathtracer::SetScene(std::shared_ptr<Scene> _scene)
 {
 	m_scene = _scene;
 	m_lightTriangleSampler.SetScene(m_scene);
@@ -97,13 +98,13 @@ void ReferenceRenderer::SetScene(std::shared_ptr<Scene> _scene)
 	PerIterationBufferUpdate();
 }
 
-void ReferenceRenderer::SetScreenSize(const ei::IVec2& _newSize)
+void Pathtracer::SetScreenSize(const ei::IVec2& _newSize)
 {
 	Renderer::SetScreenSize(_newSize);
 	m_iterationCount = 0;
 }
 
-void ReferenceRenderer::PerIterationBufferUpdate()
+void Pathtracer::PerIterationBufferUpdate()
 {
 	m_perIterationUBO["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
 	m_perIterationUBO["NumLightSamples"].Set(static_cast<std::int32_t>(m_numInitialLightSamples)); // todo
@@ -114,14 +115,14 @@ void ReferenceRenderer::PerIterationBufferUpdate()
 	m_initialLightSampleBuffer->GetBuffer()->Flush();
 }
 
-void ReferenceRenderer::Draw()
+void Pathtracer::Draw()
 {
 	++m_iterationCount;
 	
 	m_backbuffer->BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
 
 	m_pathtracerShader.Activate();
-	GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / 8, m_backbuffer->GetHeight() / 8, 1);
+	GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / m_localSizePathtracer.x, m_backbuffer->GetHeight() / m_localSizePathtracer.y, 1);
 
 	PerIterationBufferUpdate();
 

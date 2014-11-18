@@ -20,17 +20,22 @@ namespace gl
         GL_CALL(glDeleteTextures, 1, &m_textureObject);
 	}
 
-    Result TextureBufferView::Init(std::shared_ptr<Buffer> _buffer, TextureBufferFormat _format)
+	Result TextureBufferView::Init(std::shared_ptr<Buffer> _buffer, TextureBufferFormat _format)
+	{
+		return Init(_buffer, _format, 0, _buffer->GetSize());
+	}
+
+	Result TextureBufferView::Init(std::shared_ptr<Buffer> _buffer, TextureBufferFormat _format, std::uint32_t _offset, std::uint32_t _numBytes)
     {
         m_buffer = _buffer;
 		if(glTextureBuffer)
 		{
-			GL_CALL(glTextureBuffer, m_textureObject, 
-				static_cast<GLenum>(_format), _buffer->GetBufferId());
+			GL_CALL(glTextureBufferRange, m_textureObject, 
+				static_cast<GLenum>(_format), _buffer->GetBufferId(), _offset, _numBytes);
 		} else {
 			BindBuffer(0);
-			GL_CALL(glTexBuffer, GL_TEXTURE_BUFFER, 
-				static_cast<GLenum>(_format), _buffer->GetBufferId());
+			GL_CALL(glTexBufferRange, GL_TEXTURE_BUFFER, 
+				static_cast<GLenum>(_format), _buffer->GetBufferId(), _offset, _numBytes);
 		}
 
         return SUCCEEDED;
