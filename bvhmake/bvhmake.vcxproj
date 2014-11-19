@@ -129,7 +129,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\dependencies\epsilon\src\2dintersection.cpp" />
     <ClCompile Include="..\dependencies\epsilon\src\2dtypes.cpp" />
+    <ClCompile Include="..\dependencies\epsilon\src\3dintersection.cpp" />
     <ClCompile Include="..\dependencies\epsilon\src\3dtypes.cpp" />
     <ClCompile Include="..\gpugi\utilities\assert.cpp" />
     <ClCompile Include="..\gpugi\utilities\logger.cpp" />

@@ -57,6 +57,12 @@
     <ClCompile Include="fitmethods\aaellipsoidfit.cpp">
       <Filter>code\fitmethods</Filter>
     </ClCompile>
+    <ClCompile Include="..\dependencies\epsilon\src\3dintersection.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\epsilon\src\2dintersection.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bvhmake.hpp">

@@ -1,7 +1,30 @@
 ﻿#include "aaellipsoidfit.hpp"
-#include "ei/3dfunctions.hpp"
+#include "ei/3dintersection.hpp"
 #include "optimize.hpp"
 #include "../../gpugi/utilities/assert.hpp"
+
+ε::Ellipsoid fitFromCenter(const ε::Vec3* _vertexList, uint32 _num, ε::Vec3 _center)
+{
+	// Begin with an minimal ellipsoid at the given center and enlarge it
+	// successive
+	ε::Ellipsoid ellipsoid( _center, ε::Vec3(0.0f) );
+
+	for(uint32 i = 0; i < _num; ++i)
+	{
+		// Skip point if already contained
+		if( !ε::intersects(_vertexList[i], ellipsoid) )
+		{
+			// Compute volume minimal radii for an ellipsoid which contains
+			// the point
+			// Count number of dimensions via sum(präd) (if point lies on an axis
+			// the optimal ellipse or beam is smaller)
+			ε::Vec3 radii = sqrt((float)sum(_vertexList[i] != 0.0f)) * _vertexList[i];
+			// Enlarge only, thus a once added point can never fall outside.
+			// This is not necessarily optimal.
+			ellipsoid.radii = max(ellipsoid.radii, radii);
+		}
+	}
+}
 
 void FitEllipsoid::operator()(uint32 _left, uint32 _right, uint32 _target) const
 {
