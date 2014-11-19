@@ -63,28 +63,13 @@
     <ClCompile Include="..\dependencies\epsilon\src\2dintersection.cpp">
       <Filter>dependencies\epsilon</Filter>
     </ClCompile>
+    <ClCompile Include="..\gpugi\utilities\random.cpp">
+      <Filter>dependencies\utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bvhmake.hpp">
       <Filter>code</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gpugi\utilities\assert.hpp">
-      <Filter>dependencies\utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gpugi\utilities\logger.hpp">
-      <Filter>dependencies\utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gpugi\utilities\loggerinit.hpp">
-      <Filter>dependencies\utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gpugi\utilities\pathutils.hpp">
-      <Filter>dependencies\utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gpugi\utilities\policy.hpp">
-      <Filter>dependencies\utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gpugi\utilities\utils.hpp">
-      <Filter>dependencies\utilities</Filter>
     </ClInclude>
     <ClInclude Include="filedef.hpp">
       <Filter>code</Filter>

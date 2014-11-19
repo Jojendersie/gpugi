@@ -137,6 +137,7 @@
     <ClCompile Include="..\gpugi\utilities\logger.cpp" />
     <ClCompile Include="..\gpugi\utilities\pathutils.cpp" />
     <ClCompile Include="..\gpugi\utilities\policy.cpp" />
+    <ClCompile Include="..\gpugi\utilities\random.cpp" />
     <ClCompile Include="buildmethods\kdtree.cpp" />
     <ClCompile Include="buildmethods\sweep.cpp" />
     <ClCompile Include="bvhbuilder.cpp" />
@@ -145,12 +146,6 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\gpugi\utilities\assert.hpp" />
-    <ClInclude Include="..\gpugi\utilities\logger.hpp" />
-    <ClInclude Include="..\gpugi\utilities\loggerinit.hpp" />
-    <ClInclude Include="..\gpugi\utilities\pathutils.hpp" />
-    <ClInclude Include="..\gpugi\utilities\policy.hpp" />
-    <ClInclude Include="..\gpugi\utilities\utils.hpp" />
     <ClInclude Include="buildmethods\kdtree.hpp" />
     <ClInclude Include="buildmethods\sweep.hpp" />
     <ClInclude Include="bvhmake.hpp" />

@@ -26,7 +26,7 @@ void randomizeParameters(SwarmParticle<N>& _individual, const Vec<N>& _domainSiz
 	// Keep momentum reasonable -> [0.3,0.7]
 	_individual.damping = Xorshift(_rndState, 0.35f, 0.55f);
 	// Create a velocity which is in 1%-2% of the domain size
-	for( unsigned d = 0; d < D; ++d )
+	for( unsigned d = 0; d < N; ++d )
 		_individual.velocity[d] = Xorshift(_rndState, _domainSize[d]*0.01f, _domainSize[d]*0.02f );
 }
 
@@ -47,7 +47,7 @@ void populate(std::vector<SwarmParticle<N>>& _population, int _numNewIndividuals
 		for( int i = 0; i < num; ++i )
 		{
 			// Create a position inside cell x
-			SwarmParticle individual;
+			SwarmParticle<N> individual;
 			for( unsigned d = 0; d < N; ++d )
 				individual.position[d] = x[d] * domainSize[d] / cells
 								+ Xorshift(_rndState, 0.0f, domainSize[d]/cells);
@@ -73,17 +73,18 @@ void populate(std::vector<SwarmParticle<N>>& _population, int _numNewIndividuals
 	for( int i = num; i < _numNewIndividuals; ++i )
 	{
 		// Create a position which is inside the domain
-		Vec<N> individal;
+		SwarmParticle<N> individual;
 		for( unsigned d = 0; d < N; ++d )
-			individal[d] = Xorshift(_rndState, _min[d], _max[d]);
-		_population.push_back( individal );
+			individual.position[d] = Xorshift(_rndState, _min[d], _max[d]);
+		randomizeParameters( individual, domainSize, _rndState );
+		_population.push_back( individual );
 	}
 }
 
 template<unsigned N>
 Vec<N> optimize(const Vec<N>& _min, const Vec<N>& _max, std::function<float(const Vec<N>&)> _function)
 {
-	std::vector<Vec<N>>& population;
+	std::vector<SwarmParticle<N>> population;
 	uint64 rndState;
 	populate(population, 30, _min, _max, rndState);
 	return _min;

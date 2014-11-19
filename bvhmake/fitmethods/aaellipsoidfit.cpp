@@ -28,11 +28,6 @@
 
 void FitEllipsoid::operator()(uint32 _left, uint32 _right, uint32 _target) const
 {
-	// Decode position and radii
-	//Vec<6> minSearch(-1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f);
-	//Vec<6> maxSearch(-1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f);
-	//optimize<6>(minSearch, maxSearch, [](const Vec<6>&){ return 0.0f; });
-
 	// TESTING: use bounding boxes and fit ellipsoid around
 	auto& elll = m_manager->GetBoundingVolume<ε::Ellipsoid>(_left);
 	auto& ellr = m_manager->GetBoundingVolume<ε::Ellipsoid>(_right);
@@ -54,6 +49,11 @@ void FitEllipsoid::operator()(FileDecl::Triangle* _tringles, uint32 _num, uint32
     for( uint32 i = 1; i < _num && IsTriangleValid(_tringles[i]); ++i )
         box = ε::Box(ε::Box(m_manager->GetTriangle(_tringles[i])), box);
     m_manager->GetBoundingVolume<ε::Ellipsoid>(_target) = ε::Ellipsoid(box);
+
+	// Find optimal center and try to fit nearly optimal ellipsoid with fitFromCenter
+	ε::Vec3 minSearch(-1.0f, -1.0f, -1.0f);
+	ε::Vec3 maxSearch(1.0f, 1.0f, 1.0f);
+	optimize<3>(minSearch, maxSearch, [](const Vec<3>&){ return 0.0f; });
 }
 
 float FitEllipsoid::Surface(uint32 _index) const
