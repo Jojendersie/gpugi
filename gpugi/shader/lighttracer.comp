@@ -136,11 +136,11 @@ void main()
 					// 1/cos == length(pixelPos)
 					// vec3 pixelPos = CameraU * screenCoord.x + CameraV * screenCoord.y + CameraW;
 					
-					float cosAtCameraPow4 = camViewDotRay / cameraDist; // = dot(-cameraRay.Direction, CameraW);
-					cosAtCameraPow4 *= cosAtCameraPow4;
-					cosAtCameraPow4 *= cosAtCameraPow4;
+					float cosAtCameraPow4 = saturate(camViewDotRay / cameraDist); // = dot(-cameraRay.Direction, CameraW);
+					//cosAtCameraPow4 *= cosAtCameraPow4; // Not entirely clear why this is more correct in empiric comparisions
+					//cosAtCameraPow4 *= cosAtCameraPow4;
 					float fluxToRadiance = 1.0 / (cosAtCameraPow4 * PixelArea * cameraDistSq);
-					float fluxToIrradiance = fluxToRadiance * dot(cameraRay.Direction, hitNormal);
+					float fluxToIrradiance = fluxToRadiance * saturate(dot(cameraRay.Direction, hitNormal));
 
 					vec3 brdf = BRDF(cameraRay.Direction, ray.Direction, triangle.w, materialTexData, hitNormal);
 					vec3 color = rayFlux * fluxToIrradiance * brdf;
