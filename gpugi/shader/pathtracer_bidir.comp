@@ -1,12 +1,11 @@
 #version 440
 
 #include "stdheader.glsl"
-
+#include "lightcache.glsl"
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
-#define NUM_LIGHT_SAMPLES 1
-#define MAX_PATHLENGTH 16
+#define MAX_PATHLENGTH 8
 
 #define LOCAL_SIZE 8
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
@@ -23,7 +22,8 @@ void main()
 	vec3 color = vec3(0.0);
 	vec3 rayColor = vec3(1.0);
 
-	const float lightSampleWeight = float(NumInitialLightSamples) / NUM_LIGHT_SAMPLES; // This could be a uniform!
+	uint actualNumLightCacheEntries = min(NumLightCacheEntries, LightCacheCapacity);
+	float lightSampleWeight = float(actualNumLightCacheEntries) / NUM_SAMPLING_TECHNIQUES; // TODO: Add MIS.
 
 	for(int i=0; i<MAX_PATHLENGTH; ++i)
 	{
@@ -44,24 +44,58 @@ void main()
 		// Connect to random light samples ("Next Event Estimation")
 		Ray lightRay;
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
-		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
+		for(int lightSample=0; lightSample<NUM_CAMPATH_LIGHTSAMPLE_CONNECTIONS; ++lightSample)
 		{
-			int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
-			vec3 lightSamplePos = texelFetch(InitialLightSampleBuffer, sampleIndex * 2).xyz;
-
-			lightRay.Direction = lightSamplePos - ray.Origin;
+			uint lightCacheSampleIndex = RandomUInt(randomSeed) % actualNumLightCacheEntries;
+		
+			lightRay.Direction = LightCacheEntries[lightCacheSampleIndex].Position - ray.Origin;
 			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
 			float lightDist = sqrt(lightDistSq);
 			lightRay.Direction /= lightDist;
-			rayHit = lightDist;
+			rayHit = lightDist - RAY_HIT_EPSILON;
 			lightRay.Origin = ray.Origin + RAY_HIT_EPSILON * lightRay.Direction;
 
 			if(!TraceRayAnyHit(lightRay, rayHit))
 			{
-				vec3 lightSampleIntensity = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1).xyz;
+				int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
+				vec3 lightSampleIntensity;
+
+				// Lambert Emitter?
+				if(lightSampleMaterialIndex == -1)
+				{
+					lightSampleIntensity = LightCacheEntries[lightCacheSampleIndex].Flux / PI_2;
+				}
+				// Triangle material
+				else
+				{
+					int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
+					MaterialTextureData lightSampleMaterialTexData = SampleMaterialData(lightSampleMaterialIndex, LightCacheEntries[lightCacheSampleIndex].Texcoord);
+
+					vec3 lightSampleHitNormal = UnpackNormal(vec2(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1));
+					vec3 lightSampleFlux = LightCacheEntries[lightCacheSampleIndex].Flux;
+					vec3 lightBRDF = BRDF(LightCacheEntries[lightCacheSampleIndex].IncidentDirection, -lightRay.Direction, lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal);
+
+					// I_in = Flux (= total outgoing light energy) is known.
+					// Want to know the Intensity for a given direction I_out				
+
+					// BRDF = L_out/E_in
+					// E_in = I_in / dAreaIn
+					// L_out = I_out / (dAreaEmitt * cos(OutgoingDir, Normal) * dSolidAngle)
+					// dAreaIn = dAreaEmitt
+					//
+					// => BRDF = I_out / (I_in * cos(OutgoingDir, Normal) * dSolidAngle)
+					//
+					// Infitesimal angle -> derivation is 1: dSolidAngle = 1
+					//
+					// => I_out = I_in * BRDF * cos(OutgoingDir, Normal)
+
+					lightSampleIntensity = LightCacheEntries[lightCacheSampleIndex].Flux * lightBRDF * saturate(dot(-lightRay.Direction, lightSampleHitNormal));
+				}
+
+
 				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
 				vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
-								dot(lightRay.Direction, hitNormal) / lightDistSq) * lightSampleIntensity;
+								saturate(dot(lightRay.Direction, hitNormal) / lightDistSq)) * lightSampleIntensity;
 				color += irradiance * rayColor * brdf; 
 			}
 		}

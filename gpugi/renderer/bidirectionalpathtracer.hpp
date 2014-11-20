@@ -7,7 +7,7 @@
 
 namespace gl
 {
-	class TextureBufferView;
+	class ShaderStorageBufferView;
 }
 
 // Renderer that uses only light path -> camera connections to render the image.
@@ -22,11 +22,15 @@ public:
 
 	void Draw() override;
 
+
 private:
 	gl::ShaderObject m_pathtraceShader;
 	gl::ShaderObject m_lighttraceShader;
 
 	std::unique_ptr<gl::Texture2D> m_lockTexture;
+
+	unsigned int m_lightCacheCapacity;
+	std::unique_ptr<gl::ShaderStorageBufferView> m_lightCache;
 
 	int m_numRaysPerLightSample;
 	gl::UniformBufferView m_lightpathtraceUBO;

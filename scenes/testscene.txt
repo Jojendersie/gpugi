@@ -5,4 +5,10 @@ cameraFOV = 67
 resolution = 1024, 768
 
 
+renderer=0
+waitIterations = 250
+screenshot
+
 renderer=2
+waitIterations = 250
+screenshot

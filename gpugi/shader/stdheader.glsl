@@ -1,11 +1,9 @@
-#version 440
 #extension GL_ARB_bindless_texture : require
 // Header suitable for most ray based renderers
 
 #define RAY_HIT_EPSILON 0.001
 #define RAY_MAX 3.40282347e+38
 
-#define MAX_PATHLENGTH 16
 #define RUSSIAN_ROULETTE
 
 #include "helper.glsl"

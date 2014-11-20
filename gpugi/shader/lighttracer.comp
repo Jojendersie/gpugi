@@ -1,10 +1,17 @@
+#version 440
+
 #include "stdheader.glsl"
 
-layout(binding = 4, std140) uniform LightPathTrace
-{
-	int NumRaysPerLightSample;
-	float LightRayPixelWeight; // (Total num pixels) / (Total num light rays) 
-};
+#ifdef SAVE_LIGHT_CACHE
+	#include "lightcache.glsl"
+#else
+	layout(binding = 4, std140) uniform LightPathTrace
+	{
+		int NumRaysPerLightSample;
+		float LightRayPixelWeight; // (Total num pixels) / (Total num light rays) 
+	};
+	#define NUM_SAMPLING_TECHNIQUES 1
+#endif
 
 
 // The problem: There is no atomic vec4 operation, even with GL_NV_shader_atomic_float
@@ -15,13 +22,29 @@ layout(binding = 4, std140) uniform LightPathTrace
 layout(binding = 0, rgba32f) coherent uniform image2D OutputTexture;
 layout(binding = 1, r32ui) coherent uniform uimage2D LockTexture;
 
+
+#ifdef SAVE_LIGHT_CACHE
+	#define MAX_PATHLENGTH 8
+#else
+	#define MAX_PATHLENGTH 16
+#endif
+
 layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
+#ifdef SAVE_LIGHT_CACHE
+	// Not entirely sure if this is 100% reliable!
+	// Idea is to keep the counter on GPU without any CPU interaction.
+	// Problems could arise if a thread uses "NumLightCacheEntries" before Thread0 wrote this number.
+	// This may happen if the GPU does not schedule block 0 as first.
+	if(gl_GlobalInvocationID.x == 0)
+		NumLightCacheEntries = NumRaysPerLightSample * NumInitialLightSamples;
+	memoryBarrierBuffer();
+#endif
+
 	uint randomSeed = InitRandomSeed(FrameSeed, gl_GlobalInvocationID.x);
 	int lightSampleIndex = int(gl_GlobalInvocationID.x / NumRaysPerLightSample);
 
-	// TODO: Force whole group to operate on the same initial sample and load the sample into sharedmem
 	Ray ray;
 	vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2);
 	vec4 lightFlux_Norm1 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2 + 1);
@@ -33,6 +56,18 @@ void main()
 	CreateONB(normal, U, V);
 	ray.Direction = SampleUnitHemisphere(Random2(randomSeed), U, V, normal);
 
+#ifdef SAVE_LIGHT_CACHE
+	// Correct init of "NumLightCacheEntries" required!
+	// Each thread writes its own initial light sample into the LightCache
+	LightCacheEntries[gl_GlobalInvocationID.x].Flux = rayFlux;
+	LightCacheEntries[gl_GlobalInvocationID.x].MaterialIndex = -1; // todo
+	LightCacheEntries[gl_GlobalInvocationID.x].Position = ray.Origin;
+	LightCacheEntries[gl_GlobalInvocationID.x].Normal0 = lightSamplePos_Norm0.w;
+	LightCacheEntries[gl_GlobalInvocationID.x].Normal1 = lightFlux_Norm1.w;
+	//LightCacheEntries[gl_GlobalInvocationID.x].Texcoord // texcoord empty
+#endif 
+
+
 	for(int i=0; i<MAX_PATHLENGTH; ++i)
 	{
 		// Trace ray.
@@ -42,15 +77,33 @@ void main()
 		TraceRay(ray, rayHit, barycentricCoord, triangle);
 		if(rayHit == RAY_MAX)
 			break;
+		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
 
 		// Compute hit normal and texture coordinate.
 		vec3 hitNormal; vec2 hitTexcoord;
 		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
+
 		// Get Material infos.
 		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
 
+		// Save light cache entry.
+#ifdef SAVE_LIGHT_CACHE
+		uint lightCacheEntryIndex = atomicAdd(NumLightCacheEntries, 1);
+		if(lightCacheEntryIndex < LightCacheCapacity)
+		{
+			LightCacheEntries[lightCacheEntryIndex].Flux = rayFlux;
+			LightCacheEntries[lightCacheEntryIndex].MaterialIndex = triangle.w;
+			// Use "true" position - necessary epsilon can be easily applied in pathtracer_bidir.comp
+			LightCacheEntries[lightCacheEntryIndex].Position = ray.Origin; 
+			vec2 packedNormal = PackNormal(hitNormal);
+			LightCacheEntries[lightCacheEntryIndex].Normal0 = packedNormal.x;
+			LightCacheEntries[lightCacheEntryIndex].Normal1 = packedNormal.y;
+			LightCacheEntries[lightCacheEntryIndex].Texcoord = hitTexcoord;
+			LightCacheEntries[lightCacheEntryIndex].IncidentDirection = ray.Direction;
+		}
+#endif
+
 		// Try to connect to camera.
-		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
 		Ray cameraRay;
 		cameraRay.Direction = CameraPosition - ray.Origin;
 		float camViewDotRay = -dot(CameraW, cameraRay.Direction);
@@ -92,6 +145,9 @@ void main()
 					vec3 brdf = BRDF(cameraRay.Direction, ray.Direction, triangle.w, materialTexData, hitNormal);
 					vec3 color = rayFlux * fluxToIrradiance * brdf;
 
+					// TODO: Reliable MIS weights. 
+					color /= NUM_SAMPLING_TECHNIQUES;
+
 					// Add Sample.
 					ivec2 pixelCoord = ivec2((screenCoord*0.5 + vec2(0.5)) * BackbufferSize);
 
@@ -103,7 +159,7 @@ void main()
 					do {
 						if(imageAtomicCompSwap(LockTexture, pixelCoord, uint(0), uint(1)) == 0)
 						{
-							memoryBarrier();
+							memoryBarrierImage();
 
 							// Add sample
 							vec4 imageVal = imageLoad(OutputTexture, pixelCoord);
@@ -117,6 +173,9 @@ void main()
 				}
 			}
 		}
+
+		// Go epsilon in sampling direction (refraction/reflection different)
+		ray.Origin = ray.Origin + RAY_HIT_EPSILON * sign(dot(ray.Direction, hitNormal)) * hitNormal;	
 
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
 		if(!ContinuePath(rayFlux, ray, randomSeed, hitNormal, triangle.w, materialTexData))
