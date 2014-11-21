@@ -59,14 +59,13 @@ void main()
 #ifdef SAVE_LIGHT_CACHE
 	// Correct init of "NumLightCacheEntries" required!
 	// Each thread writes its own initial light sample into the LightCache
-	LightCacheEntries[gl_GlobalInvocationID.x].Flux = rayFlux;
+	LightCacheEntries[gl_GlobalInvocationID.x].Intensity = rayFlux / PI_2;
 	LightCacheEntries[gl_GlobalInvocationID.x].MaterialIndex = -1; // todo
 	LightCacheEntries[gl_GlobalInvocationID.x].Position = ray.Origin;
 	LightCacheEntries[gl_GlobalInvocationID.x].Normal0 = lightSamplePos_Norm0.w;
 	LightCacheEntries[gl_GlobalInvocationID.x].Normal1 = lightFlux_Norm1.w;
 	//LightCacheEntries[gl_GlobalInvocationID.x].Texcoord // texcoord empty
-#endif 
-
+#endif
 
 	for(int i=0; i<MAX_PATHLENGTH; ++i)
 	{
@@ -91,7 +90,7 @@ void main()
 		uint lightCacheEntryIndex = atomicAdd(NumLightCacheEntries, 1);
 		if(lightCacheEntryIndex < LightCacheCapacity)
 		{
-			LightCacheEntries[lightCacheEntryIndex].Flux = rayFlux;
+			LightCacheEntries[lightCacheEntryIndex].Intensity = rayFlux / PI_2;
 			LightCacheEntries[lightCacheEntryIndex].MaterialIndex = triangle.w;
 			// Use "true" position - necessary epsilon can be easily applied in pathtracer_bidir.comp
 			LightCacheEntries[lightCacheEntryIndex].Position = ray.Origin; 
@@ -121,7 +120,7 @@ void main()
 				float cameraDistSq = dot(cameraRay.Direction, cameraRay.Direction);
 				float cameraDist = sqrt(cameraDistSq);
 				cameraRay.Direction /= cameraDist;
-				cameraRay.Origin = cameraRay.Direction * RAY_HIT_EPSILON + ray.Origin;
+				cameraRay.Origin = ray.Origin + cameraRay.Direction * RAY_HIT_EPSILON;
 
 				// Hits *pinhole* camera
 				if(!TraceRayAnyHit(cameraRay, cameraDist))

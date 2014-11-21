@@ -1,6 +1,6 @@
 struct LightCacheEntry // aka photon
 {
-	vec3 Flux;
+	vec3 Intensity; // Flux / PI_2
 	int MaterialIndex; // -1 means "diffuse light" - TODO: Create a material for this!
 	
 	vec3 Position;
@@ -45,5 +45,5 @@ layout(binding = 4, shared) uniform LightPathTrace
 	uint LightCacheCapacity;
 };
 
-#define NUM_CAMPATH_LIGHTSAMPLE_CONNECTIONS 4
-#define NUM_SAMPLING_TECHNIQUES NUM_CAMPATH_LIGHTSAMPLE_CONNECTIONS + 1
+#define NUM_CAMPATH_LIGHTSAMPLE_CONNECTIONS 4 // should be "average light path length num"
+#define NUM_SAMPLING_TECHNIQUES NUM_CAMPATH_LIGHTSAMPLE_CONNECTIONS+1
