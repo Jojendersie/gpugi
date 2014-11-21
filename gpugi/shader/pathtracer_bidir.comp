@@ -95,7 +95,7 @@ void main()
 
 				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
 				vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
-								saturate(dot(lightRay.Direction, hitNormal) / lightDistSq)) * lightSampleIntensity;
+								saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity;
 				color += irradiance * rayColor * brdf; 
 			}
 		}
