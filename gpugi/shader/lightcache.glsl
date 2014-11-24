@@ -8,9 +8,10 @@ struct LightCacheEntry // aka photon
 
 	vec2 Texcoord;
 	float Normal1;
-	float padding;
+	float PathProbability; // "p": Probability of the underlying path.
 
 	vec3 IncidentDirection;
+	float AnyPathProbabilitySum; // "d": Propability for sampling the underlying path using any bidirectional sampling method. (if first light vertex is given)
 
 	// TODO:
 	// - Normal (compressed?)

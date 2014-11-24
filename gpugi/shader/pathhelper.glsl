@@ -1,15 +1,22 @@
-bool ContinuePath(inout vec3 rayColor, inout Ray ray, inout uint randomSeed, 
+bool ContinuePath(inout vec3 rayColor, inout Ray ray, inout uint randomSeed, out float connectionPropability,
 				  vec3 hitNormal, int triangleIdx, MaterialTextureData materialTexData)
 {
 	vec3 weight;
 	ray.Direction = SampleBRDF(ray.Direction, triangleIdx, materialTexData, randomSeed, hitNormal, weight);
 
 #ifdef RUSSIAN_ROULETTE
-	float hitLuminance = GetLuminance(weight);
-	rayColor *= weight / hitLuminance; // Only change in spectrum, no energy loss.
-	return Random(randomSeed) <= hitLuminance;
+	connectionPropability = GetLuminance(weight);
+	rayColor *= weight / connectionPropability; // Only change in spectrum, no energy loss.
+	return Random(randomSeed) <= connectionPropability;
 #else
 	rayColor *= weight; // Absorption, not via Russion Roulette, but by color multiplication.
 	return true;
 #endif
+}
+
+bool ContinuePath(inout vec3 rayColor, inout Ray ray, inout uint randomSeed,
+				  vec3 hitNormal, int triangleIdx, MaterialTextureData materialTexData)
+{
+	float connectionPropability;
+	return ContinuePath(rayColor, ray, randomSeed, connectionPropability, hitNormal, triangleIdx, materialTexData);
 }

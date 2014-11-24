@@ -23,7 +23,11 @@ void main()
 	vec3 rayColor = vec3(1.0);
 
 	uint actualNumLightCacheEntries = min(NumLightCacheEntries, LightCacheCapacity);
-	float lightSampleWeight = float(actualNumLightCacheEntries) / NUM_SAMPLING_TECHNIQUES; // TODO: Add MIS.
+	float lightSampleWeight = float(actualNumLightCacheEntries) / NUM_SAMPLING_TECHNIQUES;
+
+	// recursive MIS construction.
+	float pathProbability = 1.0;
+	float anyPathProbabilitySum = 0.0;
 
 	for(int i=0; i<MAX_PATHLENGTH; ++i)
 	{
@@ -61,6 +65,7 @@ void main()
 			{
 				int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
 				vec3 lightSampleIntensity = LightCacheEntries[lightCacheSampleIndex].Intensity;
+				float connectionLightPathToEyePath = 1.0;
 
 				// Triangle material
 				if(lightSampleMaterialIndex != -1)
@@ -70,6 +75,7 @@ void main()
 
 					vec3 lightSampleHitNormal = UnpackNormal(vec2(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1));
 					vec3 lightBRDF = BRDF(LightCacheEntries[lightCacheSampleIndex].IncidentDirection, -lightRay.Direction, lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal);
+					connectionLightPathToEyePath = GetLuminance(lightBRDF);
 
 					// I_in = Flux/2PI (= total outgoing light energy) is known.
 					// Want to know the Intensity for a given direction I_out				
@@ -88,9 +94,18 @@ void main()
 					lightSampleIntensity *= lightBRDF * saturate(dot(-lightRay.Direction, lightSampleHitNormal));
 				}
 
-
 				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
-				vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
+
+				float connectionEyePathToLightPath = GetLuminance(brdf);
+				float light_pathProbability = LightCacheEntries[lightCacheSampleIndex].PathProbability;
+				float light_anyPathProbabilitySum = LightCacheEntries[lightCacheSampleIndex].AnyPathProbabilitySum;
+
+				float connectedPathPropability = light_pathProbability * pathProbability;
+				float mis = connectedPathPropability / 
+							(light_pathProbability * connectionEyePathToLightPath * anyPathProbabilitySum + 
+							 pathProbability * connectionLightPathToEyePath * light_anyPathProbabilitySum + connectedPathPropability);
+
+				vec3 irradiance = (lightSampleWeight * mis * 
 									dot(lightRay.Direction, hitNormal) / lightDistSq) * lightSampleIntensity;
 				color += irradiance * rayColor * brdf; 
 			}
@@ -99,9 +114,13 @@ void main()
 
 		// Go epsilon in sampling direction (refraction/reflection different)
 		ray.Origin = ray.Origin + RAY_HIT_EPSILON * sign(dot(ray.Direction, hitNormal)) * hitNormal;
+		float connectionPropability;
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
-		if(!ContinuePath(rayColor, ray, randomSeed, hitNormal, triangle.w, materialTexData))
+		if(!ContinuePath(rayColor, ray, randomSeed, connectionPropability, hitNormal, triangle.w, materialTexData))
 			break;
+
+		anyPathProbabilitySum = anyPathProbabilitySum * connectionPropability + pathProbability;
+		pathProbability *= connectionPropability;
 	}
 
 	vec4 final = vec4(color, 1.0);
