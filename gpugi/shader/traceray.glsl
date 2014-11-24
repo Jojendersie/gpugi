@@ -25,6 +25,7 @@
 			#endif
 
 			float newHit;
+			//if(IntersectVirtualEllipsoid(ray, currentNode0.xyz, currentNode1.xyz, newHit) && newHit <= rayLength)
 			if(IntersectBox(ray, invRayDir, currentNode0.xyz, currentNode1.xyz, newHit) && newHit <= rayLength)
 			{
 				uint childCode = floatBitsToUint(currentNode0.w);

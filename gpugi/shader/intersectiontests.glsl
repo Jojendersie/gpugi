@@ -14,7 +14,7 @@ bool IntersectBox(Ray ray, vec3 invRayDir, vec3 aabbMin, vec3 aabbMax, out float
 	vec3 tmin = min(ttop, tbot);
 	vec3 tmax = max(ttop, tbot);
 	vec2 t = max(tmin.xx, tmin.yz);
-	firstHit = max(t.x, t.y);
+	firstHit = max(0.0f, max(t.x, t.y));
 	t = min(tmax.xx, tmax.yz);
 	float lastHit = min(t.x, t.y);
 	return firstHit <= lastHit;
@@ -22,6 +22,34 @@ bool IntersectBox(Ray ray, vec3 invRayDir, vec3 aabbMin, vec3 aabbMax, out float
 bool IntersectBox(Ray ray, vec3 aabbMin, vec3 aabbMax, out float firstHit)
 {
 	return IntersectBox(ray, vec3(1.0) / ray.Direction, aabbMin, aabbMax, firstHit);
+}
+
+bool IntersectVirtualEllipsoid(Ray ray, vec3 aabbMin, vec3 aabbMax, out float firstHit)
+{
+	// compute virual ellipsoid
+	vec3 radii = (aabbMax - aabbMin) * 0.866025404 + 1e-15;
+	vec3 o = ray.Origin - (aabbMax + aabbMin) * 0.5;
+
+	// Go to sphere for numerical stability
+	//float r = max(radii.x, max(radii.y, radii.z));
+	float t = dot(o, ray.Direction);
+	t = max(0.0f, - t );
+	o += ray.Direction * t;
+
+	o /= radii;
+	float odoto = dot(o, o);
+
+	// Test if quadratic equation for the hit point has a solution
+	vec3 d = ray.Direction / radii;
+	float odotd = dot(o, d);
+	float ddotd = dot(d, d);
+	float phalf = odotd / ddotd;
+	float q = (odoto - 1.0f) / ddotd;
+	float rad = phalf * phalf - q;
+	if( rad < 0.0f ) return false;
+	rad = sqrt(rad);
+	firstHit = max(0.0f, -phalf - rad + t);
+	return -phalf + rad + t >= 0.0f;
 }
 
 

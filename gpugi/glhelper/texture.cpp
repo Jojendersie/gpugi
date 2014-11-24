@@ -77,8 +77,12 @@ namespace gl
 		if(glGetTextureImage)
 			GL_CALL(glGetTextureImage, m_textureHandle, _mipLevel, static_cast<GLenum>(_format), static_cast<GLenum>(_type), _bufferSize, _buffer);
 		else {
+			ResetImageBinding(0);
 			Bind(0);
+			//BindImage(0, gl::Texture::ImageAccess::READ);
+			//GL_CALL(glMemoryBarrier, GL_ALL_BARRIER_BITS);
 			GL_CALL(glGetTexImage, GetOpenGLTextureType(), _mipLevel, static_cast<GLenum>(_format), static_cast<GLenum>(_type), _buffer);
+			//GL_CALL(glFinish);
 		}
 	}
 }
