@@ -40,6 +40,12 @@ vec3 UnpackNormal(in vec2 packedNormal)
 	float sinPhi = sqrt(1.0 - packedNormal.y*packedNormal.y);
 	return vec3(cos(packedNormal.x)*sinPhi, sin(packedNormal.x)*sinPhi, packedNormal.y);
 }
+// Returns: vec2(atan(normal.y, normal.x), normal.z)
+// Attention: return.x ranges [-PI;+PI]
+vec2 PackNormal(in vec3 normal)
+{
+	return vec2(atan(normal.x, normal.y), normal.z);
+}
 
 
 /*

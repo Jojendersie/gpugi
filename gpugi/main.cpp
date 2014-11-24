@@ -116,19 +116,19 @@ public:
 		{
 		case 0:
 			LOG_LVL2("Switching to Pathtracer...");
-			delete m_renderer.release();
+			m_renderer.reset();
 			m_renderer.reset(new Pathtracer());
 			break;
 
 		case 1:
 			LOG_LVL2("Switching to LightPathtracer...");
-			delete m_renderer.release();
+			m_renderer.reset();
 			m_renderer.reset(new LightPathtracer());
 			break;
 
 		case 2:
 			LOG_LVL2("Switching to Bidirectional Pathtracer...");
-			delete m_renderer.release();
+			m_renderer.reset();
 			m_renderer.reset(new BidirectionalPathtracer());
 			break;
 
