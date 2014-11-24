@@ -74,17 +74,17 @@ uint32 BuildSweep::Build( const std::unique_ptr<uint32[]>* _sorted, uint32 _min,
 	if( _max - _min < FileDecl::Leaf::NUM_PRIMITIVES )
 	{
 		// Allocate a new leaf
-        uint32 leafIdx = m_manager->GetNewLeaf();
-        FileDecl::Leaf& leaf = m_manager->GetLeaf( leafIdx );
-        // Fill it
-        FileDecl::Triangle* trianglesPtr = leaf.triangles;
-        for( uint i = _min; i <= _max; ++i )
-            *(trianglesPtr++) = m_manager->GetTriangleIdx( _sorted[0][i] );
-        for( uint i = 0; i < FileDecl::Leaf::NUM_PRIMITIVES - (_max - _min + 1); ++i )
-            *(trianglesPtr++) = FileDecl::INVALID_TRIANGLE;
+		uint32 leafIdx = m_manager->GetNewLeaf();
+		FileDecl::Leaf& leaf = m_manager->GetLeaf( leafIdx );
+		// Fill it
+		FileDecl::Triangle* trianglesPtr = leaf.triangles;
+		for( uint i = _min; i <= _max; ++i )
+			*(trianglesPtr++) = m_manager->GetTriangleIdx( _sorted[0][i] );
+		for( uint i = 0; i < FileDecl::Leaf::NUM_PRIMITIVES - (_max - _min + 1); ++i )
+			*(trianglesPtr++) = FileDecl::INVALID_TRIANGLE;
 
-        // This node is pointing to this leaf
-        node.left = 0x80000000 | leafIdx;
+		// This node is pointing to this leaf
+		node.left = 0x80000000 | leafIdx;
 		node.right = 0;
 	} else {
 		// Assume the last indices to be unused

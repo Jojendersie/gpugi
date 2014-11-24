@@ -24,6 +24,15 @@ public:
         AAELLIPSOID
     };
 
+/*	/// \brief One time forward iterator
+	class TriangleIterator
+	{
+	public:
+		/// \brief Return the current and go to the next triangle.
+		/// \return A triangle or nullptr if reached the end
+		virtual const FileDecl::Triangle* next() const = 0;
+	};*/
+
     /// \param [inout] The builder holds the memory which is accessed by the method.
     FitMethod(BVHBuilder* _manager) : m_manager(_manager) {}
 
@@ -33,7 +42,7 @@ public:
     /// \param [in] _left The index of the left child and its BV respectively.
     /// \param [in] _right The index of the right child and its BV respectively.
     /// \param [in] _target The index of the new element.
-    virtual void operator()(uint32 _left, uint32 _right, uint32 _target) const = 0;
+	virtual void operator()(uint32 _left, uint32 _right, uint32 _target) const = 0;
 
     /// \brief Compute a new bounding volume from a leaf node.
     /// \param [in] _tringles List of valid triangles (e.g. from a leaf).

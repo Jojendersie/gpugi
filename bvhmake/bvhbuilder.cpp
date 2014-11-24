@@ -281,7 +281,7 @@ void BVHBuilder::ExportBVH( std::ofstream& _file )
         bvHeader.elementSize = sizeof(ε::Sphere);
         break;
     case FitMethod::BVType::AAELLIPSOID: strcpy( bvHeader.name, "bounding_ellipsoid" );
-        bvHeader.elementSize = sizeof(ε::Sphere);
+        bvHeader.elementSize = sizeof(ε::Ellipsoid);
         break;
     default: Assert( false, "Current geometry cannot be stored!" ); break;
     }
