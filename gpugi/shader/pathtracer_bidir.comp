@@ -54,14 +54,11 @@ void main()
 		
 			lightRay.Direction = LightCacheEntries[lightCacheSampleIndex].Position - ray.Origin;
 			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
-			if(lightDistSq < RAY_HIT_EPSILON*10.0)
-				continue;
 			float lightDist = sqrt(lightDistSq);
 			lightRay.Direction /= lightDist;
-			rayHit = lightDist - RAY_HIT_EPSILON;
-			lightRay.Origin = ray.Origin + RAY_HIT_EPSILON * lightRay.Direction;
+			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + ray.Origin;
 
-			if(!TraceRayAnyHit(lightRay, rayHit))
+			if(!TraceRayAnyHit(lightRay, lightDist))
 			{
 				int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
 				vec3 lightSampleIntensity = LightCacheEntries[lightCacheSampleIndex].Intensity;
@@ -111,9 +108,6 @@ void main()
 			}
 		}
 
-
-		// Go epsilon in sampling direction (refraction/reflection different)
-		ray.Origin = ray.Origin + RAY_HIT_EPSILON * sign(dot(ray.Direction, hitNormal)) * hitNormal;
 		float connectionPropability;
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
 		if(!ContinuePath(rayColor, ray, randomSeed, connectionPropability, hitNormal, triangle.w, materialTexData))

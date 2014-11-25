@@ -54,21 +54,18 @@ void main()
 			float lightDist = sqrt(lightDistSq);
 			lightRay.Direction /= lightDist;
 			rayHit = lightDist;
-			lightRay.Origin = ray.Origin + RAY_HIT_EPSILON * lightRay.Direction;
+			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + ray.Origin;
 
 			if(!TraceRayAnyHit(lightRay, rayHit))
 			{
 				vec3 lightSampleIntensity = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1).xyz;
 				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
 				vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
-								dot(lightRay.Direction, hitNormal) / lightDistSq) * lightSampleIntensity;
-				color += irradiance * rayColor * brdf; 
+								abs(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity;
+				color += irradiance * rayColor * brdf;
 			}
 		}
 
-
-		// Go epsilon in sampling direction (refraction/reflection different)
-		ray.Origin = ray.Origin + RAY_HIT_EPSILON * sign(dot(ray.Direction, hitNormal)) * hitNormal;
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
 		if(!ContinuePath(rayColor, ray, randomSeed, hitNormal, triangle.w, materialTexData))
 			break;

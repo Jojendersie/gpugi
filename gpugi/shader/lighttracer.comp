@@ -129,7 +129,7 @@ void main()
 				float cameraDistSq = dot(cameraRay.Direction, cameraRay.Direction);
 				float cameraDist = sqrt(cameraDistSq);
 				cameraRay.Direction /= cameraDist;
-				cameraRay.Origin = ray.Origin + cameraRay.Direction * RAY_HIT_EPSILON;
+				cameraRay.Origin = cameraRay.Direction * RAY_HIT_EPSILON + ray.Origin;
 
 				// Hits *pinhole* camera
 				if(!TraceRayAnyHit(cameraRay, cameraDist))
@@ -189,10 +189,6 @@ void main()
 			}
 		}
 
-		// Go epsilon in sampling direction (refraction/reflection different)
-		ray.Origin = ray.Origin + RAY_HIT_EPSILON * sign(dot(ray.Direction, hitNormal)) * hitNormal;	
-
-	
 		float connectionPropability;
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
 		if(!ContinuePath(rayFlux, ray, randomSeed, connectionPropability, hitNormal, triangle.w, materialTexData))

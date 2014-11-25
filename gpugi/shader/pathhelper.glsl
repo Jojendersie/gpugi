@@ -3,7 +3,8 @@ bool ContinuePath(inout vec3 rayColor, inout Ray ray, inout uint randomSeed, out
 {
 	vec3 weight;
 	ray.Direction = SampleBRDF(ray.Direction, triangleIdx, materialTexData, randomSeed, hitNormal, weight);
-
+	ray.Origin += ray.Direction * RAY_HIT_EPSILON;
+		
 #ifdef RUSSIAN_ROULETTE
 	connectionPropability = GetLuminance(weight);
 	rayColor *= weight / connectionPropability; // Only change in spectrum, no energy loss.

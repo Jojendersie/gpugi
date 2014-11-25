@@ -2,7 +2,7 @@
 // #define TRACERAY_DEBUG_VARS
 
 #ifdef ANY_HIT
-	bool TraceRayAnyHit(in Ray ray, inout float rayLength)
+	bool TraceRayAnyHit(in Ray ray, in float rayLength)
 #else
 	void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, out Triangle outTriangle)
 #endif
