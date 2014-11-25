@@ -304,5 +304,14 @@
     <None Include="shader\stdheader.glsl">
       <Filter>shader</Filter>
     </None>
+    <None Include="shader\lightcache.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\pathhelper.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\pathtracer_bidir.comp">
+      <Filter>shader</Filter>
+    </None>
   </ItemGroup>
 </Project>
