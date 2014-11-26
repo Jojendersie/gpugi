@@ -69,16 +69,17 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, MaterialTextureData materi
 	// Fresnel Term Approximations for Metals
 	// ((n-1)²+k²) / ((n+1)²+k²) + 4n / ((n+1)²+k²) * (1-cos theta)^5
 	// = Fresnel0 + Fresnel1 * (1-cos theta)^5
-	float cosTheta = -dot(N, incidentDirection);
+	float cosTheta = dot(N, incidentDirection);
+	float cosThetaAbs = abs(cosTheta);
 
 	// Reflect
-	vec3 sampleDir = (2.0 * cosTheta) * N + incidentDirection; // later normalized, may not be final
+	vec3 sampleDir = incidentDirection - (2.0 * cosTheta) * N; // later normalized, may not be final
 
 	// Random values later needed for sampling direction
 	vec2 randomSamples = Random2(seed);
 
 	// Reflection probability
-	vec3 preflectrefract = materialTexData.Reflectiveness.xyz * (Materials[material].Fresnel1 * pow(saturate(1.0 - abs(cosTheta)), 5.0) + Materials[material].Fresnel0);
+	vec3 preflectrefract = materialTexData.Reflectiveness.xyz * (Materials[material].Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + Materials[material].Fresnel0);
 	float avgPReflectRefract = (preflectrefract.x + preflectrefract.y + preflectrefract.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON); // reflection (!) probability
 
 	// Propability for diffuse reflection (= probability of )
@@ -92,11 +93,13 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, MaterialTextureData materi
 	if(avgPDiffuse < pathDecisionVar)
 	{
 		// Compute refraction direction.
-		float eta = cosTheta > 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg; // Is this a branch? And if yes, how to avoid it?
+		float eta = cosTheta < 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg; // Is this a branch? And if yes, how to avoid it?
 		float sinTheta2Sq = eta * eta * (1.0f - cosTheta * cosTheta);
-		// Total reflection
+		// No total reflection
 		if( sinTheta2Sq < 1.0f )
-			sampleDir = eta * incidentDirection - (sign(cosTheta) * (eta * cosTheta + sqrt(saturate(1.0 - sinTheta2Sq)))) * N;
+			// N * sign(cosTheta) = "faceForwardNormal"; -cosThetaAbs = -dot(faceForwardNormal, incidentDirection)
+			sampleDir = eta * incidentDirection + (sign(cosTheta) * (sqrt(saturate(1.0 - sinTheta2Sq)) - eta * cosThetaAbs)) * N; 
+
 
 		// Refraction probability
 		preflectrefract = (1.0 - preflectrefract) * (1.0 - materialTexData.Opacity);
@@ -135,16 +138,17 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, MaterialTextureData materi
 vec3 BRDF(vec3 incidentDirection, vec3 excidentDirection, int material, MaterialTextureData materialTexData, vec3 N)
 {
 	vec3 excidentLight = vec3(0.0);
-	float cosTheta = -dot(N, incidentDirection);
+	float cosTheta = dot(N, incidentDirection);
+	float cosThetaAbs = abs(cosTheta);
 
 	// Compute reflection probabilities with rescaled fresnel approximation from:
 	// Fresnel Term Approximations for Metals
 	// ((n-1)²+k²) / ((n+1)²+k²) + 4n / ((n+1)²+k²) * (1-cos theta)^5
 	// = Fresnel0 + Fresnel1 * (1-cos theta)^5
-	vec3 preflect = Materials[material].Fresnel0 + Materials[material].Fresnel1 * pow(saturate(1.0 - abs(cosTheta)), 5.0);
+	vec3 preflect = Materials[material].Fresnel0 + Materials[material].Fresnel1 * pow(1.0 - cosThetaAbs, 5.0);
 	preflect *= materialTexData.Reflectiveness.xyz;
 	// Reflection vector
-	vec3 sampleDir = normalize(incidentDirection + (2.0 * cosTheta) * N);
+	vec3 sampleDir = normalize(incidentDirection - (2.0 * cosTheta) * N);
 	float phongNormalization = (materialTexData.Reflectiveness.w + 2.0) / PI_2;
 	excidentLight += preflect * (phongNormalization * pow(max(0.0,dot(sampleDir, excidentDirection)), materialTexData.Reflectiveness.w));
 
@@ -152,14 +156,16 @@ vec3 BRDF(vec3 incidentDirection, vec3 excidentDirection, int material, Material
 	vec3 prefract = 1.0 - preflect;
 	vec3 pdiffuse = prefract * materialTexData.Opacity;
 	prefract = prefract - pdiffuse;
-	excidentLight += pdiffuse * materialTexData.Diffuse / 3.141592654;// / pi?
+	excidentLight += pdiffuse * materialTexData.Diffuse / PI;// / pi?
 
 	// Refract
-	float eta = cosTheta > 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg;
+	float eta = cosTheta < 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg;
 	float sinTheta2Sq = eta * eta * (1.0f - cosTheta * cosTheta);
-	// Test if no total reflection happens
+	// No total reflection?
 	if( sinTheta2Sq < 1.0f )
-		sampleDir = normalize(eta * incidentDirection - (sign(cosTheta) * (eta * cosTheta + sqrt(saturate(1.0 - sinTheta2Sq)))) * N);
+		// N * sign(cosTheta) = "faceForwardNormal"; -cosThetaAbs = -dot(faceForwardNormal, incidentDirection)
+		sampleDir = normalize(eta * incidentDirection + (sign(cosTheta) * (sqrt(saturate(1.0 - sinTheta2Sq)) - eta * cosThetaAbs)) * N);
+
 	// else the sampleDir is again the reflection vector
 	excidentLight += prefract * (phongNormalization * pow(max(0.0,dot(sampleDir, excidentDirection)), materialTexData.Reflectiveness.w));
 	
