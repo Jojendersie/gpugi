@@ -40,11 +40,20 @@ vec3 UnpackNormal(in vec2 packedNormal)
 	float sinPhi = sqrt(1.0 - packedNormal.y*packedNormal.y);
 	return vec3(cos(packedNormal.x)*sinPhi, sin(packedNormal.x)*sinPhi, packedNormal.y);
 }
+vec3 UnpackNormal(float packedNormal0, float packedNormal1)
+{
+	float sinPhi = sqrt(1.0 - packedNormal1*packedNormal1);
+	return vec3(cos(packedNormal0)*sinPhi, sin(packedNormal0)*sinPhi, packedNormal1);
+}
+
 // Returns: vec2(atan(normal.y, normal.x), normal.z)
 // Attention: return.x ranges [-PI;+PI]
 vec2 PackNormal(in vec3 normal)
 {
-	return vec2(atan(normal.x, normal.y), normal.z);
+	// A mathematical correct and more robust alternative would be using 2 atan functions:
+	// http://stackoverflow.com/questions/26070410/robust-atany-x-on-glsl-for-converting-xy-coordinate-to-angle
+	const float ATAN_EPS = 0.0001;
+	return vec2(atan(normal.y, step(abs(normal.x), ATAN_EPS) * ATAN_EPS + normal.x), normal.z);
 }
 
 
