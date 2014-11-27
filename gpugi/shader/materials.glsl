@@ -150,7 +150,7 @@ vec3 BRDF(vec3 incidentDirection, vec3 excidentDirection, int material, Material
 	// Reflection vector
 	vec3 sampleDir = normalize(incidentDirection - (2.0 * cosTheta) * N);
 	float phongNormalization = (materialTexData.Reflectiveness.w + 2.0) / PI_2;
-	excidentLight += preflect * (phongNormalization * pow(max(0.0,dot(sampleDir, excidentDirection)), materialTexData.Reflectiveness.w));
+	excidentLight += preflect * (phongNormalization * pow(saturate(dot(sampleDir, excidentDirection)), materialTexData.Reflectiveness.w));
 
 	// Refract/Absorb/Diffus
 	vec3 prefract = 1.0 - preflect;
@@ -167,7 +167,7 @@ vec3 BRDF(vec3 incidentDirection, vec3 excidentDirection, int material, Material
 		sampleDir = normalize(eta * incidentDirection + (sign(cosTheta) * (sqrt(saturate(1.0 - sinTheta2Sq)) - eta * cosThetaAbs)) * N);
 
 	// else the sampleDir is again the reflection vector
-	excidentLight += prefract * (phongNormalization * pow(max(0.0,dot(sampleDir, excidentDirection)), materialTexData.Reflectiveness.w));
+	excidentLight += prefract * (phongNormalization * pow(saturate(dot(sampleDir, excidentDirection)), materialTexData.Reflectiveness.w));
 	
 	return excidentLight;
 }
