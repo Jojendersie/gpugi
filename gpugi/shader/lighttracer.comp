@@ -150,7 +150,8 @@ void main()
 					float fluxToRadiance = 1.0 / (cosAtCameraPow4 * PixelArea * cameraDistSq);
 					float fluxToIrradiance = fluxToRadiance * saturate(dot(cameraRay.Direction, hitNormal));
 
-					vec3 brdf = BRDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, hitNormal); // cameraRay.Direction, ray.Direction
+					// To hide hide errors in helmholtz reciprocy, trace ray "from camera to light" (instead of in=ray.Direction out=cameraRay.Direction)
+					vec3 brdf = BRDF(-cameraRay.Direction, -ray.Direction, triangle.w, materialTexData, hitNormal);
 
 				#ifdef SAVE_LIGHT_CACHE
 					float connectionPropability = GetLuminance(brdf);
