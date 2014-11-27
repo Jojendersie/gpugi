@@ -54,11 +54,15 @@ void main()
 		
 			lightRay.Direction = LightCacheEntries[lightCacheSampleIndex].Position - ray.Origin;
 			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
+
+			//if(lightDistSq < RAY_HIT_EPSILON * 10.0)
+			//	continue;
+
 			float lightDist = sqrt(lightDistSq);
 			lightRay.Direction /= lightDist;
 			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + ray.Origin;
 
-			if(!TraceRayAnyHit(lightRay, lightDist))
+			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON)) // Important to subtract epsilon, since light sample may be slightly behind the surface
 			{
 				int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
 				vec3 lightSampleIntensity = LightCacheEntries[lightCacheSampleIndex].Intensity;
@@ -70,8 +74,9 @@ void main()
 					int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
 					MaterialTextureData lightSampleMaterialTexData = SampleMaterialData(lightSampleMaterialIndex, LightCacheEntries[lightCacheSampleIndex].Texcoord);
 
-					vec3 lightSampleHitNormal = UnpackNormal(vec2(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1));
-					vec3 lightBRDF = BRDF(LightCacheEntries[lightCacheSampleIndex].IncidentDirection, -lightRay.Direction, lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal);
+					vec3 lightSampleHitNormal = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1);
+					vec3 lightBRDF = BRDF(lightRay.Direction, -LightCacheEntries[lightCacheSampleIndex].IncidentDirection,
+											lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal);
 					connectionLightPathToEyePath = GetLuminance(lightBRDF);
 
 					// I_in = Flux/2PI (= total outgoing light energy) is known.
