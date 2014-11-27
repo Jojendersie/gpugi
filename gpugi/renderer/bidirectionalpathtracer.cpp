@@ -43,7 +43,7 @@ void BidirectionalPathtracer::SetScreenSize(const ei::IVec2& _newSize)
 	// TODO: Would be better to do an experiment to check how large the light cache should be.
 	// Current size is overestimated.
 	m_lightCacheCapacity = m_numRaysPerLightSample * GetNumInitialLightSamples() * 8; // 8 is current max path length
-	unsigned int lightCacheSizeInBytes = m_lightCacheCapacity * sizeof(float) * 5 * 3 + sizeof(std::uint32_t); // 288mb @ 1024x768 resolution @ 256 initialLightSamples @ maxpath 8
+	unsigned int lightCacheSizeInBytes = m_lightCacheCapacity * sizeof(float) * 4 * 4 + sizeof(std::uint32_t);
 	m_lightCache.reset(new gl::ShaderStorageBufferView());
 	m_lightCache->Init(std::make_shared<gl::Buffer>(lightCacheSizeInBytes, gl::Buffer::Usage::IMMUTABLE), "LightCache");
 	m_lighttraceShader.BindSSBO(*m_lightCache);
