@@ -47,6 +47,11 @@ vec3 SamplePhongLobe(vec2 randomSample, float exponent, vec3 U, vec3 V, vec3 W)
 	return x*U + y*V + z*W;
 }
 
+float AvgProbability(vec3 colorProbability)
+{
+	return (colorProbability.x + colorProbability.y + colorProbability.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON);
+}
+
 // Sample a direction from the custom surface BRDF
 // weight x/p for the monte carlo integral. x weights the color channles/is the brdf
 vec3 SampleBRDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, out vec3 weight)
@@ -80,11 +85,11 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, MaterialTextureData materi
 
 	// Reflection probability
 	vec3 preflectrefract = materialTexData.Reflectiveness.xyz * (Materials[material].Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + Materials[material].Fresnel0);
-	float avgPReflectRefract = (preflectrefract.x + preflectrefract.y + preflectrefract.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON); // reflection (!) probability
+	float avgPReflectRefract = AvgProbability(preflectrefract); // reflection (!) probability
 
 	// Propability for diffuse reflection (= probability of )
 	vec3 pdiffuse = -preflectrefract * materialTexData.Opacity + materialTexData.Opacity; // preflectrefract is reflection propability
-	float avgPDiffuse = (pdiffuse.x + pdiffuse.y + pdiffuse.z) / (3.0);
+	float avgPDiffuse = AvgProbability(pdiffuse);
 
 	// Choose a random path type.
 	float pathDecisionVar = Random(seed);
@@ -103,7 +108,7 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, MaterialTextureData materi
 
 		// Refraction probability
 		preflectrefract = (1.0 - preflectrefract) * (1.0 - materialTexData.Opacity);
-		avgPReflectRefract = (preflectrefract.x + preflectrefract.y + preflectrefract.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON); // refraction!
+		avgPReflectRefract = AvgProbability(preflectrefract); // refraction!
 	}
 	// Diffuse:
 	else if(avgPReflectRefract < pathDecisionVar)	
