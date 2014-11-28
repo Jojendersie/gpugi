@@ -48,3 +48,15 @@ layout(binding = 4, shared) uniform LightPathTrace
 
 #define NUM_CAMPATH_LIGHTSAMPLE_CONNECTIONS 4 // should be "average light path length num"
 #define NUM_SAMPLING_TECHNIQUES NUM_CAMPATH_LIGHTSAMPLE_CONNECTIONS+1
+
+float MIS(float p)
+{
+	// No MIS - all techniques equal weighted. Should be the same as commenting out all MIS computations?
+	//return 1.0;
+
+	// Balance heuristic
+	return p;
+
+	// Power heuristic beta=2
+	//return p*p;
+}

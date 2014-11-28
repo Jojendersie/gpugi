@@ -77,7 +77,10 @@ void main()
 					vec3 lightSampleHitNormal = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1);
 					vec3 lightBRDF = BRDF(lightRay.Direction, -LightCacheEntries[lightCacheSampleIndex].IncidentDirection,
 											lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal);
-					connectionLightPathToEyePath = GetLuminance(lightBRDF);
+
+
+					float cosLight = saturate(dot(-lightRay.Direction, lightSampleHitNormal));
+					connectionLightPathToEyePath = MIS(GetLuminance(lightBRDF) * cosLight / lightDistSq);
 
 					// I_in = Flux/2PI (= total outgoing light energy) is known.
 					// Want to know the Intensity for a given direction I_out				
@@ -93,22 +96,28 @@ void main()
 					//
 					// => I_out = I_in * BRDF * cos(OutgoingDir, Normal)
 
-					lightSampleIntensity *= lightBRDF * saturate(dot(-lightRay.Direction, lightSampleHitNormal));
+					lightSampleIntensity *= lightBRDF * cosLight;
 				}
 
-				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
+				float cosCamera = saturate(dot(lightRay.Direction, hitNormal));
 
-				float connectionEyePathToLightPath = GetLuminance(brdf);
+				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal); // Note that this is also 1/samplingProbability!
+
+				float connectionEyePathToLightPath = MIS(GetLuminance(brdf) * cosCamera / lightDistSq);
 				float light_pathProbability = LightCacheEntries[lightCacheSampleIndex].PathProbability;
 				float light_anyPathProbabilitySum = LightCacheEntries[lightCacheSampleIndex].AnyPathProbabilitySum;
 
-				float connectedPathPropability = light_pathProbability * pathProbability;
+#ifdef RUSSIAN_ROULETTE
+				const float connectedPathPropability = 1.0;
+#else
+				float connectedPathPropability = light_pathProbability * pathProbability + DIVISOR_EPSILON;
+#endif
 				float mis = connectedPathPropability / 
 							(light_pathProbability * connectionEyePathToLightPath * anyPathProbabilitySum + 
 							 pathProbability * connectionLightPathToEyePath * light_anyPathProbabilitySum + connectedPathPropability);
 
 				vec3 irradiance = (lightSampleWeight * mis * 
-									dot(lightRay.Direction, hitNormal) / lightDistSq) * lightSampleIntensity;
+								   cosCamera / lightDistSq) * lightSampleIntensity;
 				color += irradiance * rayColor * brdf; 
 			}
 		}
@@ -118,6 +127,7 @@ void main()
 		if(!ContinuePath(rayColor, ray, randomSeed, connectionPropability, hitNormal, triangle.w, materialTexData))
 			break;
 
+		connectionPropability = MIS(connectionPropability);
 		anyPathProbabilitySum = anyPathProbabilitySum * connectionPropability + pathProbability;
 		pathProbability *= connectionPropability;
 	}

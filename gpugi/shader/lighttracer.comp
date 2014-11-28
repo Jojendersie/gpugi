@@ -155,7 +155,13 @@ void main()
 
 				#ifdef SAVE_LIGHT_CACHE
 					float connectionPropability = GetLuminance(brdf);
-					float mis = pathProbability / (pathProbability + connectionPropability * anyPathProbabilitySum);
+
+				#ifdef RUSSIAN_ROULETTE
+					const float connectedPathPropability = 1.0;
+				#else
+					float connectedPathPropability = pathProbability + DIVISOR_EPSILON;
+				#endif
+					float mis = connectedPathPropability / (connectionPropability * anyPathProbabilitySum + connectedPathPropability);
 					mis /= NUM_SAMPLING_TECHNIQUES;
 
 					vec3 color = rayFlux * (fluxToIrradiance * mis) * brdf;
@@ -196,6 +202,7 @@ void main()
 			break;
 
 	#ifdef SAVE_LIGHT_CACHE
+		connectionPropability = MIS(connectionPropability);
 		anyPathProbabilitySum = anyPathProbabilitySum * connectionPropability + pathProbability;
 		pathProbability *= connectionPropability;
 	#endif
