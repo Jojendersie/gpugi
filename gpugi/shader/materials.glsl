@@ -70,7 +70,7 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, MaterialTextureData materi
 	// ((n-1)²+k²) / ((n+1)²+k²) + 4n / ((n+1)²+k²) * (1-cos theta)^5
 	// = Fresnel0 + Fresnel1 * (1-cos theta)^5
 	float cosTheta = dot(N, incidentDirection);
-	float cosThetaAbs = abs(cosTheta);
+	float cosThetaAbs = saturate(abs(cosTheta));
 
 	// Reflect
 	vec3 sampleDir = incidentDirection - (2.0 * cosTheta) * N; // later normalized, may not be final
