@@ -1,10 +1,16 @@
 // #define ANY_HIT
 // #define TRACERAY_DEBUG_VARS
+// #define TRINORMAL_OUTPUT
 
 #ifdef ANY_HIT
 	bool TraceRayAnyHit(in Ray ray, in float rayLength)
 #else
-	void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, out Triangle outTriangle)
+	void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, out Triangle outTriangle
+		
+	#ifdef TRINORMAL_OUTPUT
+		, out vec3 triangleNormal
+	#endif
+		)
 #endif
 {
 	int currentNodeIndex = 0;
@@ -67,9 +73,9 @@
 				positions[2] = texelFetch(VertexPositionBuffer, triangle.z).xyz;
 
 				// Check hit.
-				vec3 triangleNormal;
+				vec3 newTriangleNormal;
 				float newHit; vec3 newBarycentricCoord;
-				if(IntersectTriangle(ray, positions[0], positions[1], positions[2], newHit, newBarycentricCoord, triangleNormal) && newHit < rayLength)
+				if (IntersectTriangle(ray, positions[0], positions[1], positions[2], newHit, newBarycentricCoord, newTriangleNormal) && newHit < rayLength)
 				{
 					#ifdef ANY_HIT
 						return true;
@@ -77,6 +83,11 @@
 						rayLength = newHit;
 						outTriangle = triangle;
 						outBarycentricCoord = newBarycentricCoord;
+
+					#ifdef TRINORMAL_OUTPUT
+						triangleNormal = newTriangleNormal;
+					#endif
+
 						// Cannot return yet, there might be a triangle that is hit before this one!
 					#endif
 				}
