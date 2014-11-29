@@ -1,5 +1,6 @@
 #version 440
 
+#define TRINORMAL_OUTPUT
 #include "stdheader.glsl"
 
 #ifdef SAVE_LIGHT_CACHE
@@ -28,6 +29,32 @@ layout(binding = 1, r32ui) coherent uniform uimage2D LockTexture;
 #else
 	#define MAX_PATHLENGTH 16
 #endif
+
+// The (often underestimated) problem:
+// The number of light rays hitting a triangle does NOT depend on the shading normal!
+// The fix (see also Veach Chapter 5.3 or http://ompf2.com/viewtopic.php?f=3&t=1944):
+float AdjointBSDFCorrectedOutDotN(vec3 incomingLight, vec3 toCamera, vec3 geometryNormal, vec3 shadingNormal)
+{
+	// alternative without if? todo
+	if(dot(incomingLight, geometryNormal) * dot(incomingLight, shadingNormal) < 0 ||
+		dot(toCamera, geometryNormal) * dot(toCamera, shadingNormal) < 0)
+		return 0.0;
+
+	return saturate(abs(dot(incomingLight, shadingNormal) * dot(toCamera, geometryNormal)) / (abs(dot(incomingLight, geometryNormal)) + DIVISOR_EPSILON));
+
+	// Alternative without correction:
+	// return saturate(dot(-toCamera, shadingNormal));
+}
+float AdjointBSDFCorrection(vec3 inDir, vec3 outDir, vec3 geometryNormal, vec3 shadingNormal)
+{
+	// alternative without if? todo
+	if(dot(inDir, geometryNormal) * dot(inDir, shadingNormal) < 0 ||
+		dot(outDir, geometryNormal) * dot(outDir, shadingNormal) < 0)
+		return 0.0;
+
+	return saturate(abs(dot(inDir, shadingNormal) * dot(outDir, geometryNormal)) / (abs(dot(inDir, geometryNormal) * dot(outDir, shadingNormal)) + DIVISOR_EPSILON));
+}
+
 
 layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 void main()
@@ -80,14 +107,15 @@ void main()
 		Triangle triangle;
 		vec3 barycentricCoord;
 		float rayHit = RAY_MAX;
-		TraceRay(ray, rayHit, barycentricCoord, triangle);
+		vec3 geometryNormal;
+		TraceRay(ray, rayHit, barycentricCoord, triangle, geometryNormal);
 		if(rayHit == RAY_MAX)
 			break;
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
 
 		// Compute hit normal and texture coordinate.
-		vec3 hitNormal; vec2 hitTexcoord;
-		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
+		vec3 shadingNormal; vec2 hitTexcoord;
+		GetTriangleHitInfo(triangle, barycentricCoord, shadingNormal, hitTexcoord);
 
 		// Get Material infos.
 		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
@@ -101,7 +129,7 @@ void main()
 			LightCacheEntries[lightCacheEntryIndex].MaterialIndex = triangle.w;
 			// Use "true" position - necessary epsilon can be easily applied in pathtracer_bidir.comp
 			LightCacheEntries[lightCacheEntryIndex].Position = ray.Origin; 
-			vec2 packedNormal = PackNormal(hitNormal);
+			vec2 packedNormal = PackNormal(shadingNormal);
 			LightCacheEntries[lightCacheEntryIndex].Normal0 = packedNormal.x;
 			LightCacheEntries[lightCacheEntryIndex].Normal1 = packedNormal.y;
 			LightCacheEntries[lightCacheEntryIndex].Texcoord = hitTexcoord;
@@ -148,10 +176,10 @@ void main()
 					//cosAtCameraPow4 *= cosAtCameraPow4; // Not entirely clear why this is more correct in empiric comparisions
 					//cosAtCameraPow4 *= cosAtCameraPow4;
 					float fluxToRadiance = 1.0 / (cosAtCameraPow4 * PixelArea * cameraDistSq);
-					float fluxToIrradiance = fluxToRadiance * saturate(dot(cameraRay.Direction, hitNormal));
+					float fluxToIrradiance = fluxToRadiance * AdjointBSDFCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal);
 
 					// To hide hide errors in helmholtz reciprocy, trace ray "from camera to light" (instead of in=ray.Direction out=cameraRay.Direction)
-					vec3 brdf = BRDF(-cameraRay.Direction, -ray.Direction, triangle.w, materialTexData, hitNormal);
+					vec3 brdf = BRDF(-cameraRay.Direction, -ray.Direction, triangle.w, materialTexData, shadingNormal);
 
 				#ifdef SAVE_LIGHT_CACHE
 					float connectionPropability = GetLuminance(brdf);
@@ -196,10 +224,22 @@ void main()
 			}
 		}
 
-		float connectionPropability;
-		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
-		if(!ContinuePath(rayFlux, ray, randomSeed, connectionPropability, hitNormal, triangle.w, materialTexData))
+		vec3 weight;
+		vec3 newDirection = SampleBRDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, weight);
+		weight *= AdjointBSDFCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
+
+		float connectionPropability = GetLuminance(weight);
+	#ifdef RUSSIAN_ROULETTE
+		if(Random(randomSeed) > connectionPropability)
 			break;
+		rayFlux *= weight / connectionPropability; // Only change in spectrum, no energy loss.
+	#else
+		rayFlux *= weight; // Absorption, not via Russion Roulette, but by color multiplication.
+	#endif
+
+		ray.Direction = newDirection;
+		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
+
 
 	#ifdef SAVE_LIGHT_CACHE
 		connectionPropability = MIS(connectionPropability);
