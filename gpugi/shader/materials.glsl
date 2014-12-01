@@ -52,6 +52,11 @@ float AvgProbability(vec3 colorProbability)
 	return (colorProbability.x + colorProbability.y + colorProbability.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON);
 }
 
+float Avg(vec3 colorProbability)
+{
+	return (colorProbability.x + colorProbability.y + colorProbability.z ) / 3.0;
+}
+
 // Sample a direction from the custom surface BRDF
 // weight x/p for the monte carlo integral. x weights the color channles/is the brdf
 vec3 SampleBRDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, out vec3 weight)
@@ -89,13 +94,13 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, MaterialTextureData materi
 
 	// Propability for diffuse reflection (= probability of )
 	vec3 pdiffuse = -preflectrefract * materialTexData.Opacity + materialTexData.Opacity; // preflectrefract is reflection propability
-	float avgPDiffuse = AvgProbability(pdiffuse);
+	float avgPDiffuse = Avg(pdiffuse);
 
 	// Choose a random path type.
 	float pathDecisionVar = Random(seed);
 
 	// Refract:
-	if(avgPDiffuse < pathDecisionVar)
+	if(avgPDiffuse <= pathDecisionVar)
 	{
 		// Compute refraction direction.
 		float eta = cosTheta < 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg; // Is this a branch? And if yes, how to avoid it?
@@ -144,7 +149,7 @@ vec3 BRDF(vec3 incidentDirection, vec3 excidentDirection, int material, Material
 {
 	vec3 excidentLight = vec3(0.0);
 	float cosTheta = dot(N, incidentDirection);
-	float cosThetaAbs = abs(cosTheta);
+	float cosThetaAbs = saturate(abs(cosTheta));
 
 	// Compute reflection probabilities with rescaled fresnel approximation from:
 	// Fresnel Term Approximations for Metals

@@ -59,7 +59,7 @@ void main()
 			//	continue;
 
 			float lightDist = sqrt(lightDistSq);
-			lightRay.Direction /= lightDist;
+			lightRay.Direction /= lightDist + DIVISOR_EPSILON;
 			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + ray.Origin;
 
 			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON)) // Important to subtract epsilon, since light sample may be slightly behind the surface

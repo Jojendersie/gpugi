@@ -52,7 +52,7 @@ void main()
 			lightRay.Direction = lightSamplePos - ray.Origin;
 			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
 			float lightDist = sqrt(lightDistSq);
-			lightRay.Direction /= lightDist;
+			lightRay.Direction /= lightDist + DIVISOR_EPSILON;
 			rayHit = lightDist;
 			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + ray.Origin;
 

@@ -50,10 +50,16 @@ vec3 UnpackNormal(float packedNormal0, float packedNormal1)
 // Attention: return.x ranges [-PI;+PI]
 vec2 PackNormal(in vec3 normal)
 {
+	// Currently invalid implementation which tries to remove division by 0 with an epsilon.
+	//const float ATAN_EPS = 0.0001;
+	//return vec2(atan(normal.y, step(abs(normal.x), ATAN_EPS) * ATAN_EPS + normal.x), normal.z);
 	// A mathematical correct and more robust alternative would be using 2 atan functions:
 	// http://stackoverflow.com/questions/26070410/robust-atany-x-on-glsl-for-converting-xy-coordinate-to-angle
-	const float ATAN_EPS = 0.0001;
-	return vec2(atan(normal.y, step(abs(normal.x), ATAN_EPS) * ATAN_EPS + normal.x), normal.z);
+	//return vec2(PI/2 - mix(atan(normal.x, normal.y), atan(normal.y, normal.x), abs(normal.x) > abs(normal.y)), normal.z);
+	// Alternative fix (selfmade):
+	// When x is zero then cos(packedNormal0)==0. So packedNormal0 may be +-PI/2
+	// dependent on the sign of y.
+	return vec2(normal.x == 0.0 ? sign(normal.y)*PI/2 : atan(normal.y, normal.x), normal.z);
 }
 
 
