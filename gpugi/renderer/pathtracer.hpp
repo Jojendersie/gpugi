@@ -14,7 +14,7 @@ class Pathtracer : public Renderer
 public:
 	Pathtracer();
 
-	std::string GetName() const override { return "Pathtracer"; }
+	std::string GetName() const override { return "PT"; }
 
 	void SetScreenSize(const ei::IVec2& newSize) override;
 

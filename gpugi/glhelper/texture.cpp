@@ -53,6 +53,17 @@ namespace gl
 		GL_CALL(glBindImageTexture, _slotIndex, 0, 0, false, 0, GL_READ_WRITE, GL_RGBA8);
 	}
 
+    void Texture::ResetBinding(GLuint _slotIndex)
+	{
+		Assert(_slotIndex < sizeof(s_boundTextures) / sizeof(Texture*), "Can't bind texture to slot " + std::to_string(_slotIndex) +". Maximum number of slots is " + std::to_string(sizeof(s_boundTextures) / sizeof(Texture*)));
+		if (s_boundTextures[_slotIndex] != nullptr)
+		{
+			GL_CALL(glActiveTexture, GL_TEXTURE0 + _slotIndex);
+			GL_CALL(glBindTexture, GetOpenGLTextureType(), 0);
+			s_boundTextures[_slotIndex] = nullptr;
+		}
+	}
+
 	void Texture::ClearToZero(std::uint32_t _mipLevel)
 	{
 		Assert(m_numMipLevels > _mipLevel, "Miplevel " + std::to_string(_mipLevel) + " not available, texture has only " + std::to_string(m_numMipLevels) + " levels!");

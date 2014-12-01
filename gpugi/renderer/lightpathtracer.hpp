@@ -16,7 +16,7 @@ class LightPathtracer : public Renderer
 public:
 	LightPathtracer();
 	
-	std::string GetName() const override  { return "Lighttracer"; }
+	std::string GetName() const override  { return "LPT"; }
 
 	void SetScreenSize(const ei::IVec2& newSize) override;
 

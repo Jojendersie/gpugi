@@ -16,7 +16,7 @@ class BidirectionalPathtracer : public Renderer
 public:
 	BidirectionalPathtracer();
 	
-	std::string GetName() const override  { return "Bidirectional Pathtracer"; }
+	std::string GetName() const override  { return "BPT"; }
 
 	void SetScreenSize(const ei::IVec2& newSize) override;
 

@@ -152,6 +152,8 @@ void OutputWindow::DisplayHDRTexture(gl::Texture2D& texture, std::uint32_t _divi
 
 	if (srgboutput)
 		glDisable(GL_FRAMEBUFFER_SRGB);
+
+    texture.ResetBinding(0);
 }
 
 void OutputWindow::Present()

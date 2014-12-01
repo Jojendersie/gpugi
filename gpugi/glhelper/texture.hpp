@@ -15,6 +15,9 @@ namespace gl
 		/// Binds texture to the given slot.
 		void Bind(GLuint slot);
 
+        /// Unbind texture
+        void Texture::ResetBinding(GLuint _slotIndex);
+
 		/// Different possibilities to access an image.
 		enum class ImageAccess
 		{

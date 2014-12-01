@@ -217,9 +217,12 @@ private:
 
 		time_t t = time(0);   // get time now
 		struct tm* now = localtime(&t);
-		std::string filename = m_screenShotName + m_renderer->GetName() + " " + std::to_string(m_renderer->GetIterationCount()) + " iters " +
-			                   UIntToMinLengthString(now->tm_mon+1, 2) + "." + UIntToMinLengthString(now->tm_mday, 2) + " " +
-								UIntToMinLengthString(now->tm_hour, 2) + "h" + UIntToMinLengthString(now->tm_min, 2) + "m" + std::to_string(now->tm_sec) + "s.pfm";
+        std::string date = UIntToMinLengthString(now->tm_mon+1, 2) + "." + UIntToMinLengthString(now->tm_mday, 2) + " " +
+						   UIntToMinLengthString(now->tm_hour, 2) + "h" + UIntToMinLengthString(now->tm_min, 2) + "m" + std::to_string(now->tm_sec) + "s ";
+		std::string filename = m_screenShotName + date
+                                 + m_renderer->GetName() + " " +
+                                 std::to_string(m_renderer->GetIterationCount()) + "it "
+                                ".pfm";
 		gl::Texture2D& backbuffer = m_renderer->GetBackbuffer();
 		std::unique_ptr<ei::Vec4[]> imageData(new ei::Vec4[backbuffer.GetWidth() * backbuffer.GetHeight()]);
 		backbuffer.ReadImage(0, gl::TextureReadFormat::RGBA, gl::TextureReadType::FLOAT, backbuffer.GetWidth() * backbuffer.GetHeight() * sizeof(ei::Vec4), imageData.get());
