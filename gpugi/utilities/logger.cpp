@@ -14,25 +14,43 @@ namespace Logger {
 	}
 
 	// ********************************************************************* //
+	Logger::Logger() : m_policy(nullptr), m_initialized(false)
+	{
+
+	}
+
+	// ********************************************************************* //
 	Logger::~Logger()
 	{
-		m_policy->Write( GetTimeString() );
-		m_policy->Write( " Closing Logger\n" );
-
-		// If there is some writing do not delete the policy instant.
-		m_mutex.lock();
-		delete m_policy;
-		m_policy = nullptr;
-		m_mutex.unlock();
+		Shutdown();
 	}
 	
 	// ********************************************************************* //
-	void Logger::Initialize( Policy* _policy )
+	void Logger::Initialize(Policy* _policy)
 	{
-		delete m_policy;
 		m_policy = _policy;
-		m_policy->Write( GetTimeString() );
-		m_policy->Write( " Initialized Logger\n" );
+		m_policy->Write(GetTimeString());
+		m_policy->Write(" Initialized Logger\n");
+
+		m_initialized = true;
+	}
+
+	// ********************************************************************* //
+	void Logger::Shutdown()
+	{
+		if (m_initialized)
+		{
+			m_policy->Write(GetTimeString());
+			m_policy->Write(" Closing Logger\n");
+
+			// If there is some writing do not delete the policy instant.
+			m_mutex.lock();
+			delete m_policy;
+			m_policy = nullptr;
+			m_mutex.unlock();
+
+			m_initialized = false;
+		}
 	}
 	
 	// ********************************************************************* //

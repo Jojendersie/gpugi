@@ -107,6 +107,8 @@ public:
 #endif
 
 		m_scriptProcessing.StopConsoleWindowThread();
+
+		Logger::g_logger.Shutdown();
 	}
 
 	void SwitchRenderer(const GlobalConfig::ParameterType& p)
@@ -238,8 +240,28 @@ private:
     std::shared_ptr<Scene> m_scene;
 };
 
+
+#ifdef _CONSOLE
+// Console window handler
+BOOL CtrlHandler(DWORD fdwCtrlType)
+{
+	if (fdwCtrlType == CTRL_CLOSE_EVENT)
+	{
+		Logger::g_logger.Shutdown(); // To avoid crash with invalid mutex.
+		return FALSE;
+	}
+	else
+		return FALSE;
+}
+#endif
+
 int main(int argc, char** argv)
 {
+	// Install console handler.
+#ifdef _CONSOLE
+	SetConsoleCtrlHandler((PHANDLER_ROUTINE)CtrlHandler, TRUE);
+#endif
+
 	// Actual application.
 	try
 	{

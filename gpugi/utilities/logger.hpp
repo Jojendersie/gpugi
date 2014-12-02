@@ -17,7 +17,7 @@ namespace Logger {
 	class Logger
 	{
 	public:
-		Logger()	{}
+    Logger();
 		~Logger();
 		
 		/// \brief Create a logger which uses a certain policy for outputting data.
@@ -26,6 +26,8 @@ namespace Logger {
 		///		the object itself.
 		void Initialize( Policy* _policy );
 		
+    void Shutdown();
+
 		/// \brief Format and write a log message.
 		/// \details The first three arguments are induced by the macros and
 		///		give the location of the call.
@@ -39,6 +41,7 @@ namespace Logger {
 		void Write(const char* _severity, const std::string& _message);
 
 	private:
+    bool m_initialized;
 		Policy* m_policy;
 		std::mutex m_mutex;
 
