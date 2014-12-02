@@ -206,6 +206,11 @@ private:
         const struct aiNode* _node,
         const ε::Mat4x4& _transformation );
 
+	/// \brief Recursive export for tangents
+    void ExportTangents( std::ofstream& _file,
+        const struct aiNode* _node,
+        const ε::Mat4x4& _transformation );
+
 	/// \brief Converts Node(s) to FileDecl::Node(s)
 	void RecursiveWriteHierarchy( std::ofstream& _file, uint32 _this, uint32 _parent, uint32 _escape );
 };

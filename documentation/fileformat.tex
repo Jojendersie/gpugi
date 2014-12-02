@@ -23,7 +23,7 @@
 		\end{center}
 	\end{minipage}}
 %	\subject{File Format Documentation}
-	\title{The *.rawscene Format from GPUGI Project\\Version 1.1}
+	\title{The *.rawscene Format from GPUGI Project\\Version 1.2}
 	\authors{Johannes Jendersie}
 	\abstract{Abstract}{
 		This is a complete overview about the contents of *.rawscene format. The file contains a list of different arrays. Each array has a name where some must exist in the file and some are optional.
@@ -66,6 +66,15 @@ struct Vertex
 };
 	\end{lstlisting}
 	
+		% ************************************************************************ %
+	\subsection{Tangents}
+	\lstinline|header.name == "tangents"|
+	
+	Additional vertex information. To compute the full tangent space calculate \lstinline|cross(tangent, normal)|
+	\begin{lstlisting}
+Vec3 tangent;
+	\end{lstlisting}
+		
 	% ************************************************************************ %
 	\subsection{Triangles}
 	\lstinline|header.name == "triangles"|
@@ -212,6 +221,11 @@ struct Box
 	\end{tabular}
 	
 	\subsection{Changelog}
+	\subsubsection{Version 1.2}
+	\begin{itemize}
+		\item Introduced \lstinline|header.name == "tangents"| as required data
+	\end{itemize}
+	This version is backward compatible to V1.1.
 	\subsubsection{Version 1.1}
 	\begin{itemize}
 		\item Added \lstinline|"emissivity"| to material json

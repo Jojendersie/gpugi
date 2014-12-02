@@ -142,11 +142,15 @@ void BVHBuilder::ExportGeometry( std::ofstream& _file )
 {
     // Prepare file headers and find out how much space is required
     FileDecl::NamedArray vertexHeader;
+	FileDecl::NamedArray tangentsHeader;
     strcpy( vertexHeader.name, "vertices" );
+	strcpy( tangentsHeader.name, "tangents" );
     vertexHeader.elementSize = sizeof(FileDecl::Vertex);
+	tangentsHeader.elementSize = sizeof(ε::Vec3);
     uint32 numTriangles = 0;
     vertexHeader.numElements = 0;
     CountGeometry( m_scene->mRootNode, vertexHeader.numElements, numTriangles );
+	tangentsHeader.numElements = vertexHeader.numElements;
 
     // Allocate space for positions and index buffer (these are required for
     // the hierarchy build algorithm).
@@ -158,6 +162,10 @@ void BVHBuilder::ExportGeometry( std::ofstream& _file )
     // as well as m_triangles
     _file.write( (const char*)&vertexHeader, sizeof(FileDecl::NamedArray) );
     ExportVertices( _file, m_scene->mRootNode, ε::identity4x4() );
+
+	// Export tangents
+	_file.write( (const char*)&tangentsHeader, sizeof(FileDecl::NamedArray) );
+	ExportTangents( _file, m_scene->mRootNode, ε::identity4x4() );
 
     // This is not required anymore, make place for the algorithms
     m_importer.FreeScene();
@@ -183,11 +191,15 @@ void BVHBuilder::ExportVertices( std::ofstream& _file,
     const ε::Mat4x4& _transformation)
 {
     ε::Mat4x4 transformation = hard_cast<ε::Mat4x4>(_node->mTransformation) * _transformation;
+	ε::Mat3x3 invTransTransform(transformation.m00, transformation.m01, transformation.m02,
+								transformation.m10, transformation.m11, transformation.m12,
+								transformation.m20, transformation.m21, transformation.m22);
+	invTransTransform = transpose(invert(invTransTransform));
     for( unsigned i = 0; i < _node->mNumMeshes; ++i )
 	{
 		const aiMesh* mesh = m_scene->mMeshes[ _node->mMeshes[i] ];
 
-        // Find a material entry_
+        // Find the material entry
 		aiString aiName;
 		m_scene->mMaterials[mesh->mMaterialIndex]->Get( AI_MATKEY_NAME, aiName );
 		std::string materialName = aiName.C_Str();
@@ -215,7 +227,7 @@ void BVHBuilder::ExportVertices( std::ofstream& _file,
         {
             FileDecl::Vertex vertex;
             vertex.position = ε::Vec3(transformation * homo(hard_cast<ε::Vec3>(mesh->mVertices[v])));
-            vertex.normal = hard_cast<ε::Vec3>(mesh->mNormals[v]);
+            vertex.normal = invTransTransform * hard_cast<ε::Vec3>(mesh->mNormals[v]);
             if( mesh->HasTextureCoords(0) )
 				vertex.texcoord = ε::Vec2(mesh->mTextureCoords[0][v].x, mesh->mTextureCoords[0][v].y);
 			else
@@ -228,6 +240,33 @@ void BVHBuilder::ExportVertices( std::ofstream& _file,
     // Export all children
 	for( unsigned i = 0; i < _node->mNumChildren; ++i )
         ExportVertices( _file, _node->mChildren[i], transformation );
+}
+
+
+void BVHBuilder::ExportTangents( std::ofstream& _file,
+    const struct aiNode* _node,
+    const ε::Mat4x4& _transformation)
+{
+    ε::Mat4x4 transformation = hard_cast<ε::Mat4x4>(_node->mTransformation) * _transformation;
+	ε::Mat3x3 invTransTransform(transformation.m00, transformation.m01, transformation.m02,
+								transformation.m10, transformation.m11, transformation.m12,
+								transformation.m20, transformation.m21, transformation.m22);
+	invTransTransform = transpose(invert(invTransTransform));
+    for( unsigned i = 0; i < _node->mNumMeshes; ++i )
+	{
+		const aiMesh* mesh = m_scene->mMeshes[ _node->mMeshes[i] ];
+
+        // Add vertex tangents to file
+        for( unsigned v = 0; v < mesh->mNumVertices; ++v )
+        {
+            ε::Vec3 tangent = invTransTransform * hard_cast<ε::Vec3>(mesh->mTangents[v]);
+            _file.write( (const char*)&tangent, sizeof(ε::Vec3) );
+        }
+    }
+
+    // Export all children
+	for( unsigned i = 0; i < _node->mNumChildren; ++i )
+        ExportTangents( _file, _node->mChildren[i], transformation );
 }
 
 
