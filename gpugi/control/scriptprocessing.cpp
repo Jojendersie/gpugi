@@ -65,9 +65,9 @@ void ScriptProcessing::StopConsoleWindowThread()
 
 void ScriptProcessing::ParseCommand(std::string _commandLine, bool _fromScriptFile)
 {
-	auto commentStart = _commandLine.find_first_of('#');
+	auto commentStart = _commandLine.find('#');
 	if (commentStart == std::string::npos)
-		commentStart = _commandLine.find_first_of("//");
+		commentStart = _commandLine.find("//");
 	if (commentStart != std::string::npos)
 		_commandLine.erase(commentStart, _commandLine.length() - commentStart);
 
