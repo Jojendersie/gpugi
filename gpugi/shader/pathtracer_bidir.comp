@@ -75,35 +75,35 @@ void main()
 					MaterialTextureData lightSampleMaterialTexData = SampleMaterialData(lightSampleMaterialIndex, LightCacheEntries[lightCacheSampleIndex].Texcoord);
 
 					vec3 lightSampleHitNormal = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1);
-					vec3 lightBRDF = BRDF(lightRay.Direction, -LightCacheEntries[lightCacheSampleIndex].IncidentDirection,
+					vec3 lightBSDF = BSDF(lightRay.Direction, -LightCacheEntries[lightCacheSampleIndex].IncidentDirection,
 											lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal);
 
 
 					float cosLight = saturate(dot(-lightRay.Direction, lightSampleHitNormal));
-					connectionLightPathToEyePath = MIS(GetLuminance(lightBRDF) * cosLight / lightDistSq);
+					connectionLightPathToEyePath = MIS(GetLuminance(lightBSDF) * cosLight / lightDistSq);
 
 					// I_in = Flux/2PI (= total outgoing light energy) is known.
 					// Want to know the Intensity for a given direction I_out				
 
-					// BRDF = L_out/E_in
+					// BSDF = L_out/E_in
 					// E_in = I_in / dAreaIn
 					// L_out = I_out / (dAreaEmitt * cos(OutgoingDir, Normal) * dSolidAngle)
 					// dAreaIn = dAreaEmitt
 					//
-					// => BRDF = I_out / (I_in * cos(OutgoingDir, Normal) * dSolidAngle)
+					// => BSDF = I_out / (I_in * cos(OutgoingDir, Normal) * dSolidAngle)
 					//
 					// Infitesimal angle -> derivation is 1: dSolidAngle = 1
 					//
-					// => I_out = I_in * BRDF * cos(OutgoingDir, Normal)
+					// => I_out = I_in * BSDF * cos(OutgoingDir, Normal)
 
-					lightSampleIntensity *= lightBRDF * cosLight;
+					lightSampleIntensity *= lightBSDF * cosLight;
 				}
 
 				float cosCamera = saturate(dot(lightRay.Direction, hitNormal));
 
-				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal); // Note that this is also 1/samplingProbability!
+				vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal); // Note that this is also 1/samplingProbability!
 
-				float connectionEyePathToLightPath = MIS(GetLuminance(brdf) * cosCamera / lightDistSq);
+				float connectionEyePathToLightPath = MIS(GetLuminance(bsdf) * cosCamera / lightDistSq);
 				float light_pathProbability = LightCacheEntries[lightCacheSampleIndex].PathProbability;
 				float light_anyPathProbabilitySum = LightCacheEntries[lightCacheSampleIndex].AnyPathProbabilitySum;
 
@@ -118,7 +118,7 @@ void main()
 
 				vec3 irradiance = (lightSampleWeight * mis * 
 								   cosCamera / lightDistSq) * lightSampleIntensity;
-				color += irradiance * rayColor * brdf; 
+				color += irradiance * rayColor * bsdf; 
 			}
 		}
 

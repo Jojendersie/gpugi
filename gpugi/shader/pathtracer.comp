@@ -59,10 +59,10 @@ void main()
 			if(!TraceRayAnyHit(lightRay, rayHit))
 			{
 				vec3 lightSampleIntensity = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1).xyz;
-				vec3 brdf = BRDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
+				vec3 bsdf = BSDF(lightRay.Direction, ray.Direction, triangle.w, materialTexData, hitNormal);
 				vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
 								saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity;
-				color += irradiance * rayColor * brdf;
+				color += irradiance * rayColor * bsdf;
 			}
 		}
 

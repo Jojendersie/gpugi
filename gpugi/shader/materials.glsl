@@ -57,9 +57,12 @@ float Avg(vec3 colorProbability)
 	return (colorProbability.x + colorProbability.y + colorProbability.z ) / 3.0;
 }
 
-// Sample a direction from the custom surface BRDF
-// weight x/p for the monte carlo integral. x weights the color channles/is the brdf
-vec3 SampleBRDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, out vec3 weight)
+
+// Note: While BRDFs need to be symmetric to be physical, BSDFs have no such restriction!
+
+// Sample a direction from the custom surface BSDF
+// weight x/p for the monte carlo integral. x weights the color channles/is the bsdf
+vec3 SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, out vec3 weight)
 {
 	// THIS TWO LINES ARE ONLY HERE UNTIL THE OTHER STUFF RUNS
 	//weight = vec3(0.5);
@@ -102,7 +105,7 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, MaterialTextureData materi
 	// Refract:
 	if(avgPDiffuse <= pathDecisionVar)
 	{
-		// Compute refraction direction.
+		// Compute refraction direction.		
 		float eta = cosTheta < 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg; // Is this a branch? And if yes, how to avoid it?
 		float sinTheta2Sq = eta * eta * (1.0f - cosTheta * cosTheta);
 		// No total reflection
@@ -144,8 +147,10 @@ vec3 SampleBRDF(vec3 incidentDirection, int material, MaterialTextureData materi
 	//return phongDir;
 }
 
-// Sample the custom surface BRDF for two known direction
-vec3 BRDF(vec3 incidentDirection, vec3 excidentDirection, int material, MaterialTextureData materialTexData, vec3 N)
+// Sample the custom surface BSDF for two known direction
+// incidentDirection points to the surface
+// excidentDirection points away from the surface
+vec3 BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, MaterialTextureData materialTexData, vec3 N)
 {
 	vec3 excidentLight = vec3(0.0);
 	float cosTheta = dot(N, incidentDirection);
@@ -180,4 +185,11 @@ vec3 BRDF(vec3 incidentDirection, vec3 excidentDirection, int material, Material
 	excidentLight += prefract * (phongNormalization * pow(saturate(dot(sampleDir, excidentDirection)), materialTexData.Reflectiveness.w));
 	
 	return excidentLight;
+}
+
+// Adjoint in the sense of Veach PhD Thesis 3.7.6
+// Use this for tracing light particles, use BSDF for tracing importance (=path tracing)
+vec3 AdjointBSDF(vec3 incidentDirection, vec3 excidentDirection, int material, MaterialTextureData materialTexData, vec3 N)
+{
+	return BSDF(-excidentDirection, -incidentDirection, material, materialTexData, N);
 }

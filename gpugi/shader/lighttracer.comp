@@ -33,7 +33,7 @@ layout(binding = 1, r32ui) coherent uniform uimage2D LockTexture;
 // The (often underestimated) problem:
 // The number of light rays hitting a triangle does NOT depend on the shading normal!
 // The fix (see also Veach Chapter 5.3 or http://ompf2.com/viewtopic.php?f=3&t=1944):
-float AdjointBSDFCorrectedOutDotN(vec3 incomingLight, vec3 toCamera, vec3 geometryNormal, vec3 shadingNormal)
+float AdjointBSDFShadingNormalCorrectedOutDotN(vec3 incomingLight, vec3 toCamera, vec3 geometryNormal, vec3 shadingNormal)
 {
 	// alternative without if? todo
 	if(dot(incomingLight, geometryNormal) * dot(incomingLight, shadingNormal) < 0 ||
@@ -45,7 +45,7 @@ float AdjointBSDFCorrectedOutDotN(vec3 incomingLight, vec3 toCamera, vec3 geomet
 	// Alternative without correction:
 	// return saturate(dot(-toCamera, shadingNormal));
 }
-float AdjointBSDFCorrection(vec3 inDir, vec3 outDir, vec3 geometryNormal, vec3 shadingNormal)
+float AdjointBSDFShadingNormalCorrection(vec3 inDir, vec3 outDir, vec3 geometryNormal, vec3 shadingNormal)
 {
 	// alternative without if? todo
 	if(dot(inDir, geometryNormal) * dot(inDir, shadingNormal) < 0 ||
@@ -176,13 +176,12 @@ void main()
 					//cosAtCameraPow4 *= cosAtCameraPow4; // Not entirely clear why this is more correct in empiric comparisions
 					//cosAtCameraPow4 *= cosAtCameraPow4;
 					float fluxToRadiance = 1.0 / (cosAtCameraPow4 * PixelArea * cameraDistSq);
-					float fluxToIrradiance = fluxToRadiance * AdjointBSDFCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal);
+					float fluxToIrradiance = fluxToRadiance * AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal);
 
-					// To hide hide errors in helmholtz reciprocy, trace ray "from camera to light" (instead of in=ray.Direction out=cameraRay.Direction)
-					vec3 brdf = BRDF(-cameraRay.Direction, -ray.Direction, triangle.w, materialTexData, shadingNormal);
+					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal);
 
 				#ifdef SAVE_LIGHT_CACHE
-					float connectionPropability = GetLuminance(brdf);
+					float connectionPropability = GetLuminance(bsdf);
 
 				#ifdef RUSSIAN_ROULETTE
 					const float connectedPathPropability = 1.0;
@@ -192,9 +191,9 @@ void main()
 					float mis = connectedPathPropability / (connectionPropability * anyPathProbabilitySum + connectedPathPropability);
 					mis /= NUM_SAMPLING_TECHNIQUES;
 
-					vec3 color = rayFlux * (fluxToIrradiance * mis) * brdf;
+					vec3 color = rayFlux * (fluxToIrradiance * mis) * bsdf;
 				#else
-					vec3 color = rayFlux * fluxToIrradiance * brdf;
+					vec3 color = rayFlux * fluxToIrradiance * bsdf;
 				#endif
 					
 
@@ -225,8 +224,8 @@ void main()
 		}
 
 		vec3 weight;
-		vec3 newDirection = SampleBRDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, weight);
-		weight *= AdjointBSDFCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
+		vec3 newDirection = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, weight);
+		weight *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
 
 		float connectionPropability = GetLuminance(weight);
 	#ifdef RUSSIAN_ROULETTE
