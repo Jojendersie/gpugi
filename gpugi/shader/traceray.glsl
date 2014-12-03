@@ -2,6 +2,8 @@
 // #define TRACERAY_DEBUG_VARS
 // #define TRINORMAL_OUTPUT
 
+// TRINORMAL_OUTPUT: Attention! triangleNormal is not normalized
+
 #ifdef ANY_HIT
 	bool TraceRayAnyHit(in Ray ray, in float rayLength)
 #else

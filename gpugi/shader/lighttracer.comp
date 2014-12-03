@@ -111,6 +111,7 @@ void main()
 		TraceRay(ray, rayHit, barycentricCoord, triangle, geometryNormal);
 		if(rayHit == RAY_MAX)
 			break;
+		//geometryNormal = normalize(geometryNormal); geometryNormal is not normalize, but it actually does not need to be! See AdjointBSDFShadingNormalX functions
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
 
 		// Compute hit normal and texture coordinate.
@@ -224,12 +225,12 @@ void main()
 		}
 
 		vec3 weight;
-		vec3 newDirection = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, weight);
+		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, weight);
 		weight *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
 
 		float connectionPropability = GetLuminance(weight);
 	#ifdef RUSSIAN_ROULETTE
-		if(Random(randomSeed) > connectionPropability)
+		if(Random(randomSeed) >= connectionPropability) // if connectionPropability is zero, path should be stoped -> >=
 			break;
 		rayFlux *= weight / connectionPropability; // Only change in spectrum, no energy loss.
 	#else

@@ -59,7 +59,7 @@ void main()
 			if(!TraceRayAnyHit(lightRay, rayHit))
 			{
 				vec3 lightSampleIntensity = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1).xyz;
-				vec3 bsdf = BSDF(lightRay.Direction, ray.Direction, triangle.w, materialTexData, hitNormal);
+				vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
 				vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
 								saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity;
 				color += irradiance * rayColor * bsdf;
@@ -67,8 +67,19 @@ void main()
 		}
 
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
-		if(!ContinuePath(rayColor, ray, randomSeed, hitNormal, triangle.w, materialTexData))
+		vec3 weight;
+		float radianceScale = 1.0;
+		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, weight, radianceScale);
+		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
+	#ifdef RUSSIAN_ROULETTE
+		float connectionPropability = GetLuminance(weight);
+		if(Random(randomSeed) >= connectionPropability) // if connectionPropability is zero, path should be stoped -> >=
 			break;
+		rayColor *= weight / connectionPropability; // Only change in spectrum, no energy loss.
+	#else
+		rayColor *= weight; // Absorption, not via Russion Roulette, but by color multiplication.
+	#endif
+		rayColor *= radianceScale;
 	}
 
 	vec4 final = vec4(color, 1.0);

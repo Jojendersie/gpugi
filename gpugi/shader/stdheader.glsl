@@ -12,7 +12,6 @@
 #include "random.glsl"
 #include "globaluniforms.glsl"
 #include "materials.glsl"
-#include "pathhelper.glsl" // Depends on RUSSIAN_ROULETTE and RAY_HIT_EPSILON define
 
 // Debug variables for traceray.
 /*#define TRACERAY_DEBUG_VARS

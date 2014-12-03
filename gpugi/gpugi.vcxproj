@@ -231,7 +231,6 @@
     <None Include="shader\lightcache.glsl" />
     <None Include="shader\lighttracer.comp" />
     <None Include="shader\materials.glsl" />
-    <None Include="shader\pathhelper.glsl" />
     <None Include="shader\pathtracer.comp" />
     <None Include="shader\pathtracer_bidir.comp" />
     <None Include="shader\random.glsl" />
