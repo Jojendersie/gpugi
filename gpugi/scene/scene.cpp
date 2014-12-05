@@ -70,6 +70,7 @@ Scene::Scene( const std::string& _file ) :
 		else if(strcmp(header.name, "hierarchy") == 0) LoadHierarchy(file, header);
 		else if(strcmp(header.name, "bounding_aabox") == 0) LoadBoundingVolumes(file, header);
 		else if(strcmp(header.name, "bounding_sphere") == 0) LoadBoundingVolumes(file, header);
+        else file.seekg(header.elementSize * header.numElements, std::ios_base::cur);
 		Assert( !file.fail(), "Failed to load the last block correctly." );
 	}
 
