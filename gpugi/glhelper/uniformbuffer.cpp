@@ -71,11 +71,7 @@ namespace gl
 		int i = 0;
 		for (auto shaderObjectIt = metaInfos.begin(); shaderObjectIt != metaInfos.end(); ++shaderObjectIt, ++i)
 		{
-			if (*shaderObjectIt == NULL)
-			{
-				LOG_LVL2("ShaderObject \"" + (*shaderObjectIt)->GetName() + "\" in list for uniform buffer \"" + bufferName + "\" initialization doesn't contain the needed meta data! Skiping..");
-				continue;
-			}
+			Assert(*shaderObjectIt != nullptr, "Metainfo element is nullptr!");
 			auto uniformBufferInfoIterator = (*shaderObjectIt)->GetUniformBufferInfo().find(bufferName);
 			if (uniformBufferInfoIterator == (*shaderObjectIt)->GetUniformBufferInfo().end())
 			{

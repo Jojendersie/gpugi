@@ -363,7 +363,7 @@ namespace gl
 		GL_CALL(glGetProgramInterfaceiv, m_program, GL_UNIFORM, GL_ACTIVE_RESOURCES, &iTotalNumUniforms);
 		const GLuint iNumQueriedUniformProps = 10;
 		const GLenum pQueriedUniformProps[] = { GL_NAME_LENGTH, GL_TYPE, GL_ARRAY_SIZE, GL_OFFSET, GL_BLOCK_INDEX, GL_ARRAY_STRIDE, GL_MATRIX_STRIDE, GL_IS_ROW_MAJOR, GL_ATOMIC_COUNTER_BUFFER_INDEX, GL_LOCATION };
-		GLint pRawUniformBlockInfoData[iNumQueriedUniformProps];
+		GLint pRawUniformBlockInfoData[iNumQueriedUniformProps] = {};
 		for (int blockIndex = 0; blockIndex < iTotalNumUniforms; ++blockIndex)
 		{
 			// general data
@@ -425,7 +425,7 @@ namespace gl
 			// name
 			GLint iActualNameLength = 0;
 			std::string name;
-			name.resize(pRawUniformBlockInfoData[0] + 1);
+			name.resize(pRawStorageBlockInfoData[0] + 1);
 			GL_CALL(glGetProgramResourceName, m_program, GL_BUFFER_VARIABLE, blockIndex, static_cast<GLsizei>(name.size()), &iActualNameLength, &name[0]);
 			name.resize(iActualNameLength);
 

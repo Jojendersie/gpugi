@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <GL/GL.h>
 #include <cstdint>
@@ -36,10 +36,10 @@ namespace gl
 		BOOL_VEC3 = GL_BOOL_VEC3,
 		BOOL_VEC4 = GL_BOOL_VEC4,
 
-		FLOAT_MAT​2 = GL_FLOAT_MAT2,
+		FLOAT_MAT2 = GL_FLOAT_MAT2,
 		FLOAT_MAT3 = GL_FLOAT_MAT3,
 		FLOAT_MAT4 = GL_FLOAT_MAT4,
-		FLOAT_MAT2x3​ = GL_FLOAT_MAT2x3,
+		FLOAT_MAT2x3 = GL_FLOAT_MAT2x3,
 		FLOAT_MAT2x4 = GL_FLOAT_MAT2x4,
 		FLOAT_MAT3x2 = GL_FLOAT_MAT3x2,
 		FLOAT_MAT3x4 = GL_FLOAT_MAT3x4,
@@ -49,7 +49,7 @@ namespace gl
 		DOUBLE_MAT2 = GL_DOUBLE_MAT2,
 		DOUBLE_MAT3 = GL_DOUBLE_MAT3,
 		DOUBLE_MAT4 = GL_DOUBLE_MAT4,
-		DOUBLE_MAT2x3​ = GL_DOUBLE_MAT2x3,
+		DOUBLE_MAT2x3 = GL_DOUBLE_MAT2x3,
 		DOUBLE_MAT2x4 = GL_DOUBLE_MAT2x4,
 		DOUBLE_MAT3x2 = GL_DOUBLE_MAT3x2,
 		DOUBLE_MAT3x4 = GL_DOUBLE_MAT3x4,
@@ -59,7 +59,7 @@ namespace gl
 		SAMPLER_1D = GL_SAMPLER_1D,
 		SAMPLER_2D = GL_SAMPLER_2D,
 		SAMPLER_3D = GL_SAMPLER_3D,
-		SAMPLER_CUBE​ = GL_SAMPLER_CUBE,
+		SAMPLER_CUBE = GL_SAMPLER_CUBE,
 		SAMPLER_1D_SHADOW = GL_SAMPLER_1D_SHADOW,
 		SAMPLER_2D_SHADOW = GL_SAMPLER_2D_SHADOW,
 		SAMPLER_1D_ARRAY = GL_SAMPLER_1D_ARRAY,
@@ -85,7 +85,7 @@ namespace gl
 		UNSIGNED_INT_SAMPLER_1D = GL_UNSIGNED_INT_SAMPLER_1D,
 		UNSIGNED_INT_SAMPLER_2D = GL_UNSIGNED_INT_SAMPLER_2D,
 		UNSIGNED_INT_SAMPLER_3D = GL_UNSIGNED_INT_SAMPLER_3D,
-		UNSIGNED_INT_SAMPLER_CUBE​ = GL_UNSIGNED_INT_SAMPLER_CUBE,
+		UNSIGNED_INT_SAMPLER_CUBE = GL_UNSIGNED_INT_SAMPLER_CUBE,
 		UNSIGNED_INT_SAMPLER_1D_ARRAY = GL_UNSIGNED_INT_SAMPLER_1D_ARRAY,
 		UNSIGNED_INT_SAMPLER_2D_ARRAY = GL_UNSIGNED_INT_SAMPLER_2D_ARRAY,
 		UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE = GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE,
@@ -166,7 +166,7 @@ namespace gl
 	struct UniformVariableInfo : ShaderVariableInfoBase
 	{
 		GLint iLocation;      ///< OpenGL location, -1 if used in a buffer.
-		GLint iAtomicCounterbufferIndex; ///< Index of active atomic counter buffer containing this variable​. -1 if this is no atomic counter buffer
+		GLint iAtomicCounterbufferIndex; ///< Index of active atomic counter buffer containing this variable?. -1 if this is no atomic counter buffer
 	};
 	/// Info block for buffer variables
 	struct BufferVariableInfo : ShaderVariableInfoBase
