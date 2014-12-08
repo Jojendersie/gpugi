@@ -21,13 +21,11 @@ MaterialTextureData SampleMaterialData(int materialID, vec2 texcoord)
 //    randomSample is a random number between 0-1
 vec3 SampleUnitHemisphere(vec2 randomSample, vec3 U, vec3 V, vec3 W)
 {
-    float phi = PI_2 * randomSample.x;
-    float sinTheta = sqrt(randomSample.y); // sin(acos(sqrt(1-x))) = sqrt(x)
-    float x = sinTheta * cos(phi);
-    float y = sinTheta * sin(phi);
-    float z = sqrt(saturate(1.0 - x*x - y*y));
-	//float z = 1.0 - x*x -y*y;
-    //z = z > 0.0 ? sqrt(z) : 0.0;
+	float phi = PI_2 * randomSample.x;
+	float sinTheta = sqrt(randomSample.y);	// sin(acos(sqrt(1-x))) = sqrt(x)
+	float x = sinTheta * cos(phi);
+	float y = sinTheta * sin(phi);
+	float z = sqrt(1.0 - randomSample.y);	// sqrt(1-sin(theta)^2)
 
     return x*U + y*V + z*W;
 }
