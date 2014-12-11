@@ -131,7 +131,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	else if(avgPReflectRefract < pathDecisionVar)	
 	{
 		// Normalize the probability
-		weight = (materialTexData.Diffuse * pdiffuse) / avgPDiffuse;
+		weight = (materialTexData.Diffuse * pdiffuse) / avgPDiffuse / cosThetaAbs;
 		// Create diffuse sample
 		vec3 U, V;
 		CreateONB(N, U, V);
@@ -142,8 +142,10 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 
 	// Normalize the probability
 	float phongNormalization = (materialTexData.Reflectiveness.w + 2.0) / (materialTexData.Reflectiveness.w + 1.0);
-	weight = preflectrefract * (phongNormalization / avgPReflectRefract);// * abs(cosTheta);
-
+	weight = preflectrefract * (phongNormalization / avgPReflectRefract);
+	// * cosThetaAbs is wrong because the probability that we reached the current location
+	// is always 100%. The projected area is already incorporated.
+		
 	// Create phong sample in reflection/refraction direction
 	sampleDir = normalize(sampleDir);
 	vec3 RU, RV;
