@@ -24,7 +24,7 @@ InteractiveCamera::InteractiveCamera(GLFWwindow* window, const ei::Vec3& positio
 	Camera(position, lookat, aspectRatio, hfov, up),
 	m_window(window),
 	m_rotSpeed(0.01f),
-	m_moveSpeed(16.0f)
+	m_moveSpeed(4.0f)
 {
 }
 

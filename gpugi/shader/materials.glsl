@@ -66,7 +66,7 @@ float Avg(vec3 colorProbability)
 
 
 // Sample a direction from the custom surface BSDF
-// pathThroughput = brdf * cos(Out, N) / pdf
+// pathThroughput *= brdf * cos(Out, N) / pdf
 vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, inout vec3 pathThroughput, const bool adjoint)
 {
 	// Probability model:
@@ -129,7 +129,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	else if(avgPReflectRefract < pathDecisionVar)	
 	{
 		//float pdf = dot(N, outDir) / PI; // avgPDiffuse already incorporated
-		//vec3 brdf = (materialTexData.Diffuse * pdiffuse) / avgPDiffuse * PI;
+		//vec3 brdf = (materialTexData.Diffuse * pdiffuse) / (avgPDiffuse * PI);
 		//pathThroughput *= brdf * dot(N, outDir) / pdf;
 		pathThroughput *= (materialTexData.Diffuse * pdiffuse) / avgPDiffuse;
 

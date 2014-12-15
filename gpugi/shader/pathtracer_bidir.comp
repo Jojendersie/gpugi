@@ -20,7 +20,7 @@ void main()
 	ray.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
 
 	vec3 color = vec3(0.0);
-	vec3 rayColor = vec3(1.0);
+	vec3 pathThroughput = vec3(1.0);
 
 	uint actualNumLightCacheEntries = min(NumLightCacheEntries, LightCacheCapacity);
 	float lightSampleWeight = float(actualNumLightCacheEntries) / NUM_SAMPLING_TECHNIQUES;
@@ -107,36 +107,29 @@ void main()
 				float light_pathProbability = LightCacheEntries[lightCacheSampleIndex].PathProbability;
 				float light_anyPathProbabilitySum = LightCacheEntries[lightCacheSampleIndex].AnyPathProbabilitySum;
 
-#ifdef RUSSIAN_ROULETTE
 				const float connectedPathPropability = 1.0;
-#else
-				float connectedPathPropability = light_pathProbability * pathProbability + DIVISOR_EPSILON;
-#endif
+
 				float mis = connectedPathPropability / 
 							(light_pathProbability * connectionEyePathToLightPath * anyPathProbabilitySum + 
 							 pathProbability * connectionLightPathToEyePath * light_anyPathProbabilitySum + connectedPathPropability);
 
 				vec3 irradiance = (lightSampleWeight * mis * 
 								   cosCamera / lightDistSq) * lightSampleIntensity;
-				color += irradiance * rayColor * bsdf; 
+				color += irradiance * pathThroughput * bsdf; 
 			}
 		}
 
-		vec3 weight;
-		float radianceScale = 1.0;
-		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, weight, radianceScale);
+		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, weight, pathThroughput);
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
-		float connectionPropability = GetLuminance(weight);
 	#ifdef RUSSIAN_ROULETTE
-		if(Random(randomSeed) >= connectionPropability) // if connectionPropability is zero, path should be stoped -> >=
+		float terminationPropability = GetLuminance(weight);
+		if(Random(randomSeed) >= terminationPropability) // if connectionPropability is zero, path should be stoped -> >=
 			break;
-		rayColor *= weight / connectionPropability; // Only change in spectrum, no energy loss.
-	#else
-		rayColor *= weight; // Absorption, not via Russion Roulette, but by color multiplication.
+		pathThroughput /= terminationPropability; // Only change in spectrum, no energy loss.
 	#endif
-		rayColor *= radianceScale;
 
 
+		// The probability to sample a vertex is the pdf times 1-terminationProbability
 		connectionPropability = MIS(connectionPropability);
 		anyPathProbabilitySum = anyPathProbabilitySum * connectionPropability + pathProbability;
 		pathProbability *= connectionPropability;
