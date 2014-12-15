@@ -21,7 +21,7 @@ void main()
 	ray.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
 
 	vec3 color = vec3(0.0);
-	vec3 rayColor = vec3(1.0);
+	vec3 pathThroughput = vec3(1.0);
 
 	const float lightSampleWeight = float(NumInitialLightSamples) / NUM_LIGHT_SAMPLES; // This could be a uniform!
 
@@ -60,26 +60,25 @@ void main()
 			{
 				vec3 lightSampleIntensity = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1).xyz;
 				vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
+
+				// Add Sample (L): L(hitPoint, lightRay.Direction) * bsdf * dot(lightRay.Direction, hitNormal)
+				// L(hitPoint, lightRay.Direction) = lightSampleIntensity / lightDistSq
+
 				vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
 								saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity;
-				color += irradiance * rayColor * bsdf;
+				color += irradiance * pathThroughput * bsdf;
 			}
 		}
 
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
-		vec3 weight;
-		float radianceScale = 1.0;
-		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, weight, radianceScale);
+		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, pathThroughput);
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 	#ifdef RUSSIAN_ROULETTE
-		float connectionPropability = GetLuminance(weight);
-		if(Random(randomSeed) >= connectionPropability) // if connectionPropability is zero, path should be stoped -> >=
+		float terminationPropability = GetLuminance(pathThroughput);
+		if(Random(randomSeed) >= terminationPropability) // if connectionPropability is zero, path should be stoped -> >=
 			break;
-		rayColor *= weight / connectionPropability; // Only change in spectrum, no energy loss.
-	#else
-		rayColor *= weight; // Absorption, not via Russion Roulette, but by color multiplication.
+		pathThroughput /= terminationPropability; // Only change in spectrum, no energy loss.
 	#endif
-		rayColor *= radianceScale;
 	}
 
 	vec4 final = vec4(color, 1.0);

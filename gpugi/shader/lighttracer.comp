@@ -75,7 +75,7 @@ void main()
 	Ray ray;
 	vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2);
 	vec4 lightFlux_Norm1 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2 + 1);
-	vec3 rayFlux = lightFlux_Norm1.xyz * LightRayPixelWeight;
+	vec3 pathThroughput = lightFlux_Norm1.xyz * LightRayPixelWeight; // Keep in mind that we are tracing flux = photons!
 	ray.Origin = lightSamplePos_Norm0.xyz;
 
 	vec3 normal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightFlux_Norm1.w));
@@ -90,7 +90,7 @@ void main()
 
 	// Correct init of "NumLightCacheEntries" required!
 	// Each thread writes its own initial light sample into the LightCache
-	LightCacheEntries[gl_GlobalInvocationID.x].Intensity = rayFlux / PI_2;
+	LightCacheEntries[gl_GlobalInvocationID.x].Intensity = pathThroughput / PI_2;
 	LightCacheEntries[gl_GlobalInvocationID.x].MaterialIndex = -1; // todo
 	LightCacheEntries[gl_GlobalInvocationID.x].Position = ray.Origin;
 	LightCacheEntries[gl_GlobalInvocationID.x].Normal0 = lightSamplePos_Norm0.w;
@@ -126,7 +126,7 @@ void main()
 		uint lightCacheEntryIndex = atomicAdd(NumLightCacheEntries, 1);
 		if(lightCacheEntryIndex < LightCacheCapacity)
 		{
-			LightCacheEntries[lightCacheEntryIndex].Intensity = rayFlux / PI_2;
+			LightCacheEntries[lightCacheEntryIndex].Intensity = pathThroughput / PI_2;
 			LightCacheEntries[lightCacheEntryIndex].MaterialIndex = triangle.w;
 			// Use "true" position - necessary epsilon can be easily applied in pathtracer_bidir.comp
 			LightCacheEntries[lightCacheEntryIndex].Position = ray.Origin; 
@@ -192,9 +192,9 @@ void main()
 					float mis = connectedPathPropability / (connectionPropability * anyPathProbabilitySum + connectedPathPropability);
 					mis /= NUM_SAMPLING_TECHNIQUES;
 
-					vec3 color = rayFlux * (fluxToIrradiance * mis) * bsdf;
+					vec3 color = pathThroughput * (fluxToIrradiance * mis) * bsdf;
 				#else
-					vec3 color = rayFlux * fluxToIrradiance * bsdf;
+					vec3 color = pathThroughput * fluxToIrradiance * bsdf;
 				#endif
 					
 
@@ -224,22 +224,20 @@ void main()
 			}
 		}
 
-		vec3 weight;
-		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, weight);
-		weight *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
+		vec3 sampleThroughput = vec3(1.0);
+		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, sampleThroughput);
+		sampleThroughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
+		pathThroughput *= sampleThroughput;
 
-		float connectionPropability = GetLuminance(weight);
 	#ifdef RUSSIAN_ROULETTE
-		if(Random(randomSeed) >= connectionPropability) // if connectionPropability is zero, path should be stoped -> >=
+		float terminationPropability = GetLuminance(sampleThroughput);
+		if(Random(randomSeed) >= terminationPropability) // if connectionPropability is zero, path should be stoped -> >=
 			break;
-		rayFlux *= weight / connectionPropability; // Only change in spectrum, no energy loss.
-	#else
-		rayFlux *= weight; // Absorption, not via Russion Roulette, but by color multiplication.
+		pathThroughput /= terminationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.
 	#endif
 
 		ray.Direction = newDirection;
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
-
 
 	#ifdef SAVE_LIGHT_CACHE
 		connectionPropability = MIS(connectionPropability);
