@@ -120,7 +120,8 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 			sampleDir = eta * incidentDirection + (sign(cosTheta) * (sqrt(saturate(1.0 - sinTheta2Sq)) - eta * cosThetaAbs)) * N; 
 			
 			// Need to scale radiance since angle got "widened" or "squeezed"
-			// See Veach PhD Thesis 5.2 (Non-symmetry due to refraction)
+			// See Veach PhD Thesis 5.2 (Non-symmetry due to refraction) or "Physically Based Rendering" chapter 8.2.3 (page 442)
+			// This is part of the BSDF!
 			if(!adjoint)
 				pathThroughput *= etaSq;
 		}
@@ -151,9 +152,15 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	float phongNormalization = (materialTexData.Reflectiveness.w + 2.0) / (materialTexData.Reflectiveness.w + 1.0);
 	// pdf depends on outDir!
 	// float pdf = (materialTexData.Reflectiveness.w + 1.0) / PI_2 * pow(dot(N, sampleDir), materialTexData.Reflectiveness.w)
-	// vec3 bsdf = (materialTexData.Reflectiveness.w + 2.0) / PI_2 * pow(dot(N, sampleDir), materialTexData.Reflectiveness.w) * preflectrefract / avgPReflectRefract 
+	// vec3 bsdf = (materialTexData.Reflectiveness.w + 2.0) / PI_2 * pow(dot(N, sampleDir), materialTexData.Reflectiveness.w) * preflectrefract / avgPReflectRefract / dot(N, outDir)
+	
+	// The 1/dot(N, outDir) factor is rather magical: If we would only sample a dirac delta,
+	// we would expect that the scattering (rendering) equation would yield the radiance from the (via dirac delta) sampled direction.
+	// To achieve this the BRDF must be "dirac/cos(thetai)". Here we want to "smooth out" the dirac delta to a phong lobe, but keep the cos(thetai)=dot(N,outDir) ...
+	// See also "Physically Based Rendering" page 440.
+
 	// pathThroughput = bsdf * dot(N, outDir) / pdf;
-	pathThroughput *= preflectrefract * (phongNormalization / avgPReflectRefract); // * saturate(abs(dot(N, outDir)));  Omitt cos(Theta_i) to avoid dark edges (Not physically correct! But Phong isn't too ...)
+	pathThroughput *= preflectrefract * (phongNormalization / avgPReflectRefract);
 
 	return outDir;
 }
@@ -177,6 +184,7 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, Materi
 	vec3 bsdf = vec3(0.0);
 	float cosTheta = dot(N, incidentDirection);
 	float cosThetaAbs = saturate(abs(cosTheta));
+	float cosThetaOutInv = 1.0 / abs(dot(N, excidentDirection));
 
 	// Compute reflection probabilities with rescaled fresnel approximation from:
 	// Fresnel Term Approximations for Metals
@@ -187,9 +195,9 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, Materi
 	// Reflection vector
 	vec3 sampleDir = normalize(incidentDirection - (2.0 * cosTheta) * N);
 	float phongNormalization = (materialTexData.Reflectiveness.w + 2.0) / PI_2;
-	bsdf += preflect * (phongNormalization * pow(saturate(dot(sampleDir, excidentDirection)), materialTexData.Reflectiveness.w));
+	bsdf += preflect * (phongNormalization * pow(saturate(dot(sampleDir, excidentDirection)), materialTexData.Reflectiveness.w)) * cosThetaOutInv;
 
-	// Refract/Absorb/Diffus
+	// Diffuse
 	vec3 prefract = 1.0 - saturate(preflect);
 	vec3 pdiffuse = prefract * materialTexData.Opacity;
 	prefract = prefract - pdiffuse;
@@ -205,11 +213,11 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, Materi
 		// N * sign(cosTheta) = "faceForwardNormal"; -cosThetaAbs = -dot(faceForwardNormal, incidentDirection)
 		sampleDir = normalize(eta * incidentDirection + (sign(cosTheta) * (sqrt(saturate(1.0 - sinTheta2Sq)) - eta * cosThetaAbs)) * N);
 		if(!adjoint)
-			prefract *= etaSq;
+			prefract *= etaSq; // See same factor in SampleBSDF for explanation.
 	}	
 
 	// else the sampleDir is again the reflection vector
-	bsdf += prefract * (phongNormalization * pow(saturate(dot(sampleDir, excidentDirection)), materialTexData.Reflectiveness.w));
+	bsdf += prefract * (phongNormalization * pow(saturate(dot(sampleDir, excidentDirection)), materialTexData.Reflectiveness.w) * cosThetaOutInv); // Potential for microoptimization by factoring out stuff from refract+reflect?
 
 	return bsdf;
 }
