@@ -94,7 +94,7 @@ void main()
 
 	// Correct init of "NumLightCacheEntries" required!
 	// Each thread writes its own initial light sample into the LightCache
-	LightCacheEntries[gl_GlobalInvocationID.x].Intensity = pathThroughput / PI_2;
+	LightCacheEntries[gl_GlobalInvocationID.x].Flux = pathThroughput; // equal distributed in all directions
 	LightCacheEntries[gl_GlobalInvocationID.x].MaterialIndex = -1;
 	LightCacheEntries[gl_GlobalInvocationID.x].Position = ray.Origin;
 	LightCacheEntries[gl_GlobalInvocationID.x].Normal0 = lightSamplePos_Norm0.w;
@@ -130,7 +130,7 @@ void main()
 		uint lightCacheEntryIndex = atomicAdd(NumLightCacheEntries, 1);
 		if(lightCacheEntryIndex < LightCacheCapacity)
 		{
-			LightCacheEntries[lightCacheEntryIndex].Intensity = pathThroughput;
+			LightCacheEntries[lightCacheEntryIndex].Flux = pathThroughput;
 			LightCacheEntries[lightCacheEntryIndex].MaterialIndex = triangle.w;
 			// Use "true" position - necessary epsilon can be easily applied in pathtracer_bidir.comp
 			LightCacheEntries[lightCacheEntryIndex].Position = ray.Origin; 

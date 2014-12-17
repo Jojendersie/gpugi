@@ -67,8 +67,10 @@ void main()
 			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON)) // Important to subtract epsilon, since light sample may be slightly behind the surface
 			{
 				int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
-				vec3 lightSampleIntensity = LightCacheEntries[lightCacheSampleIndex].Intensity;
-				float connectionLightPathToEyePath = 1.0;
+				vec3 lightSampleFlux = LightCacheEntries[lightCacheSampleIndex].Flux;
+				
+				float connectionLightPathToEyePath;
+				vec3 lightSampleIntensity;
 
 				// Triangle material
 				if(lightSampleMaterialIndex != -1)
@@ -79,27 +81,13 @@ void main()
 					vec3 lightSampleHitNormal = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1);
 
 					float pdf;
-					vec3 lightBSDF = BSDF(lightRay.Direction, -LightCacheEntries[lightCacheSampleIndex].IncidentDirection,
-										  lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal, pdf);
+					vec3 lightBSDF = AdjointBSDF(LightCacheEntries[lightCacheSampleIndex].IncidentDirection, -lightRay.Direction,
+										  			lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal, pdf);
 
 
 					float cosLight = saturate(-dot(lightRay.Direction, lightSampleHitNormal));
 
-					// I_in = Flux/2PI (= total outgoing light energy) is known.
-					// Want to know the Intensity for a given direction I_out				
-
-					// BSDF = L_out/E_in
-					// E_in = I_in / dAreaIn
-					// L_out = I_out / (dAreaEmitt * cos(OutgoingDir, Normal) * dSolidAngle)
-					// dAreaIn = dAreaEmitt
-					//
-					// => BSDF = I_out / (I_in * cos(OutgoingDir, Normal) * dSolidAngle)
-					//
-					// Infitesimal angle -> derivation is 1: dSolidAngle = 1
-					//
-					// => I_out = I_in * BSDF * cos(OutgoingDir, Normal)
-
-					lightSampleIntensity *= lightBSDF * cosLight;
+					lightSampleIntensity = lightSampleFlux * lightBSDF * cosLight;
 
 					#ifdef RUSSIAN_ROULETTE
 						// path termination propability: bsdf * dot(N, outDir) / pdf
@@ -112,6 +100,12 @@ void main()
 					#else
 						connectionLightPathToEyePath = MIS(pdf);
 					#endif
+				}
+				// Connect to a light source.
+				else
+				{
+					connectionLightPathToEyePath = MIS(1.0); // Only possible via THIS next event estimation -> Fixed propability of 1.
+					lightSampleIntensity = lightSampleFlux / PI_2;// hemispherical light source
 				}
 
 				float cosCamera = abs(dot(lightRay.Direction, hitNormal));

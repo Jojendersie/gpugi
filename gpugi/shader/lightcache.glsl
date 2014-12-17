@@ -1,6 +1,6 @@
 struct LightCacheEntry // aka photon
 {
-	vec3 Intensity; // Flux / PI_2
+	vec3 Flux;
 	int MaterialIndex; // -1 means "diffuse light" - TODO: Create a material for this!
 	
 	vec3 Position;
