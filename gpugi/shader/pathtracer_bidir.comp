@@ -83,7 +83,7 @@ void main()
 										  lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal, pdf);
 
 
-					float cosLight = saturate(dot(lightRay.Direction, lightSampleHitNormal));
+					float cosLight = saturate(-dot(lightRay.Direction, lightSampleHitNormal));
 
 					// I_in = Flux/2PI (= total outgoing light energy) is known.
 					// Want to know the Intensity for a given direction I_out				
@@ -114,7 +114,7 @@ void main()
 					#endif
 				}
 
-				float cosCamera = saturate(dot(lightRay.Direction, hitNormal));
+				float cosCamera = abs(dot(lightRay.Direction, hitNormal));
 
 				float pdf;
 				vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal, pdf); // Note that this is also 1/samplingProbability!
@@ -137,9 +137,8 @@ void main()
 
 				float connectedPathPropability = light_pathProbability * pathProbability;
 				float mis = connectedPathPropability / 
-							(light_pathProbability * saturate(connectionEyePathToLightPath) * anyPathProbabilitySum + 
-							 pathProbability * saturate(connectionLightPathToEyePath) * light_anyPathProbabilitySum + connectedPathPropability);
-
+							(light_pathProbability * connectionEyePathToLightPath * anyPathProbabilitySum + 
+							 pathProbability * connectionLightPathToEyePath * light_anyPathProbabilitySum + connectedPathPropability);
 
 				vec3 irradiance = (lightSampleWeight * mis * 
 								   cosCamera / lightDistSq) * lightSampleIntensity;

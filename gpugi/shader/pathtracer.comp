@@ -65,7 +65,7 @@ void main()
 				// L(hitPoint, lightRay.Direction) = lightSampleIntensity / lightDistSq
 
 				vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
-								saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity;
+								abs(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity;
 				color += irradiance * pathThroughput * bsdf;
 			}
 		}
@@ -75,7 +75,7 @@ void main()
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 	#ifdef RUSSIAN_ROULETTE
 		float continuationPropability = GetLuminance(pathThroughput);
-		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stoped -> >=
+		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stoped -> >=
 			break;
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.
 	#endif

@@ -30,7 +30,7 @@ void CreateONB(in vec3 n, out vec3 U, out vec3 V)
 
 float GetLuminance(vec3 rgb)
 {
-	const vec3 W = vec3(0.2125, 0.7154, 0.0721);
+	const vec3 W = vec3(0.212671, 0.715160, 0.072169);
 	return dot(rgb, W);
 }
 
