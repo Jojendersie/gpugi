@@ -74,10 +74,10 @@ void main()
 		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, pathThroughput);
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 	#ifdef RUSSIAN_ROULETTE
-		float terminationPropability = GetLuminance(pathThroughput);
-		if(Random(randomSeed) >= terminationPropability) // if connectionPropability is zero, path should be stoped -> >=
+		float continuationPropability = GetLuminance(pathThroughput);
+		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stoped -> >=
 			break;
-		pathThroughput /= terminationPropability; // Only change in spectrum, no energy loss.
+		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.
 	#endif
 	}
 

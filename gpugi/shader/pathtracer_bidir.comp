@@ -1,5 +1,7 @@
 #version 440
 
+#define SAMPLEBSDF_OUTPUT_PDF
+
 #include "stdheader.glsl"
 #include "lightcache.glsl"
 
@@ -75,12 +77,13 @@ void main()
 					MaterialTextureData lightSampleMaterialTexData = SampleMaterialData(lightSampleMaterialIndex, LightCacheEntries[lightCacheSampleIndex].Texcoord);
 
 					vec3 lightSampleHitNormal = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1);
+
+					float pdf;
 					vec3 lightBSDF = BSDF(lightRay.Direction, -LightCacheEntries[lightCacheSampleIndex].IncidentDirection,
-											lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal);
+										  lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal, pdf);
 
 
-					float cosLight = saturate(dot(-lightRay.Direction, lightSampleHitNormal));
-					connectionLightPathToEyePath = MIS(GetLuminance(lightBSDF) * cosLight / lightDistSq);
+					float cosLight = saturate(dot(lightRay.Direction, lightSampleHitNormal));
 
 					// I_in = Flux/2PI (= total outgoing light energy) is known.
 					// Want to know the Intensity for a given direction I_out				
@@ -97,21 +100,46 @@ void main()
 					// => I_out = I_in * BSDF * cos(OutgoingDir, Normal)
 
 					lightSampleIntensity *= lightBSDF * cosLight;
+
+					#ifdef RUSSIAN_ROULETTE
+						// path termination propability: bsdf * dot(N, outDir) / pdf
+						// -> bsdf * dot(N, outDir) = "lightSampleIntensity"
+						//pdf += DIVISOR_EPSILON;
+						//float continuationPropability = GetLuminance(lightBSDF) * cosLight / pdf;
+						//connectionLightPathToEyePath = MIS(pdf / continuationPropability);
+
+						connectionLightPathToEyePath = MIS(GetLuminance(lightBSDF) * cosLight);
+					#else
+						connectionLightPathToEyePath = MIS(pdf);
+					#endif
 				}
 
 				float cosCamera = saturate(dot(lightRay.Direction, hitNormal));
 
-				vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal); // Note that this is also 1/samplingProbability!
+				float pdf;
+				vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal, pdf); // Note that this is also 1/samplingProbability!
 
-				float connectionEyePathToLightPath = MIS(GetLuminance(bsdf) * cosCamera / lightDistSq);
+			#ifdef RUSSIAN_ROULETTE
+				// path termination propability: bsdf * dot(N, outDir) / pdf
+				// connection propability: termination * pdf
+				// -> bsdf * dot(N, outDir)
+				//pdf += DIVISOR_EPSILON;
+				//float continuationPropability = GetLuminance(bsdf) * cosCamera / pdf;
+				//float connectionEyePathToLightPath = MIS(pdf / continuationPropability);
+
+				float connectionEyePathToLightPath = MIS(GetLuminance(bsdf) * cosCamera);
+			#else
+				float connectionEyePathToLightPath = MIS(pdf);
+			#endif
+
 				float light_pathProbability = LightCacheEntries[lightCacheSampleIndex].PathProbability;
 				float light_anyPathProbabilitySum = LightCacheEntries[lightCacheSampleIndex].AnyPathProbabilitySum;
 
-				const float connectedPathPropability = 1.0;
-
+				float connectedPathPropability = light_pathProbability * pathProbability;
 				float mis = connectedPathPropability / 
-							(light_pathProbability * connectionEyePathToLightPath * anyPathProbabilitySum + 
-							 pathProbability * connectionLightPathToEyePath * light_anyPathProbabilitySum + connectedPathPropability);
+							(light_pathProbability * saturate(connectionEyePathToLightPath) * anyPathProbabilitySum + 
+							 pathProbability * saturate(connectionLightPathToEyePath) * light_anyPathProbabilitySum + connectedPathPropability);
+
 
 				vec3 irradiance = (lightSampleWeight * mis * 
 								   cosCamera / lightDistSq) * lightSampleIntensity;
@@ -119,20 +147,21 @@ void main()
 			}
 		}
 
-		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, weight, pathThroughput);
+		float samplePDF;
+		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, pathThroughput, samplePDF);
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 	#ifdef RUSSIAN_ROULETTE
-		float terminationPropability = GetLuminance(weight);
-		if(Random(randomSeed) >= terminationPropability) // if connectionPropability is zero, path should be stoped -> >=
+		float continuationPropability = GetLuminance(pathThroughput);
+		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stoped -> >=
 			break;
-		pathThroughput /= terminationPropability; // Only change in spectrum, no energy loss.
+		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.
+		samplePDF *= continuationPropability;
 	#endif
 
-
 		// The probability to sample a vertex is the pdf times 1-terminationProbability
-		connectionPropability = MIS(connectionPropability);
-		anyPathProbabilitySum = anyPathProbabilitySum * connectionPropability + pathProbability;
-		pathProbability *= connectionPropability;
+		samplePDF = MIS(samplePDF);
+		anyPathProbabilitySum = anyPathProbabilitySum * samplePDF + pathProbability;
+		pathProbability *= samplePDF;
 	}
 
 	vec4 final = vec4(color, 1.0);

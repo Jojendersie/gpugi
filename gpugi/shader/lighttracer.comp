@@ -1,5 +1,9 @@
 #version 440
 
+#ifdef SAVE_LIGHT_CACHE
+	#define SAMPLEBSDF_OUTPUT_PDF
+#endif
+
 #define TRINORMAL_OUTPUT
 #include "stdheader.glsl"
 
@@ -179,17 +183,14 @@ void main()
 					float fluxToRadiance = 1.0 / (cosAtCameraPow4 * PixelArea * cameraDistSq);
 					float fluxToIrradiance = fluxToRadiance * AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal);
 
-					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal);
+					float pdf;
+					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal, pdf);
 
 				#ifdef SAVE_LIGHT_CACHE
-					float connectionPropability = GetLuminance(bsdf);
+					float connectionLightPathToEyePath = MIS(pdf);
 
-				#ifdef RUSSIAN_ROULETTE
-					const float connectedPathPropability = 1.0;
-				#else
 					float connectedPathPropability = pathProbability + DIVISOR_EPSILON;
-				#endif
-					float mis = connectedPathPropability / (connectionPropability * anyPathProbabilitySum + connectedPathPropability);
+					float mis = connectedPathPropability / (connectionLightPathToEyePath * anyPathProbabilitySum + connectedPathPropability);
 					mis /= NUM_SAMPLING_TECHNIQUES;
 
 					vec3 color = pathThroughput * (fluxToIrradiance * mis) * bsdf;
@@ -224,25 +225,36 @@ void main()
 			}
 		}
 
+		// Continue ray.
 		vec3 sampleThroughput = vec3(1.0);
+	#ifdef SAVE_LIGHT_CACHE
+		float samplePDF;
+		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, sampleThroughput, samplePDF);
+	#else
 		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, sampleThroughput);
+	#endif
 		sampleThroughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
 		pathThroughput *= sampleThroughput;
 
 	#ifdef RUSSIAN_ROULETTE
-		float terminationPropability = GetLuminance(sampleThroughput);
-		if(Random(randomSeed) >= terminationPropability) // if connectionPropability is zero, path should be stoped -> >=
+		float continuationPropability = GetLuminance(sampleThroughput);
+		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stoped -> >=
 			break;
-		pathThroughput /= terminationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.
+		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.
+		
+		#ifdef SAVE_LIGHT_CACHE
+		samplePDF *= continuationPropability;
+		#endif
 	#endif
 
 		ray.Direction = newDirection;
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 
+		// Update MIS quantitites.
 	#ifdef SAVE_LIGHT_CACHE
-		connectionPropability = MIS(connectionPropability);
-		anyPathProbabilitySum = anyPathProbabilitySum * connectionPropability + pathProbability;
-		pathProbability *= connectionPropability;
+		samplePDF = MIS(samplePDF);
+		anyPathProbabilitySum = anyPathProbabilitySum * samplePDF + pathProbability;
+		pathProbability *= samplePDF;
 	#endif
 	}
 }
