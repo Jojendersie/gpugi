@@ -58,7 +58,11 @@ void main()
 
 			if(!TraceRayAnyHit(lightRay, rayHit))
 			{
-				vec3 lightSampleIntensity = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1).xyz;
+				vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2);
+				vec4 lightFlux_Norm1 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1);
+				vec3 lightNormal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightFlux_Norm1.w));
+
+				vec3 lightSampleIntensity = lightFlux_Norm1.xyz * saturate(dot(lightNormal, -lightRay.Direction)) * PI_2;
 				vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
 
 				// Add Sample (L): L(hitPoint, lightRay.Direction) * bsdf * dot(lightRay.Direction, hitNormal)
