@@ -5,6 +5,7 @@
 #endif
 
 #define TRINORMAL_OUTPUT
+#define SAMPLEBSDF_OUTPUT_PDF
 #include "stdheader.glsl"
 
 #ifdef SAVE_LIGHT_CACHE
@@ -227,12 +228,8 @@ void main()
 
 		// Continue ray.
 		vec3 sampleThroughput = vec3(1.0);
-	#ifdef SAVE_LIGHT_CACHE
 		float samplePDF;
 		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, sampleThroughput, samplePDF);
-	#else
-		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, sampleThroughput);
-	#endif
 		sampleThroughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
 		pathThroughput *= sampleThroughput;
 
