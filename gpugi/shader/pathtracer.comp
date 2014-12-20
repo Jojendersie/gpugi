@@ -70,7 +70,7 @@ void main()
 				// L(hitPoint, lightRay.Direction) = lightSampleIntensity / lightDistSq
 
 				vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
-								abs(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity;
+								saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in. 
 				color += irradiance * pathThroughput * bsdf;
 			}
 		}

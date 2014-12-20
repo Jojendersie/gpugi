@@ -24,7 +24,7 @@ public:
 
 	/// \param positionBias
 	///		Moves the sample a bit along the triangle normal to avoid precision issues.
-	void GenerateRandomSamples(LightSample* _destinationBuffer, unsigned int _numSamples, float _positionBias = 0.02f);
+	void GenerateRandomSamples(LightSample* _destinationBuffer, unsigned int _numSamples, float _positionBias = 0.1f);
 
 private:
 	std::shared_ptr<const Scene> m_scene;
