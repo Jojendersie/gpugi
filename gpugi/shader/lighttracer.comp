@@ -5,7 +5,6 @@
 #endif
 
 #define TRINORMAL_OUTPUT
-#define SAMPLEBSDF_OUTPUT_PDF
 #include "stdheader.glsl"
 
 #ifdef SAVE_LIGHT_CACHE
@@ -14,7 +13,6 @@
 	layout(binding = 4, std140) uniform LightPathTrace
 	{
 		int NumRaysPerLightSample;
-		float LightRayPixelWeight; // (Total num pixels) / (Total num light rays) 
 	};
 	#define NUM_SAMPLING_TECHNIQUES 1
 #endif
@@ -79,11 +77,11 @@ void main()
 
 	Ray ray;
 	vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2);
-	vec4 lightFlux_Norm1 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2 + 1);
-	vec3 pathThroughput = lightFlux_Norm1.xyz * LightRayPixelWeight; // Keep in mind that we are tracing flux = photons!
+	vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2 + 1);
+	vec3 pathThroughput = lightIntensity_Norm1.xyz / NumRaysPerLightSample; // Keep in mind that we are tracing flux = photons! A single photon represents the PI / NumRaysPerLightSample part of a hemisphere.
 	ray.Origin = lightSamplePos_Norm0.xyz;
 
-	vec3 normal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightFlux_Norm1.w));
+	vec3 normal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
 	vec3 U, V;
 	CreateONB(normal, U, V);
 	ray.Direction = SampleUnitHemisphere(Random2(randomSeed), U, V, normal);
@@ -184,8 +182,12 @@ void main()
 					float fluxToRadiance = 1.0 / (cosAtCameraPow4 * PixelArea * cameraDistSq);
 					float fluxToIrradiance = fluxToRadiance * AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal);
 
+				#ifdef SAMPLEBSDF_OUTPUT_PDF
 					float pdf;
 					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal, pdf);
+				#else
+					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal);
+				#endif
 
 				#ifdef SAVE_LIGHT_CACHE
 					float connectionLightPathToEyePath = MIS(pdf);
@@ -228,20 +230,25 @@ void main()
 
 		// Continue ray.
 		vec3 sampleThroughput = vec3(1.0);
+	#ifdef SAMPLEBSDF_OUTPUT_PDF
 		float samplePDF;
 		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, sampleThroughput, samplePDF);
+	#else
+		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, sampleThroughput);
+	#endif
 		sampleThroughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
-		pathThroughput *= sampleThroughput;
 
 	#ifdef RUSSIAN_ROULETTE
 		float continuationPropability = GetLuminance(sampleThroughput);
 		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stoped -> >=
 			break;
-		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.
+		pathThroughput *= sampleThroughput / continuationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.
 		
 		#ifdef SAVE_LIGHT_CACHE
 		samplePDF *= continuationPropability;
 		#endif
+	#else
+		pathThroughput *= sampleThroughput;
 	#endif
 
 		ray.Direction = newDirection;

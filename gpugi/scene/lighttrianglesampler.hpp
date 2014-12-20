@@ -18,7 +18,7 @@ public:
 	{
 		ei::Vec3 position;
 		float normalPhi;			// atan2(normal.y, normal.x)
-		ei::Vec3 luminance;
+		ei::Vec3 intensity;
 		float normalThetaCos;	// normal.z
 	};
 

@@ -17,7 +17,7 @@ void LightTriangleSampler::SetScene(std::shared_ptr<const Scene> _scene)
 
 void LightTriangleSampler::GenerateRandomSamples(LightSample* _destinationBuffer, unsigned int _numSamples, float _positionBias)
 {
-	float sampleWeight = ei::PI * m_scene->GetLightAreaSum() / _numSamples;
+	float sampleWeight = m_scene->GetLightAreaSum() / _numSamples;
 
 	for (unsigned int sampleIdx = 0; sampleIdx < _numSamples; ++sampleIdx, ++_destinationBuffer)
 	{
@@ -46,7 +46,7 @@ void LightTriangleSampler::GenerateRandomSamples(LightSample* _destinationBuffer
 		_destinationBuffer->position += normal * _positionBias;// Move a bit along the normal to avoid intersection precision issues.
 
 		_destinationBuffer->normalPhi = atan2(normal.y, normal.x);
-		_destinationBuffer->luminance = lightTriangle->luminance * sampleWeight; // Area factor is already contained, since it determines the sample probability.
+		_destinationBuffer->intensity = lightTriangle->luminance * sampleWeight; // Area factor is already contained, since it determines the sample probability.
 		_destinationBuffer->normalThetaCos = normal.z;
 	}
 }

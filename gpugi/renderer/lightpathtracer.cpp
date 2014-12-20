@@ -33,7 +33,6 @@ void LightPathtracer::SetScreenSize(const ei::IVec2& _newSize)
 
 	m_lightpathtraceUBO.GetBuffer()->Map();
 	m_lightpathtraceUBO["NumRaysPerLightSample"].Set(static_cast<std::int32_t>(m_numRaysPerLightSample));
-	m_lightpathtraceUBO["LightRayPixelWeight"].Set(ei::PI * 2.0f / m_numRaysPerLightSample);
 	m_lightpathtraceUBO.GetBuffer()->Unmap();
 }
 
