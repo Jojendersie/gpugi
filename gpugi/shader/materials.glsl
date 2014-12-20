@@ -126,7 +126,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 		CreateONB(N, U, V);
 		vec3 outDir = SampleUnitHemisphere(randomSamples, U, V, N);
 
-		pdf = dot(N, outDir) / PI;
+		pdf = saturate(dot(N, outDir)) / PI;
 
 		return outDir;
 	}
@@ -169,8 +169,8 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	// Normalize the probability
 	float phongNormalization = (materialTexData.Reflectiveness.w + 2.0) / (materialTexData.Reflectiveness.w + 1.0);
 
-	pdf = (materialTexData.Reflectiveness.w + 1.0) / PI_2 * pow(dot(outDir, reflectRefractDir), materialTexData.Reflectiveness.w);
-	// vec3 bsdf = (materialTexData.Reflectiveness.w + 2.0) / PI_2 * pow(dot(outDir, reflectRefractDir), materialTexData.Reflectiveness.w) * pphong / avgPPhong / dot(N, outDir)
+	pdf = (materialTexData.Reflectiveness.w + 1.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialTexData.Reflectiveness.w);
+	// vec3 bsdf = (materialTexData.Reflectiveness.w + 2.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialTexData.Reflectiveness.w) * pphong / avgPPhong / dot(N, outDir)
 	
 	// The 1/dot(N, outDir) factor is rather magical: If we would only sample a dirac delta,
 	// we would expect that the scattering (rendering) equation would yield the radiance from the (via dirac delta) sampled direction.
