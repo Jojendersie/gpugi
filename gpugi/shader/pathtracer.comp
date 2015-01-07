@@ -47,31 +47,35 @@ void main()
 		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
 		{
 			int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
-			vec3 lightSamplePos = texelFetch(InitialLightSampleBuffer, sampleIndex * 2).xyz;
-
-			lightRay.Direction = lightSamplePos - ray.Origin;
+			vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2);
+			vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1);
+			
+			// Direction to light & distance.
+			lightRay.Direction = lightSamplePos_Norm0.xyz - ray.Origin;
 			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
 			float lightDist = sqrt(lightDistSq);
-			lightRay.Direction /= lightDist + DIVISOR_EPSILON;
-			rayHit = lightDist;
-			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + ray.Origin;
+			lightRay.Direction /= lightDist;
 
-			if(!TraceRayAnyHit(lightRay, rayHit))
+			// Facing the light?
+			vec3 lightSampleDir = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
+			float lightSampleIntensityFactor = saturate(dot(lightSampleDir, -lightRay.Direction));
+			if(lightSampleIntensityFactor > 0.0)
 			{
-				vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2);
-				vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1);
-				vec3 lightSampleDir = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
+				lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + ray.Origin;
 
-				// Hemispherical lambert emitter. First we want intensity, not radiance
-				vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * saturate(dot(lightSampleDir, -lightRay.Direction)); // lightIntensity = lightIntensity in normal direction -> seen area is smaller to the border
-				vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
+				if(!TraceRayAnyHit(lightRay, lightDist))
+				{
+					// Hemispherical lambert emitter. First we want intensity, not radiance
+					vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border
+					vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
 
-				// Add Sample (L): L(hitPoint, lightRay.Direction) * bsdf * dot(lightRay.Direction, hitNormal)
-				// L(hitPoint, lightRay.Direction) = lightSampleIntensity / lightDistSq
+					// Add Sample (L): L(hitPoint, lightRay.Direction) * bsdf * dot(lightRay.Direction, hitNormal)
+					// L(hitPoint, lightRay.Direction) = lightSampleIntensity / lightDistSq
 
-				vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
-								saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in. 
-				color += irradiance * pathThroughput * bsdf;
+					vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
+									saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in because of shading normals!
+					color += irradiance * pathThroughput * bsdf;
+				}
 			}
 		}
 

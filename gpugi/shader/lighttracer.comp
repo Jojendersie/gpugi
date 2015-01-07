@@ -14,7 +14,6 @@
 	{
 		int NumRaysPerLightSample;
 	};
-	#define NUM_SAMPLING_TECHNIQUES 1
 #endif
 
 
@@ -74,17 +73,8 @@ void main()
 
 	uint randomSeed = InitRandomSeed(FrameSeed, gl_GlobalInvocationID.x);
 	int lightSampleIndex = int(gl_GlobalInvocationID.x / NumRaysPerLightSample);
-
-	Ray ray;
 	vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2);
 	vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2 + 1);
-	vec3 pathThroughput = lightIntensity_Norm1.xyz / NumRaysPerLightSample; // Keep in mind that we are tracing flux = photons! A single photon represents the PI / NumRaysPerLightSample part of a hemisphere.
-	ray.Origin = lightSamplePos_Norm0.xyz;
-
-	vec3 normal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
-	vec3 U, V;
-	CreateONB(normal, U, V);
-	ray.Direction = SampleUnitHemisphere(Random2(randomSeed), U, V, normal);
 
 #ifdef SAVE_LIGHT_CACHE
 	// recursive MIS construction.
@@ -93,16 +83,28 @@ void main()
 
 	// Correct init of "NumLightCacheEntries" required!
 	// Each thread writes its own initial light sample into the LightCache
-	LightCacheEntries[gl_GlobalInvocationID.x].Flux = pathThroughput; // equal distributed in all directions
+	LightCacheEntries[gl_GlobalInvocationID.x].Flux = lightIntensity_Norm1.xyz / PI_2; // equal distributed in all directions
 	LightCacheEntries[gl_GlobalInvocationID.x].MaterialIndex = -1;
-	LightCacheEntries[gl_GlobalInvocationID.x].Position = ray.Origin;
+	LightCacheEntries[gl_GlobalInvocationID.x].Position = lightSamplePos_Norm0.xyz;
 	LightCacheEntries[gl_GlobalInvocationID.x].Normal0 = lightSamplePos_Norm0.w;
-	LightCacheEntries[gl_GlobalInvocationID.x].Normal1 = lightFlux_Norm1.w;
+	LightCacheEntries[gl_GlobalInvocationID.x].Normal1 = lightIntensity_Norm1.w;
 	LightCacheEntries[gl_GlobalInvocationID.x].PathProbability = pathProbability;
 	LightCacheEntries[gl_GlobalInvocationID.x].AnyPathProbabilitySum = anyPathProbabilitySum;
 	//LightCacheEntries[gl_GlobalInvocationID.x].Texcoord // texcoord empty
 	//LightCacheEntries[gl_GlobalInvocationID.x].IncidentDirection // direction empty
 #endif
+
+
+	// Keep in mind that we are tracing flux = photons!
+	// TotalFlux = Integral(I0 * cos Angle) dangle = I0 * PI
+	vec3 pathThroughput = lightIntensity_Norm1.xyz * (PI / NumRaysPerLightSample);
+	
+	Ray ray;
+	ray.Origin = lightSamplePos_Norm0.xyz;
+	vec3 normal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
+	vec3 U, V;
+	CreateONB(normal, U, V);
+	ray.Direction = SampleUnitHemisphere(Random2(randomSeed), U, V, normal);
 
 	for(int i=0; i<MAX_PATHLENGTH; ++i)
 	{
@@ -179,7 +181,8 @@ void main()
 					float cosAtCameraPow4 = saturate(camViewDotRay / cameraDist); // = dot(-cameraRay.Direction, CameraW);
 					//cosAtCameraPow4 *= cosAtCameraPow4; // Not entirely clear why this is more correct in empiric comparisions
 					//cosAtCameraPow4 *= cosAtCameraPow4;
-					float fluxToRadiance = 1.0 / (cosAtCameraPow4 * PixelArea * cameraDistSq);
+					float factor = 2.0 / PI; // TODO: Unknown origin!
+					float fluxToRadiance = factor / (cosAtCameraPow4 * PixelArea * cameraDistSq);
 					float fluxToIrradiance = fluxToRadiance * AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal);
 
 				#ifdef SAMPLEBSDF_OUTPUT_PDF

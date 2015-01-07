@@ -25,7 +25,7 @@ void main()
 	vec3 pathThroughput = vec3(1.0);
 
 	uint actualNumLightCacheEntries = min(NumLightCacheEntries, LightCacheCapacity);
-	float lightSampleWeight = float(actualNumLightCacheEntries) / NUM_SAMPLING_TECHNIQUES;
+	float lightSampleWeight = float(NumInitialLightSamples) / NUM_SAMPLING_TECHNIQUES / NUM_CAMPATH_LIGHTSAMPLE_CONNECTIONS;
 
 	// recursive MIS construction.
 	float pathProbability = 1.0;
@@ -68,6 +68,7 @@ void main()
 			{
 				int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
 				vec3 lightSampleFlux = LightCacheEntries[lightCacheSampleIndex].Flux;
+				vec3 lightSampleHitNormal = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1);
 				
 				float connectionLightPathToEyePath;
 				vec3 lightSampleIntensity;
@@ -78,7 +79,7 @@ void main()
 					int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
 					MaterialTextureData lightSampleMaterialTexData = SampleMaterialData(lightSampleMaterialIndex, LightCacheEntries[lightCacheSampleIndex].Texcoord);
 
-					vec3 lightSampleHitNormal = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1);
+					
 
 					float pdf;
 					vec3 lightBSDF = AdjointBSDF(LightCacheEntries[lightCacheSampleIndex].IncidentDirection, -lightRay.Direction,
@@ -105,7 +106,7 @@ void main()
 				else
 				{
 					connectionLightPathToEyePath = MIS(1.0); // Only possible via THIS next event estimation -> Fixed propability of 1.
-					lightSampleIntensity = lightSampleFlux / PI_2;// hemispherical light source
+					lightSampleIntensity = lightSampleFlux * (saturate(dot(lightSampleHitNormal, -lightRay.Direction)) * PI_2);// hemispherical light source
 				}
 
 				float cosCamera = abs(dot(lightRay.Direction, hitNormal));
@@ -132,7 +133,7 @@ void main()
 				float connectedPathPropability = light_pathProbability * pathProbability;
 				float mis = connectedPathPropability / 
 							(light_pathProbability * connectionEyePathToLightPath * anyPathProbabilitySum + 
-							 pathProbability * connectionLightPathToEyePath * light_anyPathProbabilitySum + connectedPathPropability);
+							 pathProbability * connectionLightPathToEyePath * light_anyPathProbabilitySum + connectedPathPropability + DIVISOR_EPSILON);
 
 				vec3 irradiance = (lightSampleWeight * mis * 
 								   cosCamera / lightDistSq) * lightSampleIntensity;

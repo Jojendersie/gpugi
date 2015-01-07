@@ -276,5 +276,5 @@ vec3 AdjointBSDF(vec3 incidentDirection, vec3 excidentDirection, int material, M
 #else 
 	) { float pdf; // Hopefully removed by optimizer if not needed
 #endif
-	return __BSDF(-excidentDirection, -incidentDirection, material, materialTexData, normalize(N), pdf, true);
+	return __BSDF(-excidentDirection, -incidentDirection, material, materialTexData, N, pdf, true);
 }
