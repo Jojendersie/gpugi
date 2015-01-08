@@ -104,7 +104,7 @@ void Renderer::SetCamera(const Camera& _camera)
 	m_cameraUBO["CameraV"].Set(camV);
 	m_cameraUBO["CameraW"].Set(camW);
 	m_cameraUBO["CameraPosition"].Set(_camera.GetPosition());
-	m_cameraUBO["PixelArea"].Set(ei::len(ei::cross(camU / m_backbuffer->GetWidth(), camV / m_backbuffer->GetHeight())) * 2.0f);
+	m_cameraUBO["PixelArea"].Set(ei::len(ei::cross(camU * 2.0f / m_backbuffer->GetWidth(), camV * 2.0f / m_backbuffer->GetHeight())));
 	m_cameraUBO.GetBuffer()->Unmap();
 
 	m_iterationCount = 0;

@@ -169,21 +169,21 @@ void main()
 				if(!TraceRayAnyHit(cameraRay, cameraDist))
 				{
 					// Compute pdf conversion factor from image plane area to surface area.
-					// The problem: A pixel sees more than only a point! -> photometric distance law (E = I cosTheta / d²) not applicable!
+					// The problem: A pixel sees more than only a point! -> photometric distance law (E = I cosTheta / d²) not directly applicable!
 					// -> We need the solid angle and the projected area of the pixel in this point!
 					// Formulas explained in (6.2) http://www.maw.dk/3d_graphics_projects/downloads/Bidirectional%20Path%20Tracing%202009.pdf
-					// Also a look into SmallVCM the is a good idea!
+					// Also a look into SmallVCM is a good idea!
 					
 					// The distance to the image plane  is length(CameraW) == 1.
-					// 1/cos == length(pixelPos)
-					// vec3 pixelPos = CameraU * screenCoord.x + CameraV * screenCoord.y + CameraW;
-					
-					float cosAtCameraPow4 = saturate(camViewDotRay / cameraDist); // = dot(-cameraRay.Direction, CameraW);
-					//cosAtCameraPow4 *= cosAtCameraPow4; // Not entirely clear why this is more correct in empiric comparisions
-					//cosAtCameraPow4 *= cosAtCameraPow4;
-					float factor = 2.0 / PI; // TODO: Unknown origin!
-					float fluxToRadiance = factor / (cosAtCameraPow4 * PixelArea * cameraDistSq);
-					float fluxToIrradiance = fluxToRadiance * AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal);
+					// imagePointToCameraDist = length(pixelPos) = length(CameraU * screenCoord.x + CameraV * screenCoord.y + CameraW) =
+					//					      = 1.0 / dot(-cameraRay.Direction, CameraW)
+					// fluxToIntensity = 1/solidAngle = imagePointToCameraDist / (dot(-cameraRay.Direction, CameraW) * PixelArea) =
+					//				   =  1.0 / (dot(-cameraRay.Direction, CameraW)² * PixelArea)  ------ THIS IS APPROXIMATE!
+					// fluxToIrradiance =(photometric distance law)= fluxToIntensity * dot(cameraRay.Direction, Normal) / cameraDistSq
+
+					float cosAtCamera = saturate(camViewDotRay / cameraDist); // = dot(-cameraRay.Direction, CameraW);
+					float fluxToIrradiance = AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal) /
+											(cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
 
 				#ifdef SAMPLEBSDF_OUTPUT_PDF
 					float pdf;
