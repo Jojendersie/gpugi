@@ -1,6 +1,6 @@
 #include "bidirectionalpathtracer.hpp"
-#include "../glhelper/texture2d.hpp"
-#include "../glhelper/shaderstoragebuffer.hpp"
+#include <glhelper/texture2d.hpp>
+#include <glhelper/shaderstoragebuffer.hpp>
 #include "../utilities/flagoperators.hpp"
 #include "../utilities/logger.hpp"
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../glhelper/shaderobject.hpp"
-#include "../glhelper/uniformbuffer.hpp"
+#include <glhelper/shaderobject.hpp>
+#include <glhelper/uniformbuffer.hpp>
 
 #include <memory>
 #include <ei/matrix.hpp>
@@ -48,11 +48,12 @@ protected:
 
 	enum class TextureBufferBindings
 	{
-		TRIANGLES = 0,
-		VERTEX_POSITIONS = 1,
-		VERTEX_INFO = 2,
-		HIERARCHY = 3,
-		INITIAL_LIGHTSAMPLES = 4
+		// Don't use 0, since this is reserverd for changing purposes.
+		TRIANGLES = 1,
+		VERTEX_POSITIONS = 2,
+		VERTEX_INFO = 3,
+		HIERARCHY = 4,
+		INITIAL_LIGHTSAMPLES = 5
 	};
 
 	enum class UniformBufferBindings

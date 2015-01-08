@@ -1,3 +1,6 @@
 [submodule "dependencies/epsilon"]
 	path = dependencies/epsilon
 	url = https://github.com/Jojendersie/Epsilon-Intersection.git
+[submodule "dependencies/glhelper"]
+	path = dependencies/glhelper
+	url = https://github.com/Wumpf/glhelper.git

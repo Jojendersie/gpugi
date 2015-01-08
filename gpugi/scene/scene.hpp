@@ -1,11 +1,12 @@
 ﻿#pragma once
 
-#include "ei/3dtypes.hpp"
-#include "../glhelper/buffer.hpp"
-#include "../glhelper/texture2D.hpp"
-#include "../glhelper/samplerobject.hpp"
-#include "../../bvhmake/filedef.hpp"
+#include <ei/3dtypes.hpp>
+#include <glhelper/buffer.hpp>
+#include <glhelper/texture2D.hpp>
+#include <glhelper/samplerobject.hpp>
 #include <jofilelib.hpp>
+
+#include "../../bvhmake/filedef.hpp"
 
 #include <string>
 #include <memory>

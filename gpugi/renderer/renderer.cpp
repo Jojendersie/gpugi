@@ -1,7 +1,7 @@
 #include "renderer.hpp"
 
-#include "..\glhelper\texture2d.hpp"
-#include "..\glhelper\texturebuffer.hpp"
+#include <glhelper\texture2d.hpp>
+#include <glhelper\texturebuffer.hpp>
 
 #include "..\camera\camera.hpp"
 #include "..\scene\scene.hpp"
@@ -120,7 +120,7 @@ void Renderer::SetScreenSize(const ei::IVec2& _newSize)
 	m_iterationCount = 0;
 }
 
-void Renderer::UpdateGlobalConstUBO()
+void Renderer::UpdateGlobalConstUBO() 
 {
 	if (!m_backbuffer)
 		return; // Backbuffer not yet created - this function will be called again if it is ready, so no hurry.

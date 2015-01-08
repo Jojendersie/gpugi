@@ -18,7 +18,7 @@ vec3 GetVec(PackVec3 v) { return vec3(v.x, v.y, v.z); }
 vec2 GetVec(PackVec2 v) { return vec2(v.x, v.y); } */
 
 
-layout(binding=0) uniform isamplerBuffer TriangleBuffer;
+layout(binding=1) uniform isamplerBuffer TriangleBuffer;
 #define Triangle ivec4
 /*struct Triangle
 {
@@ -31,11 +31,11 @@ struct Leaf
 };*/
 
 
-layout(binding=1) uniform samplerBuffer VertexPositionBuffer;
+layout(binding=2) uniform samplerBuffer VertexPositionBuffer;
 
-layout(binding=2) uniform samplerBuffer VertexInfoBuffer;
+layout(binding=3) uniform samplerBuffer VertexInfoBuffer;
 
-layout(binding=3) uniform samplerBuffer HierachyBuffer;
+layout(binding=4) uniform samplerBuffer HierachyBuffer;
 /*#if NODE_TYPE == NODE_TYPE_BOX
 struct Node
 {
@@ -48,7 +48,7 @@ struct Node
 	#error "No node type defined"
 #endif */
 
-layout(binding=4) uniform samplerBuffer InitialLightSampleBuffer;
+layout(binding=5) uniform samplerBuffer InitialLightSampleBuffer;
 /*struct LightSample
 {
 	ei::Vec3 position;

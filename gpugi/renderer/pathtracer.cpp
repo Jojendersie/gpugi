@@ -1,5 +1,5 @@
 #include "pathtracer.hpp"
-#include "../glhelper/texture2d.hpp"
+#include <glhelper/texture2d.hpp>
 
 #include <fstream>
 

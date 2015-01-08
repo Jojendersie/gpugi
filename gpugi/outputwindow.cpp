@@ -91,7 +91,7 @@ OutputWindow::OutputWindow() :
 
 OutputWindow::~OutputWindow(void)
 {
-	SAFE_DELETE(screenTri);
+	delete screenTri;
 
 	GlobalConfig::RemovesListener("resolution", "outputwindow");
 

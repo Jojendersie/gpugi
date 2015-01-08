@@ -7,9 +7,6 @@
     <Filter Include="code">
       <UniqueIdentifier>{afd5e741-7caa-473a-953e-5fc961e47d38}</UniqueIdentifier>
     </Filter>
-    <Filter Include="code\glhelper">
-      <UniqueIdentifier>{9cb5bc7d-6439-4ab4-93eb-2d7a4e7036fb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="code\utilities">
       <UniqueIdentifier>{9f118de0-8de1-4757-83d0-fab722550b2d}</UniqueIdentifier>
     </Filter>
@@ -37,6 +34,12 @@
     <Filter Include="code\scene">
       <UniqueIdentifier>{289e5674-bac3-4417-8232-271f81b14537}</UniqueIdentifier>
     </Filter>
+    <Filter Include="dependencies\glhelper">
+      <UniqueIdentifier>{1ce594e5-d4e1-4311-a502-bca23eb3c857}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\glhelper\utils">
+      <UniqueIdentifier>{5070f7eb-bfae-45f0-bbe2-c423bcf7b703}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="outputwindow.cpp">
@@ -57,32 +60,11 @@
     <ClCompile Include="utilities\logger.cpp">
       <Filter>code\utilities</Filter>
     </ClCompile>
-    <ClCompile Include="glhelper\uniformbuffer.cpp">
-      <Filter>code\glhelper</Filter>
-    </ClCompile>
-    <ClCompile Include="glhelper\shaderobject.cpp">
-      <Filter>code\glhelper</Filter>
-    </ClCompile>
-    <ClCompile Include="glhelper\gl.cpp">
-      <Filter>code\glhelper</Filter>
-    </ClCompile>
     <ClCompile Include="Time\Implementation\Time.cpp">
       <Filter>code\Time\Implementation</Filter>
     </ClCompile>
     <ClCompile Include="Time\Implementation\Stopwatch.cpp">
       <Filter>code\Time\Implementation</Filter>
-    </ClCompile>
-    <ClCompile Include="glhelper\texture2d.cpp">
-      <Filter>code\glhelper</Filter>
-    </ClCompile>
-    <ClCompile Include="glhelper\texture.cpp">
-      <Filter>code\glhelper</Filter>
-    </ClCompile>
-    <ClCompile Include="glhelper\screenalignedtriangle.cpp">
-      <Filter>code\glhelper</Filter>
-    </ClCompile>
-    <ClCompile Include="glhelper\textureformats.cpp">
-      <Filter>code\glhelper</Filter>
     </ClCompile>
     <ClCompile Include="renderer\renderer.cpp">
       <Filter>code\renderer</Filter>
@@ -111,23 +93,8 @@
     <ClCompile Include="utilities\random.cpp">
       <Filter>code\utilities</Filter>
     </ClCompile>
-    <ClCompile Include="glhelper\samplerobject.cpp">
-      <Filter>code\glhelper</Filter>
-    </ClCompile>
     <ClCompile Include="scene\scene.cpp">
       <Filter>code\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="glhelper\buffer.cpp">
-      <Filter>code\glhelper</Filter>
-    </ClCompile>
-    <ClCompile Include="glhelper\texturebuffer.cpp">
-      <Filter>code\glhelper</Filter>
-    </ClCompile>
-    <ClCompile Include="glhelper\framebufferobject.cpp">
-      <Filter>code\glhelper</Filter>
-    </ClCompile>
-    <ClCompile Include="glhelper\shaderstoragebuffer.cpp">
-      <Filter>code\glhelper</Filter>
     </ClCompile>
     <ClCompile Include="utilities\color.cpp">
       <Filter>code\utilities</Filter>
@@ -143,6 +110,45 @@
     </ClCompile>
     <ClCompile Include="renderer\pathtracer.cpp">
       <Filter>code\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\framebufferobject.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\gl.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\samplerobject.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\screenalignedtriangle.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\shaderobject.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\shaderstoragebuffer.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\texture.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\texture2d.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\texturebuffer.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\textureformats.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\uniformbuffer.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\buffer.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\utils\pathutils.cpp">
+      <Filter>dependencies\glhelper\utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -161,23 +167,11 @@
     <ClInclude Include="utilities\logger.hpp">
       <Filter>code\utilities</Filter>
     </ClInclude>
-    <ClInclude Include="glhelper\gl.hpp">
-      <Filter>code\glhelper</Filter>
-    </ClInclude>
     <ClInclude Include="outputwindow.hpp">
       <Filter>code</Filter>
     </ClInclude>
     <ClInclude Include="utilities\utils.hpp">
       <Filter>code\utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="glhelper\uniformbuffer.hpp">
-      <Filter>code\glhelper</Filter>
-    </ClInclude>
-    <ClInclude Include="glhelper\shaderobject.hpp">
-      <Filter>code\glhelper</Filter>
-    </ClInclude>
-    <ClInclude Include="glhelper\shaderdatametainfo.hpp">
-      <Filter>code\glhelper</Filter>
     </ClInclude>
     <ClInclude Include="Time\Implementation\Time_inl.h">
       <Filter>code\Time\Implementation</Filter>
@@ -187,18 +181,6 @@
     </ClInclude>
     <ClInclude Include="Time\Time.h">
       <Filter>code\Time</Filter>
-    </ClInclude>
-    <ClInclude Include="glhelper\texture2d.hpp">
-      <Filter>code\glhelper</Filter>
-    </ClInclude>
-    <ClInclude Include="glhelper\texture.hpp">
-      <Filter>code\glhelper</Filter>
-    </ClInclude>
-    <ClInclude Include="glhelper\screenalignedtriangle.hpp">
-      <Filter>code\glhelper</Filter>
-    </ClInclude>
-    <ClInclude Include="glhelper\textureformats.hpp">
-      <Filter>code\glhelper</Filter>
     </ClInclude>
     <ClInclude Include="renderer\renderer.hpp">
       <Filter>code\renderer</Filter>
@@ -221,29 +203,14 @@
     <ClInclude Include="utilities\random.hpp">
       <Filter>code\utilities</Filter>
     </ClInclude>
-    <ClInclude Include="glhelper\samplerobject.hpp">
-      <Filter>code\glhelper</Filter>
-    </ClInclude>
     <ClInclude Include="scene\scene.hpp">
       <Filter>code\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="glhelper\buffer.hpp">
-      <Filter>code\glhelper</Filter>
-    </ClInclude>
-    <ClInclude Include="glhelper\texturebuffer.hpp">
-      <Filter>code\glhelper</Filter>
     </ClInclude>
     <ClInclude Include="utilities\flagoperators.hpp">
       <Filter>code\utilities</Filter>
     </ClInclude>
     <ClInclude Include="utilities\variant.hpp">
       <Filter>code\utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="glhelper\framebufferobject.hpp">
-      <Filter>code\glhelper</Filter>
-    </ClInclude>
-    <ClInclude Include="glhelper\shaderstoragebuffer.hpp">
-      <Filter>code\glhelper</Filter>
     </ClInclude>
     <ClInclude Include="utilities\color.hpp">
       <Filter>code\utilities</Filter>
@@ -260,14 +227,54 @@
     <ClInclude Include="renderer\pathtracer.hpp">
       <Filter>code\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="glhelperconfig.hpp" />
+    <ClInclude Include="..\dependencies\glhelper\glhelper\framebufferobject.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\gl.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\samplerobject.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\screenalignedtriangle.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\shaderdatametainfo.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\shaderobject.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\shaderstoragebuffer.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\texture.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\texture2d.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\texturebuffer.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\textureformats.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\uniformbuffer.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\buffer.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\utils\pathutils.hpp">
+      <Filter>dependencies\glhelper\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\utils\flagoperators.hpp">
+      <Filter>dependencies\glhelper\utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="glhelper\uniformbuffer.inl">
-      <Filter>code\glhelper</Filter>
-    </None>
-    <None Include="glhelper\shaderdatametainfo.inl">
-      <Filter>code\glhelper</Filter>
-    </None>
     <None Include="shader\globaluniforms.glsl">
       <Filter>shader</Filter>
     </None>
@@ -309,6 +316,12 @@
     </None>
     <None Include="shader\pathtracer_bidir.comp">
       <Filter>shader</Filter>
+    </None>
+    <None Include="..\dependencies\glhelper\glhelper\shaderdatametainfo.inl">
+      <Filter>dependencies\glhelper</Filter>
+    </None>
+    <None Include="..\dependencies\glhelper\glhelper\uniformbuffer.inl">
+      <Filter>dependencies\glhelper</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 ﻿#include "scene.hpp"
-#include "../glhelper/gl.hpp"
-#include "../glhelper/samplerobject.hpp"
-#include "../glhelper/texture2d.hpp"
+#include <glhelper/gl.hpp>
+#include <glhelper/samplerobject.hpp>
+#include <glhelper/texture2d.hpp>
 #include "../utilities/logger.hpp"
 #include "../utilities/assert.hpp"
 #include "../utilities/flagoperators.hpp"

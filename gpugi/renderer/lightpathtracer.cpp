@@ -1,5 +1,5 @@
 #include "lightpathtracer.hpp"
-#include "../glhelper/texture2d.hpp"
+#include <glhelper/texture2d.hpp>
 
 const unsigned int LightPathtracer::m_localSizeLightPathtracer = 8 * 8;
 

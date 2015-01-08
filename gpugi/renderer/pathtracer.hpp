@@ -1,8 +1,8 @@
 #pragma once
 
 #include "renderer.hpp"
-#include "../glhelper/screenalignedtriangle.hpp"
-#include "../glhelper/framebufferobject.hpp"
+#include <glhelper/screenalignedtriangle.hpp>
+#include <glhelper/framebufferobject.hpp>
 
 namespace gl
 {
