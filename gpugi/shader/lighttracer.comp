@@ -76,7 +76,7 @@ void main()
 	vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2);
 	vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2 + 1);
 
-#ifdef SAVE_LIGHT_CACHE
+#if defined(SAVE_LIGHT_CACHE) && !defined(SAVE_LIGHT_CACHE_WARMUP)
 	// recursive MIS construction.
 	float pathProbability = 1.0;
 	float anyPathProbabilitySum = 0.0;
@@ -127,8 +127,9 @@ void main()
 		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
 
 		// Save light cache entry.
-#ifdef SAVE_LIGHT_CACHE
+#ifdef SAVE_LIGHT_CACHE 
 		uint lightCacheEntryIndex = atomicAdd(NumLightCacheEntries, 1);
+	#ifndef SAVE_LIGHT_CACHE_WARMUP
 		if(lightCacheEntryIndex < LightCacheCapacity)
 		{
 			LightCacheEntries[lightCacheEntryIndex].Flux = pathThroughput;
@@ -143,9 +144,11 @@ void main()
 			LightCacheEntries[lightCacheEntryIndex].PathProbability = pathProbability;
 			LightCacheEntries[lightCacheEntryIndex].AnyPathProbabilitySum = anyPathProbabilitySum;
 		}
+	#endif
 #endif
 
 		// Try to connect to camera.
+	#ifndef SAVE_LIGHT_CACHE_WARMUP
 		Ray cameraRay;
 		cameraRay.Direction = CameraPosition - ray.Origin;
 		float camViewDotRay = -dot(CameraW, cameraRay.Direction);
@@ -230,7 +233,7 @@ void main()
 				}
 			}
 		}
-
+	#endif
 		// Continue ray.
 		vec3 sampleThroughput = vec3(1.0);
 	#ifdef SAMPLEBSDF_OUTPUT_PDF
@@ -258,7 +261,7 @@ void main()
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 
 		// Update MIS quantitites.
-	#ifdef SAVE_LIGHT_CACHE
+	#if defined(SAVE_LIGHT_CACHE) && !defined(SAVE_LIGHT_CACHE_WARMUP)
 		samplePDF = MIS(samplePDF);
 		anyPathProbabilitySum = anyPathProbabilitySum * samplePDF + pathProbability;
 		pathProbability *= samplePDF;

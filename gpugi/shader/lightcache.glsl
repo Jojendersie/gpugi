@@ -18,16 +18,23 @@ struct LightCacheEntry // aka photon
 #ifdef SAVE_LIGHT_CACHE
 layout (std430, binding=0) buffer LightCache
 { 
-	coherent uint NumLightCacheEntries;
 	restrict writeonly LightCacheEntry LightCacheEntries[];
 };
+layout (std430, binding=1) buffer LightCacheCount
+{ 
+	coherent uint NumLightCacheEntries;
+};
+
 
 // READ VERSION
 #else
 layout (std430, binding=0) restrict readonly buffer LightCache
 { 
-	uint NumLightCacheEntries;
 	LightCacheEntry LightCacheEntries[];
+};
+layout(std430, binding = 1) restrict readonly buffer LightCacheCount
+{
+	uint NumLightCacheEntries;
 };
 #endif
 

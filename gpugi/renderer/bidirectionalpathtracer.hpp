@@ -24,13 +24,21 @@ public:
 
 
 private:
+	/// Estimates light cache capacity and creates a new cache.
+	void CreateLightCacheWithCapacityEstimate();
+
 	gl::ShaderObject m_pathtraceShader;
 	gl::ShaderObject m_lighttraceShader;
+	gl::ShaderObject m_warmupLighttraceShader;
 
 	std::unique_ptr<gl::Texture2D> m_lockTexture;
 
 	unsigned int m_lightCacheCapacity;
+	std::unique_ptr<gl::ShaderStorageBufferView> m_lightCacheFillCounter;
 	std::unique_ptr<gl::ShaderStorageBufferView> m_lightCache;
+
+	/// If true, the light cache capacity is not known and needs to be recomputed.
+	bool m_needToDetermineNeededLightCacheCapacity;
 
 	int m_numRaysPerLightSample;
 	gl::UniformBufferView m_lightpathtraceUBO;
