@@ -121,6 +121,8 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<gl::Texture2D>> m_textures;
 	const gl::SamplerObject& m_samplerLinearNoMipMap;
 
+	std::string m_sourceDirectory;
+
 	/// "sizeof" for different geometry
 	size_t size(ε::Types3D _type);
 

@@ -5,6 +5,7 @@
 #include "../utilities/logger.hpp"
 #include "../utilities/assert.hpp"
 #include "../utilities/flagoperators.hpp"
+#include "../utilities/pathutils.hpp"
 #include "ei/3dfunctions.hpp"
 
 #include <fstream>
@@ -19,6 +20,8 @@ Scene::Scene( const std::string& _file ) :
 		gl::SamplerObject::Border::REPEAT
 	)) )
 {
+	m_sourceDirectory = PathUtils::GetDirectory(_file);
+
 	// Load materials from dedicated material file
 	std::string matFileName = _file.substr(0, _file.find_last_of('.')) + ".json";
 	Jo::Files::MetaFileWrapper materialFile;
@@ -291,7 +294,7 @@ uint64 Scene::GetBindlessHandle( const std::string& _name )
 	if( it == m_textures.end() )
 	{
 		it = m_textures.insert( std::pair<std::string, std::unique_ptr<gl::Texture2D>>(
-			_name, gl::Texture2D::LoadFromFile(_name, false)) ).first;
+			_name, gl::Texture2D::LoadFromFile(PathUtils::AppendPath(m_sourceDirectory, _name), false))).first;
 		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
 		// Make permanently resident
 		GL_CALL(glMakeTextureHandleResidentARB, handle);
