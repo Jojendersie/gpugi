@@ -25,7 +25,7 @@ void main()
 	vec3 pathThroughput = vec3(1.0);
 
 	uint actualNumLightCacheEntries = min(NumLightCacheEntries, LightCacheCapacity);
-	float lightSampleWeight = float(NumInitialLightSamples) / NUM_SAMPLING_TECHNIQUES / NUM_CAMPATH_LIGHTSAMPLE_CONNECTIONS;
+	float lightSampleWeight = float(actualNumLightCacheEntries) / NUM_SAMPLING_TECHNIQUES;
 
 	// recursive MIS construction.
 	float pathProbability = 1.0;
@@ -79,7 +79,6 @@ void main()
 					int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
 					MaterialTextureData lightSampleMaterialTexData = SampleMaterialData(lightSampleMaterialIndex, LightCacheEntries[lightCacheSampleIndex].Texcoord);
 
-					
 
 					float pdf;
 					vec3 lightBSDF = AdjointBSDF(LightCacheEntries[lightCacheSampleIndex].IncidentDirection, -lightRay.Direction,
@@ -91,11 +90,11 @@ void main()
 					lightSampleIntensity = lightSampleFlux * lightBSDF * cosLight;
 
 					#ifdef RUSSIAN_ROULETTE
-						// path termination propability: bsdf * dot(N, outDir) / pdf
-						// -> bsdf * dot(N, outDir) = "lightSampleIntensity"
+						// path continuation propability: bsdf * dot(N, outDir) / pdf
+						// connection propability: connection * pdf
 						//pdf += DIVISOR_EPSILON;
-						//float continuationPropability = GetLuminance(lightBSDF) * cosLight / pdf;
-						//connectionLightPathToEyePath = MIS(pdf / continuationPropability);
+						//float continuationPropability = GetLuminance(lightBSDF) * cosLight / pdf + DIVISOR_EPSILON;
+						//connectionLightPathToEyePath = MIS(pdf * continuationPropability);
 
 						connectionLightPathToEyePath = MIS(GetLuminance(lightBSDF) * cosLight);
 					#else
@@ -115,12 +114,11 @@ void main()
 				vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal, pdf); // Note that this is also 1/samplingProbability!
 
 			#ifdef RUSSIAN_ROULETTE
-				// path termination propability: bsdf * dot(N, outDir) / pdf
-				// connection propability: termination * pdf
-				// -> bsdf * dot(N, outDir)
+				// path continuation propability: bsdf * dot(N, outDir) / pdf
+				// connection propability: connection * pdf
 				//pdf += DIVISOR_EPSILON;
-				//float continuationPropability = GetLuminance(bsdf) * cosCamera / pdf;
-				//float connectionEyePathToLightPath = MIS(pdf / continuationPropability);
+				//float continuationPropability = GetLuminance(bsdf) * cosCamera / pdf + DIVISOR_EPSILON;
+				//float connectionEyePathToLightPath = MIS(pdf * continuationPropability);
 
 				float connectionEyePathToLightPath = MIS(GetLuminance(bsdf) * cosCamera);
 			#else

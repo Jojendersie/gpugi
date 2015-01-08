@@ -83,7 +83,7 @@ void main()
 
 	// Correct init of "NumLightCacheEntries" required!
 	// Each thread writes its own initial light sample into the LightCache
-	LightCacheEntries[gl_GlobalInvocationID.x].Flux = lightIntensity_Norm1.xyz / PI_2; // equal distributed in all directions
+	LightCacheEntries[gl_GlobalInvocationID.x].Flux = lightIntensity_Norm1.xyz / PI_2 / NumRaysPerLightSample; // equal distributed in all directions, NumRaysPerLightSample times
 	LightCacheEntries[gl_GlobalInvocationID.x].MaterialIndex = -1;
 	LightCacheEntries[gl_GlobalInvocationID.x].Position = lightSamplePos_Norm0.xyz;
 	LightCacheEntries[gl_GlobalInvocationID.x].Normal0 = lightSamplePos_Norm0.w;
@@ -193,7 +193,7 @@ void main()
 				#endif
 
 				#ifdef SAVE_LIGHT_CACHE
-					float connectionLightPathToEyePath = MIS(pdf);
+					float connectionLightPathToEyePath = MIS(1.0); // Next event estimate!
 
 					float connectedPathPropability = pathProbability + DIVISOR_EPSILON;
 					float mis = connectedPathPropability / (connectionLightPathToEyePath * anyPathProbabilitySum + connectedPathPropability);
