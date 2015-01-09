@@ -22,8 +22,8 @@
 
 // Logging
 #define GLHELPER_LOG_ERROR(message)		LOG_ERROR(message)
-#define GLHELPER_LOG_WARNING(message)	LOG_ERROR(message)
-#define GLHELPER_LOG_INFO(message)		LOG_ERROR(message)
+#define GLHELPER_LOG_WARNING(message)	LOG_LVL2(message)
+#define GLHELPER_LOG_INFO(message)		LOG_LVL0(message)
 
 
 
