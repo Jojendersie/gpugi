@@ -226,7 +226,7 @@ void BVHBuilder::ExportVertices( std::ofstream& _file,
         for( unsigned v = 0; v < mesh->mNumVertices; ++v )
         {
             FileDecl::Vertex vertex;
-            vertex.position = ε::Vec3(transformation * homo(hard_cast<ε::Vec3>(mesh->mVertices[v])));
+            vertex.position = ε::transform(hard_cast<ε::Vec3>(mesh->mVertices[v]), transformation);
             vertex.normal = invTransTransform * hard_cast<ε::Vec3>(mesh->mNormals[v]);
             if( mesh->HasTextureCoords(0) )
 				vertex.texcoord = ε::Vec2(mesh->mTextureCoords[0][v].x, mesh->mTextureCoords[0][v].y);
