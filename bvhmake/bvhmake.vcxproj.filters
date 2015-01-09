@@ -33,9 +33,6 @@
     <ClCompile Include="..\gpugi\utilities\logger.cpp">
       <Filter>dependencies\utilities</Filter>
     </ClCompile>
-    <ClCompile Include="..\gpugi\utilities\pathutils.cpp">
-      <Filter>dependencies\utilities</Filter>
-    </ClCompile>
     <ClCompile Include="..\gpugi\utilities\policy.cpp">
       <Filter>dependencies\utilities</Filter>
     </ClCompile>
@@ -64,6 +61,9 @@
       <Filter>dependencies\epsilon</Filter>
     </ClCompile>
     <ClCompile Include="..\gpugi\utilities\random.cpp">
+      <Filter>dependencies\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\utils\pathutils.cpp">
       <Filter>dependencies\utilities</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <assimp/DefaultLogger.hpp>
 #include "bvhmake.hpp"
-#include "..\gpugi\utilities\pathutils.hpp"
+#include "../dependencies/glhelper/glhelper/utils/pathutils.hpp"
 #include "..\gpugi\utilities\loggerinit.hpp"
 
 // ************************************************************************* //

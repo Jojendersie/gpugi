@@ -133,9 +133,9 @@
     <ClCompile Include="..\dependencies\epsilon\src\2dtypes.cpp" />
     <ClCompile Include="..\dependencies\epsilon\src\3dintersection.cpp" />
     <ClCompile Include="..\dependencies\epsilon\src\3dtypes.cpp" />
+    <ClCompile Include="..\dependencies\glhelper\glhelper\utils\pathutils.cpp" />
     <ClCompile Include="..\gpugi\utilities\assert.cpp" />
     <ClCompile Include="..\gpugi\utilities\logger.cpp" />
-    <ClCompile Include="..\gpugi\utilities\pathutils.cpp" />
     <ClCompile Include="..\gpugi\utilities\policy.cpp" />
     <ClCompile Include="..\gpugi\utilities\random.cpp" />
     <ClCompile Include="buildmethods\kdtree.cpp" />
