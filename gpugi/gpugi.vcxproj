@@ -179,7 +179,6 @@
     <ClCompile Include="utilities\color.cpp" />
     <ClCompile Include="utilities\logger.cpp" />
     <ClCompile Include="utilities\random.cpp" />
-    <ClCompile Include="utilities\pathutils.cpp" />
     <ClCompile Include="utilities\policy.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -220,7 +219,6 @@
     <ClInclude Include="utilities\logger.hpp" />
     <ClInclude Include="utilities\loggerinit.hpp" />
     <ClInclude Include="utilities\random.hpp" />
-    <ClInclude Include="utilities\pathutils.hpp" />
     <ClInclude Include="utilities\policy.hpp" />
     <ClInclude Include="utilities\utils.hpp" />
     <ClInclude Include="utilities\variant.hpp" />

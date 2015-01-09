@@ -48,9 +48,6 @@
     <ClCompile Include="main.cpp">
       <Filter>code</Filter>
     </ClCompile>
-    <ClCompile Include="utilities\pathutils.cpp">
-      <Filter>code\utilities</Filter>
-    </ClCompile>
     <ClCompile Include="utilities\policy.cpp">
       <Filter>code\utilities</Filter>
     </ClCompile>
@@ -153,9 +150,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
-      <Filter>code\utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="utilities\pathutils.hpp">
       <Filter>code\utilities</Filter>
     </ClInclude>
     <ClInclude Include="utilities\policy.hpp">

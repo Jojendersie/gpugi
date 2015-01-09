@@ -5,7 +5,7 @@
 #include "../utilities/logger.hpp"
 #include "../utilities/assert.hpp"
 #include "../utilities/flagoperators.hpp"
-#include "../utilities/pathutils.hpp"
+#include "../dependencies/glhelper/glhelper/utils/pathutils.hpp"
 #include "ei/3dfunctions.hpp"
 
 #include <fstream>
