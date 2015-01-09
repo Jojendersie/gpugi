@@ -89,6 +89,9 @@
     <ClInclude Include="fitmethods\aaellipsoidfit.hpp">
       <Filter>code\fitmethods</Filter>
     </ClInclude>
+    <ClInclude Include="glhelperconfig.hpp">
+      <Filter>dependencies</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="fitmethods\optimize.inl">
