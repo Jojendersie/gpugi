@@ -66,11 +66,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>../dependencies/epsilon/include/;../dependencies/assimp3.1.1/include/;../dependencies/jofilelib/include/;$(IncludePath)</IncludePath>
+    <IncludePath>.;../dependencies/epsilon/include/;../dependencies/assimp3.1.1/include/;../dependencies/jofilelib/include/;$(IncludePath)</IncludePath>
     <LibraryPath>../dependencies/assimp3.1.1/lib64;../dependencies/jofilelib/lib/Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>../dependencies/epsilon/include/;../dependencies/assimp3.1.1/include/;../dependencies/jofilelib/include/;$(IncludePath)</IncludePath>
+    <IncludePath>.;../dependencies/epsilon/include/;../dependencies/assimp3.1.1/include/;../dependencies/jofilelib/include/;$(IncludePath)</IncludePath>
     <LibraryPath>../dependencies/assimp3.1.1/lib64;../dependencies/jofilelib/lib/Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -153,6 +153,7 @@
     <ClInclude Include="fitmethods\aaboxfit.hpp" />
     <ClInclude Include="fitmethods\aaellipsoidfit.hpp" />
     <ClInclude Include="fitmethods\optimize.hpp" />
+    <ClInclude Include="glhelperconfig.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="fitmethods\optimize.inl" />
