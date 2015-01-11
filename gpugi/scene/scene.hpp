@@ -97,7 +97,7 @@ public:
 	ε::Types3D GetBoundingVolumeType() const	{ return m_bvType; }
 
 	uint32 GetNumTrianglesPerLeaf() const		{ return m_numTrianglesPerLeaf; }
-	uint32 GetNumTriangles() const				{ return m_triangleBuffer->GetSize() / sizeof(Triangle); }
+	uint32 GetNumTriangles() const				{ return static_cast<uint32>(m_triangleBuffer->GetSize() / sizeof(Triangle)); }
 	uint32 GetNumInnerNodes() const				{ return m_numInnerNodes; }
 	uint32 GetNumMaterials() const				{ return static_cast<uint32>(m_materials.size()); }
 	uint32 GetNumVertices() const				{ return static_cast<uint32>(m_vertexPositionBuffer->GetSize() / sizeof(ei::Vec3)); }

@@ -48,7 +48,7 @@ protected:
 
 	enum class TextureBufferBindings
 	{
-		// Don't use 0, since this is reserverd for changing purposes.
+		// Don't use 0, since this is reserved for changing purposes.
 		TRIANGLES = 1,
 		VERTEX_POSITIONS = 2,
 		VERTEX_INFO = 3,

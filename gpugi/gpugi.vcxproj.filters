@@ -147,6 +147,9 @@
     <ClCompile Include="..\dependencies\glhelper\glhelper\utils\pathutils.cpp">
       <Filter>dependencies\glhelper\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\vertexarrayobject.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -266,6 +269,9 @@
     </ClInclude>
     <ClInclude Include="..\dependencies\glhelper\glhelper\utils\flagoperators.hpp">
       <Filter>dependencies\glhelper\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\vertexarrayobject.hpp">
+      <Filter>dependencies\glhelper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
