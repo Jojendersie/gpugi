@@ -1,0 +1,642 @@
+{
+  "Stone": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Grass": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Dirt": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Cobblestone": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Wooden_Plank": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Sapling": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Stationary_Water": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Stationary_Lava": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "JoinedMaterial_#16": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Gravel": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Iron_Ore": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Coal_Ore": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Log": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Leaves": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "JoinedMaterial_#67": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Dispenser": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Bed": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Tall_Grass": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "JoinedMaterial_#20": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Dandelion": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Rose": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Brown_Mushroom": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Red_Mushroom": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Gold_Block": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Iron_Block": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Double_Slab": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Stone_Slab": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "JoinedMaterial_#70": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Bookshelf": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Moss_Stone": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Obsidian": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Torch": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Fire": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Monster_Spawner": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Wooden_Stairs": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Chest": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Redstone_Wire": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Crafting_Table": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Crops": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Farmland": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Furnace": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Sign_Post": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Wooden_Door": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Ladder": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Rail": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Cobblestone_Stairs": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Wall_Sign": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Lever": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Stone_Plate": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Iron_Door": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Wooden_Plate": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Redstone_Torch__off_": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Redstone_Torch__on_": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Stone_Button": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Clay": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Sugar_Cane": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Fence": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Netherrack": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Glowstone": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Jack_O_Lantern": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Cake": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Repeater__on_": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Trapdoor": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "JoinedMaterial_#71": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Iron_Bars": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Vines": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Fence_Gate": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Lily_Pad": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Enchantment_Table": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "White_Wool": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Orange_Wool": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Light_Blue_Wool": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Gray_Wool": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Light_Gray_Wool": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Cyan_Wool": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Brown_Wool": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Green_Wool": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Red_Wool": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Black_Wool": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.071773],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "DefaultMaterial": {
+    "diffuse": [0.800000, 0.800000, 0.800000],
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 1.000000],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [100.000000, 100.000000, 100.000000]
+  }
+}
