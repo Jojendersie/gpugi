@@ -83,7 +83,7 @@ void BidirectionalPathtracer::CreateLightCacheWithCapacityEstimate()
 	// Perform Warmup to find out how large the lightcache should be.
 	LOG_LVL2("Starting bpt warmup to estimate needed light cache capacity...");
 	m_warmupLighttraceShader.Activate();
-	static unsigned int numWarmupRuns = 16;
+	static unsigned int numWarmupRuns = 8;
 	std::uint64_t numCacheEntries = 0;
 	for (unsigned int run = 0; run < numWarmupRuns; ++run)
 	{
@@ -111,7 +111,7 @@ void BidirectionalPathtracer::CreateLightCacheWithCapacityEstimate()
 
 	// Create light cache
 	m_lightpathtraceUBO.GetBuffer()->Map();
-	m_lightpathtraceUBO["LightCacheCapacity"].Set(std::numeric_limits<std::uint32_t>().max()); // Not known yet.
+	m_lightpathtraceUBO["LightCacheCapacity"].Set(m_lightCacheCapacity);
 	m_lightpathtraceUBO.GetBuffer()->Unmap();
 	m_lightCache.reset(new gl::ShaderStorageBufferView());
 	m_lightCache->Init(std::make_shared<gl::Buffer>(lightCacheSizeInBytes, gl::Buffer::Usage::IMMUTABLE), "LightCache");
