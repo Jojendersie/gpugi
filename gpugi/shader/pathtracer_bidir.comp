@@ -79,19 +79,17 @@ void main()
 				float connectionLightPathToEyePath;
 				vec3 lightSampleIntensity;
 
+				const float cosLight = saturate(-dot(lightRay.Direction, lightSampleHitNormal));
+
 				// Triangle material
 				if(lightSampleMaterialIndex != -1)
 				{
 					int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
 					MaterialTextureData lightSampleMaterialTexData = SampleMaterialData(lightSampleMaterialIndex, LightCacheEntries[lightCacheSampleIndex].Texcoord);
 
-
 					float pdf;
 					vec3 lightBSDF = AdjointBSDF(LightCacheEntries[lightCacheSampleIndex].IncidentDirection, -lightRay.Direction,
 										  			lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal, pdf);
-
-
-					float cosLight = saturate(-dot(lightRay.Direction, lightSampleHitNormal));
 
 					lightSampleIntensity = lightSampleFlux * lightBSDF * cosLight;
 
@@ -111,10 +109,10 @@ void main()
 				else
 				{
 					connectionLightPathToEyePath = MIS(1.0); // Only possible via THIS next event estimation -> Fixed propability of 1.
-					lightSampleIntensity = lightSampleFlux * (saturate(dot(lightSampleHitNormal, -lightRay.Direction)) * PI_2);// hemispherical light source
+					lightSampleIntensity = lightSampleFlux * (cosLight * PI_2);// hemispherical light source
 				}
 
-				float cosCamera = abs(dot(lightRay.Direction, hitNormal));
+				float cosCamera = saturate(dot(lightRay.Direction, hitNormal));
 
 				float pdf;
 				vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal, pdf); // Note that this is also 1/samplingProbability!
