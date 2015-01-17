@@ -9,6 +9,11 @@
 
 #ifdef SAVE_LIGHT_CACHE
 	#include "lightcache.glsl"
+#else
+    layout(binding = 4, std140) uniform LightPathTrace
+    {
+        int NumRaysPerLightSample;
+    };
 #endif
 
 
