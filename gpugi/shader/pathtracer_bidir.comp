@@ -66,6 +66,12 @@ void main()
 
 			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON)) // Important to subtract epsilon, since light sample may be slightly behind the surface
 			{
+			#ifdef SHOW_ONLY_PATHLENGTH
+				int pathLength = LightCacheEntries[lightCacheSampleIndex].PathLength + i + 1;
+				if(pathLength != SHOW_ONLY_PATHLENGTH)
+					continue;
+			#endif
+
 				int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
 				vec3 lightSampleFlux = LightCacheEntries[lightCacheSampleIndex].Flux;
 				vec3 lightSampleHitNormal = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1);

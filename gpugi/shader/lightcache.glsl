@@ -12,6 +12,10 @@ struct LightCacheEntry // aka photon
 
 	vec3 IncidentDirection;
 	float AnyPathProbabilitySum; // "d": Propability for sampling the underlying path using any bidirectional sampling method. (if first light vertex is given)
+
+#ifdef SHOW_ONLY_PATHLENGTH
+	int PathLength;
+#endif
 };
 
 // WRITE VERSION

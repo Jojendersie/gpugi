@@ -92,6 +92,9 @@ void main()
 	LightCacheEntries[gl_GlobalInvocationID.x].AnyPathProbabilitySum = anyPathProbabilitySum;
 	//LightCacheEntries[gl_GlobalInvocationID.x].Texcoord // texcoord empty
 	//LightCacheEntries[gl_GlobalInvocationID.x].IncidentDirection // direction empty
+	#ifdef SHOW_ONLY_PATHLENGTH
+	LightCacheEntries[gl_GlobalInvocationID.x].PathLength = 0; // For debugging only
+	#endif
 #endif
 
 
@@ -143,9 +146,18 @@ void main()
 			LightCacheEntries[lightCacheEntryIndex].IncidentDirection = ray.Direction;
 			LightCacheEntries[lightCacheEntryIndex].PathProbability = pathProbability;
 			LightCacheEntries[lightCacheEntryIndex].AnyPathProbabilitySum = anyPathProbabilitySum;
+		#ifdef SHOW_ONLY_PATHLENGTH
+			LightCacheEntries[lightCacheEntryIndex].PathLength = i+1; // For debugging only
+		#endif
 		}
 	#endif
 #endif
+
+		// Path length debugging.
+	#ifdef SHOW_ONLY_PATHLENGTH
+		if(i+1 == SHOW_ONLY_PATHLENGTH)
+		{
+	#endif
 
 		// Try to connect to camera.
 	#ifndef SAVE_LIGHT_CACHE_WARMUP
@@ -206,7 +218,6 @@ void main()
 				#else
 					vec3 color = pathThroughput * fluxToIrradiance * bsdf;
 				#endif
-					
 
 					// Add Sample.
 					ivec2 pixelCoord = ivec2((screenCoord*0.5 + vec2(0.5)) * BackbufferSize);
@@ -234,6 +245,11 @@ void main()
 			}
 		}
 	#endif
+
+	#ifdef SHOW_ONLY_PATHLENGTH
+		}
+	#endif
+
 		// Continue ray.
 		vec3 sampleThroughput = vec3(1.0);
 	#ifdef SAMPLEBSDF_OUTPUT_PDF

@@ -8,6 +8,11 @@
 
 #include "../scene/lighttrianglesampler.hpp"
 
+// Define this macro to display only the paths of the given length (with 1 = direct lighting)
+// Will alter shader code with the same macro automatically.
+// This is independently implemented in 
+//#define SHOW_ONLY_PATHLENGTH 1
+
 namespace gl
 {
 	class Texture2D;
@@ -16,6 +21,9 @@ namespace gl
 class Camera;
 class Scene;
 
+/// Base class for all renderer.
+///
+/// Provides a unified interface and implements various shared functions.
 class Renderer
 {
 public:

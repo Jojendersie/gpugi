@@ -6,7 +6,12 @@ const unsigned int LightPathtracer::m_localSizeLightPathtracer = 8 * 8;
 LightPathtracer::LightPathtracer() :
 	m_lighttraceShader("lighttracer")
 {
-	m_lighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp");
+	std::string additionalDefines;
+#ifdef SHOW_ONLY_PATHLENGTH
+	additionalDefines += "#define SHOW_ONLY_PATHLENGTH " + std::to_string(SHOW_ONLY_PATHLENGTH) + "\n";
+#endif
+
+	m_lighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp", additionalDefines);
 	m_lighttraceShader.CreateProgram();
 
 	m_lightpathtraceUBO.Init(m_lighttraceShader, "LightPathTrace");

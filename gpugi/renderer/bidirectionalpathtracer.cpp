@@ -12,11 +12,17 @@ BidirectionalPathtracer::BidirectionalPathtracer() :
 	m_pathtraceShader("pathtracer_bidir"),
 	m_warmupLighttraceShader("lighttracer_warmup_bidir")
 {
-	m_pathtraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer_bidir.comp");
+	std::string additionalDefines;
+#ifdef SHOW_ONLY_PATHLENGTH
+	additionalDefines += "#define SHOW_ONLY_PATHLENGTH " + std::to_string(SHOW_ONLY_PATHLENGTH) + "\n";
+#endif
+
+	m_pathtraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer_bidir.comp", additionalDefines);
 	m_pathtraceShader.CreateProgram();
-	m_lighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp", "#define SAVE_LIGHT_CACHE\n");
+	additionalDefines += "#define SAVE_LIGHT_CACHE\n";
+	m_lighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp", additionalDefines);
 	m_lighttraceShader.CreateProgram();
-	m_warmupLighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp", "#define SAVE_LIGHT_CACHE\n#define SAVE_LIGHT_CACHE_WARMUP\n");
+	m_warmupLighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp", additionalDefines + "#define SAVE_LIGHT_CACHE_WARMUP\n");
 	m_warmupLighttraceShader.CreateProgram();
 
 	// Assure that LightCacheCount/LightCache SSBOs are defined the same in all shaders
@@ -101,7 +107,12 @@ void BidirectionalPathtracer::CreateLightCacheWithCapacityEstimate()
 	}
 	numCacheEntries /= numWarmupRuns;
 	m_lightCacheCapacity = static_cast<unsigned int>(numCacheEntries + numCacheEntries / 10); // Add 10% safety margin.
-	unsigned int lightCacheSizeInBytes = m_lightCacheCapacity * (sizeof(float) * 4 * 4);
+#ifdef SHOW_ONLY_PATHLENGTH
+	const unsigned int lightCacheEntrySize = sizeof(float) * 4 * 4 + sizeof(std::uint32_t);
+#else
+	const unsigned int lightCacheEntrySize = sizeof(float) * 4 * 4;
+#endif
+	unsigned int lightCacheSizeInBytes = m_lightCacheCapacity * lightCacheEntrySize;
 
 	LOG_LVL2("... bpt warmup done. Reserving " << lightCacheSizeInBytes /1024/1024 << "mb light sample cache!");
 

@@ -46,6 +46,11 @@ void main()
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
 		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
 		{
+		#ifdef SHOW_ONLY_PATHLENGTH
+			if(i+1 != SHOW_ONLY_PATHLENGTH)
+				break;
+		#endif
+
 			int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
 			vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2);
 			vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1);

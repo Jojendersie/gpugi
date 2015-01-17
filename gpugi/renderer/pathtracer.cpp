@@ -8,7 +8,12 @@ const ei::UVec2 Pathtracer::m_localSizePathtracer = ei::UVec2(8, 8);
 Pathtracer::Pathtracer() :
 	m_pathtracerShader("pathtracer")
 {
-	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer.comp");
+	std::string additionalDefines;
+#ifdef SHOW_ONLY_PATHLENGTH
+	additionalDefines += "#define SHOW_ONLY_PATHLENGTH " + std::to_string(SHOW_ONLY_PATHLENGTH) + "\n";
+#endif
+
+	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer.comp", additionalDefines);
 	m_pathtracerShader.CreateProgram();
 
 	// Save shader binary.
