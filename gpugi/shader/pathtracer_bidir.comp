@@ -25,7 +25,7 @@ void main()
 	vec3 pathThroughput = vec3(1.0);
 
 	uint actualNumLightCacheEntries = min(NumLightCacheEntries, LightCacheCapacity);
-	float lightSampleWeight = float(actualNumLightCacheEntries) / NUM_SAMPLING_TECHNIQUES;
+	float lightSampleWeight = float(actualNumLightCacheEntries) / (AverageLightPathLength + 1);
 
 	// recursive MIS construction.
 	float pathProbability = 1.0;
@@ -50,7 +50,7 @@ void main()
 		// Connect to random light samples ("Next Event Estimation")
 		Ray lightRay;
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
-		for(int lightSample=0; lightSample<NUM_CAMPATH_LIGHTSAMPLE_CONNECTIONS; ++lightSample)
+		for(int lightSample=0; lightSample<AverageLightPathLength; ++lightSample)
 		{
 			uint lightCacheSampleIndex = RandomUInt(randomSeed) % actualNumLightCacheEntries;
 		

@@ -9,11 +9,6 @@
 
 #ifdef SAVE_LIGHT_CACHE
 	#include "lightcache.glsl"
-#else
-	layout(binding = 4, std140) uniform LightPathTrace
-	{
-		int NumRaysPerLightSample;
-	};
 #endif
 
 
@@ -67,7 +62,12 @@ void main()
 	// Problems could arise if a thread uses "NumLightCacheEntries" before Thread0 wrote this number.
 	// This may happen if the GPU does not schedule block 0 as first.
 	if(gl_GlobalInvocationID.x == 0)
+	{
 		NumLightCacheEntries = NumRaysPerLightSample * NumInitialLightSamples;
+		#ifdef SAVE_LIGHT_CACHE_WARMUP
+			LightPathLengthSum = 0;
+		#endif
+	}
 	memoryBarrierBuffer();
 #endif
 
@@ -132,7 +132,9 @@ void main()
 		// Save light cache entry.
 #ifdef SAVE_LIGHT_CACHE 
 		uint lightCacheEntryIndex = atomicAdd(NumLightCacheEntries, 1);
-	#ifndef SAVE_LIGHT_CACHE_WARMUP
+	#ifdef SAVE_LIGHT_CACHE_WARMUP
+		atomicAdd(LightPathLengthSum, 1);
+	#else
 		if(lightCacheEntryIndex < LightCacheCapacity)
 		{
 			LightCacheEntries[lightCacheEntryIndex].Flux = pathThroughput;
@@ -212,7 +214,7 @@ void main()
 
 					float connectedPathPropability = pathProbability + DIVISOR_EPSILON;
 					float mis = connectedPathPropability / (connectionLightPathToEyePath * anyPathProbabilitySum + connectedPathPropability);
-					mis /= NUM_SAMPLING_TECHNIQUES;
+					mis /= AverageLightPathLength + 1; // Equals number of techniques per BPT iteration. (Not exactly a part of the mis!)
 
 					vec3 color = pathThroughput * (fluxToIrradiance * mis) * bsdf;
 				#else

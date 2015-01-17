@@ -33,7 +33,6 @@ private:
 
 	std::unique_ptr<gl::Texture2D> m_lockTexture;
 
-	unsigned int m_lightCacheCapacity;
 	std::unique_ptr<gl::ShaderStorageBufferView> m_lightCacheFillCounter;
 	std::unique_ptr<gl::ShaderStorageBufferView> m_lightCache;
 

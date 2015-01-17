@@ -20,14 +20,21 @@ struct LightCacheEntry // aka photon
 
 // WRITE VERSION
 #ifdef SAVE_LIGHT_CACHE
-layout (std430, binding=0) buffer LightCache
-{ 
-	restrict writeonly LightCacheEntry LightCacheEntries[];
+layout (std430, binding=0) writeonly buffer LightCache
+{
+	restrict LightCacheEntry LightCacheEntries[];
 };
 layout (std430, binding=1) buffer LightCacheCount
 { 
-	coherent uint NumLightCacheEntries;
+	coherent int NumLightCacheEntries;
 };
+
+#ifdef SAVE_LIGHT_CACHE_WARMUP
+layout(std430, binding = 2) buffer LightPathLength
+{
+	coherent int LightPathLengthSum;
+};
+#endif
 
 
 // READ VERSION
@@ -38,7 +45,7 @@ layout (std430, binding=0) restrict readonly buffer LightCache
 };
 layout(std430, binding = 1) restrict readonly buffer LightCacheCount
 {
-	uint NumLightCacheEntries;
+	int NumLightCacheEntries;
 };
 #endif
 
@@ -48,11 +55,9 @@ layout(binding = 4, shared) uniform LightPathTrace
 {
 	int NumRaysPerLightSample;
 	float LightRayPixelWeight; // (Total num pixels) / (Total num light rays) 
-	uint LightCacheCapacity;
+	int LightCacheCapacity;
+	int AverageLightPathLength;
 };
-
-#define NUM_CAMPATH_LIGHTSAMPLE_CONNECTIONS 4 // should be "average light path length num"
-#define NUM_SAMPLING_TECHNIQUES NUM_CAMPATH_LIGHTSAMPLE_CONNECTIONS+1
 
 float MIS(float p)
 {
