@@ -3,7 +3,7 @@
 #include <fstream>
 
 
-void WritePfm(const ei::Vec4* _data, const ei::IVec2& _size, const std::string& _filename, std::uint32_t _divisor)
+bool WritePfm(const ei::Vec4* _data, const ei::IVec2& _size, const std::string& _filename, std::uint32_t _divisor)
 {
 	std::ofstream file(_filename.c_str(), std::ios::binary);
 	if(!file.bad() && !file.fail())
@@ -23,9 +23,11 @@ void WritePfm(const ei::Vec4* _data, const ei::IVec2& _size, const std::string& 
 				++v;
 			}
 		}
+		return true;
 	}
 	else
 	{
 		LOG_ERROR("Error writing hdr image to " + _filename);
+		return false;
 	}
 }

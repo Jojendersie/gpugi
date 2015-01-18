@@ -31,7 +31,7 @@
 class Application
 {
 public:
-	Application(int argc, char** argv) : m_screenShotName(""), m_shutdown(false)
+	Application(int argc, char** argv) : m_shutdown(false)
 	{
 		// Logger init.
 		Logger::g_logger.Initialize(new Logger::FilePolicy("log.txt"));
@@ -41,8 +41,10 @@ public:
 		GlobalConfig::AddParameter("resolution", { 1024, 768 }, "The window's width and height.");
 		GlobalConfig::AddParameter("help", {}, "Dumps all available parameter/events to the command window.");
 		GlobalConfig::AddListener("help", "HelpDumpFunc", [](const GlobalConfig::ParameterType&) { std::cout << GlobalConfig::GetEntryDescriptions() << std::endl; });
-		GlobalConfig::AddParameter("screenshot", {}, "Saves a screenshot.");
-		GlobalConfig::AddListener("screenshot", "SaveScreenshot", [=](const GlobalConfig::ParameterType) { this->SaveImage(); });
+		GlobalConfig::AddParameter("screenshot", { }, "Saves a screenshot.");
+		GlobalConfig::AddListener("screenshot", "SaveScreenshot", [=](const GlobalConfig::ParameterType&) { this->SaveImage(); });
+		GlobalConfig::AddParameter("namedscreenshot", {std::string("")}, "Saves a screenshot with the given name.");
+		GlobalConfig::AddListener("namedscreenshot", "SaveScreenshot", [=](const GlobalConfig::ParameterType& p) { this->SaveImage(p[0].As<std::string>()); });
 
 		// Window...
 		LOG_LVL2("Init window ...");
@@ -90,7 +92,7 @@ public:
 
 		// General functions.
 		GlobalConfig::AddParameter("exit", {}, "Exits the application. Does NOT take a screenshot.");
-		GlobalConfig::AddListener("exit", "exit", [&](const GlobalConfig::ParameterType&) { m_shutdown = true; });
+		GlobalConfig::AddListener("exit", "exit application", [&](const GlobalConfig::ParameterType&) { m_shutdown = true; });
 
 		// Load command script if there's a parameter
 		if (argc > 1)
@@ -216,7 +218,7 @@ private:
 		return out;
 	}
 
-	void SaveImage()
+	void SaveImage(const std::string& name = "")
 	{
 		if (!m_renderer)
 			return;
@@ -225,19 +227,19 @@ private:
 		struct tm* now = localtime(&t);
         std::string date = UIntToMinLengthString(now->tm_mon+1, 2) + "." + UIntToMinLengthString(now->tm_mday, 2) + " " +
 						   UIntToMinLengthString(now->tm_hour, 2) + "h" + UIntToMinLengthString(now->tm_min, 2) + "m" + std::to_string(now->tm_sec) + "s ";
-		std::string filename = m_screenShotName + date
-                                 + m_renderer->GetName() + " " +
-                                 std::to_string(m_renderer->GetIterationCount()) + "it "
+		std::string filename = date + m_renderer->GetName() + " " +
+                                 std::to_string(m_renderer->GetIterationCount()) + "it"
                                 ".pfm";
+		if (!name.empty())
+			filename = name + " " + filename;
 		gl::Texture2D& backbuffer = m_renderer->GetBackbuffer();
 		std::unique_ptr<ei::Vec4[]> imageData(new ei::Vec4[backbuffer.GetWidth() * backbuffer.GetHeight()]);
 		backbuffer.ReadImage(0, gl::TextureReadFormat::RGBA, gl::TextureReadType::FLOAT, backbuffer.GetWidth() * backbuffer.GetHeight() * sizeof(ei::Vec4), imageData.get());
-		WritePfm(imageData.get(), ei::IVec2(backbuffer.GetWidth(), backbuffer.GetHeight()), filename, m_renderer->GetIterationCount());
-		LOG_LVL1("Wrote screenshot \"" + filename + "\"");
+		if(WritePfm(imageData.get(), ei::IVec2(backbuffer.GetWidth(), backbuffer.GetHeight()), filename, m_renderer->GetIterationCount()))
+			LOG_LVL1("Wrote screenshot \"" + filename + "\"");
 	}
 
 	ScriptProcessing m_scriptProcessing;
-	std::string m_screenShotName;
 	std::unique_ptr<Renderer> m_renderer;
 	std::unique_ptr<OutputWindow> m_window;
 	std::unique_ptr<InteractiveCamera> m_camera;
