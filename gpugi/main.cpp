@@ -36,38 +36,50 @@ public:
 		// Logger init.
 		Logger::g_logger.Initialize(new Logger::FilePolicy("log.txt"));
 
-		// Add a few fundamental global parameters/events.
-		GlobalConfig::AddParameter("pause", { false }, "Set to true to pause drawing. Input will still work.");
-		GlobalConfig::AddParameter("resolution", { 1024, 768 }, "The window's width and height.");
-		GlobalConfig::AddParameter("help", {}, "Dumps all available parameter/events to the command window.");
-		GlobalConfig::AddListener("help", "HelpDumpFunc", [](const GlobalConfig::ParameterType&) { std::cout << GlobalConfig::GetEntryDescriptions() << std::endl; });
-		GlobalConfig::AddParameter("screenshot", { }, "Saves a screenshot.");
-		GlobalConfig::AddListener("screenshot", "SaveScreenshot", [=](const GlobalConfig::ParameterType&) { this->SaveImage(); });
-		GlobalConfig::AddParameter("namedscreenshot", {std::string("")}, "Saves a screenshot with the given name.");
-		GlobalConfig::AddListener("namedscreenshot", "SaveScreenshot", [=](const GlobalConfig::ParameterType& p) { this->SaveImage(p[0].As<std::string>()); });
-
 		// Window...
 		LOG_LVL2("Init window ...");
 		m_window.reset(new OutputWindow());
 
 		// Create "global" camera.
 		m_camera.reset(new InteractiveCamera(m_window->GetGLFWWindow(), ei::Vec3(0.0f), ei::Vec3(0.0f, 0.0f, 1.0f), 
-							GlobalConfig::GetParameter("resolution")[0].As<float>() / GlobalConfig::GetParameter("resolution")[1].As<int>(), 70.0f));
+											static_cast<float>(m_window->GetResolution().x) / m_window->GetResolution().y, 70.0f));
+
+		// Register various script commands.
+		RegisterScriptCommands();
+
+		// Load command script if there's a parameter
+		if (argc > 1)
+			m_scriptProcessing.RunScript(argv[1]);
+
+		// Init console input.
+		m_scriptProcessing.StartConsoleWindowThread();
+	}
+
+	void RegisterScriptCommands()
+	{
+		// Add a few fundamental global parameters/events.
+		GlobalConfig::AddParameter("pause", { false }, "Set to true to pause drawing. Input will still work.");
+		GlobalConfig::AddParameter("help", {}, "Dumps all available parameter/events to the command window.");
+		GlobalConfig::AddListener("help", "HelpDumpFunc", [](const GlobalConfig::ParameterType&) { std::cout << GlobalConfig::GetEntryDescriptions() << std::endl; });
+		GlobalConfig::AddParameter("exit", {}, "Exits the application. Does NOT take a screenshot.");
+		GlobalConfig::AddListener("exit", "exit application", [&](const GlobalConfig::ParameterType&) { m_shutdown = true; });
+		GlobalConfig::AddParameter("tic", {}, "Resets stopwatch.");
+		GlobalConfig::AddListener("tic", "stopwatch reset", [&](const GlobalConfig::ParameterType&) { m_stopwatch.StopAndReset(); m_stopwatch.Resume(); });
+		GlobalConfig::AddParameter("toc", {}, "Gets current stopwatch time.");
+		GlobalConfig::AddListener("toc", "stopwatch reset", [&](const GlobalConfig::ParameterType&) { LOG_LVL2(m_stopwatch.GetRunningTotal().GetSeconds() << "s"); });
+
+		// Screenshots
+		GlobalConfig::AddParameter("screenshot", {}, "Saves a screenshot.");
+		GlobalConfig::AddListener("screenshot", "SaveScreenshot", [=](const GlobalConfig::ParameterType&) { this->SaveImage(); });
+		GlobalConfig::AddParameter("namedscreenshot", { std::string("") }, "Saves a screenshot with the given name.");
+		GlobalConfig::AddListener("namedscreenshot", "SaveScreenshot", [=](const GlobalConfig::ParameterType& p) { this->SaveImage(p[0].As<std::string>()); });
+
+		// Camera
 		m_camera->ConnectToGlobalConfig();
 		auto updateCamera = [=](const GlobalConfig::ParameterType& p){
 			if (m_renderer)
 				m_renderer->SetCamera(*m_camera);
 		};
-		GlobalConfig::AddListener("resolution", "global camera aspect", [=](const GlobalConfig::ParameterType& p) {
-			m_camera->SetAspectRatio(p[0].As<float>() / p[1].As<float>());
-			updateCamera(p);
-			if (m_renderer)
-			{
-				m_renderer->SetCamera(*m_camera);
-				m_renderer->SetScreenSize(ei::IVec2(p[0].As<int>(), p[1].As<int>()));
-			}
-		});
-
 		GlobalConfig::AddListener("cameraPos", "update renderer cam", updateCamera);
 		GlobalConfig::AddListener("cameraLookAt", "update renderer cam", updateCamera);
 		GlobalConfig::AddListener("cameraFOV", "update renderer cam", updateCamera);
@@ -75,10 +87,20 @@ public:
 
 		// Renderer change function.
 		GlobalConfig::AddParameter("renderer", { 0 }, "Change this value to change the active renderer (resets previous results!).\n"
-													  "0: Pathtracer (\"ReferenceRenderer\"\n"
-													  "1: LightPathtracer\n"
-													  "2: BidirectionalPathtracer");
+			"0: Pathtracer (\"ReferenceRenderer\"\n"
+			"1: LightPathtracer\n"
+			"2: BidirectionalPathtracer");
 		GlobalConfig::AddListener("renderer", "ChangeRenderer", std::bind(&Application::SwitchRenderer, this, std::placeholders::_1));
+
+		// Resolution change
+		GlobalConfig::AddListener("resolution", "global camera aspect", [=](const GlobalConfig::ParameterType& p) {
+			m_camera->SetAspectRatio(p[0].As<float>() / p[1].As<float>());
+			if (m_renderer)
+			{
+				m_renderer->SetCamera(*m_camera);
+				m_renderer->SetScreenSize(ei::IVec2(p[0].As<int>(), p[1].As<int>()));
+			}
+		});
 
 		// Scene change functions.
 		GlobalConfig::AddParameter("sceneFilename", { std::string("") }, "Change this value to load a new scene.");
@@ -89,22 +111,8 @@ public:
 			if (m_renderer)
 				m_renderer->SetScene(m_scene);
 		});
-
-		// General functions.
-		GlobalConfig::AddParameter("exit", {}, "Exits the application. Does NOT take a screenshot.");
-		GlobalConfig::AddListener("exit", "exit application", [&](const GlobalConfig::ParameterType&) { m_shutdown = true; });
-		GlobalConfig::AddParameter("tic", {}, "Resets stopwatch.");
-		GlobalConfig::AddListener("tic", "stopwatch reset", [&](const GlobalConfig::ParameterType&) { m_stopwatch.StopAndReset(); m_stopwatch.Resume(); });
-		GlobalConfig::AddParameter("toc", {}, "Gets current stopwatch time.");
-		GlobalConfig::AddListener("toc", "stopwatch reset", [&](const GlobalConfig::ParameterType&) { LOG_LVL2(m_stopwatch.GetRunningTotal().GetSeconds() << "s"); });
-
-		// Load command script if there's a parameter
-		if (argc > 1)
-			m_scriptProcessing.RunScript(argv[1]);
-
-		// Init console input.
-		m_scriptProcessing.StartConsoleWindowThread();
 	}
+	
 
 	~Application()
 	{

@@ -36,9 +36,10 @@ OutputWindow::OutputWindow() :
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #endif
 
-	auto resolutionParam = GlobalConfig::GetParameter("resolution");
-	unsigned int width = resolutionParam[0].As<int>();
-	unsigned int height = resolutionParam[1].As<int>();
+	// Setup with a default resolution.
+	int width = 1024;
+	int height = 768;
+	GlobalConfig::AddParameter("resolution", { width, height }, "The window's width and height.");
 
 	window = glfwCreateWindow(width, height, "<Add fancy title here>", nullptr, nullptr);
 	if (!window)
@@ -94,6 +95,8 @@ OutputWindow::~OutputWindow(void)
 	delete screenTri;
 
 	GlobalConfig::RemovesListener("resolution", "outputwindow");
+	GlobalConfig::RemoveParameter("resolution");
+	GlobalConfig::RemoveParameter("srgb");
 
 	glfwDestroyWindow(window);
 	window = nullptr;
