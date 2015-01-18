@@ -5,6 +5,7 @@
 #include "buildmethods/kdtree.hpp"
 #include "buildmethods/sweep.hpp"
 #include "../gpugi/utilities/assert.hpp"
+#include "../gpugi/utilities/logger.hpp"
 #include <assimp/matrix4x4.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -117,8 +118,8 @@ bool BVHBuilder::LoadSceneWithAssimp( const char* _file )
 		aiProcess_GenUVCoords			|
 		aiProcess_TransformUVCoords     |
         aiProcess_ImproveCacheLocality  |
-        aiProcess_JoinIdenticalVertices
-		//aiProcess_FlipUVs
+        aiProcess_JoinIdenticalVertices |
+		aiProcess_FlipUVs
 	);
 
 	return m_scene != nullptr;
@@ -252,16 +253,30 @@ void BVHBuilder::ExportTangents( std::ofstream& _file,
 								transformation.m10, transformation.m11, transformation.m12,
 								transformation.m20, transformation.m21, transformation.m22);
 	invTransTransform = transpose(invert(invTransTransform));
-    for( unsigned i = 0; i < _node->mNumMeshes; ++i )
+    
+	for( unsigned i = 0; i < _node->mNumMeshes; ++i )
 	{
 		const aiMesh* mesh = m_scene->mMeshes[ _node->mMeshes[i] ];
 
         // Add vertex tangents to file
-        for( unsigned v = 0; v < mesh->mNumVertices; ++v )
-        {
-            ε::Vec3 tangent = invTransTransform * hard_cast<ε::Vec3>(mesh->mTangents[v]);
-            _file.write( (const char*)&tangent, sizeof(ε::Vec3) );
-        }
+		if (mesh->mTangents != nullptr)
+		{
+			for (unsigned v = 0; v < mesh->mNumVertices; ++v)
+			{
+				ε::Vec3 tangent = invTransTransform * hard_cast<ε::Vec3>(mesh->mTangents[v]);
+				_file.write((const char*)&tangent, sizeof(ε::Vec3));
+			}
+		}
+		else
+		{
+			LOG_ERROR("No tangents generated! Filling tangent buffer with zeros.");
+			
+			ei::Vec3 zero(0, 0, 0);
+			for (unsigned v = 0; v < mesh->mNumVertices; ++v)
+			{
+				_file.write((const char*)&zero, sizeof(ε::Vec3));
+			}
+		}
     }
 
     // Export all children
