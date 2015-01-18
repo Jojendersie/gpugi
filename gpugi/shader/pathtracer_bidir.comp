@@ -8,6 +8,7 @@
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
 #define MAX_PATHLENGTH 8
+#define MIN_CONNECTION_DISTSQ 0.001
 
 #define LOCAL_SIZE 8
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
@@ -57,8 +58,8 @@ void main()
 			lightRay.Direction = LightCacheEntries[lightCacheSampleIndex].Position - ray.Origin;
 			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
 
-			//if(lightDistSq < RAY_HIT_EPSILON * 10.0)
-			//	continue;
+			if(lightDistSq < MIN_CONNECTION_DISTSQ)
+				continue;
 
 			float lightDist = sqrt(lightDistSq);
 			lightRay.Direction /= lightDist + DIVISOR_EPSILON;
