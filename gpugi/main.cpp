@@ -93,6 +93,10 @@ public:
 		// General functions.
 		GlobalConfig::AddParameter("exit", {}, "Exits the application. Does NOT take a screenshot.");
 		GlobalConfig::AddListener("exit", "exit application", [&](const GlobalConfig::ParameterType&) { m_shutdown = true; });
+		GlobalConfig::AddParameter("tic", {}, "Resets stopwatch.");
+		GlobalConfig::AddListener("tic", "stopwatch reset", [&](const GlobalConfig::ParameterType&) { m_stopwatch.StopAndReset(); m_stopwatch.Resume(); });
+		GlobalConfig::AddParameter("toc", {}, "Gets current stopwatch time.");
+		GlobalConfig::AddListener("toc", "stopwatch reset", [&](const GlobalConfig::ParameterType&) { LOG_LVL2(m_stopwatch.GetRunningTotal().GetSeconds() << "s"); });
 
 		// Load command script if there's a parameter
 		if (argc > 1)
@@ -245,6 +249,7 @@ private:
 	std::unique_ptr<InteractiveCamera> m_camera;
     std::shared_ptr<Scene> m_scene;
 
+	ezStopwatch m_stopwatch;
 	bool m_shutdown;
 };
 
