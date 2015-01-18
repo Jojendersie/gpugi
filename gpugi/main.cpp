@@ -31,7 +31,7 @@
 class Application
 {
 public:
-	Application(int argc, char** argv) : m_screenShotName("")
+	Application(int argc, char** argv) : m_screenShotName(""), m_shutdown(false)
 	{
 		// Logger init.
 		Logger::g_logger.Initialize(new Logger::FilePolicy("log.txt"));
@@ -88,6 +88,9 @@ public:
 				m_renderer->SetScene(m_scene);
 		});
 
+		// General functions.
+		GlobalConfig::AddParameter("exit", {}, "Exits the application. Does NOT take a screenshot.");
+		GlobalConfig::AddListener("exit", "exit", [&](const GlobalConfig::ParameterType&) { m_shutdown = true; });
 
 		// Load command script if there's a parameter
 		if (argc > 1)
@@ -99,7 +102,8 @@ public:
 
 	~Application()
 	{
-		SaveImage();
+		if (!m_shutdown)
+			SaveImage();
 
 		// Only known method to kill the console.
 #ifdef _WIN32
@@ -151,7 +155,7 @@ public:
 	{
 		// Main loop
 		ezStopwatch mainLoopStopWatch;
-		while(m_window->IsWindowAlive())
+		while(m_window->IsWindowAlive() && !m_shutdown)
 		{
 			ezTime timeSinceLastUpdate = mainLoopStopWatch.GetRunningTotal();
 			mainLoopStopWatch.StopAndReset();
@@ -238,6 +242,8 @@ private:
 	std::unique_ptr<OutputWindow> m_window;
 	std::unique_ptr<InteractiveCamera> m_camera;
     std::shared_ptr<Scene> m_scene;
+
+	bool m_shutdown;
 };
 
 
