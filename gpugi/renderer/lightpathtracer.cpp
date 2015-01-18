@@ -7,8 +7,8 @@ LightPathtracer::LightPathtracer() :
 	m_lighttraceShader("lighttracer")
 {
 	std::string additionalDefines;
-#ifdef SHOW_ONLY_PATHLENGTH
-	additionalDefines += "#define SHOW_ONLY_PATHLENGTH " + std::to_string(SHOW_ONLY_PATHLENGTH) + "\n";
+#ifdef SHOW_SPECIFIC_PATHLENGTH
+	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
 #endif
 
 	m_lighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp", additionalDefines);

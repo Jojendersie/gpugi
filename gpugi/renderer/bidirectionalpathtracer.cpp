@@ -13,8 +13,8 @@ BidirectionalPathtracer::BidirectionalPathtracer() :
 	m_warmupLighttraceShader("lighttracer_warmup_bidir")
 {
 	std::string additionalDefines;
-#ifdef SHOW_ONLY_PATHLENGTH
-	additionalDefines += "#define SHOW_ONLY_PATHLENGTH " + std::to_string(SHOW_ONLY_PATHLENGTH) + "\n";
+#ifdef SHOW_SPECIFIC_PATHLENGTH
+	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
 #endif
 
 	m_pathtraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer_bidir.comp", additionalDefines);
@@ -124,7 +124,7 @@ void BidirectionalPathtracer::CreateLightCacheWithCapacityEstimate()
 	int averageLightPathLength = static_cast<int>(summedPathLength / numWarmupRuns / blockCountPerRun / m_localSizeLightPathtracer + 1); // Rounding up (for such large numbers this means +1 almost always)
 	numCacheEntries /= numWarmupRuns;
 	int lightCacheCapacity = static_cast<unsigned int>(numCacheEntries + numCacheEntries / 10); // Add 10% safety margin.
-#ifdef SHOW_ONLY_PATHLENGTH
+#ifdef SHOW_SPECIFIC_PATHLENGTH
 	const unsigned int lightCacheEntrySize = sizeof(float) * 4 * 4 + sizeof(std::uint32_t);
 #else
 	const unsigned int lightCacheEntrySize = sizeof(float) * 4 * 4;

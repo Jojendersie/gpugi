@@ -67,9 +67,9 @@ void main()
 
 			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON)) // Important to subtract epsilon, since light sample may be slightly behind the surface
 			{
-			#ifdef SHOW_ONLY_PATHLENGTH
+			#ifdef SHOW_SPECIFIC_PATHLENGTH
 				int pathLength = LightCacheEntries[lightCacheSampleIndex].PathLength + i + 1;
-				if(pathLength != SHOW_ONLY_PATHLENGTH)
+				if(pathLength != SHOW_SPECIFIC_PATHLENGTH)
 					continue;
 			#endif
 
@@ -95,22 +95,18 @@ void main()
 					lightSampleIntensity = lightSampleFlux * lightBSDF * cosLight;
 
 					#ifdef RUSSIAN_ROULETTE
-						// path continuation propability: bsdf * dot(N, outDir) / pdf
-						// connection propability: connection * pdf
-						//pdf += DIVISOR_EPSILON;
-						//float continuationPropability = GetLuminance(lightBSDF) * cosLight / pdf + DIVISOR_EPSILON;
-						//connectionLightPathToEyePath = MIS(pdf * continuationPropability);
-
-						connectionLightPathToEyePath = MIS(GetLuminance(lightBSDF) * cosLight);
+						// path continuation propability (russion roulette): bsdf * dot(N, outDir) / pdf
+						// connection propability: continuation * pdf = bsdf * dot(N, outDir)
+						connectionLightPathToEyePath = MISHeuristic(GetLuminance(lightBSDF) * cosLight);
 					#else
-						connectionLightPathToEyePath = MIS(pdf);
+						connectionLightPathToEyePath = MISHeuristic(pdf);
 					#endif
 				}
 				// Connect to a light source.
 				else
 				{
-					connectionLightPathToEyePath = MIS(1.0); // Only possible via THIS next event estimation -> Fixed propability of 1.
-					lightSampleIntensity = lightSampleFlux * (cosLight * PI_2);// hemispherical light source
+					connectionLightPathToEyePath = MISHeuristic(1.0); // Only possible via THIS next event estimation -> Fixed propability of 1.
+					lightSampleIntensity = lightSampleFlux * (cosLight * PI_2);// heMISHeuristicpherical light source
 				}
 
 				float cosCamera = saturate(dot(lightRay.Direction, hitNormal));
@@ -119,15 +115,11 @@ void main()
 				vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal, pdf); // Note that this is also 1/samplingProbability!
 
 			#ifdef RUSSIAN_ROULETTE
-				// path continuation propability: bsdf * dot(N, outDir) / pdf
-				// connection propability: connection * pdf
-				//pdf += DIVISOR_EPSILON;
-				//float continuationPropability = GetLuminance(bsdf) * cosCamera / pdf + DIVISOR_EPSILON;
-				//float connectionEyePathToLightPath = MIS(pdf * continuationPropability);
-
-				float connectionEyePathToLightPath = MIS(GetLuminance(bsdf) * cosCamera);
+				// path continuation propability (russion roulette): bsdf * dot(N, outDir) / pdf
+				// connection propability: continuation * pdf = bsdf * dot(N, outDir)
+				float connectionEyePathToLightPath = MISHeuristic(GetLuminance(bsdf) * cosCamera);
 			#else
-				float connectionEyePathToLightPath = MIS(pdf);
+				float connectionEyePathToLightPath = MISHeuristic(pdf);
 			#endif
 
 				float light_pathProbability = LightCacheEntries[lightCacheSampleIndex].PathProbability;
@@ -156,7 +148,7 @@ void main()
 	#endif
 
 		// The probability to sample a vertex is the pdf times 1-terminationProbability
-		samplePDF = MIS(samplePDF);
+		samplePDF = MISHeuristic(samplePDF);
 		anyPathProbabilitySum = anyPathProbabilitySum * samplePDF + pathProbability;
 		pathProbability *= samplePDF;
 	}

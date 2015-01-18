@@ -11,7 +11,7 @@
 // Define this macro to display only the paths of the given length (with 1 = direct lighting)
 // Will alter shader code with the same macro automatically.
 // This is independently implemented in 
-//#define SHOW_ONLY_PATHLENGTH 1
+//#define SHOW_SPECIFIC_PATHLENGTH 1
 
 namespace gl
 {

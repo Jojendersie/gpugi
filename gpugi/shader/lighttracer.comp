@@ -97,7 +97,7 @@ void main()
 	LightCacheEntries[gl_GlobalInvocationID.x].AnyPathProbabilitySum = anyPathProbabilitySum;
 	//LightCacheEntries[gl_GlobalInvocationID.x].Texcoord // texcoord empty
 	//LightCacheEntries[gl_GlobalInvocationID.x].IncidentDirection // direction empty
-	#ifdef SHOW_ONLY_PATHLENGTH
+	#ifdef SHOW_SPECIFIC_PATHLENGTH
 	LightCacheEntries[gl_GlobalInvocationID.x].PathLength = 0; // For debugging only
 	#endif
 #endif
@@ -153,7 +153,7 @@ void main()
 			LightCacheEntries[lightCacheEntryIndex].IncidentDirection = ray.Direction;
 			LightCacheEntries[lightCacheEntryIndex].PathProbability = pathProbability;
 			LightCacheEntries[lightCacheEntryIndex].AnyPathProbabilitySum = anyPathProbabilitySum;
-		#ifdef SHOW_ONLY_PATHLENGTH
+		#ifdef SHOW_SPECIFIC_PATHLENGTH
 			LightCacheEntries[lightCacheEntryIndex].PathLength = i+1; // For debugging only
 		#endif
 		}
@@ -161,8 +161,8 @@ void main()
 #endif
 
 		// Path length debugging.
-	#ifdef SHOW_ONLY_PATHLENGTH
-		if(i+1 == SHOW_ONLY_PATHLENGTH)
+	#ifdef SHOW_SPECIFIC_PATHLENGTH
+		if(i+1 == SHOW_SPECIFIC_PATHLENGTH)
 		{
 	#endif
 
@@ -215,7 +215,7 @@ void main()
 				#endif
 
 				#ifdef SAVE_LIGHT_CACHE
-					float connectionLightPathToEyePath = MIS(1.0); // Next event estimate!
+					float connectionLightPathToEyePath = MISHeuristic(1.0); // Next event estimate!
 
 					float connectedPathPropability = pathProbability + DIVISOR_EPSILON;
 					float mis = connectedPathPropability / (connectionLightPathToEyePath * anyPathProbabilitySum + connectedPathPropability);
@@ -253,7 +253,7 @@ void main()
 		}
 	#endif
 
-	#ifdef SHOW_ONLY_PATHLENGTH
+	#ifdef SHOW_SPECIFIC_PATHLENGTH
 		}
 	#endif
 
@@ -285,7 +285,7 @@ void main()
 
 		// Update MIS quantitites.
 	#if defined(SAVE_LIGHT_CACHE) && !defined(SAVE_LIGHT_CACHE_WARMUP)
-		samplePDF = MIS(samplePDF);
+		samplePDF = MISHeuristic(samplePDF);
 		anyPathProbabilitySum = anyPathProbabilitySum * samplePDF + pathProbability;
 		pathProbability *= samplePDF;
 	#endif

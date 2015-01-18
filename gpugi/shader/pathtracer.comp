@@ -41,13 +41,14 @@ void main()
 		// Get Material infos.
 		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
 
+
 		// Connect to random light samples ("Next Event Estimation")
 		Ray lightRay;
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
 		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
 		{
-		#ifdef SHOW_ONLY_PATHLENGTH
-			if(i+1 != SHOW_ONLY_PATHLENGTH)
+		#ifdef SHOW_SPECIFIC_PATHLENGTH
+			if(i+1 != SHOW_SPECIFIC_PATHLENGTH)
 				break;
 		#endif
 

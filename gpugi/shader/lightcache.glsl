@@ -13,7 +13,7 @@ struct LightCacheEntry // aka photon
 	vec3 IncidentDirection;
 	float AnyPathProbabilitySum; // "d": Propability for sampling the underlying path using any bidirectional sampling method. (if first light vertex is given)
 
-#ifdef SHOW_ONLY_PATHLENGTH
+#ifdef SHOW_SPECIFIC_PATHLENGTH
 	int PathLength;
 #endif
 };
@@ -59,9 +59,9 @@ layout(binding = 4, shared) uniform LightPathTrace
 	int AverageLightPathLength;
 };
 
-float MIS(float p)
+float MISHeuristic(float p)
 {
-	// No MIS - all techniques equal weighted. Should be the same as commenting out all MIS computations?
+	// No MIS - all techniques equal weighted. Should be the same as commenting out all MIS computations.
 	//return 1.0;
 
 	// Balance heuristic

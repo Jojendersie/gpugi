@@ -9,8 +9,8 @@ Pathtracer::Pathtracer() :
 	m_pathtracerShader("pathtracer")
 {
 	std::string additionalDefines;
-#ifdef SHOW_ONLY_PATHLENGTH
-	additionalDefines += "#define SHOW_ONLY_PATHLENGTH " + std::to_string(SHOW_ONLY_PATHLENGTH) + "\n";
+#ifdef SHOW_SPECIFIC_PATHLENGTH
+	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
 #endif
 
 	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer.comp", additionalDefines);
@@ -27,7 +27,7 @@ Pathtracer::Pathtracer() :
 	} */
 
 	InitStandardUBOs(m_pathtracerShader);
-	SetNumInitialLightSamples(16);
+	SetNumInitialLightSamples(32);
 }
 
 void Pathtracer::SetScreenSize(const ei::IVec2& _newSize)
