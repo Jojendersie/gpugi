@@ -4,6 +4,8 @@
 #include "../utilities/flagoperators.hpp"
 #include "../utilities/logger.hpp"
 
+#include <iostream>
+
 const unsigned int BidirectionalPathtracer::m_localSizeLightPathtracer = 8*8;
 const ei::UVec2 BidirectionalPathtracer::m_localSizePathtracer = ei::UVec2(8, 8);
 
@@ -118,7 +120,14 @@ void BidirectionalPathtracer::CreateLightCacheWithCapacityEstimate()
 		lightPathLengthBuffer.reset(new gl::ShaderStorageBufferView());
 		lightPathLengthBuffer->Init(std::make_shared<gl::Buffer>(4, gl::Buffer::Usage::MAP_READ), "LightPathLength");
 		m_warmupLighttraceShader.BindSSBO(*lightPathLengthBuffer);
+
+		// Important to change random seed
+		++m_iterationCount;
+		PerIterationBufferUpdate();
 	}
+
+	// Reset iteration count for actual rendering
+	m_iterationCount = 0;
 
 	// Take mean and report to log.
 	int averageLightPathLength = static_cast<int>(summedPathLength / numWarmupRuns / blockCountPerRun / m_localSizeLightPathtracer + 1); // Rounding up (for such large numbers this means +1 almost always)

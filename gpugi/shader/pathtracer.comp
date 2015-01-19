@@ -23,8 +23,6 @@ void main()
 	vec3 color = vec3(0.0);
 	vec3 pathThroughput = vec3(1.0);
 
-	const float lightSampleWeight = float(NumInitialLightSamples) / NUM_LIGHT_SAMPLES; // This could be a uniform!
-
 	for(int i=0; i<MAX_PATHLENGTH; ++i)
 	{
 		// Trace ray.
@@ -78,8 +76,7 @@ void main()
 					// Add Sample (L): L(hitPoint, lightRay.Direction) * bsdf * dot(lightRay.Direction, hitNormal)
 					// L(hitPoint, lightRay.Direction) = lightSampleIntensity / lightDistSq
 
-					vec3 irradiance = (lightSampleWeight *		// Divide by p for Montecarlo
-									saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in because of shading normals!
+					vec3 irradiance = (saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in because of shading normals!
 					color += irradiance * pathThroughput * bsdf;
 				}
 			}
@@ -95,6 +92,9 @@ void main()
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.
 	#endif
 	}
+
+	const float lightSampleWeight = float(NumInitialLightSamples) / NUM_LIGHT_SAMPLES; // This could be a uniform!
+	color *= lightSampleWeight;
 
 	vec4 final = vec4(color, 1.0);
 	final += imageLoad(OutputTexture, gridPosition);
