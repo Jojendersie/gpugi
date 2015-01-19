@@ -87,15 +87,15 @@ void main()
 					MaterialTextureData lightSampleMaterialTexData = SampleMaterialData(lightSampleMaterialIndex, LightCacheEntries[lightCacheSampleIndex].Texcoord);
 
 					float pdf;
-					vec3 lightBSDF = AdjointBSDF(LightCacheEntries[lightCacheSampleIndex].IncidentDirection, -lightRay.Direction,
-										  			lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal, pdf);
+					vec3 lightBSDF = BSDF(LightCacheEntries[lightCacheSampleIndex].IncidentDirection, -lightRay.Direction,
+											lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal, pdf);
 
 					lightSampleIntensity = lightSampleFlux * lightBSDF * cosLight;
 
 					#ifdef RUSSIAN_ROULETTE
-						// path continuation probability (russian roulette): bsdf * dot(N, outDir) / pdf
+						// path continuation probability (russian roulette): saturate(bsdf * dot(N, outDir) / pdf)
 						// connection probability: continuation * pdf = bsdf * dot(N, outDir)
-						connectionLightPathToEyePath = MISHeuristic(GetLuminance(lightBSDF) * cosLight);
+						connectionLightPathToEyePath = MISHeuristic(saturate(GetLuminance(lightBSDF) * cosLight / (pdf + DIVISOR_EPSILON)) * pdf);
 					#else
 						connectionLightPathToEyePath = MISHeuristic(pdf);
 					#endif
@@ -104,7 +104,7 @@ void main()
 				else
 				{
 					connectionLightPathToEyePath = MISHeuristic(1.0); // Only possible via THIS next event estimation -> Fixed propability of 1.
-					lightSampleIntensity = lightSampleFlux * (cosLight * PI_2);// heMISHeuristicpherical light source
+					lightSampleIntensity = lightSampleFlux * (cosLight * PI_2);// hemispherical light source
 				}
 
 				float cosCamera = saturate(dot(lightRay.Direction, hitNormal));
@@ -113,9 +113,9 @@ void main()
 				vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal, pdf); // Note that this is also 1/samplingProbability!
 
 			#ifdef RUSSIAN_ROULETTE
-				// path continuation probability (russian roulette): bsdf * dot(N, outDir) / pdf
+				// path continuation probability (russian roulette): saturate(bsdf * dot(N, outDir) / pdf)
 				// connection probability: continuation * pdf = bsdf * dot(N, outDir)
-				float connectionEyePathToLightPath = MISHeuristic(GetLuminance(bsdf) * cosCamera);
+				float connectionEyePathToLightPath = MISHeuristic(saturate(GetLuminance(bsdf) * cosCamera / (pdf + DIVISOR_EPSILON)) * pdf);
 			#else
 				float connectionEyePathToLightPath = MISHeuristic(pdf);
 			#endif
@@ -134,10 +134,12 @@ void main()
 		}
 
 		float samplePDF;
-		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, pathThroughput, samplePDF);
+		vec3 throughput = vec3(1.0);
+		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, throughput, samplePDF);
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
+		pathThroughput *= throughput;
 	#ifdef RUSSIAN_ROULETTE
-		float continuationPropability = GetLuminance(pathThroughput);
+		float continuationPropability = saturate(GetLuminance(throughput));
 		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stoped -> >=
 			break;
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.

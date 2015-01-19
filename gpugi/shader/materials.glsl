@@ -140,7 +140,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 		avgPPhong = avgPRefract;
 
 		// Compute refraction direction.		
-		float eta = cosTheta < 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg; // Is this a branch? And if yes, how to avoid it?
+		float eta = cosTheta < 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg;
 		float etaSq = eta * eta;
 		float sinTheta2Sq = etaSq * (1.0f - cosTheta * cosTheta);
 		
@@ -153,8 +153,9 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 			// Need to scale radiance since angle got "widened" or "squeezed"
 			// See Veach PhD Thesis 5.2 (Non-symmetry due to refraction) or "Physically Based Rendering" chapter 8.2.3 (page 442)
 			// This is part of the BSDF!
+			// See also Physically Based Rendering page 442, 8.2.3 "Specular Transmission"
 			if(!adjoint)
-				pathThroughput *= etaSq;
+				pathThroughput /= etaSq;
 		}
 	}
 
@@ -178,7 +179,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	// See also "Physically Based Rendering" page 440.
 
 	// pathThroughput = bsdf * dot(N, outDir) / pdf;
-	pathThroughput *= pphong * (phongNormalization / avgPPhong); // Divide with decision propability (avgPPhong) for russion roulette.
+	pathThroughput *= pphong * (phongNormalization / avgPPhong); // Divide with decision propability (avgPPhong) for russian roulette.
 
 	return outDir;
 }
@@ -209,14 +210,14 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, Materi
 	vec3 bsdf;
 	float cosTheta = dot(N, incidentDirection);
 	float cosThetaAbs = saturate(abs(cosTheta));
-	float cosThetaOut = dot(N, excidentDirection) + DIVISOR_EPSILON;
+	float cosThetaOut = dot(N, excidentDirection);
 
 	// Propabilities.
 	vec3 preflect, prefract, pdiffuse;
 	GetBSDFDecisionPropabilities(material, materialTexData, cosThetaAbs, preflect, prefract, pdiffuse);
 
 	// Constants for phong sampling.
-	float phongFactor_brdf = (materialTexData.Reflectiveness.w + 2.0) / (PI_2 * abs(cosThetaOut)); // normalization / abs(cosThetatOut)
+	float phongFactor_brdf = (materialTexData.Reflectiveness.w + 2.0) / (PI_2 * (abs(cosThetaOut)+DIVISOR_EPSILON)); // normalization / abs(cosThetatOut)
 	float phongNormalization_pdf = (materialTexData.Reflectiveness.w + 1.0) / PI_2;
 
 	// Reflection
@@ -249,7 +250,7 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, Materi
 		reflrefrPDFFactor = phongNormalization_pdf * refractionDotRefraction_powN;
 
 		if(!adjoint)
-			reflrefrBRDFFactor *= etaSq;
+			reflrefrBRDFFactor /= etaSq;
 	}	
 	
 	// else the sampleDir is again the reflection vector
