@@ -209,9 +209,9 @@ void main()
 
 				#ifdef SAMPLEBSDF_OUTPUT_PDF
 					float pdf;
-					vec3 bsdf = BSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal, pdf);
+					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal, pdf);
 				#else
-					vec3 bsdf = BSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal);
+					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal);
 				#endif
 
 				#ifdef SAVE_LIGHT_CACHE

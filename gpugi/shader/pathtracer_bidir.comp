@@ -87,7 +87,7 @@ void main()
 					MaterialTextureData lightSampleMaterialTexData = SampleMaterialData(lightSampleMaterialIndex, LightCacheEntries[lightCacheSampleIndex].Texcoord);
 
 					float pdf;
-					vec3 lightBSDF = BSDF(LightCacheEntries[lightCacheSampleIndex].IncidentDirection, -lightRay.Direction,
+					vec3 lightBSDF = AdjointBSDF(LightCacheEntries[lightCacheSampleIndex].IncidentDirection, -lightRay.Direction,
 											lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal, pdf);
 
 					lightSampleIntensity = lightSampleFlux * lightBSDF * cosLight;
