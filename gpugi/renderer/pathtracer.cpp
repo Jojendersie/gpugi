@@ -1,4 +1,5 @@
 #include "pathtracer.hpp"
+#include "debugrenderer/raytracemeshinfo.hpp"
 #include <glhelper/texture2d.hpp>
 
 #include <fstream>
@@ -28,6 +29,9 @@ Pathtracer::Pathtracer() :
 
 	InitStandardUBOs(m_pathtracerShader);
 	SetNumInitialLightSamples(32);
+
+	// Create debug renderers.
+	m_debugRenderConstructors.push_back(std::make_pair([=](){ return std::make_unique<RaytraceMeshInfo>(*this); }, RaytraceMeshInfo::Name));
 }
 
 void Pathtracer::SetScreenSize(const ei::IVec2& _newSize)
@@ -38,14 +42,21 @@ void Pathtracer::SetScreenSize(const ei::IVec2& _newSize)
 
 void Pathtracer::Draw()
 {
-	++m_iterationCount;
-	
-	m_pathtracerShader.Activate();
-	GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / m_localSizePathtracer.x, m_backbuffer->GetHeight() / m_localSizePathtracer.y, 1);
+	if (m_activeDebugRenderer != nullptr)
+	{
+		m_activeDebugRenderer->Draw();
+	}
+	else
+	{
+		++m_iterationCount;
 
-	PerIterationBufferUpdate();
+		m_pathtracerShader.Activate();
+		GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / m_localSizePathtracer.x, m_backbuffer->GetHeight() / m_localSizePathtracer.y, 1);
 
-	// Ensure that all future fetches will use the modified data.
-	// See https://www.opengl.org/wiki/Memory_Model#Ensuring_visibility
-	GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT);
+		PerIterationBufferUpdate();
+
+		// Ensure that all future fetches will use the modified data.
+		// See https://www.opengl.org/wiki/Memory_Model#Ensuring_visibility
+		GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT);
+	}
 }

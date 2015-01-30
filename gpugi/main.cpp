@@ -25,7 +25,7 @@
 #ifdef _WIN32
 	#undef APIENTRY
 	#define NOMINMAX
-	#include <windows.h>
+	#include <windows.h>	
 #endif
 
 class Application
@@ -163,6 +163,7 @@ public:
 		{
 			m_renderer->SetScene(m_scene);
 		}
+		m_renderer->RegisterDebugRenderStateConfigOptions();
 	}
 
 	void Run()
@@ -210,7 +211,8 @@ private:
 
 		m_renderer->Draw();
 
-		m_window->DisplayHDRTexture(m_renderer->GetBackbuffer(), m_renderer->GetIterationCount());
+		if (!m_renderer->IsDebugRendererActive())
+			m_window->DisplayHDRTexture(m_renderer->GetBackbuffer(), m_renderer->GetIterationCount());
 		m_window->Present();
 	}
 

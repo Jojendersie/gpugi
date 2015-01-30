@@ -169,6 +169,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="outputwindow.cpp" />
     <ClCompile Include="renderer\bidirectionalpathtracer.cpp" />
+    <ClCompile Include="renderer\debugrenderer\raytracemeshinfo.cpp" />
     <ClCompile Include="renderer\lightpathtracer.cpp" />
     <ClCompile Include="renderer\pathtracer.cpp" />
     <ClCompile Include="renderer\renderer.cpp" />
@@ -207,6 +208,8 @@
     <ClInclude Include="hdrimage.hpp" />
     <ClInclude Include="outputwindow.hpp" />
     <ClInclude Include="renderer\bidirectionalpathtracer.hpp" />
+    <ClInclude Include="renderer\debugrenderer\debugrenderer.hpp" />
+    <ClInclude Include="renderer\debugrenderer\raytracemeshinfo.hpp" />
     <ClInclude Include="renderer\lightpathtracer.hpp" />
     <ClInclude Include="renderer\pathtracer.hpp" />
     <ClInclude Include="renderer\renderer.hpp" />
@@ -228,6 +231,7 @@
   <ItemGroup>
     <None Include="..\dependencies\glhelper\glhelper\shaderdatametainfo.inl" />
     <None Include="..\dependencies\glhelper\glhelper\uniformbuffer.inl" />
+    <None Include="shader\debug\screenTri.vert" />
     <None Include="shader\displayHDR.frag" />
     <None Include="shader\globaluniforms.glsl" />
     <None Include="shader\helper.glsl" />

@@ -1,13 +1,19 @@
 #include "renderer.hpp"
 
-#include <glhelper\texture2d.hpp>
-#include <glhelper\texturebuffer.hpp>
+#include <glhelper/texture2d.hpp>
+#include <glhelper/texturebuffer.hpp>
 
-#include "..\camera\camera.hpp"
-#include "..\scene\scene.hpp"
+#include "../camera/camera.hpp"
+#include "../scene/scene.hpp"
 
 #include "../utilities/flagoperators.hpp"
 #include "../utilities/random.hpp"
+#include "../utilities/logger.hpp"
+
+#include "../control/globalconfig.hpp"
+
+#include "debugrenderer/debugrenderer.hpp"
+
 
 
 Renderer::Renderer() : m_iterationCount(0), m_numInitialLightSamples(0)
@@ -129,4 +135,25 @@ void Renderer::UpdateGlobalConstUBO()
 	m_globalConstUBO["BackbufferSize"].Set(ei::IVec2(m_backbuffer->GetWidth(), m_backbuffer->GetHeight()));
 	m_globalConstUBO["NumInitialLightSamples"].Set(static_cast<std::int32_t>(m_numInitialLightSamples));
 	m_globalConstUBO.GetBuffer()->Unmap();
+}
+
+void Renderer::RegisterDebugRenderStateConfigOptions()
+{
+	std::string description = "Set active debug renderer (will not change the current renderer).\n"
+								"-1: to disable any debug rendering.\n";
+	for (int i = 0; i < m_debugRenderConstructors.size(); ++i)
+		description += std::to_string(i) + ": " + m_debugRenderConstructors[i].second + "\n";
+	description.pop_back();
+
+	GlobalConfig::AddParameter("debugrenderer", { -1 }, description);
+	GlobalConfig::AddListener("debugrenderer", "Renderer", [&](const GlobalConfig::ParameterType& p) { 
+		int index = p[0].As<int>();
+		m_activeDebugRenderer.reset();
+		if (index >= 0 && index < m_debugRenderConstructors.size())
+		{
+			LOG_LVL0("Switching to debug renderer " << index);
+			m_activeDebugRenderer = m_debugRenderConstructors[index].first();
+		}
+	});
+	
 }

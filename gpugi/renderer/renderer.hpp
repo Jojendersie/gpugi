@@ -20,6 +20,7 @@ namespace gl
 }
 class Camera;
 class Scene;
+class DebugRenderer;
 
 /// Base class for all renderer.
 ///
@@ -29,7 +30,7 @@ class Renderer
 public:
 	virtual ~Renderer();
 
-	// All following functions reset the backbuffer and the iteration count to zero.
+	// The following functions may (depending on the renderer) reset the backbuffer and the iteration count to zero.
 
 	/// Sets scene.
 	virtual void SetScene(std::shared_ptr<Scene> _scene);
@@ -40,7 +41,6 @@ public:
 
 	// ---------
 
-
 	gl::Texture2D& GetBackbuffer() { return *m_backbuffer; }
 
 	virtual std::string GetName() const = 0;
@@ -48,12 +48,19 @@ public:
 	/// Performs a draw iteration.
 	virtual void Draw() = 0;
 
+	/// Returns if a debug renderer is active
+	bool IsDebugRendererActive() { return m_activeDebugRenderer.get() != nullptr; }
+
 	/// Hoy many iterations did the current image already render.
 	/// Meaning may differ with concrete renderer.
 	unsigned long GetIterationCount() const { return m_iterationCount;  }
 
+	/// Registers debug renderer state config options at globalconfig.
+	void RegisterDebugRenderStateConfigOptions();
+
 protected:
 
+	/// Defines default texture buffer binding assignment.
 	enum class TextureBufferBindings
 	{
 		// Don't use 0, since this is reserved for changing purposes.
@@ -64,12 +71,13 @@ protected:
 		INITIAL_LIGHTSAMPLES = 5
 	};
 
+	/// Defines default constant buffer binding assignment.
 	enum class UniformBufferBindings
 	{
 		GLOBALCONST = 0,
 		CAMERA = 1,
 		PERITERATION = 2,
-		MATERIAL = 3
+		MATERIAL = 3,
 	};
 
 	void InitStandardUBOs(const gl::ShaderObject& _reflectionShader);
@@ -85,9 +93,14 @@ protected:
 	/// Is reset for SetScene/Camera/Screensize. Other than that its handling is the task of the concrete renderer-impl.
 	unsigned long m_iterationCount;
 
-	// Scene data
+	/// Scene data
 	std::shared_ptr<Scene> m_scene;
 
+	/// List of all available debug renderer instantiation functions.
+	std::vector<std::pair<std::function<std::unique_ptr<DebugRenderer>()>, std::string>> m_debugRenderConstructors;
+
+	/// Active debug renderer. nullptr if none is active.
+	std::unique_ptr<DebugRenderer> m_activeDebugRenderer;
 
 private:
 	void UpdateGlobalConstUBO();
@@ -101,6 +114,7 @@ private:
 	gl::UniformBufferView m_cameraUBO;
 	gl::UniformBufferView m_materialUBO;
 	gl::UniformBufferView m_perIterationUBO;
+
 
 	unsigned int m_numInitialLightSamples;
 	std::unique_ptr<gl::TextureBufferView> m_initialLightSampleBuffer;
