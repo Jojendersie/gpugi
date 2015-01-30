@@ -1,7 +1,5 @@
 #version 450 core
 
-#include "globalubos.glsl"
-
 // input
 layout(location = 0) in vec2 inPosition;
 
