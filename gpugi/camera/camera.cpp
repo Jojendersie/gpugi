@@ -4,12 +4,12 @@
 
 bool Camera::s_anyCameraConnectedToGlobalConfig = false;
 
-Camera::Camera(const ei::Vec3& position, const ei::Vec3& lookat, float aspectRatio, float hfov, const ei::Vec3& up) :
-	m_position(position),
-	m_lookat(lookat),
-	m_aspectRatio(aspectRatio),
-	m_hfov(hfov),
-	m_up(up),
+Camera::Camera(const ei::Vec3& _position, const ei::Vec3& _lookat, float _aspectRatio, float _hfov, const ei::Vec3& _up) :
+	m_position(_position),
+	m_lookat(_lookat),
+	m_aspectRatio(_aspectRatio),
+	m_yfov(_hfov),
+	m_up(_up),
 	m_connectedToGlobalConfig(false)
 {
 }
@@ -34,7 +34,7 @@ void Camera::ConnectToGlobalConfig()
 	GlobalConfig::AddParameter("cameraLookAt", { m_lookat.x, m_lookat.y, m_lookat.z }, "Global camera's look at");
 	GlobalConfig::AddListener("cameraLookAt", "global camera", [=](const GlobalConfig::ParameterType& p){ this->SetLookAt(ei::Vec3(p[0].As<float>(), p[1].As<float>(), p[2].As<float>())); });
 
-	GlobalConfig::AddParameter("cameraFOV", { m_hfov }, "Global camera's horizontal FOV");
+	GlobalConfig::AddParameter("cameraFOV", { m_yfov }, "Global camera's vertical FOV");
 	GlobalConfig::AddListener("cameraFOV", "global camera", [=](const GlobalConfig::ParameterType& p){ this->SetHFov(p[0].As<float>()); });
 
 	m_connectedToGlobalConfig = true;
@@ -57,17 +57,17 @@ void Camera::DisconnectFromGlobalConfig()
 
 void Camera::ComputeCameraParams(ei::Vec3& cameraU, ei::Vec3& cameraV, ei::Vec3& cameraW) const
 {
-	float ulen, vlen;
 	cameraW = ei::normalize(m_lookat - m_position);
-
 	cameraU = ei::normalize(ei::cross(cameraW, m_up));
 	cameraV = ei::normalize(ei::cross(cameraU, cameraW));
-	ulen = tanf(m_hfov / 2.0f * 3.14159265358979323846f / 180.0f);
-	cameraU.x *= ulen;
-	cameraU.y *= ulen;
-	cameraU.z *= ulen;
-	vlen = ulen / m_aspectRatio;
-	cameraV.x *= vlen;
-	cameraV.y *= vlen;
-	cameraV.z *= vlen;
+
+	float f = tanf(m_yfov / 2.0f * (ei::PI / 180.0f));
+	cameraU *= f * m_aspectRatio;
+	cameraV *= f;
+}
+
+void Camera::ComputeViewProjection(ei::Mat4x4& _viewProjection, float _near, float _far) const
+{
+	_viewProjection = ei::perspectiveGL(m_yfov * (ei::PI / 180.0f), m_aspectRatio, _near, _far) *
+						ei::camera(m_position, m_lookat, m_up);
 }

@@ -12,7 +12,7 @@ public:
 	InteractiveCamera(GLFWwindow* window, const ei::Vec3& position, const ei::Vec3& lookat, float aspectRatio, float hfov = 60.0f, const ei::Vec3& up = ei::Vec3(0.0f, 1.0f, 0.0f));
 
 	virtual void SetAspectRatio(float aspect) override				{ m_dirty = true; m_aspectRatio = aspect; }
-	virtual void SetHFov(float hfov) override						{ m_dirty = true; m_hfov = hfov; }
+	virtual void SetVFov(float hfov) override						{ m_dirty = true; m_yfov = hfov; }
 	virtual void SetPosition(const ei::Vec3& position) override		{ m_dirty = true; m_position = position; }
 	virtual void SetLookAt(const ei::Vec3& lookat) override			{ m_dirty = true; m_lookat = lookat; }
 

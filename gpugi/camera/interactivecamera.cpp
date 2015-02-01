@@ -16,7 +16,7 @@ void InteractiveCamera::Reset(const Camera& camera)
 	m_position = camera.GetPosition();
 	m_lookat = camera.GetLookAt();
 	m_aspectRatio = camera.GetAspectRatio();
-	m_hfov = camera.GetHFov();
+	m_yfov = camera.GetHFov();
 	m_up = camera.GetUp();
 }
 
@@ -27,7 +27,6 @@ InteractiveCamera::InteractiveCamera(GLFWwindow* window, const ei::Vec3& positio
 	m_moveSpeed(4.0f)
 {
 }
-
 
 bool InteractiveCamera::Update(ezTime timeSinceLastFrame)
 {
