@@ -78,12 +78,6 @@
     <ClCompile Include="control\globalconfig.cpp">
       <Filter>code\control</Filter>
     </ClCompile>
-    <ClCompile Include="..\dependencies\epsilon\src\2dtypes.cpp">
-      <Filter>dependencies\epsilon</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dependencies\epsilon\src\3dtypes.cpp">
-      <Filter>dependencies\epsilon</Filter>
-    </ClCompile>
     <ClCompile Include="hdrimage.cpp">
       <Filter>code</Filter>
     </ClCompile>
@@ -157,6 +151,9 @@
       <Filter>dependencies\glhelper</Filter>
     </ClCompile>
     <ClCompile Include="renderer\debugrenderer\raytracemeshinfo.cpp">
+      <Filter>code\renderer\debugrenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\debugrenderer\hierarchyvisualization.cpp">
       <Filter>code\renderer\debugrenderer</Filter>
     </ClCompile>
   </ItemGroup>
@@ -288,6 +285,18 @@
     <ClInclude Include="renderer\debugrenderer\raytracemeshinfo.hpp">
       <Filter>code\renderer\debugrenderer</Filter>
     </ClInclude>
+    <ClInclude Include="..\dependencies\epsilon\include\ei\details\matrixcomponents.hpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\epsilon\include\ei\details\matrixutililities.hpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\epsilon\include\ei\details\inttemplate.hpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\debugrenderer\hierarchyvisualization.hpp">
+      <Filter>code\renderer\debugrenderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\globaluniforms.glsl">
@@ -339,6 +348,39 @@
       <Filter>dependencies\glhelper</Filter>
     </None>
     <None Include="shader\debug\screenTri.vert">
+      <Filter>shader\debug</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\matrix.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\quaternion.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\2dfunctions.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\2dtypes.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\3dfunctions.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\3dtypes.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\config.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\elementary.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="shader\debug\hierarchybox.vert">
+      <Filter>shader\debug</Filter>
+    </None>
+    <None Include="shader\debug\raytracemeshinfo.frag">
+      <Filter>shader\debug</Filter>
+    </None>
+    <None Include="shader\debug\hierarchybox.frag">
       <Filter>shader\debug</Filter>
     </None>
   </ItemGroup>

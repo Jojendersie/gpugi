@@ -6,7 +6,6 @@
 #include "../../control/globalconfig.hpp"
 
 const std::string RaytraceMeshInfo::Name = "Raytrace Meshinfo";
-const ei::UVec2 RaytraceMeshInfo::m_localSize= ei::UVec2(8, 8);
 
 RaytraceMeshInfo::RaytraceMeshInfo(const Renderer& _parentRenderer) :
 	DebugRenderer(_parentRenderer),

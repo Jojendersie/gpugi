@@ -28,7 +28,7 @@
 
 
 // Vector & Matrix types.
-#include <ei/matrix.hpp>
+#include <ei/vector.hpp>
 namespace gl
 {
 	typedef ei::Vec2 Vec2;

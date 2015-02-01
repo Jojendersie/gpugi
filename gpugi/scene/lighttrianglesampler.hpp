@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <memory>
-#include <ei/matrix.hpp>
+#include <ei/vector.hpp>
 #include <cinttypes>
 
 class Scene;

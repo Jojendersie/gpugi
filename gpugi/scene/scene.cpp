@@ -58,6 +58,9 @@ Scene::Scene( const std::string& _file ) :
 	else if( m_bvType == ε::Types3D::SPHERE )
 		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Sphere>) * m_numInnerNodes), gl::Buffer::Usage::MAP_WRITE);
 
+	m_parentBuffer = std::make_shared<gl::Buffer>(uint32(4 * m_numInnerNodes), gl::Buffer::Usage::MAP_WRITE);
+	m_parentBufferRAM.resize(m_numInnerNodes);
+
 	// Hold double buffer to find light sources
 	std::unique_ptr<FileDecl::Vertex[]> tmpVertexBuffer;
 	std::unique_ptr<Triangle[]> tmpTriangleBuffer;
@@ -181,31 +184,36 @@ void Scene::LoadMatRef( std::ifstream& _file, const Jo::Files::MetaFileWrapper::
 }
 
 template<typename BVType>
-void LoadHierachyHelper(char* _dest, std::ifstream& _file, const FileDecl::NamedArray& _header)
+void LoadHierachyHelper(char* _hierachy, uint32* _parentBuffer, std::ifstream& _file, const FileDecl::NamedArray& _header)
 {
-	Scene::TreeNode<BVType>* dest = reinterpret_cast<Scene::TreeNode<BVType>*>(_dest);
-	for (uint32_t i = 0; i < _header.numElements; ++i, ++dest)
+	Scene::TreeNode<BVType>* hierachy = reinterpret_cast<Scene::TreeNode<BVType>*>(_hierachy);
+	for (uint32_t i = 0; i < _header.numElements; ++i, ++hierachy, ++_parentBuffer)
 	{
 		FileDecl::Node node;
 		_file.read((char*)&node, sizeof(FileDecl::Node));
 
-		dest->firstChild = node.firstChild;
-		dest->escape = node.escape;
+		hierachy->firstChild = node.firstChild;
+		hierachy->escape = node.escape;
+		*_parentBuffer = node.parent;
 	}
 }
 
 void Scene::LoadHierarchy( std::ifstream& _file, const FileDecl::NamedArray& _header )
 {
 	// Read element wise and copy the tree structure
-	char* dest = (char*)m_hierarchyBuffer->Map();
+	char* hierachy = reinterpret_cast<char*>(m_hierarchyBuffer->Map());
+	uint32* parentBuffer = reinterpret_cast<uint32*>(m_parentBuffer->Map());
 	
 	if (m_bvType == ε::Types3D::BOX)
-		LoadHierachyHelper<ei::Box>(dest, _file, _header);
+		LoadHierachyHelper<ei::Box>(hierachy, parentBuffer, _file, _header);
 	else if (m_bvType == ε::Types3D::SPHERE)
-		LoadHierachyHelper<ei::Sphere>(dest, _file, _header);
+		LoadHierachyHelper<ei::Sphere>(hierachy, parentBuffer, _file, _header);
 	else
 		LOG_ERROR("Unimplemented bvh type!");
 
+	memcpy(m_parentBufferRAM.data(), parentBuffer, 4 * m_numInnerNodes);
+
+	m_parentBuffer->Unmap();
 	m_hierarchyBuffer->Unmap();
 }
 

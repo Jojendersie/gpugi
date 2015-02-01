@@ -145,8 +145,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\dependencies\epsilon\src\2dtypes.cpp" />
-    <ClCompile Include="..\dependencies\epsilon\src\3dtypes.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\buffer.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\framebufferobject.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\gl.cpp" />
@@ -169,6 +167,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="outputwindow.cpp" />
     <ClCompile Include="renderer\bidirectionalpathtracer.cpp" />
+    <ClCompile Include="renderer\debugrenderer\hierarchyvisualization.cpp" />
     <ClCompile Include="renderer\debugrenderer\raytracemeshinfo.cpp" />
     <ClCompile Include="renderer\lightpathtracer.cpp" />
     <ClCompile Include="renderer\pathtracer.cpp" />
@@ -184,6 +183,9 @@
     <ClCompile Include="utilities\policy.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\dependencies\epsilon\include\ei\details\inttemplate.hpp" />
+    <ClInclude Include="..\dependencies\epsilon\include\ei\details\matrixcomponents.hpp" />
+    <ClInclude Include="..\dependencies\epsilon\include\ei\details\matrixutililities.hpp" />
     <ClInclude Include="..\dependencies\glhelper\glhelper\buffer.hpp" />
     <ClInclude Include="..\dependencies\glhelper\glhelper\framebufferobject.hpp" />
     <ClInclude Include="..\dependencies\glhelper\glhelper\gl.hpp" />
@@ -209,6 +211,7 @@
     <ClInclude Include="outputwindow.hpp" />
     <ClInclude Include="renderer\bidirectionalpathtracer.hpp" />
     <ClInclude Include="renderer\debugrenderer\debugrenderer.hpp" />
+    <ClInclude Include="renderer\debugrenderer\hierarchyvisualization.hpp" />
     <ClInclude Include="renderer\debugrenderer\raytracemeshinfo.hpp" />
     <ClInclude Include="renderer\lightpathtracer.hpp" />
     <ClInclude Include="renderer\pathtracer.hpp" />
@@ -229,8 +232,19 @@
     <ClInclude Include="utilities\variant.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\dependencies\epsilon\include\ei\details\2dfunctions.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\2dtypes.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\3dfunctions.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\3dtypes.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\config.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\elementary.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\matrix.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\quaternion.inl" />
     <None Include="..\dependencies\glhelper\glhelper\shaderdatametainfo.inl" />
     <None Include="..\dependencies\glhelper\glhelper\uniformbuffer.inl" />
+    <None Include="shader\debug\hierarchybox.frag" />
+    <None Include="shader\debug\hierarchybox.vert" />
+    <None Include="shader\debug\raytracemeshinfo.frag" />
     <None Include="shader\debug\screenTri.vert" />
     <None Include="shader\displayHDR.frag" />
     <None Include="shader\globaluniforms.glsl" />

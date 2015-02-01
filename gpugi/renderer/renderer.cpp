@@ -22,6 +22,7 @@ Renderer::Renderer() : m_iterationCount(0), m_numInitialLightSamples(0)
 
 Renderer::~Renderer()
 {
+	GlobalConfig::RemoveParameter("debugrenderer");
 }
 
 void Renderer::InitStandardUBOs(const gl::ShaderObject& _reflectionShader)
@@ -98,12 +99,18 @@ void Renderer::SetScene(std::shared_ptr<Scene> _scene)
 
 	m_iterationCount = 0;
 	m_backbuffer->ClearToZero(0);
+
+	
+	if (m_activeDebugRenderer)
+		m_activeDebugRenderer->SetScene(m_scene);
 }
 
 void Renderer::SetCamera(const Camera& _camera)
 {
 	ei::Vec3 camU, camV, camW;
 	_camera.ComputeCameraParams(camU, camV, camW);
+	ei::Mat4x4 viewProjection;
+	_camera.ComputeViewProjection(viewProjection);
 
 	m_cameraUBO.GetBuffer()->Map();
 	m_cameraUBO["CameraU"].Set(camU);
@@ -111,6 +118,7 @@ void Renderer::SetCamera(const Camera& _camera)
 	m_cameraUBO["CameraW"].Set(camW);
 	m_cameraUBO["CameraPosition"].Set(_camera.GetPosition());
 	m_cameraUBO["PixelArea"].Set(ei::len(ei::cross(camU * 2.0f / m_backbuffer->GetWidth(), camV * 2.0f / m_backbuffer->GetHeight())));
+	m_cameraUBO["ViewProjection"].Set(viewProjection);
 	m_cameraUBO.GetBuffer()->Unmap();
 
 	m_iterationCount = 0;
@@ -153,6 +161,8 @@ void Renderer::RegisterDebugRenderStateConfigOptions()
 		{
 			LOG_LVL0("Switching to debug renderer " << index);
 			m_activeDebugRenderer = m_debugRenderConstructors[index].first();
+			if (m_scene)
+				m_activeDebugRenderer->SetScene(m_scene);
 		}
 	});
 	

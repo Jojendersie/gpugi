@@ -1,8 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
 class Renderer;
+class Scene;
 
 /// Base class for all debug renderers.
 ///
@@ -17,6 +19,12 @@ class DebugRenderer
 public:
 	DebugRenderer(const Renderer& parentRenderer) : m_parentRenderer(parentRenderer) {}
 	virtual ~DebugRenderer() {}
+
+	/// Sets the scene for the debug renderer.
+	///
+	/// If a scene was already loaded into the Renderer, this function will be called right after the init.
+	/// Of course it will also be called with every call of Renderer::SetScene
+	virtual void SetScene(std::shared_ptr<Scene> _scene) {}
 
 	virtual std::string GetName() const = 0;
 	virtual void Draw() = 0;

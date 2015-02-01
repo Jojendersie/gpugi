@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ei/matrix.hpp>
+#include <ei/vector.hpp>
 
 class Camera
 {
@@ -18,7 +18,7 @@ public:
 	const ei::Vec3& GetLookAt() const  { return m_lookat; }
 
 	virtual void SetAspectRatio(float aspect)				{ m_aspectRatio = aspect; }
-	virtual void SetHFov(float hfov)						{ m_yfov = hfov; }
+	virtual void SetVFov(float hfov)						{ m_yfov = hfov; }
 	virtual void SetPosition(const ei::Vec3& position)		{ m_position = position; }
 	virtual void SetLookAt(const ei::Vec3& lookat)			{ m_lookat = lookat; }
 	

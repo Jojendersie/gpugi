@@ -11,6 +11,7 @@ layout(binding = 1, shared) uniform Camera
 	vec3 CameraW;
 	vec3 CameraPosition;
 	float PixelArea;
+	mat4 ViewProjection;
 };
 
 layout(binding = 2, shared) uniform PerIteration

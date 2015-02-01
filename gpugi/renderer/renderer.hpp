@@ -4,7 +4,7 @@
 #include <glhelper/uniformbuffer.hpp>
 
 #include <memory>
-#include <ei/matrix.hpp>
+#include <ei/vector.hpp>
 
 #include "../scene/lighttrianglesampler.hpp"
 

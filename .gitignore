@@ -50,3 +50,5 @@ log.txt
 *.rawscene
 *.pfm
 *.mtl
+/scenes/cryteksponza/textures
+/scenes/sanmiguel/Maps

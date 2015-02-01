@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <ei/matrix.hpp>
+#include <ei/vector.hpp>
 #include <cinttypes>
 
 /// Writes HDR image to a rgb pfm.

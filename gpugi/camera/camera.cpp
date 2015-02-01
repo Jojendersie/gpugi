@@ -35,7 +35,7 @@ void Camera::ConnectToGlobalConfig()
 	GlobalConfig::AddListener("cameraLookAt", "global camera", [=](const GlobalConfig::ParameterType& p){ this->SetLookAt(ei::Vec3(p[0].As<float>(), p[1].As<float>(), p[2].As<float>())); });
 
 	GlobalConfig::AddParameter("cameraFOV", { m_yfov }, "Global camera's vertical FOV");
-	GlobalConfig::AddListener("cameraFOV", "global camera", [=](const GlobalConfig::ParameterType& p){ this->SetHFov(p[0].As<float>()); });
+	GlobalConfig::AddListener("cameraFOV", "global camera", [=](const GlobalConfig::ParameterType& p){ this->SetVFov(p[0].As<float>()); });
 
 	m_connectedToGlobalConfig = true;
 	s_anyCameraConnectedToGlobalConfig = true;

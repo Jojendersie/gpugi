@@ -1,5 +1,6 @@
 #include "pathtracer.hpp"
 #include "debugrenderer/raytracemeshinfo.hpp"
+#include "debugrenderer/hierarchyvisualization.hpp"
 #include <glhelper/texture2d.hpp>
 
 #include <fstream>
@@ -28,10 +29,11 @@ Pathtracer::Pathtracer() :
 	} */
 
 	InitStandardUBOs(m_pathtracerShader);
-	SetNumInitialLightSamples(32);
+	SetNumInitialLightSamples(128);
 
 	// Create debug renderers.
 	m_debugRenderConstructors.push_back(std::make_pair([=](){ return std::make_unique<RaytraceMeshInfo>(*this); }, RaytraceMeshInfo::Name));
+	m_debugRenderConstructors.push_back(std::make_pair([=](){ return std::make_unique<HierarchyVisualization>(*this); }, HierarchyVisualization::Name));
 }
 
 void Pathtracer::SetScreenSize(const ei::IVec2& _newSize)

@@ -91,6 +91,12 @@ public:
 	std::shared_ptr<gl::Buffer> GetVertexInfoBuffer() const		{ return m_vertexInfoBuffer; }
 	std::shared_ptr<gl::Buffer> GetTriangleBuffer() const		{ return m_triangleBuffer; }
 	std::shared_ptr<gl::Buffer> GetHierarchyBuffer() const		{ return m_hierarchyBuffer; }
+	/// The parent buffer supplements the hierachy buffer.
+	/// It contains a parent index for each node.
+	std::shared_ptr<gl::Buffer> GetParentBuffer() const		{ return m_parentBuffer; }
+	/// A CPU sided version of the parent buffer.
+	const std::vector<uint32> GetParentBufferRAM() const	{ return m_parentBufferRAM; }
+
 	const std::vector<Material>& GetMaterials() const			{ return m_materials; }
 
 	/// The bvh uses ε:: geometries. Which one can change with the files.
@@ -112,6 +118,9 @@ private:
 	std::shared_ptr<gl::Buffer> m_vertexInfoBuffer;
 	std::shared_ptr<gl::Buffer> m_triangleBuffer;
 	std::shared_ptr<gl::Buffer> m_hierarchyBuffer;
+	std::shared_ptr<gl::Buffer> m_parentBuffer;
+	std::vector<uint32> m_parentBufferRAM;
+
 	std::vector<LightTriangle> m_lightTriangles;
 	std::vector<float> m_lightSummedArea;
 	std::vector<Material> m_materials;

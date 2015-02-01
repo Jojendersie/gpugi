@@ -26,7 +26,5 @@ private:
 	std::unique_ptr<gl::UniformBufferView> m_settingsUBO;
 	std::unique_ptr<gl::ScreenAlignedTriangle> m_screenTri;
 	gl::ShaderObject m_infoShader;
-
-	static const ei::UVec2 m_localSize;
 };
 

@@ -129,10 +129,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\dependencies\epsilon\src\2dintersection.cpp" />
-    <ClCompile Include="..\dependencies\epsilon\src\2dtypes.cpp" />
-    <ClCompile Include="..\dependencies\epsilon\src\3dintersection.cpp" />
-    <ClCompile Include="..\dependencies\epsilon\src\3dtypes.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\utils\pathutils.cpp" />
     <ClCompile Include="..\gpugi\utilities\assert.cpp" />
     <ClCompile Include="..\gpugi\utilities\logger.cpp" />
@@ -146,6 +142,9 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\dependencies\epsilon\include\ei\details\inttemplate.hpp" />
+    <ClInclude Include="..\dependencies\epsilon\include\ei\details\matrixcomponents.hpp" />
+    <ClInclude Include="..\dependencies\epsilon\include\ei\details\matrixutililities.hpp" />
     <ClInclude Include="buildmethods\kdtree.hpp" />
     <ClInclude Include="buildmethods\sweep.hpp" />
     <ClInclude Include="bvhmake.hpp" />
@@ -156,6 +155,14 @@
     <ClInclude Include="glhelperconfig.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\dependencies\epsilon\include\ei\details\2dfunctions.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\2dtypes.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\3dfunctions.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\3dtypes.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\config.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\elementary.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\matrix.inl" />
+    <None Include="..\dependencies\epsilon\include\ei\details\quaternion.inl" />
     <None Include="fitmethods\optimize.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <ei/matrix.hpp>
+#include <ei/vector.hpp>
 #include <functional>
 
 template<unsigned N> using Vec = ε::Matrix<float, N, 1>;

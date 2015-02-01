@@ -21,12 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\dependencies\epsilon\src\2dtypes.cpp">
-      <Filter>dependencies\epsilon</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dependencies\epsilon\src\3dtypes.cpp">
-      <Filter>dependencies\epsilon</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>code</Filter>
     </ClCompile>
@@ -53,12 +47,6 @@
     </ClCompile>
     <ClCompile Include="fitmethods\aaellipsoidfit.cpp">
       <Filter>code\fitmethods</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dependencies\epsilon\src\3dintersection.cpp">
-      <Filter>dependencies\epsilon</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dependencies\epsilon\src\2dintersection.cpp">
-      <Filter>dependencies\epsilon</Filter>
     </ClCompile>
     <ClCompile Include="..\gpugi\utilities\random.cpp">
       <Filter>dependencies\utilities</Filter>
@@ -92,10 +80,43 @@
     <ClInclude Include="glhelperconfig.hpp">
       <Filter>dependencies</Filter>
     </ClInclude>
+    <ClInclude Include="..\dependencies\epsilon\include\ei\details\inttemplate.hpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\epsilon\include\ei\details\matrixcomponents.hpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\epsilon\include\ei\details\matrixutililities.hpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="fitmethods\optimize.inl">
       <Filter>code\fitmethods</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\elementary.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\matrix.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\quaternion.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\2dfunctions.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\2dtypes.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\3dfunctions.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\3dtypes.inl">
+      <Filter>dependencies\epsilon</Filter>
+    </None>
+    <None Include="..\dependencies\epsilon\include\ei\details\config.inl">
+      <Filter>dependencies\epsilon</Filter>
     </None>
   </ItemGroup>
 </Project>

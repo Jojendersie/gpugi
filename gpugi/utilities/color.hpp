@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ei/matrix.hpp>
+#include <ei/vector.hpp>
 #include <cinttypes>
 
 namespace ColorUtils

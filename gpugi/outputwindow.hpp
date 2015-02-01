@@ -2,7 +2,7 @@
 
 #include "glhelper/shaderobject.hpp"
 #include <GLFW/glfw3.h>
-#include <ei/matrix.hpp>
+#include <ei/vector.hpp>
 
 struct GLFWwindow;
 namespace gl
