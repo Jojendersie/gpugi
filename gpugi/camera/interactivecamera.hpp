@@ -15,6 +15,7 @@ public:
 	virtual void SetVFov(float hfov) override						{ m_dirty = true; m_yfov = hfov; }
 	virtual void SetPosition(const ei::Vec3& position) override		{ m_dirty = true; m_position = position; }
 	virtual void SetLookAt(const ei::Vec3& lookat) override			{ m_dirty = true; m_lookat = lookat; }
+	void SetMoveSpeed(float _speed)									{ m_moveSpeed = _speed; }
 
 	void Reset(const Camera& camera);
 

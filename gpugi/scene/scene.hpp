@@ -16,11 +16,11 @@
 class Scene
 {
 public:
-    /// Load a scene.
-    Scene( const std::string& _file );
+	/// Load a scene.
+	Scene( const std::string& _file );
 
-    /// Unload all the scene data and GPU resources
-    ~Scene();
+	/// Unload all the scene data and GPU resources
+	~Scene();
 
 	/// Inner node struct on GPU side
 	/// Specialized for optimal GPU alignment.
@@ -95,7 +95,7 @@ public:
 	/// It contains a parent index for each node.
 	std::shared_ptr<gl::Buffer> GetParentBuffer() const		{ return m_parentBuffer; }
 	/// A CPU sided version of the parent buffer.
-	const std::vector<uint32> GetParentBufferRAM() const	{ return m_parentBufferRAM; }
+	const std::vector<uint32>& GetParentBufferRAM() const	{ return m_parentBufferRAM; }
 
 	const std::vector<Material>& GetMaterials() const			{ return m_materials; }
 
@@ -112,6 +112,7 @@ public:
 	// Normalized (to [0,1]) summed area for all light triangles
 	const float* GetLightSummedAreaTable() const			{ return m_lightSummedArea.data(); }
 	float GetLightAreaSum() const				{ return m_lightAreaSum; }
+	const ε::Box& GetBoundingBox() const		{ return m_boundingBox; }
 
 private:
 	std::shared_ptr<gl::Buffer> m_vertexPositionBuffer;
@@ -121,6 +122,7 @@ private:
 	std::shared_ptr<gl::Buffer> m_parentBuffer;
 	std::vector<uint32> m_parentBufferRAM;
 
+	ε::Box m_boundingBox;
 	std::vector<LightTriangle> m_lightTriangles;
 	std::vector<float> m_lightSummedArea;
 	std::vector<Material> m_materials;

@@ -105,7 +105,7 @@ void HierarchyVisualization::SetScene(std::shared_ptr<Scene> _scene)
 			while (parentInst->depth == std::numeric_limits<std::uint32_t>::max())
 			{
 				pathStack.push_back(parentInst);
-				parentInst = &instances[_scene->GetParentBufferRAM()[pathStack.back()->nodeIndex]];
+				parentInst = &instances[_scene->GetParentBufferRAM()[parentInst->nodeIndex]];
 			}
 
 			std::uint32_t depthOffset = parentInst->depth;

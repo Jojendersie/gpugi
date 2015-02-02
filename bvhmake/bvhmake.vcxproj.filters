@@ -54,6 +54,24 @@
     <ClCompile Include="..\dependencies\glhelper\glhelper\utils\pathutils.cpp">
       <Filter>dependencies\utilities</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Epsilon-Intersection\src\3dfunctions.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Epsilon-Intersection\src\3dintersection.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Epsilon-Intersection\src\3dtypes.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Epsilon-Intersection\src\2dfunctions.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Epsilon-Intersection\src\2dintersection.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Epsilon-Intersection\src\2dtypes.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bvhmake.hpp">

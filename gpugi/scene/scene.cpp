@@ -230,6 +230,8 @@ void Scene::LoadBoundingVolumes( std::ifstream& _file, const FileDecl::NamedArra
 			dest->max = buffer.max;
 			dest->min = buffer.min;
 		}
+		dest -= _header.numElements;
+		m_boundingBox = ε::Box(dest->min, dest->max);
 	}
 	else if( m_bvType == ε::Types3D::SPHERE )
 	{
@@ -241,6 +243,8 @@ void Scene::LoadBoundingVolumes( std::ifstream& _file, const FileDecl::NamedArra
 			dest->center = buffer.center;
 			dest->radius = buffer.radius;
 		}
+		dest -= _header.numElements;
+		m_boundingBox = ε::Box(ε::Sphere(dest->center, dest->radius));
 	}
 	else
 		LOG_ERROR("Unimplemented bvh type!");

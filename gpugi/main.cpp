@@ -110,6 +110,10 @@ public:
 			m_scene = std::make_shared<Scene>(sceneFilename);
 			if (m_renderer)
 				m_renderer->SetScene(m_scene);
+
+			InteractiveCamera* icam = dynamic_cast<InteractiveCamera*>(m_camera.get());
+			if (icam)
+				icam->SetMoveSpeed(max(m_scene->GetBoundingBox().max - m_scene->GetBoundingBox().min) / 15.0f);
 		});
 	}
 	
