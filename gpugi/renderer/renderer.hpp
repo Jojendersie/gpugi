@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glhelper/shaderobject.hpp>
-#include <glhelper/uniformbuffer.hpp>
 
 #include <memory>
 #include <ei/vector.hpp>
@@ -17,6 +16,7 @@ namespace gl
 {
 	class Texture2D;
 	class TextureBufferView;
+	class UniformBufferView;
 }
 class Camera;
 class Scene;
@@ -110,10 +110,10 @@ private:
 	std::unique_ptr<gl::TextureBufferView> m_vertexInfoBuffer;
 	std::unique_ptr<gl::TextureBufferView> m_triangleBuffer;
 
-	gl::UniformBufferView m_globalConstUBO;
-	gl::UniformBufferView m_cameraUBO;
-	gl::UniformBufferView m_materialUBO;
-	gl::UniformBufferView m_perIterationUBO;
+	std::unique_ptr<gl::UniformBufferView> m_globalConstUBO;
+	std::unique_ptr<gl::UniformBufferView> m_cameraUBO;
+	std::unique_ptr<gl::UniformBufferView> m_materialUBO;
+	std::unique_ptr<gl::UniformBufferView> m_perIterationUBO;
 
 
 	unsigned int m_numInitialLightSamples;

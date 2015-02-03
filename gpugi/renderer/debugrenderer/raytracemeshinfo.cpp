@@ -1,6 +1,6 @@
 #include "raytracemeshinfo.hpp"
 #include <glhelper/screenalignedtriangle.hpp>
-#include <glhelper/uniformbuffer.hpp>
+#include <glhelper/uniformbufferview.hpp>
 
 #include "../../control/scriptprocessing.hpp"
 #include "../../control/globalconfig.hpp"
@@ -16,8 +16,7 @@ RaytraceMeshInfo::RaytraceMeshInfo(const Renderer& _parentRenderer) :
 	m_infoShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/debug/raytracemeshinfo.frag");
 	m_infoShader.CreateProgram();
 
-	m_settingsUBO = std::make_unique<gl::UniformBufferView>();
-	m_settingsUBO->Init(m_infoShader, "DebugSettings");
+	m_settingsUBO = std::make_unique<gl::UniformBufferView>(m_infoShader, "DebugSettings");
 	m_settingsUBO->BindBuffer(8);
 
 	GlobalConfig::AddParameter("meshinfotype", { 0 }, std::string("Displayed meshinfo type:\n") +

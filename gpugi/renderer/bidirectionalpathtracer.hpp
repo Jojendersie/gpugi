@@ -8,6 +8,7 @@
 namespace gl
 {
 	class ShaderStorageBufferView;
+	class UniformBufferView;
 }
 
 // Renderer that uses only light path -> camera connections to render the image.
@@ -40,7 +41,7 @@ private:
 	bool m_needToDetermineNeededLightCacheCapacity;
 
 	int m_numRaysPerLightSample;
-	gl::UniformBufferView m_lightpathtraceUBO;
+	std::unique_ptr<gl::UniformBufferView> m_lightpathtraceUBO;
 
 	static const unsigned int m_localSizeLightPathtracer;
 	static const ei::UVec2 m_localSizePathtracer;

@@ -28,7 +28,7 @@ private:
 	std::unique_ptr<gl::Texture2D> m_lockTexture;
 
 	int m_numRaysPerLightSample;
-	gl::UniformBufferView m_lightpathtraceUBO;
+	std::unique_ptr<gl::UniformBufferView> m_lightpathtraceUBO;
 
 	static const unsigned int m_localSizeLightPathtracer;
 };

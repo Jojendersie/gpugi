@@ -1,5 +1,5 @@
 #include "hierarchyvisualization.hpp"
-#include <glhelper/uniformbuffer.hpp>
+#include <glhelper/uniformbufferview.hpp>
 #include <glhelper/vertexarrayobject.hpp>
 
 #include "../../scene/scene.hpp"
@@ -17,8 +17,7 @@ HierarchyVisualization::HierarchyVisualization(const Renderer& _parentRenderer) 
 	m_shader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/debug/hierarchybox.frag");
 	m_shader.CreateProgram();
 
-	m_settingsUBO = std::make_unique<gl::UniformBufferView>();
-	m_settingsUBO->Init(m_shader, "DebugSettings");
+	m_settingsUBO = std::make_unique<gl::UniformBufferView>(m_shader, "DebugSettings");
 	m_settingsUBO->BindBuffer(8);
 
 
