@@ -1,0 +1,8 @@
+sceneFilename = ../scenes/sibenik/sibenik.rawscene
+cameraPos= 18.545946, -5.615241, -0.808306
+cameraLookAt = 17.619658, -5.963274, -0.663870
+cameraFOV = 70
+resolution = 1024, 768
+
+renderer=0
+//debugrenderer=0
