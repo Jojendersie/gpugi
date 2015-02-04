@@ -245,7 +245,7 @@ private:
 		struct tm* now = localtime(&t);
         std::string date = UIntToMinLengthString(now->tm_mon+1, 2) + "." + UIntToMinLengthString(now->tm_mday, 2) + " " +
 						   UIntToMinLengthString(now->tm_hour, 2) + "h" + UIntToMinLengthString(now->tm_min, 2) + "m" + std::to_string(now->tm_sec) + "s ";
-		std::string filename = date + m_renderer->GetName() + " " +
+		std::string filename = "../screenshots/" + date + m_renderer->GetName() + " " +
                                  std::to_string(m_renderer->GetIterationCount()) + "it"
                                 ".pfm";
 		if (!name.empty())
