@@ -163,7 +163,8 @@
     <ClCompile Include="camera\interactivecamera.cpp" />
     <ClCompile Include="control\globalconfig.cpp" />
     <ClCompile Include="control\scriptprocessing.cpp" />
-    <ClCompile Include="hdrimage.cpp" />
+    <ClCompile Include="imageut\hdrimage.cpp" />
+    <ClCompile Include="imageut\texturemse.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="outputwindow.cpp" />
     <ClCompile Include="renderer\bidirectionalpathtracer.cpp" />
@@ -207,7 +208,8 @@
     <ClInclude Include="control\globalconfig.hpp" />
     <ClInclude Include="control\scriptprocessing.hpp" />
     <ClInclude Include="glhelperconfig.hpp" />
-    <ClInclude Include="hdrimage.hpp" />
+    <ClInclude Include="imageut\hdrimage.hpp" />
+    <ClInclude Include="imageut\texturemse.hpp" />
     <ClInclude Include="outputwindow.hpp" />
     <ClInclude Include="renderer\bidirectionalpathtracer.hpp" />
     <ClInclude Include="renderer\debugrenderer\debugrenderer.hpp" />
@@ -257,9 +259,10 @@
     <None Include="shader\pathtracer_bidir.comp" />
     <None Include="shader\random.glsl" />
     <None Include="shader\scenedata.glsl" />
-    <None Include="shader\screenTri.vert" />
     <None Include="shader\stdheader.glsl" />
     <None Include="shader\traceray.glsl" />
+    <None Include="shader\utils\screenTri.vert" />
+    <None Include="shader\utils\sqerror.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

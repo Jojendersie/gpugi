@@ -83,7 +83,7 @@ OutputWindow::OutputWindow() :
 
 
 
-	displayHDR.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/screenTri.vert");
+	displayHDR.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/utils/screenTri.vert");
 	displayHDR.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/displayHDR.frag");
 	displayHDR.CreateProgram();
 

@@ -5,6 +5,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <unordered_set>
 
 /// Allows changes/triggers in the global config by simple script commands.
 ///
@@ -31,9 +32,13 @@ public:
 	/// Parses and processes all commands in the process queue.
 	void ProcessCommandQueue(double timeDelta, unsigned int iterationDelta = 1);
 
+	/// Adds a command that causes ProcessCommandQueue to stop processing and return.
+	/// Remaining commands will be processed in the next call.
+	void AddProcessingPauseCommand(const std::string& _processPauseCommand) { m_processPauseCommand.insert(_processPauseCommand); }
+
 private:
 	
-	void ParseCommand(std::string command, bool fromScriptFile);
+	void ParseCommand(std::string command, bool fromScriptFile, bool& _stopProcessing);
 	void CommandWindowThread();
 
 	std::queue<std::string> m_scriptCommandQueue;
@@ -43,6 +48,8 @@ private:
 	std::unique_ptr<std::thread> m_consoleWindowObservationThread;
 	std::mutex m_consoleCommandQueueMutex;
 	std::queue<std::string> m_consoleCommandQueue;
+
+	std::unordered_set<std::string> m_processPauseCommand;
 
 	bool m_consoleWindowThreadRunning;
 };

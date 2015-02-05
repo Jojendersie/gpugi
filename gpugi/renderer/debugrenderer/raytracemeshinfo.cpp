@@ -12,7 +12,7 @@ RaytraceMeshInfo::RaytraceMeshInfo(const Renderer& _parentRenderer) :
 	m_screenTri(new gl::ScreenAlignedTriangle()),
 	m_infoShader("RaytraceMeshInfo")
 {
-	m_infoShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/debug/screenTri.vert");
+	m_infoShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/utils/screenTri.vert");
 	m_infoShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/debug/raytracemeshinfo.frag");
 	m_infoShader.CreateProgram();
 

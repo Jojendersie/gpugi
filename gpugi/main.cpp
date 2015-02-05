@@ -18,9 +18,11 @@
 
 #include "glhelper/texture2d.hpp"
 
-#include "hdrimage.hpp"
+#include "imageut/hdrimage.hpp"
+#include "imageut/texturemse.hpp"
 
 #include <ctime>
+#include <limits>
 
 #ifdef _WIN32
 	#undef APIENTRY
@@ -28,21 +30,26 @@
 	#include <windows.h>	
 #endif
 
+
 class Application
 {
 public:
-	Application(int argc, char** argv) : m_shutdown(false)
+	Application(int argc, char** argv) : m_shutdown(false),
+		m_iterationSinceLastMSECheck(0), m_scriptWaitsForMSE(false)
 	{
 		// Logger init.
 		Logger::g_logger.Initialize(new Logger::FilePolicy("log.txt"));
 
 		// Window...
 		LOG_LVL2("Init window ...");
-		m_window.reset(new OutputWindow());
+		m_window = std::make_unique<OutputWindow>();
 
 		// Create "global" camera.
-		m_camera.reset(new InteractiveCamera(m_window->GetGLFWWindow(), ei::Vec3(0.0f), ei::Vec3(0.0f, 0.0f, 1.0f), 
-											static_cast<float>(m_window->GetResolution().x) / m_window->GetResolution().y, 70.0f));
+		m_camera = std::make_unique<InteractiveCamera>(m_window->GetGLFWWindow(), ei::Vec3(0.0f), ei::Vec3(0.0f, 0.0f, 1.0f),
+														static_cast<float>(m_window->GetResolution().x) / m_window->GetResolution().y, 70.0f);
+
+		// Module for image-MSE checks.
+		m_textureMSE = std::make_unique<TextureMSE>();
 
 		// Register various script commands.
 		RegisterScriptCommands();
@@ -115,6 +122,23 @@ public:
 			if (icam)
 				icam->SetMoveSpeed(max(m_scene->GetBoundingBox().max - m_scene->GetBoundingBox().min) / 15.0f);
 		});
+
+		// MSE check
+		GlobalConfig::AddParameter("referenceImage", { std::string("") }, "Reference for all mse checks.");
+		GlobalConfig::AddListener("referenceImage", "LoadReference", [=](const GlobalConfig::ParameterType& p) {
+			m_textureMSE->LoadReferenceFromPFM(p[0].As<std::string>());
+		});
+		GlobalConfig::AddParameter("mseCheckInterval", { 0 }, "MSE will be computed every xth iteration. 0 for no MSE computation");
+		GlobalConfig::AddParameter("waitMSE", { 0 }, "Script execution halts until the MSE is lower than the given value. Only used if mseCheckInterval is >0.");
+		GlobalConfig::AddListener("waitMSE", "ScriptWait", [&](const GlobalConfig::ParameterType& p) {
+			if (GlobalConfig::GetParameter("mseCheckInterval")[0].As<int>() <= 0)
+				LOG_ERROR("Can't activate waitMSE as long the mseCheckInterval is 0!");
+			else if (!m_textureMSE->HasValidReferenceImage())
+				LOG_ERROR("Can't activate waitMSE as long as there is no reference image loaded!");
+			else
+				m_scriptWaitsForMSE = true;
+		});
+		m_scriptProcessing.AddProcessingPauseCommand("waitMSE");
 	}
 	
 
@@ -191,7 +215,9 @@ private:
 	void Update(ezTime timeSinceLastUpdate)
 	{
 		m_window->PollWindowEvents();
-		m_scriptProcessing.ProcessCommandQueue(timeSinceLastUpdate.GetSeconds());
+
+		if (!m_scriptWaitsForMSE)
+			m_scriptProcessing.ProcessCommandQueue(timeSinceLastUpdate.GetSeconds());
 
 		Input();
 
@@ -216,8 +242,44 @@ private:
 		m_renderer->Draw();
 
 		if (!m_renderer->IsDebugRendererActive())
+		{
 			m_window->DisplayHDRTexture(m_renderer->GetBackbuffer(), m_renderer->GetIterationCount());
+			MSEChecks();
+		}
+		
 		m_window->Present();
+	}
+
+	void MSEChecks()
+	{
+		++m_iterationSinceLastMSECheck;
+		int mseCheckInterval = GlobalConfig::GetParameter("mseCheckInterval")[0].As<int>();
+		if (mseCheckInterval > 0 && m_iterationSinceLastMSECheck >= mseCheckInterval)
+		{
+			m_iterationSinceLastMSECheck = 0;
+			float mse = m_textureMSE->ComputeCurrentMSE(m_renderer->GetBackbuffer(), m_renderer->GetIterationCount());
+			LOG_LVL2("Iteration " << m_renderer->GetIterationCount() << " MSE: " << mse);
+
+			if (m_scriptWaitsForMSE)
+			{
+				float goalMSE = GlobalConfig::GetParameter("waitMSE")[0].As<float>();
+				if (goalMSE > 0)
+				{
+					if (mse != mse)
+					{
+						LOG_ERROR("MSE is NaN. Resuming script.");
+						m_scriptWaitsForMSE = false;
+					}
+					else if (goalMSE > mse)
+					{
+						LOG_LVL2("MSE now below " << goalMSE << "! Resuming script");
+						m_scriptWaitsForMSE = false;
+					}
+				}
+				else
+					m_scriptWaitsForMSE = false;
+			}
+		}
 	}
 
 	void Input()
@@ -262,9 +324,14 @@ private:
 	std::unique_ptr<OutputWindow> m_window;
 	std::unique_ptr<InteractiveCamera> m_camera;
     std::shared_ptr<Scene> m_scene;
+	
 
 	ezStopwatch m_stopwatch;
 	bool m_shutdown;
+
+	bool m_scriptWaitsForMSE;
+	unsigned int m_iterationSinceLastMSECheck;
+	std::shared_ptr<TextureMSE> m_textureMSE;
 };
 
 

@@ -31,3 +31,37 @@ bool WritePfm(const ei::Vec4* _data, const ei::IVec2& _size, const std::string& 
 		return false;
 	}
 }
+
+std::unique_ptr<ei::Vec3[]> LoadPfm(const std::string& _filename, ei::IVec2& _size)
+{
+	std::ifstream file(_filename.c_str(), std::ios::binary);
+	if (!file.bad() && !file.fail())
+	{
+		char header[4];
+		file.read(header, sizeof(char) * 3);
+		header[3] = '\0';
+		if (strcmp(header, "PF\n") != 0)
+			return nullptr;
+
+		file >> _size.x >> _size.y;
+		std::unique_ptr<ei::Vec3[]> out(new ei::Vec3[_size.x * _size.y]);
+
+		file.ignore(11);
+		
+		ei::Vec3* v = out.get();
+		for (int y = 0; y < _size.y; ++y)
+		{
+			for (int x = 0; x < _size.x; ++x)
+			{
+				file.read(reinterpret_cast<char*>(v), sizeof(float) * 3);
+				++v;
+			}
+		}
+		return out;
+	}
+	else
+	{
+		LOG_ERROR("Error reading hdr image from " + _filename);
+		return nullptr;
+	}
+}

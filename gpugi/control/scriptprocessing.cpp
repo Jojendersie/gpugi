@@ -10,6 +10,8 @@ ScriptProcessing::ScriptProcessing() :
 	m_scriptWaitIterations(0),
 	m_consoleWindowThreadRunning(false)
 {
+	m_processPauseCommand.insert("waitSeconds");
+	m_processPauseCommand.insert("waitIterations");
 }
 
 void ScriptProcessing::RunScript(const std::string& _scriptFilename)
@@ -63,7 +65,7 @@ void ScriptProcessing::StopConsoleWindowThread()
 	}
 }
 
-void ScriptProcessing::ParseCommand(std::string _commandLine, bool _fromScriptFile)
+void ScriptProcessing::ParseCommand(std::string _commandLine, bool _fromScriptFile, bool& _stopProcessing)
 {
 	auto commentStart = _commandLine.find('#');
 	if (commentStart == std::string::npos)
@@ -117,7 +119,7 @@ void ScriptProcessing::ParseCommand(std::string _commandLine, bool _fromScriptFi
 				LOG_ERROR("The waitSeconds command expects a single number as argument.");
 			else
 				m_scriptWaitSeconds = argumentList[0].As<float>();
-			return;
+			_stopProcessing = true;
 		}
 		else if (name == "waitIterations")
 		{
@@ -125,7 +127,7 @@ void ScriptProcessing::ParseCommand(std::string _commandLine, bool _fromScriptFi
 				LOG_ERROR("The waitIterations command expects a single number as argument.");
 			else
 				m_scriptWaitIterations = argumentList[0].As<unsigned int>();
-			return;
+			_stopProcessing = true;
 		}
 	}
 
@@ -149,6 +151,8 @@ void ScriptProcessing::ParseCommand(std::string _commandLine, bool _fromScriptFi
 	{
 		LOG_ERROR(e.what());
 	}
+
+	_stopProcessing = m_processPauseCommand.find(name) != m_processPauseCommand.end();
 }
 
 void ScriptProcessing::ProcessCommandQueue(double timeDelta, unsigned int iterationDelta)
@@ -157,18 +161,20 @@ void ScriptProcessing::ProcessCommandQueue(double timeDelta, unsigned int iterat
 	if (m_scriptWaitIterations > 0)
 		m_scriptWaitIterations -= iterationDelta;
 
+	bool processingStop = false;
+
 	// Execute script commands.
-	while (m_scriptWaitSeconds <= 0.0f && m_scriptWaitIterations == 0 && !m_scriptCommandQueue.empty())
+	while (!m_scriptCommandQueue.empty() && !processingStop)
 	{
-		ParseCommand(m_scriptCommandQueue.front(), true);
+		ParseCommand(m_scriptCommandQueue.front(), true, processingStop);
 		m_scriptCommandQueue.pop();
 	}
 
 	// Execute console commands.
 	m_consoleCommandQueueMutex.lock();
-	while (!m_consoleCommandQueue.empty())
+	while (!m_consoleCommandQueue.empty() && !processingStop)
 	{
-		ParseCommand(m_consoleCommandQueue.front(), false);
+		ParseCommand(m_consoleCommandQueue.front(), false, processingStop);
 		m_consoleCommandQueue.pop();
 	}
 	m_consoleCommandQueueMutex.unlock();

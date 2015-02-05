@@ -46,6 +46,12 @@
     <Filter Include="shader\debug">
       <UniqueIdentifier>{f815c6a0-4ed3-42e8-b04e-cd5b3201906f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="code\imageut">
+      <UniqueIdentifier>{7ee38e9e-2fc5-446b-873b-3388b1f2f02c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shader\utils">
+      <UniqueIdentifier>{d466beef-87c8-48e9-a60f-f4fec06bd745}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="outputwindow.cpp">
@@ -77,9 +83,6 @@
     </ClCompile>
     <ClCompile Include="control\globalconfig.cpp">
       <Filter>code\control</Filter>
-    </ClCompile>
-    <ClCompile Include="hdrimage.cpp">
-      <Filter>code</Filter>
     </ClCompile>
     <ClCompile Include="camera\interactivecamera.cpp">
       <Filter>code\camera</Filter>
@@ -156,6 +159,12 @@
     <ClCompile Include="..\dependencies\glhelper\glhelper\texturebufferview.cpp">
       <Filter>dependencies\glhelper</Filter>
     </ClCompile>
+    <ClCompile Include="imageut\texturemse.cpp">
+      <Filter>code\imageut</Filter>
+    </ClCompile>
+    <ClCompile Include="imageut\hdrimage.cpp">
+      <Filter>code\imageut</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -193,9 +202,6 @@
     </ClInclude>
     <ClInclude Include="control\globalconfig.hpp">
       <Filter>code\control</Filter>
-    </ClInclude>
-    <ClInclude Include="hdrimage.hpp">
-      <Filter>code</Filter>
     </ClInclude>
     <ClInclude Include="camera\interactivecamera.hpp">
       <Filter>code\camera</Filter>
@@ -297,6 +303,12 @@
     <ClInclude Include="..\dependencies\glhelper\glhelper\texturebufferview.hpp">
       <Filter>dependencies\glhelper</Filter>
     </ClInclude>
+    <ClInclude Include="imageut\texturemse.hpp">
+      <Filter>code\imageut</Filter>
+    </ClInclude>
+    <ClInclude Include="imageut\hdrimage.hpp">
+      <Filter>code\imageut</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\globaluniforms.glsl">
@@ -318,9 +330,6 @@
       <Filter>shader</Filter>
     </None>
     <None Include="shader\scenedata.glsl">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\screenTri.vert">
       <Filter>shader</Filter>
     </None>
     <None Include="shader\displayHDR.frag">
@@ -382,6 +391,12 @@
     </None>
     <None Include="shader\debug\hierarchybox.frag">
       <Filter>shader\debug</Filter>
+    </None>
+    <None Include="shader\utils\sqerror.frag">
+      <Filter>shader\utils</Filter>
+    </None>
+    <None Include="shader\utils\screenTri.vert">
+      <Filter>shader\utils</Filter>
     </None>
   </ItemGroup>
 </Project>
