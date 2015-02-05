@@ -10,8 +10,6 @@ ScriptProcessing::ScriptProcessing() :
 	m_scriptWaitIterations(0),
 	m_consoleWindowThreadRunning(false)
 {
-	m_processPauseCommand.insert("waitSeconds");
-	m_processPauseCommand.insert("waitIterations");
 }
 
 void ScriptProcessing::RunScript(const std::string& _scriptFilename)
@@ -120,6 +118,7 @@ void ScriptProcessing::ParseCommand(std::string _commandLine, bool _fromScriptFi
 			else
 				m_scriptWaitSeconds = argumentList[0].As<float>();
 			_stopProcessing = true;
+			return;
 		}
 		else if (name == "waitIterations")
 		{
@@ -128,6 +127,7 @@ void ScriptProcessing::ParseCommand(std::string _commandLine, bool _fromScriptFi
 			else
 				m_scriptWaitIterations = argumentList[0].As<unsigned int>();
 			_stopProcessing = true;
+			return;
 		}
 	}
 
@@ -164,7 +164,7 @@ void ScriptProcessing::ProcessCommandQueue(double timeDelta, unsigned int iterat
 	bool processingStop = false;
 
 	// Execute script commands.
-	while (!m_scriptCommandQueue.empty() && !processingStop)
+	while (m_scriptWaitSeconds <= 0.0f && m_scriptWaitIterations == 0 && !m_scriptCommandQueue.empty() && !processingStop)
 	{
 		ParseCommand(m_scriptCommandQueue.front(), true, processingStop);
 		m_scriptCommandQueue.pop();
