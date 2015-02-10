@@ -80,6 +80,7 @@ HierarchyVisualization::HierarchyVisualization(const Renderer& _parentRenderer) 
 HierarchyVisualization::~HierarchyVisualization()
 {
 	GlobalConfig::RemoveParameter("hvis_range");
+	GlobalConfig::RemoveParameter("hvis_solid");
 }
 
 void HierarchyVisualization::SetScene(std::shared_ptr<Scene> _scene)

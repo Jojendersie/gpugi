@@ -6,3 +6,8 @@ resolution = 1024, 768
 
 renderer=0
 //debugrenderer=0
+
+//referenceImage=sibenik_ref.pfm
+//mseCheckInterval=10
+//waitMSE=0.005
+//exit
