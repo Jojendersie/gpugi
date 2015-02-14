@@ -1,4 +1,5 @@
 #include "pathtracer.hpp"
+#include "renderersystem.hpp"
 #include "debugrenderer/raytracemeshinfo.hpp"
 #include "debugrenderer/hierarchyvisualization.hpp"
 #include <glhelper/texture2d.hpp>
@@ -7,7 +8,8 @@
 
 const ei::UVec2 Pathtracer::m_localSizePathtracer = ei::UVec2(8, 8);
 
-Pathtracer::Pathtracer() :
+Pathtracer::Pathtracer(RendererSystem& _rendererSystem) :
+	Renderer(_rendererSystem),
 	m_pathtracerShader("pathtracer")
 {
 	std::string additionalDefines;
@@ -28,37 +30,16 @@ Pathtracer::Pathtracer() :
 		shaderBinaryFile.close();
 	} */
 
-	InitStandardUBOs(m_pathtracerShader);
-	SetNumInitialLightSamples(128);
-
-	// Create debug renderers.
-	m_debugRenderConstructors.push_back(std::make_pair([=](){ return std::make_unique<RaytraceMeshInfo>(*this); }, RaytraceMeshInfo::Name));
-	m_debugRenderConstructors.push_back(std::make_pair([=](){ return std::make_unique<HierarchyVisualization>(*this); }, HierarchyVisualization::Name));
+	m_rendererSystem.SetNumInitialLightSamples(128);
 }
 
-void Pathtracer::SetScreenSize(const ei::IVec2& _newSize)
+void Pathtracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 {
-	Renderer::SetScreenSize(_newSize);
-	m_backbuffer->BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
+	_newBackbuffer.BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
 }
 
 void Pathtracer::Draw()
 {
-	if (m_activeDebugRenderer != nullptr)
-	{
-		m_activeDebugRenderer->Draw();
-	}
-	else
-	{
-		++m_iterationCount;
-
-		m_pathtracerShader.Activate();
-		GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / m_localSizePathtracer.x, m_backbuffer->GetHeight() / m_localSizePathtracer.y, 1);
-
-		PerIterationBufferUpdate();
-
-		// Ensure that all future fetches will use the modified data.
-		// See https://www.opengl.org/wiki/Memory_Model#Ensuring_visibility
-		GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT);
-	}
+	m_pathtracerShader.Activate();
+	GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localSizePathtracer.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localSizePathtracer.y, 1);
 }

@@ -387,6 +387,13 @@ void Scene::LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::uniqu
 		for (size_t i = 0; i < m_lightSummedArea.size(); ++i)
 			m_lightSummedArea[i] /= m_lightAreaSum;
 	}
+
+	// Normalize material emissivities
+	/*for (Material& mat : m_materials)
+	{
+		mat.emissivityRG /= m_lightAreaSum;
+		mat.emissivityB /= m_lightAreaSum;
+	}*/
 }
 
 void Scene::SanityCheck(Triangle* _triangles)

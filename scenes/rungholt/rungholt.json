@@ -638,5 +638,85 @@
     "refractionIndexK": [0.000000, 0.000000, 0.000000],
     "opacity": [1.000000, 1.000000, 1.000000],
     "emissivity": [100.000000, 100.000000, 100.000000]
+  },
+  "JoinedMaterial_#17": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 0.000000],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "JoinedMaterial_#68": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 0.000000],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "JoinedMaterial_#21": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 0.000000],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "JoinedMaterial_#72": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 0.000000],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "wire_228184153": {
+    "diffuse": [0.894100, 0.721600, 0.600000],
+    "reflectiveness": [0.350000, 0.350000, 0.350000, 128.000000],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [100.000000, 100.000000, 100.000000]
+  },
+  "wire_177028149": {
+    "diffuse": [0.694100, 0.109800, 0.584300],
+    "reflectiveness": [0.350000, 0.350000, 0.350000, 128.000000],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [100.000000, 100.000000, 100.000000]
+  },
+  "Redstone_Torch_(off)": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 0.000000],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Redstone_Torch_(on)": {
+    "diffuseTex": "rungholt-RGBA.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 0.000000],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacityTex": "rungholt-Alpha.png",
+    "emissivity": [100.000000, 80.000000, 80.000000]
+  },
+  "Jack-O-Lantern": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 0.000000],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
+  },
+  "Repeater_(on)": {
+    "diffuseTex": "rungholt-RGB.png",
+    "reflectiveness": [0.000000, 0.000000, 0.000000, 0.000000],
+    "refractionIndexN": [1.450000, 1.450000, 1.450000],
+    "refractionIndexK": [0.000000, 0.000000, 0.000000],
+    "opacity": [1.000000, 1.000000, 1.000000],
+    "emissivity": [0.000000, 0.000000, 0.000000]
   }
 }

@@ -75,9 +75,6 @@
     <ClCompile Include="Time\Implementation\Stopwatch.cpp">
       <Filter>code\Time\Implementation</Filter>
     </ClCompile>
-    <ClCompile Include="renderer\renderer.cpp">
-      <Filter>code\renderer</Filter>
-    </ClCompile>
     <ClCompile Include="control\scriptprocessing.cpp">
       <Filter>code\control</Filter>
     </ClCompile>
@@ -165,6 +162,9 @@
     <ClCompile Include="imageut\hdrimage.cpp">
       <Filter>code\imageut</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\renderersystem.cpp">
+      <Filter>code\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -193,9 +193,6 @@
     </ClInclude>
     <ClInclude Include="Time\Time.h">
       <Filter>code\Time</Filter>
-    </ClInclude>
-    <ClInclude Include="renderer\renderer.hpp">
-      <Filter>code\renderer</Filter>
     </ClInclude>
     <ClInclude Include="control\scriptprocessing.hpp">
       <Filter>code\control</Filter>
@@ -309,6 +306,12 @@
     <ClInclude Include="imageut\hdrimage.hpp">
       <Filter>code\imageut</Filter>
     </ClInclude>
+    <ClInclude Include="renderer\renderersystem.hpp">
+      <Filter>code\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\renderer.hpp">
+      <Filter>code\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\globaluniforms.glsl">
@@ -397,6 +400,9 @@
     </None>
     <None Include="shader\utils\screenTri.vert">
       <Filter>shader\utils</Filter>
+    </None>
+    <None Include="shader\dummy.comp">
+      <Filter>shader</Filter>
     </None>
   </ItemGroup>
 </Project>

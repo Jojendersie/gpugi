@@ -5,6 +5,8 @@
 class Camera
 {
 public:
+	Camera();
+	Camera(Camera& _camera);
 	Camera(const ei::Vec3& _position, const ei::Vec3& _lookat, float _aspectRatio, float _verticalFOV = 60.0f, const ei::Vec3& _up = ei::Vec3(0.0f, 1.0f, 0.0f));
 	virtual ~Camera();
 

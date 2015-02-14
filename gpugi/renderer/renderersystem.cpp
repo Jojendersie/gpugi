@@ -1,8 +1,10 @@
+#include "renderersystem.hpp"
 #include "renderer.hpp"
 
 #include <glhelper/texture2d.hpp>
 #include <glhelper/texturebufferview.hpp>
 #include <glhelper/uniformbufferview.hpp>
+#include <glhelper/shaderobject.hpp>
 
 #include "../camera/camera.hpp"
 #include "../scene/scene.hpp"
@@ -17,17 +19,31 @@
 
 
 
-
-Renderer::Renderer() : m_iterationCount(0), m_numInitialLightSamples(0)
+RendererSystem::RendererSystem() : m_iterationCount(0), m_numInitialLightSamples(0), m_activeRenderer(nullptr), m_activeDebugRenderer(nullptr)
 {
+	std::unique_ptr<gl::ShaderObject> dummyShader(new gl::ShaderObject("dummy"));
+	dummyShader->AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/dummy.comp");
+	dummyShader->CreateProgram();
+	InitStandardUBOs(*dummyShader);
+	PerIterationBufferUpdate();
+	m_iterationCount = 0;
 }
 
-Renderer::~Renderer()
+RendererSystem::~RendererSystem()
 {
+	delete m_activeDebugRenderer;
+	delete m_activeRenderer;
 	GlobalConfig::RemoveParameter("debugrenderer");
 }
 
-void Renderer::InitStandardUBOs(const gl::ShaderObject& _reflectionShader)
+void RendererSystem::DisableDebugRenderer()
+{
+	delete m_activeDebugRenderer;
+	m_activeDebugRenderer = nullptr;
+}
+
+
+void RendererSystem::InitStandardUBOs(const gl::ShaderObject& _reflectionShader)
 {
 	m_globalConstUBO = std::make_unique<gl::UniformBufferView>(_reflectionShader, "GlobalConst");
 	m_cameraUBO = std::make_unique<gl::UniformBufferView>(_reflectionShader, "Camera");
@@ -40,17 +56,27 @@ void Renderer::InitStandardUBOs(const gl::ShaderObject& _reflectionShader)
 	m_materialUBO->BindBuffer((int)UniformBufferBindings::MATERIAL);
 }
 
-void Renderer::PerIterationBufferUpdate()
+void RendererSystem::PerIterationBufferUpdate(bool _iterationIncrement)
 {
+	if (_iterationIncrement)
+		++m_iterationCount;
+
 	(*m_perIterationUBO)["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
 	m_perIterationUBO->GetBuffer()->Flush();
 
 	// There could be some performance gain in double/triple buffering this buffer.
-	m_lightTriangleSampler.GenerateRandomSamples(static_cast<LightTriangleSampler::LightSample*>(m_initialLightSampleBuffer->GetBuffer()->Map()), m_numInitialLightSamples);
-	m_initialLightSampleBuffer->GetBuffer()->Flush();
+	if (m_initialLightSampleBuffer)
+	{
+		m_lightTriangleSampler.GenerateRandomSamples(static_cast<LightTriangleSampler::LightSample*>(m_initialLightSampleBuffer->GetBuffer()->Map()), m_numInitialLightSamples);
+		m_initialLightSampleBuffer->GetBuffer()->Flush();
+	}
+
+	// Ensure that all future fetches will use the modified data.
+	// See https://www.opengl.org/wiki/Memory_Model#Ensuring_visibility
+	GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
-void Renderer::SetNumInitialLightSamples(unsigned int _numInitialLightSamples)
+void RendererSystem::SetNumInitialLightSamples(unsigned int _numInitialLightSamples)
 {
 	m_numInitialLightSamples = _numInitialLightSamples;
 
@@ -63,7 +89,7 @@ void Renderer::SetNumInitialLightSamples(unsigned int _numInitialLightSamples)
 	UpdateGlobalConstUBO();
 }
 
-void Renderer::SetScene(std::shared_ptr<Scene> _scene)
+void RendererSystem::SetScene(std::shared_ptr<Scene> _scene)
 {
 	m_scene = _scene;
 
@@ -92,43 +118,72 @@ void Renderer::SetScene(std::shared_ptr<Scene> _scene)
 
 
 	m_iterationCount = 0;
-	m_backbuffer->ClearToZero(0);
+	if (m_backbuffer)
+		m_backbuffer->ClearToZero(0);
 
-	
+	if (m_activeRenderer)
+		m_activeRenderer->SetScene(m_scene);
 	if (m_activeDebugRenderer)
 		m_activeDebugRenderer->SetScene(m_scene);
 }
 
-void Renderer::SetCamera(const Camera& _camera)
+void RendererSystem::SetCamera(const Camera& _camera)
 {
-	ei::Vec3 camU, camV, camW;
-	_camera.ComputeCameraParams(camU, camV, camW);
-	ei::Mat4x4 viewProjection;
-	_camera.ComputeViewProjection(viewProjection);
-
-	m_cameraUBO->GetBuffer()->Map();
-	(*m_cameraUBO)["CameraU"].Set(camU);
-	(*m_cameraUBO)["CameraV"].Set(camV);
-	(*m_cameraUBO)["CameraW"].Set(camW);
-	(*m_cameraUBO)["CameraPosition"].Set(_camera.GetPosition());
-	(*m_cameraUBO)["PixelArea"].Set(ei::len(ei::cross(camU * 2.0f / m_backbuffer->GetWidth(), camV * 2.0f / m_backbuffer->GetHeight())));
-	(*m_cameraUBO)["ViewProjection"].Set(viewProjection);
-	m_cameraUBO->GetBuffer()->Unmap();
-
 	m_iterationCount = 0;
-	m_backbuffer->ClearToZero(0);
+	m_camera = _camera;
+
+	if (m_backbuffer)
+	{
+		ei::Vec3 camU, camV, camW;
+		_camera.ComputeCameraParams(camU, camV, camW);
+		ei::Mat4x4 viewProjection;
+		_camera.ComputeViewProjection(viewProjection);
+
+		m_cameraUBO->GetBuffer()->Map();
+		(*m_cameraUBO)["CameraU"].Set(camU);
+		(*m_cameraUBO)["CameraV"].Set(camV);
+		(*m_cameraUBO)["CameraW"].Set(camW);
+		(*m_cameraUBO)["CameraPosition"].Set(_camera.GetPosition());
+		(*m_cameraUBO)["PixelArea"].Set(ei::len(ei::cross(camU * 2.0f / m_backbuffer->GetWidth(), camV * 2.0f / m_backbuffer->GetHeight())));
+		(*m_cameraUBO)["ViewProjection"].Set(viewProjection);
+		m_cameraUBO->GetBuffer()->Unmap();
+
+		m_backbuffer->ClearToZero(0);
+	}
+
+	if (m_activeRenderer)
+		m_activeRenderer->SetCamera(_camera);
 }
 
-void Renderer::SetScreenSize(const ei::IVec2& _newSize)
+void RendererSystem::SetScreenSize(const ei::IVec2& _newSize)
 {
 	m_backbuffer.reset(new gl::Texture2D(_newSize.x, _newSize.y, gl::TextureFormat::RGBA32F, 1, 0));
 	m_backbuffer->ClearToZero(0);
-
+	
 	UpdateGlobalConstUBO();
 	m_iterationCount = 0;
+
+	if (m_activeRenderer)
+		m_activeRenderer->SetScreenSize(*m_backbuffer);
 }
 
-void Renderer::UpdateGlobalConstUBO() 
+void RendererSystem::Draw()
+{
+	if (m_activeRenderer)
+	{
+		if (m_activeDebugRenderer)
+		{
+			m_activeDebugRenderer->Draw();
+		}
+		else
+		{
+			m_activeRenderer->Draw();
+			PerIterationBufferUpdate();
+		}
+	}
+}
+
+void RendererSystem::UpdateGlobalConstUBO() 
 {
 	if (!m_backbuffer)
 		return; // Backbuffer not yet created - this function will be called again if it is ready, so no hurry.
@@ -137,27 +192,4 @@ void Renderer::UpdateGlobalConstUBO()
 	(*m_globalConstUBO)["BackbufferSize"].Set(ei::IVec2(m_backbuffer->GetWidth(), m_backbuffer->GetHeight()));
 	(*m_globalConstUBO)["NumInitialLightSamples"].Set(static_cast<std::int32_t>(m_numInitialLightSamples));
 	m_globalConstUBO->GetBuffer()->Unmap();
-}
-
-void Renderer::RegisterDebugRenderStateConfigOptions()
-{
-	std::string description = "Set active debug renderer (will not change the current renderer).\n"
-								"-1: to disable any debug rendering.\n";
-	for (int i = 0; i < m_debugRenderConstructors.size(); ++i)
-		description += std::to_string(i) + ": " + m_debugRenderConstructors[i].second + "\n";
-	description.pop_back();
-
-	GlobalConfig::AddParameter("debugrenderer", { -1 }, description);
-	GlobalConfig::AddListener("debugrenderer", "Renderer", [&](const GlobalConfig::ParameterType& p) { 
-		int index = p[0].As<int>();
-		m_activeDebugRenderer.reset();
-		if (index >= 0 && index < m_debugRenderConstructors.size())
-		{
-			LOG_LVL0("Switching to debug renderer " << index);
-			m_activeDebugRenderer = m_debugRenderConstructors[index].first();
-			if (m_scene)
-				m_activeDebugRenderer->SetScene(m_scene);
-		}
-	});
-	
 }

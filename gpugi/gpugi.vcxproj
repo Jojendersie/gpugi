@@ -172,7 +172,7 @@
     <ClCompile Include="renderer\debugrenderer\raytracemeshinfo.cpp" />
     <ClCompile Include="renderer\lightpathtracer.cpp" />
     <ClCompile Include="renderer\pathtracer.cpp" />
-    <ClCompile Include="renderer\renderer.cpp" />
+    <ClCompile Include="renderer\renderersystem.cpp" />
     <ClCompile Include="scene\lighttrianglesampler.cpp" />
     <ClCompile Include="scene\scene.cpp" />
     <ClCompile Include="Time\Implementation\Stopwatch.cpp" />
@@ -218,6 +218,7 @@
     <ClInclude Include="renderer\lightpathtracer.hpp" />
     <ClInclude Include="renderer\pathtracer.hpp" />
     <ClInclude Include="renderer\renderer.hpp" />
+    <ClInclude Include="renderer\renderersystem.hpp" />
     <ClInclude Include="scene\lighttrianglesampler.hpp" />
     <ClInclude Include="scene\scene.hpp" />
     <ClInclude Include="Time\Implementation\Time_inl.h" />
@@ -249,6 +250,7 @@
     <None Include="shader\debug\raytracemeshinfo.frag" />
     <None Include="shader\debug\screenTri.vert" />
     <None Include="shader\displayHDR.frag" />
+    <None Include="shader\dummy.comp" />
     <None Include="shader\globaluniforms.glsl" />
     <None Include="shader\helper.glsl" />
     <None Include="shader\intersectiontests.glsl" />

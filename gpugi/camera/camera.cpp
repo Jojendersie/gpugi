@@ -4,11 +4,29 @@
 
 bool Camera::s_anyCameraConnectedToGlobalConfig = false;
 
-Camera::Camera(const ei::Vec3& _position, const ei::Vec3& _lookat, float _aspectRatio, float _hfov, const ei::Vec3& _up) :
+Camera::Camera() :
+	m_position(),
+	m_lookat(),
+	m_aspectRatio(1.0f),
+	m_yfov(),
+	m_up(),
+	m_connectedToGlobalConfig(false)
+{}
+
+Camera::Camera(Camera& _camera) :
+	m_position(_camera.m_position),
+	m_lookat(_camera.m_lookat),
+	m_aspectRatio(_camera.m_aspectRatio),
+	m_yfov(_camera.m_yfov),
+	m_up(_camera.m_up),
+	m_connectedToGlobalConfig(false)
+{}
+
+Camera::Camera(const ei::Vec3& _position, const ei::Vec3& _lookat, float _aspectRatio, float _yFov, const ei::Vec3& _up) :
 	m_position(_position),
 	m_lookat(_lookat),
 	m_aspectRatio(_aspectRatio),
-	m_yfov(_hfov),
+	m_yfov(_yFov),
 	m_up(_up),
 	m_connectedToGlobalConfig(false)
 {

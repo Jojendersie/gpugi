@@ -7,7 +7,7 @@
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
-#define MAX_PATHLENGTH 8
+#define MAX_PATHLENGTH 4
 #define MIN_CONNECTION_DISTSQ 0.001
 
 #define LOCAL_SIZE 8

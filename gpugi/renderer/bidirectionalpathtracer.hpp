@@ -3,6 +3,7 @@
 #include "renderer.hpp"
 #include <glhelper/screenalignedtriangle.hpp>
 #include <glhelper/framebufferobject.hpp>
+#include <glhelper/shaderobject.hpp>
 #include "../scene/lighttrianglesampler.hpp"
 
 namespace gl
@@ -15,11 +16,11 @@ namespace gl
 class BidirectionalPathtracer : public Renderer
 {
 public:
-	BidirectionalPathtracer();
+	BidirectionalPathtracer(RendererSystem& _rendererSystem);
 	
 	std::string GetName() const override  { return "BPT"; }
 
-	void SetScreenSize(const ei::IVec2& newSize) override;
+	void SetScreenSize(const gl::Texture2D& _newBackbuffer) override;
 
 	void Draw() override;
 

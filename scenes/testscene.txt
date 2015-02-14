@@ -4,5 +4,9 @@ cameraLookAt = 0.0, 1.5, 2.0
 cameraFOV = 67
 resolution = 1024, 768
 
-
-renderer=2
+//waitSeconds=2
+renderer=0
+//referenceImage=ref.pfm
+//mseCheckInterval = 10
+//waitMSE = 0.001
+//exit

@@ -3,7 +3,7 @@
 #include "renderer.hpp"
 #include <glhelper/screenalignedtriangle.hpp>
 #include <glhelper/framebufferobject.hpp>
-#include "../scene/lighttrianglesampler.hpp"
+#include <glhelper/shaderobject.hpp>
 
 namespace gl
 {
@@ -14,11 +14,11 @@ namespace gl
 class LightPathtracer : public Renderer
 {
 public:
-	LightPathtracer();
+	LightPathtracer(RendererSystem& _rendererSystem);
 	
 	std::string GetName() const override  { return "LPT"; }
 
-	void SetScreenSize(const ei::IVec2& newSize) override;
+	void SetScreenSize(const gl::Texture2D& _newBackbuffer) override;
 
 	void Draw() override;
 

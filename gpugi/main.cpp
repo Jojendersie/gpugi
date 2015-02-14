@@ -8,9 +8,12 @@
 #include "control/globalconfig.hpp"
 #include "control/scriptprocessing.hpp"
 
+#include "renderer/renderersystem.hpp"
 #include "renderer/pathtracer.hpp"
 #include "renderer/lightpathtracer.hpp"
 #include "renderer/bidirectionalpathtracer.hpp"
+#include "renderer/debugrenderer/hierarchyvisualization.hpp"
+#include "renderer/debugrenderer/raytracemeshinfo.hpp"
 
 #include "camera/interactivecamera.hpp"
 
@@ -48,6 +51,9 @@ public:
 		m_camera = std::make_unique<InteractiveCamera>(m_window->GetGLFWWindow(), ei::Vec3(0.0f), ei::Vec3(0.0f, 0.0f, 1.0f),
 														static_cast<float>(m_window->GetResolution().x) / m_window->GetResolution().y, 70.0f);
 
+		// Create persistent render system.
+		m_rendererSystem = std::make_unique<RendererSystem>();
+
 		// Module for image-MSE checks.
 		m_textureMSE = std::make_unique<TextureMSE>();
 
@@ -83,10 +89,7 @@ public:
 
 		// Camera
 		m_camera->ConnectToGlobalConfig();
-		auto updateCamera = [=](const GlobalConfig::ParameterType& p){
-			if (m_renderer)
-				m_renderer->SetCamera(*m_camera);
-		};
+		auto updateCamera = [=](const GlobalConfig::ParameterType& p) { m_rendererSystem->SetCamera(*m_camera); };
 		GlobalConfig::AddListener("cameraPos", "update renderer cam", updateCamera);
 		GlobalConfig::AddListener("cameraLookAt", "update renderer cam", updateCamera);
 		GlobalConfig::AddListener("cameraFOV", "update renderer cam", updateCamera);
@@ -94,19 +97,23 @@ public:
 
 		// Renderer change function.
 		GlobalConfig::AddParameter("renderer", { 0 }, "Change this value to change the active renderer (resets previous results!).\n"
-			"0: Pathtracer (\"ReferenceRenderer\"\n"
-			"1: LightPathtracer\n"
-			"2: BidirectionalPathtracer");
+														"0: Pathtracer\n"
+														"1: LightPathtracer\n"
+														"2: BidirectionalPathtracer");
 		GlobalConfig::AddListener("renderer", "ChangeRenderer", std::bind(&Application::SwitchRenderer, this, std::placeholders::_1));
+
+		GlobalConfig::AddParameter("debugrenderer", { -1 }, "Set active debug renderer (will not change the current renderer).\n"
+															"-1: to disable any debug rendering.\n"
+															"0: RayTraceMeshInfo\n"
+															"1: Hierachyvisualization");
+		GlobalConfig::AddListener("debugrenderer", "Renderer", std::bind(&Application::SwitchDebugRenderer, this, std::placeholders::_1));
+
 
 		// Resolution change
 		GlobalConfig::AddListener("resolution", "global camera aspect", [=](const GlobalConfig::ParameterType& p) {
 			m_camera->SetAspectRatio(p[0].As<float>() / p[1].As<float>());
-			if (m_renderer)
-			{
-				m_renderer->SetCamera(*m_camera);
-				m_renderer->SetScreenSize(ei::IVec2(p[0].As<int>(), p[1].As<int>()));
-			}
+			m_rendererSystem->SetCamera(*m_camera);
+			m_rendererSystem->SetScreenSize(ei::IVec2(p[0].As<int>(), p[1].As<int>()));
 		});
 
 		// Scene change functions.
@@ -115,8 +122,7 @@ public:
 			std::string sceneFilename = p[0].As<std::string>();
 			std::cout << "Loading scene " << sceneFilename;
 			m_scene = std::make_shared<Scene>(sceneFilename);
-			if (m_renderer)
-				m_renderer->SetScene(m_scene);
+			m_rendererSystem->SetScene(m_scene);
 
 			InteractiveCamera* icam = dynamic_cast<InteractiveCamera*>(m_camera.get());
 			if (icam)
@@ -164,34 +170,44 @@ public:
 		{
 		case 0:
 			LOG_LVL2("Switching to Pathtracer...");
-			m_renderer.reset();
-			m_renderer.reset(new Pathtracer());
+			m_rendererSystem->SetRenderer<Pathtracer>();
 			break;
 
 		case 1:
 			LOG_LVL2("Switching to LightPathtracer...");
-			m_renderer.reset();
-			m_renderer.reset(new LightPathtracer());
+			m_rendererSystem->SetRenderer<LightPathtracer>();
 			break;
 
 		case 2:
 			LOG_LVL2("Switching to Bidirectional Pathtracer...");
-			m_renderer.reset();
-			m_renderer.reset(new BidirectionalPathtracer());
+			m_rendererSystem->SetRenderer<BidirectionalPathtracer>();
 			break;
 
 		default:
 			LOG_ERROR("Unknown renderer index!");
 			return;
 		}
-
-		m_renderer->SetScreenSize(m_window->GetResolution());
-		m_renderer->SetCamera(*m_camera);
-		if (m_scene)
+	}
+	void SwitchDebugRenderer(const GlobalConfig::ParameterType& p)
+	{
+		switch (p[0].As<int>())
 		{
-			m_renderer->SetScene(m_scene);
+		case -1:
+			LOG_LVL2("Disabling Debug Renderer");
+			m_rendererSystem->DisableDebugRenderer();
+			break;
+
+		case 0:
+			m_rendererSystem->SetDebugRenderer<RaytraceMeshInfo>();
+			break;
+		case 1:
+			m_rendererSystem->SetDebugRenderer<HierarchyVisualization>();
+			break;
+
+		default:
+			LOG_ERROR("Unknown renderer index!");
+			return;
 		}
-		m_renderer->RegisterDebugRenderStateConfigOptions();
 	}
 
 	void Run()
@@ -221,13 +237,13 @@ private:
 
 		Input();
 
-		if (m_renderer)
+		if (m_rendererSystem->GetActiveRenderer())
 		{
 			if (m_camera->Update(timeSinceLastUpdate))
-				m_renderer->SetCamera(*m_camera);
+				m_rendererSystem->SetCamera(*m_camera);
 
 
-			m_window->SetTitle(m_renderer->GetName() + " - iteration: " + std::to_string(m_renderer->GetIterationCount()) + " - time per frame " +
+			m_window->SetTitle(m_rendererSystem->GetActiveRenderer()->GetName() + " - iteration: " + std::to_string(m_rendererSystem->GetIterationCount()) + " - time per frame " +
 				std::to_string(timeSinceLastUpdate.GetMilliseconds()) + "ms (FPS: " + std::to_string(1.0f / timeSinceLastUpdate.GetSeconds()) + ")");
 		}
 		else
@@ -236,14 +252,14 @@ private:
 
 	void Draw()
 	{
-		if (!m_renderer)
+		if (!m_rendererSystem->GetActiveRenderer())
 			return;
 
-		m_renderer->Draw();
+		m_rendererSystem->Draw();
 
-		if (!m_renderer->IsDebugRendererActive())
+		if (!m_rendererSystem->IsDebugRendererActive())
 		{
-			m_window->DisplayHDRTexture(m_renderer->GetBackbuffer(), m_renderer->GetIterationCount());
+			m_window->DisplayHDRTexture(m_rendererSystem->GetBackbuffer(), m_rendererSystem->GetIterationCount());
 			MSEChecks();
 		}
 		
@@ -257,8 +273,8 @@ private:
 		if (mseCheckInterval > 0 && m_iterationSinceLastMSECheck >= mseCheckInterval)
 		{
 			m_iterationSinceLastMSECheck = 0;
-			float mse = m_textureMSE->ComputeCurrentMSE(m_renderer->GetBackbuffer(), m_renderer->GetIterationCount());
-			LOG_LVL2("Iteration " << m_renderer->GetIterationCount() << " MSE: " << mse);
+			float mse = m_textureMSE->ComputeCurrentMSE(m_rendererSystem->GetBackbuffer(), m_rendererSystem->GetIterationCount());
+			LOG_LVL2("Iteration " << m_rendererSystem->GetIterationCount() << " MSE: " << mse);
 
 			if (m_scriptWaitsForMSE)
 			{
@@ -300,27 +316,27 @@ private:
 
 	void SaveImage(const std::string& name = "")
 	{
-		if (!m_renderer)
+		if (!m_rendererSystem->GetActiveRenderer())
 			return;
 
 		time_t t = time(0);   // get time now
 		struct tm* now = localtime(&t);
         std::string date = UIntToMinLengthString(now->tm_mon+1, 2) + "." + UIntToMinLengthString(now->tm_mday, 2) + " " +
 						   UIntToMinLengthString(now->tm_hour, 2) + "h" + UIntToMinLengthString(now->tm_min, 2) + "m" + std::to_string(now->tm_sec) + "s ";
-		std::string filename = "../screenshots/" + date + m_renderer->GetName() + " " +
-                                 std::to_string(m_renderer->GetIterationCount()) + "it"
+		std::string filename = "../screenshots/" + date + m_rendererSystem->GetActiveRenderer()->GetName() + " " +
+								std::to_string(m_rendererSystem->GetIterationCount()) + "it"
                                 ".pfm";
 		if (!name.empty())
 			filename = name + " " + filename;
-		gl::Texture2D& backbuffer = m_renderer->GetBackbuffer();
+		gl::Texture2D& backbuffer = m_rendererSystem->GetBackbuffer();
 		std::unique_ptr<ei::Vec4[]> imageData(new ei::Vec4[backbuffer.GetWidth() * backbuffer.GetHeight()]);
 		backbuffer.ReadImage(0, gl::TextureReadFormat::RGBA, gl::TextureReadType::FLOAT, backbuffer.GetWidth() * backbuffer.GetHeight() * sizeof(ei::Vec4), imageData.get());
-		if(WritePfm(imageData.get(), ei::IVec2(backbuffer.GetWidth(), backbuffer.GetHeight()), filename, m_renderer->GetIterationCount()))
+		if (WritePfm(imageData.get(), ei::IVec2(backbuffer.GetWidth(), backbuffer.GetHeight()), filename, m_rendererSystem->GetIterationCount()))
 			LOG_LVL1("Wrote screenshot \"" + filename + "\"");
 	}
 
 	ScriptProcessing m_scriptProcessing;
-	std::unique_ptr<Renderer> m_renderer;
+	std::unique_ptr<RendererSystem> m_rendererSystem;
 	std::unique_ptr<OutputWindow> m_window;
 	std::unique_ptr<InteractiveCamera> m_camera;
     std::shared_ptr<Scene> m_scene;

@@ -1,4 +1,5 @@
 #include "bidirectionalpathtracer.hpp"
+#include "renderersystem.hpp"
 #include <glhelper/texture2d.hpp>
 #include <glhelper/shaderstoragebufferview.hpp>
 #include <glhelper/uniformbufferview.hpp>
@@ -10,7 +11,8 @@
 const unsigned int BidirectionalPathtracer::m_localSizeLightPathtracer = 8*8;
 const ei::UVec2 BidirectionalPathtracer::m_localSizePathtracer = ei::UVec2(8, 8);
 
-BidirectionalPathtracer::BidirectionalPathtracer() :
+BidirectionalPathtracer::BidirectionalPathtracer(RendererSystem& _rendererSystem) :
+	Renderer(_rendererSystem),
 	m_lighttraceShader("lighttracer_bidir"),
 	m_pathtraceShader("pathtracer_bidir"),
 	m_warmupLighttraceShader("lighttracer_warmup_bidir")
@@ -56,25 +58,21 @@ BidirectionalPathtracer::BidirectionalPathtracer() :
 	m_lightCacheFillCounter = std::make_unique<gl::ShaderStorageBufferView>(std::make_shared<gl::Buffer>(4, gl::Buffer::Usage::MAP_READ), "LightCacheCount");
 	m_warmupLighttraceShader.BindSSBO(*m_lightCacheFillCounter);
 
-	InitStandardUBOs(m_lighttraceShader);
-	SetNumInitialLightSamples(128);
+	m_rendererSystem.SetNumInitialLightSamples(128);
 }
 
-void BidirectionalPathtracer::SetScreenSize(const ei::IVec2& _newSize)
+void BidirectionalPathtracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 {
-	Renderer::SetScreenSize(_newSize);
-	m_backbuffer->BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
-
-	m_iterationCount = 0;
+	_newBackbuffer.BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
 
 	// Lock texture for light-camera path connections.
-	m_lockTexture.reset(new gl::Texture2D(_newSize.x, _newSize.y, gl::TextureFormat::R32UI));
+	m_lockTexture.reset(new gl::Texture2D(_newBackbuffer.GetWidth(), _newBackbuffer.GetHeight(), gl::TextureFormat::R32UI));
 	m_lockTexture->ClearToZero(0);
 	m_lockTexture->BindImage(1, gl::Texture::ImageAccess::READ_WRITE);
 
 	// Rule: Every block (size = m_localSizeLightPathtracer) should work with the same initial light sample!
-	int numPixels = _newSize.x * _newSize.y;
-	m_numRaysPerLightSample = std::max(m_localSizeLightPathtracer, (numPixels / GetNumInitialLightSamples() / m_localSizeLightPathtracer) * m_localSizeLightPathtracer);
+	int numPixels = _newBackbuffer.GetWidth() * _newBackbuffer.GetHeight();
+	m_numRaysPerLightSample = std::max(m_localSizeLightPathtracer, (numPixels / m_rendererSystem.GetNumInitialLightSamples() / m_localSizeLightPathtracer) * m_localSizeLightPathtracer);
 
 	// Set constants ...
 	m_lightpathtraceUBO->GetBuffer()->Map();
@@ -96,7 +94,7 @@ void BidirectionalPathtracer::CreateLightCacheWithCapacityEstimate()
 	LOG_LVL2("Starting bpt warmup to estimate needed light cache capacity...");
 	m_warmupLighttraceShader.Activate();
 	static const unsigned int numWarmupRuns = 8;
-	const unsigned int blockCountPerRun = GetNumInitialLightSamples() * m_numRaysPerLightSample / m_localSizeLightPathtracer;
+	const unsigned int blockCountPerRun = m_rendererSystem.GetNumInitialLightSamples() * m_numRaysPerLightSample / m_localSizeLightPathtracer;
 	std::uint64_t numCacheEntries = 0;
 	std::uint64_t summedPathLength = 0;
 	for (unsigned int run = 0; run < numWarmupRuns; ++run)
@@ -119,12 +117,11 @@ void BidirectionalPathtracer::CreateLightCacheWithCapacityEstimate()
 		m_warmupLighttraceShader.BindSSBO(*lightPathLengthBuffer);
 
 		// Important to change random seed
-		++m_iterationCount;
-		PerIterationBufferUpdate();
+		m_rendererSystem.PerIterationBufferUpdate();
 	}
 
 	// Reset iteration count for actual rendering
-	m_iterationCount = 0;
+	m_rendererSystem.ResetIterationCount();
 
 	// Take mean and report to log.
 	int averageLightPathLength = static_cast<int>(summedPathLength / numWarmupRuns / blockCountPerRun / m_localSizeLightPathtracer + 1); // Rounding up (for such large numbers this means +1 almost always)
@@ -159,21 +156,12 @@ void BidirectionalPathtracer::Draw()
 		m_needToDetermineNeededLightCacheCapacity = false;
 	}
 
-	++m_iterationCount;
-
 	m_lighttraceShader.Activate();
-	GL_CALL(glDispatchCompute, GetNumInitialLightSamples() * m_numRaysPerLightSample / m_localSizeLightPathtracer, 1, 1);
+	GL_CALL(glDispatchCompute, m_rendererSystem.GetNumInitialLightSamples() * m_numRaysPerLightSample / m_localSizeLightPathtracer, 1, 1);
 
 	GL_CALL(glMemoryBarrier, GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); // Output texture
 	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT); // Light Cache
 
 	m_pathtraceShader.Activate();
-	GL_CALL(glDispatchCompute, m_backbuffer->GetWidth() / m_localSizePathtracer.x, m_backbuffer->GetHeight() / m_localSizePathtracer.y, 1);
-
-
-	PerIterationBufferUpdate();
-
-	// Ensure that all future fetches will use the modified data.
-	// See https://www.opengl.org/wiki/Memory_Model#Ensuring_visibility
-	GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localSizePathtracer.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localSizePathtracer.y, 1);
 }

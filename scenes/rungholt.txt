@@ -5,3 +5,4 @@ cameraFOV = 70
 resolution = 1024, 768
 
 renderer=0
+debugrenderer=1
