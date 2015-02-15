@@ -12,6 +12,7 @@
 #include "renderer/pathtracer.hpp"
 #include "renderer/lightpathtracer.hpp"
 #include "renderer/bidirectionalpathtracer.hpp"
+#include "renderer/hierarchyimportance.hpp"
 #include "renderer/debugrenderer/hierarchyvisualization.hpp"
 #include "renderer/debugrenderer/raytracemeshinfo.hpp"
 
@@ -99,7 +100,8 @@ public:
 		GlobalConfig::AddParameter("renderer", { 0 }, "Change this value to change the active renderer (resets previous results!).\n"
 														"0: Pathtracer\n"
 														"1: LightPathtracer\n"
-														"2: BidirectionalPathtracer");
+														"2: BidirectionalPathtracer\n"
+														"3: HierarchyImportance");
 		GlobalConfig::AddListener("renderer", "ChangeRenderer", std::bind(&Application::SwitchRenderer, this, std::placeholders::_1));
 
 		GlobalConfig::AddParameter("debugrenderer", { -1 }, "Set active debug renderer (will not change the current renderer).\n"
@@ -181,6 +183,11 @@ public:
 		case 2:
 			LOG_LVL2("Switching to Bidirectional Pathtracer...");
 			m_rendererSystem->SetRenderer<BidirectionalPathtracer>();
+			break;
+
+		case 3:
+			LOG_LVL2("Switching to Hierarchy Importance Renderer...");
+			m_rendererSystem->SetRenderer<HierarchyImportance>();
 			break;
 
 		default:
