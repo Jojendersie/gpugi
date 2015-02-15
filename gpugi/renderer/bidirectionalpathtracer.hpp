@@ -12,7 +12,6 @@ namespace gl
 	class UniformBufferView;
 }
 
-// Renderer that uses only light path -> camera connections to render the image.
 class BidirectionalPathtracer : public Renderer
 {
 public:

@@ -1,0 +1,43 @@
+#version 450
+
+#define TRIINDEX_OUTPUT
+#include "../stdheader.glsl"
+#include "importanceubo.glsl"
+
+
+layout(binding = 1, rgba32f) restrict writeonly uniform image2D OutputTexture;
+
+layout(binding = 0, std430) restrict readonly buffer HierarchyImportanceBuffer
+{
+	float HierarchyImportance[];
+};
+
+#define LOCAL_SIZE 8
+layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
+void main()
+{
+	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
+	uint randomSeed = InitRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
+	vec2 screenCoord = (vec2(0.5) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
+
+	Ray ray;
+	ray.Origin = CameraPosition;
+	ray.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
+
+	float outputImportance = 0.0;
+
+	int numTouchedTriangles = 0;
+
+	// Trace ray.
+	int triangleIndex;
+	Triangle triangle;
+	vec3 barycentricCoord;
+	float rayHit = RAY_MAX;
+	TraceRay(ray, rayHit, barycentricCoord, triangle, triangleIndex);
+	if(rayHit != RAY_MAX)
+	{
+		outputImportance = HierarchyImportance[NumInnerNodes + triangleIndex];
+	}
+
+	imageStore(OutputTexture, gridPosition, vec4(outputImportance * 0.0001));
+}

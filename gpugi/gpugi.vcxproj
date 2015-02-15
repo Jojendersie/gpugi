@@ -167,6 +167,7 @@
     <ClCompile Include="imageut\texturemse.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="outputwindow.cpp" />
+    <ClCompile Include="renderer\hierarchyimportance.cpp" />
     <ClCompile Include="renderer\bidirectionalpathtracer.cpp" />
     <ClCompile Include="renderer\debugrenderer\hierarchyvisualization.cpp" />
     <ClCompile Include="renderer\debugrenderer\raytracemeshinfo.cpp" />
@@ -211,6 +212,7 @@
     <ClInclude Include="imageut\hdrimage.hpp" />
     <ClInclude Include="imageut\texturemse.hpp" />
     <ClInclude Include="outputwindow.hpp" />
+    <ClInclude Include="renderer\hierarchyimportance.hpp" />
     <ClInclude Include="renderer\bidirectionalpathtracer.hpp" />
     <ClInclude Include="renderer\debugrenderer\debugrenderer.hpp" />
     <ClInclude Include="renderer\debugrenderer\hierarchyvisualization.hpp" />
@@ -253,6 +255,10 @@
     <None Include="shader\dummy.comp" />
     <None Include="shader\globaluniforms.glsl" />
     <None Include="shader\helper.glsl" />
+    <None Include="shader\hierarchy\hierarchypropagation.comp" />
+    <None Include="shader\hierarchy\importanceubo.glsl" />
+    <None Include="shader\hierarchy\trianglevis.comp" />
+    <None Include="shader\hierarchy\acquisition.comp" />
     <None Include="shader\intersectiontests.glsl" />
     <None Include="shader\lightcache.glsl" />
     <None Include="shader\lighttracer.comp" />

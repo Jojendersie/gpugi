@@ -52,6 +52,9 @@
     <Filter Include="shader\utils">
       <UniqueIdentifier>{d466beef-87c8-48e9-a60f-f4fec06bd745}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shader\importance">
+      <UniqueIdentifier>{fcf52a70-e3b8-4829-ad31-2ccd2b2e3090}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="outputwindow.cpp">
@@ -163,6 +166,9 @@
       <Filter>code\imageut</Filter>
     </ClCompile>
     <ClCompile Include="renderer\renderersystem.cpp">
+      <Filter>code\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\hierarchyimportance.cpp">
       <Filter>code\renderer</Filter>
     </ClCompile>
   </ItemGroup>
@@ -312,6 +318,9 @@
     <ClInclude Include="renderer\renderer.hpp">
       <Filter>code\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="renderer\hierarchyimportance.hpp">
+      <Filter>code\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\globaluniforms.glsl">
@@ -403,6 +412,18 @@
     </None>
     <None Include="shader\dummy.comp">
       <Filter>shader</Filter>
+    </None>
+    <None Include="shader\hierarchy\acquisition.comp">
+      <Filter>shader\importance</Filter>
+    </None>
+    <None Include="shader\hierarchy\hierarchypropagation.comp">
+      <Filter>shader\importance</Filter>
+    </None>
+    <None Include="shader\hierarchy\trianglevis.comp">
+      <Filter>shader\importance</Filter>
+    </None>
+    <None Include="shader\hierarchy\importanceubo.glsl">
+      <Filter>shader\importance</Filter>
     </None>
   </ItemGroup>
 </Project>

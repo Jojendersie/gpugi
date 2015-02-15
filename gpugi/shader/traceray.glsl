@@ -1,6 +1,7 @@
 // #define ANY_HIT
 // #define TRACERAY_DEBUG_VARS
 // #define TRINORMAL_OUTPUT
+// #define TRIINDEX_OUTPUT
 
 // TRINORMAL_OUTPUT: Attention! triangleNormal is not normalized
 
@@ -12,12 +13,15 @@
 	#ifdef TRINORMAL_OUTPUT
 		, out vec3 triangleNormal
 	#endif
+	#ifdef TRIINDEX_OUTPUT
+		, out int triangleIndex
+	#endif
 		)
 #endif
 {
 	int currentNodeIndex = 0;
 	int currentLeafIndex = 0; // For highly arcane, currently unknown reasons an initial value gives a distinct performance improvement: 10ms!!
-								//
+
 	vec3 invRayDir = 1.0 / ray.Direction;
 	bool nextIsLeafNode = false;
 
@@ -88,6 +92,10 @@
 
 					#ifdef TRINORMAL_OUTPUT
 						triangleNormal = newTriangleNormal;
+					#endif
+
+					#ifdef TRIINDEX_OUTPUT
+						triangleIndex = currentLeafIndex;
 					#endif
 
 						// Cannot return yet, there might be a triangle that is hit before this one!

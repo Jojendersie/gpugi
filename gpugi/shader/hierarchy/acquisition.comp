@@ -1,0 +1,115 @@
+#version 450
+#extension GL_NV_shader_atomic_float : require
+
+#define TRIINDEX_OUTPUT
+#include "../stdheader.glsl"
+#include "importanceubo.glsl"
+
+//layout(binding = 1, r32f) coherent uniform image2D HierarchyImportanceBuffer;
+layout(std430, binding = 0) restrict coherent buffer HierarchyImportanceBuffer
+{
+	float HierarchyImportance[];
+};
+
+#define NUM_LIGHT_SAMPLES 1
+#define MAX_PATHLENGTH 16
+
+#define LOCAL_SIZE 8
+layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
+void main()
+{
+	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
+	uint randomSeed = InitRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
+	vec2 screenCoord = (Random2(randomSeed) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
+
+	Ray ray;
+	ray.Origin = CameraPosition;
+	ray.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
+
+	vec3 pathThroughput = vec3(1.0);
+
+	float totalRadiance = 0.0f;
+	int touchedTriangleIndices[MAX_PATHLENGTH];
+
+	int numTouchedTriangles = 0;
+	for(; numTouchedTriangles<MAX_PATHLENGTH; ++numTouchedTriangles)
+	{
+		// Trace ray.
+		Triangle triangle;
+		vec3 barycentricCoord;
+		float rayHit = RAY_MAX;
+		TraceRay(ray, rayHit, barycentricCoord, triangle, touchedTriangleIndices[numTouchedTriangles]);
+		if(rayHit == RAY_MAX)
+			break;
+
+		// Compute hit normal and texture coordinate.
+		vec3 hitNormal; vec2 hitTexcoord;
+		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
+		// Get Material infos.
+		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
+
+
+		// Connect to random light samples ("Next Event Estimation")
+		Ray lightRay;
+		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
+		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
+		{
+		#ifdef SHOW_SPECIFIC_PATHLENGTH
+			if(i+1 != SHOW_SPECIFIC_PATHLENGTH)
+				break;
+		#endif
+
+			int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
+			vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2);
+			vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1);
+			
+			// Direction to light & distance.
+			lightRay.Direction = lightSamplePos_Norm0.xyz - ray.Origin;
+			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
+			float lightDist = sqrt(lightDistSq);
+			lightRay.Direction /= lightDist;
+
+			// Facing the light?
+			vec3 lightSampleDir = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
+			float lightSampleIntensityFactor = saturate(dot(lightSampleDir, -lightRay.Direction));
+			if(lightSampleIntensityFactor > 0.0)
+			{
+				lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + ray.Origin;
+
+				if(!TraceRayAnyHit(lightRay, lightDist))
+				{
+					// Hemispherical lambert emitter. First we want intensity, not radiance
+					vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border
+					vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
+
+					// Add Sample (L): L(hitPoint, lightRay.Direction) * bsdf * dot(lightRay.Direction, hitNormal)
+					// L(hitPoint, lightRay.Direction) = lightSampleIntensity / lightDistSq
+
+					vec3 irradiance = (saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in because of shading normals!
+					totalRadiance += GetLuminance(irradiance * pathThroughput * bsdf);
+				}
+			}
+		}
+
+		vec3 throughput = vec3(1.0);
+		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, throughput);
+		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
+		pathThroughput *= throughput;
+	#ifdef RUSSIAN_ROULETTE
+		float continuationPropability = saturate(GetLuminance(throughput));
+		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stoped -> >=
+			break;
+		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.
+	#endif
+	}
+
+	const float lightSampleWeight = float(NumInitialLightSamples) / NUM_LIGHT_SAMPLES; // This could be a uniform!
+	totalRadiance *= lightSampleWeight;
+
+	// Add radiance as importance to all hit triangles.
+	float firstTriagValue = 0.0;
+	for(int i=0; i<numTouchedTriangles; ++i)
+	{
+		atomicAdd(HierarchyImportance[NumInnerNodes + touchedTriangleIndices[i]], totalRadiance);
+	}
+}
