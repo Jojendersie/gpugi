@@ -249,13 +249,15 @@
     <None Include="..\dependencies\glhelper\glhelper\uniformbuffer.inl" />
     <None Include="shader\debug\hierarchybox.frag" />
     <None Include="shader\debug\hierarchybox.vert" />
+    <None Include="shader\debug\hierarchybox_importance.frag" />
     <None Include="shader\debug\raytracemeshinfo.frag" />
     <None Include="shader\debug\screenTri.vert" />
     <None Include="shader\displayHDR.frag" />
     <None Include="shader\dummy.comp" />
     <None Include="shader\globaluniforms.glsl" />
     <None Include="shader\helper.glsl" />
-    <None Include="shader\hierarchy\hierarchypropagation.comp" />
+    <None Include="shader\hierarchy\hierarchypropagation_init.comp" />
+    <None Include="shader\hierarchy\hierarchypropagation_nodes.comp" />
     <None Include="shader\hierarchy\importanceubo.glsl" />
     <None Include="shader\hierarchy\trianglevis.comp" />
     <None Include="shader\hierarchy\acquisition.comp" />

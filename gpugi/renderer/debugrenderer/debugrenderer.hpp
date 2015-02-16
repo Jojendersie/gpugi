@@ -12,7 +12,7 @@ class Renderer;
 class DebugRenderer
 {
 public:
-	DebugRenderer(const Renderer& _parentRenderer) : m_parentRenderer(_parentRenderer) {}
+	DebugRenderer(Renderer& _parentRenderer) : m_parentRenderer(_parentRenderer) {}
 	virtual ~DebugRenderer() {}
 
 	/// Sets the scene for the debug renderer.
@@ -25,5 +25,5 @@ public:
 	virtual void Draw() = 0;
 
 protected:
-	const Renderer& m_parentRenderer;
+	Renderer& m_parentRenderer;
 };

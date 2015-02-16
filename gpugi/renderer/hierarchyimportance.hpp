@@ -26,17 +26,23 @@ public:
 
 	/// Returns hierarchy importance for possible use in other systems.
 	///
-	/// Hierarchy importance is saved a texture for practical reasons:
-	/// Using a shader storage buffer with a single float array fails to compile on NVIDIA driver (15.02.2015) since its elements are collapsed to vec4 for which no atomic operation is available.
-	/// Texture buffers on the other hand do not support atomic operatoins at all.
-	std::shared_ptr<gl::Texture2D> GetHierachyImportance();
+	/// Contains a float entry for all inner nodes (first) and triangles (after node entries).
+	/// If no call of UpdateHierarchyNodeImportance proceeded, only the triangles have valid importance values.
+	std::shared_ptr<gl::ShaderStorageBufferView>& GetHierachyImportance() { return m_hierarchyImportance; }
+
+	/// Updates the hierarchy importance of all inner nodes by propagating them from the triangles up through the tree.
+	void UpdateHierarchyNodeImportance();
 
 	void Draw() override;
+
+	/// Internal ssbo binding point of the hierarchy importance buffer.
+	static const unsigned int s_hierarchyImportanceBinding = 0;
 
 private:
 	gl::ShaderObject m_hierarchyImpAcquisitionShader;
 	gl::ShaderObject m_hierarchyImpTriagVisShader;
-	gl::ShaderObject m_hierarchyImpPropagationShader;
+	gl::ShaderObject m_hierarchyImpPropagationInitShader;
+	gl::ShaderObject m_hierarchyImpPropagationNodeShader;
 
 	std::unique_ptr<gl::UniformBufferView> m_hierarchyImportanceUBO;
 	static const ei::UVec2 m_localSizePathtracer;

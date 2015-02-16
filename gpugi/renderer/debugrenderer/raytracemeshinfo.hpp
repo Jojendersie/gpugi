@@ -15,7 +15,7 @@ namespace gl
 class RaytraceMeshInfo : public DebugRenderer
 {
 public:
-	RaytraceMeshInfo(const Renderer& _parentRenderer);
+	RaytraceMeshInfo(Renderer& _parentRenderer);
 	~RaytraceMeshInfo();
 
 	static const std::string Name;

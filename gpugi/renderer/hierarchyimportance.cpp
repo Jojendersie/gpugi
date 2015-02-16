@@ -10,6 +10,7 @@
 #include <glhelper/shaderstoragebufferview.hpp>
 #include <glhelper/uniformbufferview.hpp>
 #include <glhelper/texturebufferview.hpp>
+#include <glhelper/utils/flagoperators.hpp>
 
 #include <fstream>
 
@@ -19,7 +20,8 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 	Renderer(_rendererSystem),
 	m_hierarchyImpAcquisitionShader("hierarchyImpAcquisition"),
 	m_hierarchyImpTriagVisShader("hierarchyImpTriagVis"),
-	m_hierarchyImpPropagationShader("hierarchyImpPropagation")
+	m_hierarchyImpPropagationInitShader("hierarchyImpPropagation_Init"),
+	m_hierarchyImpPropagationNodeShader("hierarchyImpPropagation_Node")
 {
 	std::string additionalDefines;
 #ifdef SHOW_SPECIFIC_PATHLENGTH
@@ -28,10 +30,12 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 
 	m_hierarchyImpAcquisitionShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/acquisition.comp", additionalDefines);
 	m_hierarchyImpAcquisitionShader.CreateProgram();
-	m_hierarchyImpTriagVisShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/trianglevis.comp", additionalDefines);
+	m_hierarchyImpTriagVisShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/trianglevis.comp");
 	m_hierarchyImpTriagVisShader.CreateProgram();
-	//m_hierarchyImpPropagationShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/trianglevis.comp", additionalDefines);
-	//m_hierarchyImpPropagationShader.CreateProgram();
+	m_hierarchyImpPropagationInitShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_init.comp");
+	m_hierarchyImpPropagationInitShader.CreateProgram();
+	m_hierarchyImpPropagationNodeShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_nodes.comp");
+	m_hierarchyImpPropagationNodeShader.CreateProgram();
 
 	m_hierarchyImportanceUBO.reset(new gl::UniformBufferView({ &m_hierarchyImpAcquisitionShader, &m_hierarchyImpTriagVisShader }, "HierarchyImportanceUBO"));
 	m_hierarchyImportanceUBO->BindBuffer(4);
@@ -46,7 +50,7 @@ void HierarchyImportance::SetScene(std::shared_ptr<Scene> _scene)
 							std::make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::Usage::IMMUTABLE),
 							"HierachyImportanceBuffer");
 	m_hierarchyImportance->GetBuffer()->ClearToZero();
-	m_hierarchyImportance->BindBuffer(0);
+	m_hierarchyImportance->BindBuffer(s_hierarchyImportanceBinding);
 
 	m_hierarchyImportanceUBO->GetBuffer()->Map();
 	(*m_hierarchyImportanceUBO)["NumInnerNodes"].Set(static_cast<std::int32_t>(_scene->GetNumInnerNodes()));
@@ -77,4 +81,38 @@ void HierarchyImportance::Draw()
 	GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localSizePathtracer.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localSizePathtracer.y, 1);
 
 	GL_CALL(glMemoryBarrier, GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+}
+
+void HierarchyImportance::UpdateHierarchyNodeImportance()
+{
+	// First pull importance from the triangles into the nodes.
+	// Then pull importance from child nodes, tree layer by tree layer until convergence
+	//
+	// Why not in a single shader?
+	//  Idea would be to perform "pull tries" that finish only if there is importance to pull and busy loop otherwise.
+	//  This is not possible with GPUs since a running shader invocation might be waiting for another invocation that was not yet triggered!
+
+	GLuint numBlocks = (m_rendererSystem.GetScene()->GetNumInnerNodes() / 64) + (m_rendererSystem.GetScene()->GetNumInnerNodes() % 64 > 0 ? 1 : 0);
+
+	m_hierarchyImpPropagationInitShader.Activate();
+	GL_CALL(glDispatchCompute, numBlocks, 1, 1);
+	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
+
+
+	gl::ShaderStorageBufferView doneBuffer(std::make_shared<gl::Buffer>(4, gl::Buffer::Usage::MAP_READ | gl::Buffer::Usage::MAP_WRITE), "DoneFlagBuffer");
+	doneBuffer.BindBuffer(1);
+	m_hierarchyImpPropagationNodeShader.Activate();
+
+	bool changedAnything = false;
+	do
+	{
+		*static_cast<int*>(doneBuffer.GetBuffer()->Map()) = 0;
+		doneBuffer.GetBuffer()->Unmap();
+
+		GL_CALL(glDispatchCompute, numBlocks, 1, 1);
+		GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
+
+		changedAnything = *static_cast<int*>(doneBuffer.GetBuffer()->Map()) != 0;
+		doneBuffer.GetBuffer()->Unmap();
+	} while (changedAnything);
 }

@@ -1,0 +1,63 @@
+#version 450
+
+#define TRIINDEX_OUTPUT
+#include "../stdheader.glsl"
+#include "importanceubo.glsl"
+
+layout(binding = 0, std430) restrict buffer HierarchyImportanceBuffer
+{
+	float HierarchyImportance[];
+};
+layout(binding = 1, std430) restrict buffer DoneFlagBuffer
+{
+	int ChangedAnything;
+};
+
+layout(binding = 6) uniform samplerBuffer ParentPointerBuffer;
+
+// Should be called once per inner node.
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+	// If there is no inner node for this thread, return. (May happen due to block sizing)
+	if(gl_GlobalInvocationID.x >= NumInnerNodes)
+		return;
+
+	// Already have an importance value?
+	if(HierarchyImportance[gl_GlobalInvocationID.x] != 0.0)
+		return;
+
+	// Get node info (see also "../traceray.glsl")
+	uint childCodeRaw = floatBitsToUint(texelFetch(HierachyBuffer, int(gl_GlobalInvocationID.x) * 2).w); 	
+	int childNodeIndex = int(childCodeRaw & uint(0x7FFFFFFF));	// Most significant bit tells us is this is a leaf.
+
+	float totalImportance = 0.0;
+
+
+
+	// Get first child's importance
+	float childImportance = HierarchyImportance[childNodeIndex];
+	// If the first child doesn't have an importance 
+	if(childImportance == 0.0)
+		return;
+
+	// Gather importance from all children
+	int parentPointer = int(gl_GlobalInvocationID.x);
+	do
+	{
+		totalImportance += childImportance;
+
+		// Next child
+		childNodeIndex = floatBitsToInt(texelFetch(HierachyBuffer, childNodeIndex * 2 + 1).w); 	// w = Escape
+		if(childNodeIndex == 0) // No escape pointer, done!
+			break; 
+
+		int parentPointer = floatBitsToInt(texelFetch(ParentPointerBuffer, childNodeIndex).r);
+		childImportance = HierarchyImportance[childNodeIndex];
+
+	} while(parentPointer == gl_GlobalInvocationID.x); // Continue until this is no longer the child's parent.
+
+	// Write importance and be done.
+	HierarchyImportance[gl_GlobalInvocationID.x] = totalImportance;
+	ChangedAnything = 1;
+}

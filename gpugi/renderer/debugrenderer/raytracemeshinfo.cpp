@@ -7,7 +7,7 @@
 
 const std::string RaytraceMeshInfo::Name = "Raytrace Meshinfo";
 
-RaytraceMeshInfo::RaytraceMeshInfo(const Renderer& _parentRenderer) :
+RaytraceMeshInfo::RaytraceMeshInfo(Renderer& _parentRenderer) :
 	DebugRenderer(_parentRenderer),
 	m_screenTri(new gl::ScreenAlignedTriangle()),
 	m_infoShader("RaytraceMeshInfo")

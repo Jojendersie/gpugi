@@ -29,18 +29,32 @@ public:
 	RendererSystem();
 	~RendererSystem();
 
-	// The following functions may (depending on the renderer) reset the backbuffer and the iteration count to zero.
-
 	/// Sets scene.
+	///
+	/// Active (debug)renderer will be notified.
+	/// Resets iteration count.
 	void SetScene(std::shared_ptr<Scene> _scene);
+
+	/// Returns currently set scene.
+	const std::shared_ptr<Scene>& GetScene() const { return m_scene; }
+
+
 	/// Sets camera.
+	///
+	/// Active renderer will be notified.
+	/// Resets iteration count.
 	void SetCamera(const Camera& camera);
+
+
 	/// Sets back buffer size.
+	///
+	/// Active renderer will be notified.
+	/// Resets iteration count.
 	void SetScreenSize(const ei::IVec2& newSize);
 
-	// ---------
-
+	/// Returns internal HDR backbuffer.
 	gl::Texture2D& GetBackbuffer() { return *m_backbuffer; }
+
 
 
 	/// Returns currently active renderer.
@@ -48,7 +62,7 @@ public:
 
 	/// Destroys old renderer, creates new renderer and makes it active.
 	///
-	/// If there was a debug renderer active, it will be destroyed
+	/// If there was a debug renderer active, it will be destroyed.
 	template<typename RendererType, typename... Args>
 	void SetRenderer(Args&&... _arguments)
 	{
@@ -100,7 +114,7 @@ public:
 	/// Updates global per iteration uniform buffer.
 	/// Will be called automatically after each draw.
 	/// \param _iterationIncrement
-	///		By default the iteration counter will be incremenented. Specify false to suppress.
+	///		By default the iteration counter will be incremented. Specify false to suppress.
 	void PerIterationBufferUpdate(bool _iterationIncrement = true);
 
 private:

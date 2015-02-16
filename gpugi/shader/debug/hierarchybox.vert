@@ -2,6 +2,8 @@
 
 #include "../stdheader.glsl"
 
+// SHOW_NODE_IMPORTANCE
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in int inBoxInstance;
 layout(location = 2) in int inDepth;
@@ -9,6 +11,15 @@ layout(location = 2) in int inDepth;
 
 layout(location = 0) out vec3 BoxPosition;
 layout(location = 1) out int Depth;
+
+#ifdef SHOW_NODE_IMPORTANCE
+	layout(binding = 0, std430) restrict readonly buffer HierarchyImportanceBuffer
+	{
+		float HierarchyImportance[];
+	};
+
+	layout(location = 2) out float Importance;
+#endif
 
 void main()
 {	
@@ -26,4 +37,8 @@ void main()
 	gl_Position = vec4(worldPosition, 1.0) * ViewProjection;
 	BoxPosition = inPosition;
 	Depth = inDepth;
+
+	#ifdef SHOW_NODE_IMPORTANCE
+		Importance = HierarchyImportance[inBoxInstance];
+	#endif
 }

@@ -18,7 +18,7 @@ class Scene;
 class Camera;
 class RendererSystem;
 
-/// Base class for all renderer.
+/// Abstract base class for all renderer.
 ///
 /// Provides a unified interface for interop with RendererSystem.
 class Renderer
@@ -35,6 +35,9 @@ public:
 	virtual void SetScreenSize(const gl::Texture2D& _newBackbuffer) = 0;
 	/// Draw command, increments usually iteration count.
 	virtual void Draw() = 0;
+
+	/// Returns associated renderersystem.
+	const RendererSystem& GetRendererSystem() const		{ return m_rendererSystem; }
 
 protected:
 	Renderer(RendererSystem& _rendererSystem) : m_rendererSystem(_rendererSystem) {}

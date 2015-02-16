@@ -52,7 +52,7 @@
     <Filter Include="shader\utils">
       <UniqueIdentifier>{d466beef-87c8-48e9-a60f-f4fec06bd745}</UniqueIdentifier>
     </Filter>
-    <Filter Include="shader\importance">
+    <Filter Include="shader\hierarchy">
       <UniqueIdentifier>{fcf52a70-e3b8-4829-ad31-2ccd2b2e3090}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -414,16 +414,22 @@
       <Filter>shader</Filter>
     </None>
     <None Include="shader\hierarchy\acquisition.comp">
-      <Filter>shader\importance</Filter>
-    </None>
-    <None Include="shader\hierarchy\hierarchypropagation.comp">
-      <Filter>shader\importance</Filter>
+      <Filter>shader\hierarchy</Filter>
     </None>
     <None Include="shader\hierarchy\trianglevis.comp">
-      <Filter>shader\importance</Filter>
+      <Filter>shader\hierarchy</Filter>
     </None>
     <None Include="shader\hierarchy\importanceubo.glsl">
-      <Filter>shader\importance</Filter>
+      <Filter>shader\hierarchy</Filter>
+    </None>
+    <None Include="shader\debug\hierarchybox_importance.frag">
+      <Filter>shader\debug</Filter>
+    </None>
+    <None Include="shader\hierarchy\hierarchypropagation_init.comp">
+      <Filter>shader\hierarchy</Filter>
+    </None>
+    <None Include="shader\hierarchy\hierarchypropagation_nodes.comp">
+      <Filter>shader\hierarchy</Filter>
     </None>
   </ItemGroup>
 </Project>

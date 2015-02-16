@@ -11,11 +11,14 @@ namespace gl
 	class VertexArrayObject;
 }
 
-/// Debug renderer for visualizing the scene hierachy.
+/// Debug renderer for visualizing the scene hierarchy.
+///
+/// Coloring is normally depended on the relative depth of the nodes.
+/// If the active renderer is the HierarchyImportance Renderer, the color is defined by the node's importance value.
 class HierarchyVisualization : public DebugRenderer
 {
 public:
-	HierarchyVisualization(const Renderer& _parentRenderer);
+	HierarchyVisualization(Renderer& _parentRenderer);
 	~HierarchyVisualization();
 
 	void SetScene(std::shared_ptr<Scene> _scene) override;
