@@ -15,7 +15,9 @@ BidirectionalPathtracer::BidirectionalPathtracer(RendererSystem& _rendererSystem
 	Renderer(_rendererSystem),
 	m_lighttraceShader("lighttracer_bidir"),
 	m_pathtraceShader("pathtracer_bidir"),
-	m_warmupLighttraceShader("lighttracer_warmup_bidir")
+	m_warmupLighttraceShader("lighttracer_warmup_bidir"),
+	m_needToDetermineNeededLightCacheCapacity(false),
+	m_numRaysPerLightSample(0)
 {
 	std::string additionalDefines;
 #ifdef SHOW_SPECIFIC_PATHLENGTH

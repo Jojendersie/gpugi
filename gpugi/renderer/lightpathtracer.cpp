@@ -7,7 +7,8 @@ const unsigned int LightPathtracer::m_localSizeLightPathtracer = 8 * 8;
 
 LightPathtracer::LightPathtracer(RendererSystem& _rendererSystem) :
 	Renderer(_rendererSystem),
-	m_lighttraceShader("lighttracer")
+	m_lighttraceShader("lighttracer"),
+	m_numRaysPerLightSample(0)
 {
 	std::string additionalDefines;
 #ifdef SHOW_SPECIFIC_PATHLENGTH

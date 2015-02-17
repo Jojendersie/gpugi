@@ -157,7 +157,7 @@ std::unique_ptr<Scene::Triangle[]> Scene::LoadTriangles( std::ifstream& _file, c
 
 	// Copy to GPU
 	m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_numTrianglesPerLeaf * sizeof(Triangle) * _header.numElements), gl::Buffer::Usage::MAP_WRITE );
-	Triangle* dest = (Triangle*)m_triangleBuffer->Map();
+	Triangle* dest = reinterpret_cast<Triangle*>(m_triangleBuffer->Map());
 	memcpy( dest, &triangleBuffer[0], _header.numElements * _header.elementSize );
 	m_triangleBuffer->Unmap();
 

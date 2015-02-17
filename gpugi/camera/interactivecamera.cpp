@@ -4,9 +4,10 @@
 
 InteractiveCamera::InteractiveCamera(GLFWwindow* window, const Camera& camera) :
 	Camera(camera.GetPosition(), camera.GetLookAt(), camera.GetAspectRatio(), camera.GetHFov(), camera.GetUp()),
-	m_window(m_window),
+	m_window(window),
 	m_rotSpeed(0.01f),
 	m_moveSpeed(16.0f),
+	m_lastMousePosX(0.0f), m_lastMousePosY(0.0f),
 	m_dirty(true)
 {
 }
@@ -24,7 +25,9 @@ InteractiveCamera::InteractiveCamera(GLFWwindow* window, const ei::Vec3& positio
 	Camera(position, lookat, aspectRatio, hfov, up),
 	m_window(window),
 	m_rotSpeed(0.01f),
-	m_moveSpeed(4.0f)
+	m_moveSpeed(4.0f),
+	m_lastMousePosX(0.0f), m_lastMousePosY(0.0f),
+	m_dirty(true)
 {
 }
 
