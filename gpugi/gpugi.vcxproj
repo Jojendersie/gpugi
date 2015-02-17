@@ -159,6 +159,7 @@
     <ClCompile Include="..\dependencies\glhelper\glhelper\uniformbufferview.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\utils\pathutils.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\vertexarrayobject.cpp" />
+    <ClCompile Include="application.cpp" />
     <ClCompile Include="camera\camera.cpp" />
     <ClCompile Include="camera\interactivecamera.cpp" />
     <ClCompile Include="control\globalconfig.cpp" />
@@ -204,6 +205,7 @@
     <ClInclude Include="..\dependencies\glhelper\glhelper\utils\flagoperators.hpp" />
     <ClInclude Include="..\dependencies\glhelper\glhelper\utils\pathutils.hpp" />
     <ClInclude Include="..\dependencies\glhelper\glhelper\vertexarrayobject.hpp" />
+    <ClInclude Include="application.hpp" />
     <ClInclude Include="camera\camera.hpp" />
     <ClInclude Include="camera\interactivecamera.hpp" />
     <ClInclude Include="control\globalconfig.hpp" />

@@ -28,9 +28,9 @@ namespace GlobalConfig
 
 	/// Removes a new global parameter.
 	///
+	/// If given parameter does not exist, the call will be ignored.
 	/// \param _name 
 	///		Name of the parameter.
-	/// \throws std::invalid_argument if parameter already exists.
 	void RemoveParameter(const std::string& _name);
 
 	/// Adds a listener to an existing parameter.

@@ -171,6 +171,9 @@
     <ClCompile Include="renderer\hierarchyimportance.cpp">
       <Filter>code\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="application.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -239,7 +242,6 @@
     <ClInclude Include="renderer\pathtracer.hpp">
       <Filter>code\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="glhelperconfig.hpp" />
     <ClInclude Include="..\dependencies\glhelper\glhelper\framebufferobject.hpp">
       <Filter>dependencies\glhelper</Filter>
     </ClInclude>
@@ -320,6 +322,12 @@
     </ClInclude>
     <ClInclude Include="renderer\hierarchyimportance.hpp">
       <Filter>code\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="application.hpp">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="glhelperconfig.hpp">
+      <Filter>code</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
