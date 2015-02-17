@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-/// \file flags.hpp
+/// \file flagoperators.hpp
 /// \brief This header adds the operators | ^ ~ & to all enumeration types.
 /// \details After including this header all enumeration types have the
 ///		mentioned operators defined.

@@ -14,6 +14,7 @@ namespace gl
 	class Texture2D;
 }
 
+/// Renderer that generates an importance value for each node/triangle.
 class HierarchyImportance : public Renderer
 {
 public:
