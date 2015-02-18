@@ -26,9 +26,10 @@ void main()
 	ray.Origin = CameraPosition;
 	ray.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
 
+	const float lightSampleWeight = float(NumInitialLightSamples) / NUM_LIGHT_SAMPLES; // This could be a uniform!
+
 	vec3 pathThroughput = vec3(1.0);
 
-	float totalRadiance = 0.0f;
 	int touchedTriangleIndices[MAX_PATHLENGTH];
 
 	int numTouchedTriangles = 0;
@@ -48,6 +49,7 @@ void main()
 		// Get Material infos.
 		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
 
+		float totalRadiance = 0.0f;
 
 		// Connect to random light samples ("Next Event Estimation")
 		Ray lightRay;
@@ -91,6 +93,18 @@ void main()
 			}
 		}
 
+		if(totalRadiance > 0.0f)
+		{
+			totalRadiance *= lightSampleWeight;
+
+			// Add radiance as importance to all preceding triangles.
+			float firstTriagValue = 0.0;
+			for(int i=0; i<numTouchedTriangles+1; ++i)
+			{
+				atomicAdd(HierarchyImportance[NumInnerNodes + touchedTriangleIndices[i]], totalRadiance);
+			}
+		}
+
 		vec3 throughput = vec3(1.0);
 		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, throughput);
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
@@ -101,15 +115,5 @@ void main()
 			break;
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.
 	#endif
-	}
-
-	const float lightSampleWeight = float(NumInitialLightSamples) / NUM_LIGHT_SAMPLES; // This could be a uniform!
-	totalRadiance *= lightSampleWeight;
-
-	// Add radiance as importance to all hit triangles.
-	float firstTriagValue = 0.0;
-	for(int i=0; i<numTouchedTriangles; ++i)
-	{
-		atomicAdd(HierarchyImportance[NumInnerNodes + touchedTriangleIndices[i]], totalRadiance);
 	}
 }
