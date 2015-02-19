@@ -33,6 +33,7 @@ public:
 	void ProcessCommandQueue(double timeDelta, unsigned int iterationDelta = 1);
 
 	/// Adds a command that causes ProcessCommandQueue to stop processing and return.
+	///
 	/// Remaining commands will be processed in the next call.
 	void AddProcessingPauseCommand(const std::string& _processPauseCommand) { m_processPauseCommand.insert(_processPauseCommand); }
 

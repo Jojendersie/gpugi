@@ -5,7 +5,7 @@
 
 // Define this macro to display only the paths of the given length (with 1 = direct lighting)
 // Will alter shader code with the same macro automatically.
-// This is independently implemented in 
+// This is independently implemented in Pathtracer, BidirectionalPathtracer, Lighttracer and Hierachyimportance.
 //#define SHOW_SPECIFIC_PATHLENGTH 1
 
 

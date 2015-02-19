@@ -36,10 +36,12 @@ private:
 	void SwitchDebugRenderer(const GlobalConfig::ParameterType& p);
 
 
-
+	/// Takes care of inputs etc.
 	void Update(ezTime timeSinceLastUpdate);
-
+	/// Keeps renderer running and updates screen content.
 	void Draw();
+
+
 
 	void MSEChecks();
 
