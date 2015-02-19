@@ -693,7 +693,7 @@ LAYOUT_FILE            =
 # search path. Do not use file names with spaces, bibtex cannot handle them. See
 # also \cite for info how to create references.
 
-CITE_BIB_FILES         = 
+CITE_BIB_FILES         = ./bibliography.bib
 
 #---------------------------------------------------------------------------
 # Configuration options related to warning and progress messages
@@ -764,7 +764,10 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../gpugi
+INPUT                  = doxymanpage.md \
+                         ../gpugi \
+                         ../dependencies/glhelper \
+                         ../dependencies/epsilon
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -941,7 +944,7 @@ FILTER_SOURCE_PATTERNS =
 # (index.html). This can be useful if you have a project on for instance GitHub
 # and want to reuse the introduction page also for the doxygen output.
 
-USE_MDFILE_AS_MAINPAGE = 
+USE_MDFILE_AS_MAINPAGE = doxymanpage.md
 
 #---------------------------------------------------------------------------
 # Configuration options related to source browsing
