@@ -106,13 +106,26 @@ public:
 	unsigned long GetIterationCount() const { return m_iterationCount;  }
 
 
+	/// Configures the number of so called initial light samples
+	///
+	/// Creates a new light sample buffer which is bound to texture slot TextureBufferBindings::INITIAL_LIGHTSAMPLES.
+	/// \attention Before this call the internal light samples buffer is not set.
+	/// \see GetNumInitialLightSamples
 	void SetNumInitialLightSamples(unsigned int _numInitialLightSamples);
+
+	/// Returns number of initial light samples.
+	/// \see SetNumInitialLightSamples
 	unsigned int GetNumInitialLightSamples() const { return m_numInitialLightSamples; }
+	
+	/// Resets the iteration count to zero and updates the UBO.
+	///
+	/// Does not perform the other operations associated with PerIterationBufferUpdate.
+	void ResetIterationCount();
 
-	void ResetIterationCount() { m_iterationCount = 0; PerIterationBufferUpdate(true); }
-
-	/// Updates global per iteration uniform buffer.
+	/// Updates global per iteration uniform buffer and initial light samples buffer.
+	/// 
 	/// Will be called automatically after each draw.
+	/// Generates GetNumInitialLightSamples() new light samples.
 	/// \param _iterationIncrement
 	///		By default the iteration counter will be incremented. Specify false to suppress.
 	void PerIterationBufferUpdate(bool _iterationIncrement = true);
@@ -127,7 +140,7 @@ private:
 	/// Defines default texture buffer binding assignment.
 	enum class TextureBufferBindings
 	{
-		// Don't use 0, since this is reserved for changing purposes.
+		// Don't use 0, since this is reserved for changing purposes. 
 		TRIANGLES = 1,
 		VERTEX_POSITIONS = 2,
 		VERTEX_INFO = 3,

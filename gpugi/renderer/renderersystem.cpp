@@ -56,6 +56,16 @@ void RendererSystem::InitStandardUBOs(const gl::ShaderObject& _reflectionShader)
 	m_materialUBO->BindBuffer((int)UniformBufferBindings::MATERIAL);
 }
 
+void RendererSystem::ResetIterationCount()
+{
+	m_iterationCount = 0;
+
+	(*m_perIterationUBO)["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
+	m_perIterationUBO->GetBuffer()->Flush();
+
+	GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT);
+}
+
 void RendererSystem::PerIterationBufferUpdate(bool _iterationIncrement)
 {
 	if (_iterationIncrement)
