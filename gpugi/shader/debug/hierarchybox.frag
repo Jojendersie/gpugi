@@ -6,7 +6,9 @@ layout(binding = 8, shared) uniform DebugSettings
 {
 	int MinDepth;
 	int MaxDepth; // excluding
+	int IterationCount;
 };
+
 
 layout(location = 0) in vec3 BoxPosition;
 layout(location = 1) flat in int Depth;

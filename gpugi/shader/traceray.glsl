@@ -1,6 +1,6 @@
 // #define ANY_HIT
 
-// If defined a global variable called numBoxesVisited/ will be inkremented on each box/triangle test.
+// If defined a global variable called numBoxesVisited/numTrianglesVisited will be inkremented on each box/triangle test.
 // #define TRACERAY_DEBUG_VARS
 
 // #define TRINORMAL_OUTPUT

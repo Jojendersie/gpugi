@@ -14,9 +14,11 @@
 #include "materials.glsl"
 
 // Debug variables for traceray.
-/*#define TRACERAY_DEBUG_VARS
-uint numBoxesVisited = 0;
-uint numTrianglesVisited = 0;*/
+//#define TRACERAY_DEBUG_VARS
+#ifdef TRACERAY_DEBUG_VARS
+	uint numBoxesVisited = 0;
+	uint numTrianglesVisited = 0;
+#endif
 
 // Two versions of trace ray.
 #include "traceray.glsl"

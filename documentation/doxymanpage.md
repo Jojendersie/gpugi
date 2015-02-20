@@ -28,7 +28,7 @@ It provides several buffer(views) which are available to all renderers:
   * camera (expected to change only on camera movements)
   * per iteration (expected to change every iteration)
 
-Glhelper allows to create uniform buffers from shader-meta-info. To create the mentioned UBOs, a special dummy shader is used (GLSL UBO layout is set to `shared`).
+Glhelper allows to create uniform buffers from shader-meta-info. To create the mentioned UBOs, a special dummy shader is used to obtain the layouts automatically. Since the GLSL UBO layout is set to `shared` it is not necessary to alter the dummy shader on changes or additions to the UBOs (see also `shader/globaluniforms.glsl`).
 
 The RendererSystem contains its own HDR (RGBA32F) "backbuffer" that can be obtained with RendererSystem::GetBackbuffer(). All rendering happens in either Renderer or DebugRenderer.
 
@@ -55,7 +55,7 @@ Renderers are set using RendererSystem::SetRenderer. It is not possible to set m
 * HierarchyImportance
   * Obtains "importance" for all triangles using a pathtracer. For each path vertex all preceeding triangle-hits will increase their importance by the received radiance.
   * Propagation through the hierachy can be performed using HierarchyImportance::UpdateHierarchyNodeImportance
-  * Hierachy information buffer (SSBO) is available as shared pointer (for later use in other renderers) using HierarchyImportance::GetHierachyImportance
+  * Hierachy information buffer (SSBO) is available as _shared pointer_ (for later use in other renderers) using HierarchyImportance::GetHierachyImportance. This means that the buffer survives a Renderer change, if you hold a copy of the shared_ptr somewhere else. Note however that switching to HierarchyImportance will always create a new buffer.
 
 
 ### General Notes ###
@@ -69,7 +69,12 @@ DebugRenderers are set using RendererSystem::SetDebugRenderer. The call only suc
 ### Type Overview ###
 * RaytraceMeshInfo
   * Displays various scene information using a raytracer
-  * Display type can be set via GlobalConfig
+  * Display type can (only) be set via GlobalConfig (use "help" command to list them)
+  * Currently supported:
+    * 0: World-Normal (color = n*.5 + .5) +
+	* 1: Diffuse color
+	* 2: Opacity color
+	* 3: Reflection color
   
 * HierarchyVisualization
   * Displays the scene hierachy as boxes (solid or wireframe)
@@ -106,7 +111,7 @@ Overview of shader files. Configurations are done via #define macros (can be set
     * Contains also wrapper for multiple importance sampling heuristic (MISHeuristic, defaulting to balance heuristic)
     * Configuration options:
       * `SAVE_LIGHT_CACHE`: Write access to LightCache SSBO
-      * `SAVE_LIGHT_CACHE_WARMUP`: (only valid with SAVE_LIGHT_CACHE) Additional SSBO for sum of light path length
+      * `SAVE_LIGHT_CACHE_WARMUP`: (only valid with SAVE_LIGHT_CACHE) Additional SSBO for sum of light path length (SSBO contains a single integer).
   * `lighttracer.comp`
     * Compute shader for particle tracing. Used by LightPathtracer and BidirectionalPathtracer.
     * Configuration options:
@@ -139,12 +144,14 @@ Overview of shader files. Configurations are done via #define macros (can be set
     * Configuration options:
       * [built-in] `RAY_HIT_EPSILON`: Offset usually applied to ray hits for next trace
       * [built-in] `RAY_MAX`: Maximum length of a ray.
-      * [built-in] `RUSSIAN_ROULETTE`: If defined, `pathtracer.comp`, `pathtracer_bidir.comp`, `lighttracer.comp` and `hierarchy/acqusition.comp` will use Russian Roulette to cancel rays. Otherwise always MAX_PATHLENGTH ray hits will be computed.
+      * [built-in] `RUSSIAN_ROULETTE`: If defined, `pathtracer.comp`, `pathtracer_bidir.comp`, `lighttracer.comp` and `hierarchy/acqusition.comp` will use Russian Roulette to cancel rays. 
+      * [built-in] `TRACERAY_DEBUG_VARS`: Defines debug variables for `traceray.glsl` (see `traceray.glsl` for more info)
+      Otherwise always MAX_PATHLENGTH ray hits will be computed.
   * `traceray.glsl`
     * Traces a ray in the scene
     * Configuration options:
       * [built-in] `ANY_HIT`: Code defines TraceRayAnyHit, instead of TraceRay. (you can include this file multiple times!)
-      * [built-in] `TRACERAY_DEBUG_VARS`: If defined a global variable called numBoxesVisited/ will be inkremented on each box/triangle test.
+      * [built-in] `TRACERAY_DEBUG_VARS`: If defined a global variable called `numBoxesVisited`/`numTrianglesVisited` will be inkremented on each box/triangle test.
       * [built-in] `TRINORMAL_OUTPUT`: TraceRay function outputs the normal of the hit triangle.
       * [built-in] `TRIINDEX_OUTPUT`: TraceRay function outputs the index of the hit triangle.
 * `debug/`
@@ -184,7 +191,8 @@ ScriptProcessing & GlobalConfig
 ==============================
 GPUGI uses a simple command list script to make configuration at runtime or per file possible. Commands are parsed via ScriptProcessing. Console inputs are continously read in a separate thread (see ScriptProcessing::StartConsoleWindowThread and ScriptProcessing::StopConsoleWindowThread) and evaluated together with script commands during a ScriptProcessing::ProcessCommandQueue call.
 
-With the exception of a few built-in commands, all commands will be passed to GlobalConfig. GlobalConfig is a namespace containing several functions to control a global variable pool. Since variables are lists of Variants (see GlobalConfig::ParameterType) and each variable can have an arbitrary number of listeners, _empty parameters can be used for global callbacks_ enabling the ScriptProcessing module to act like an event-manager.
+With the exception of a few built-in commands, all commands will be passed to GlobalConfig. GlobalConfig is a namespace containing several functions to control a global variable pool. 
+It is possible to use GlobalConfig like a global event-manager, since each global variable is a list of Variants (see GlobalConfig::ParameterType) with an arbitrary number of listeners. The size of these Variant-lists is user-defined and may even be empty to realize global functions like "screenshot" or "exit".
 
 GlobalConfig is based on the Variant template class (see GlobalConfig::ParameterElementType). An instance of variant is guaranteed to be able to be converted to the provided template parameter. Note that it needs at least as much memory as the smallest given type (there might be additional padding).
 
