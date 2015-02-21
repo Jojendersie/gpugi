@@ -37,7 +37,7 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 	m_hierarchyImpPropagationNodeShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_nodes.comp");
 	m_hierarchyImpPropagationNodeShader.CreateProgram();
 
-	m_hierarchyImportanceUBO.reset(new gl::UniformBufferView({ &m_hierarchyImpAcquisitionShader, &m_hierarchyImpTriagVisShader }, "HierarchyImportanceUBO"));
+	m_hierarchyImportanceUBO.reset(new gl::UniformBufferView(m_hierarchyImpAcquisitionShader, "HierarchyImportanceUBO"));
 	m_hierarchyImportanceUBO->BindBuffer(4);
 
 	m_rendererSystem.SetNumInitialLightSamples(128);

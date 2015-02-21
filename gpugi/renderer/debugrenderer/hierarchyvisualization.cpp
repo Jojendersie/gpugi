@@ -1,6 +1,7 @@
 #include "hierarchyvisualization.hpp"
 #include <glhelper/uniformbufferview.hpp>
 #include <glhelper/vertexarrayobject.hpp>
+#include <glhelper/statemanagement.hpp>
 
 #include "../../scene/scene.hpp"
 
@@ -179,11 +180,11 @@ void HierarchyVisualization::Draw()
 	
 	if(solid)
 	{
-		GL_CALL(glEnable, GL_DEPTH_TEST);
+		gl::Enable(gl::Cap::DEPTH_TEST);
 		m_boxSolidIndices->BindIndexBuffer();
 		GL_CALL(glDrawElementsInstancedBaseInstance, GL_TRIANGLES, 6 * 2 * 3, GL_UNSIGNED_INT, nullptr,
 			m_hierachyLevelOffset[rangeEnd] - m_hierachyLevelOffset[rangeStart], m_hierachyLevelOffset[rangeStart]);
-		GL_CALL(glDisable, GL_DEPTH_TEST);
+		gl::Disable(gl::Cap::DEPTH_TEST);
 	}
 	else
 	{

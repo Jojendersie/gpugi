@@ -38,19 +38,19 @@ BidirectionalPathtracer::BidirectionalPathtracer(RendererSystem& _rendererSystem
 	auto lighttrace_LightCacheCount = m_lighttraceShader.GetShaderStorageBufferInfo().find("LightCacheCount")->second;
 	auto warmupLighttrace_LightCacheCount = m_warmupLighttraceShader.GetShaderStorageBufferInfo().find("LightCacheCount")->second;
 
-	Assert(pathtrace_LightCacheCount.iBufferBinding == lighttrace_LightCacheCount.iBufferBinding &&
-		pathtrace_LightCacheCount.iBufferBinding == warmupLighttrace_LightCacheCount.iBufferBinding &&
-		pathtrace_LightCacheCount.iBufferDataSizeByte == lighttrace_LightCacheCount.iBufferDataSizeByte &&
-		pathtrace_LightCacheCount.iBufferDataSizeByte == warmupLighttrace_LightCacheCount.iBufferDataSizeByte, "Different definitions of LightCacheCount SSBO within shaders!");
+	Assert(pathtrace_LightCacheCount.bufferBinding == lighttrace_LightCacheCount.bufferBinding &&
+		pathtrace_LightCacheCount.bufferBinding == warmupLighttrace_LightCacheCount.bufferBinding &&
+		pathtrace_LightCacheCount.bufferDataSizeByte == lighttrace_LightCacheCount.bufferDataSizeByte &&
+		pathtrace_LightCacheCount.bufferDataSizeByte == warmupLighttrace_LightCacheCount.bufferDataSizeByte, "Different definitions of LightCacheCount SSBO within shaders!");
 
 	auto pathtrace_LightCache = m_lighttraceShader.GetShaderStorageBufferInfo().find("LightCache")->second;
 	auto lighttrace_LightCache = m_lighttraceShader.GetShaderStorageBufferInfo().find("LightCache")->second;
 	auto warmupLighttrace_LightCache = m_warmupLighttraceShader.GetShaderStorageBufferInfo().find("LightCache")->second;
 
-	Assert(pathtrace_LightCache.iBufferBinding == lighttrace_LightCache.iBufferBinding &&
-		pathtrace_LightCache.iBufferBinding == warmupLighttrace_LightCache.iBufferBinding &&
-		pathtrace_LightCache.iBufferDataSizeByte == lighttrace_LightCache.iBufferDataSizeByte &&
-		pathtrace_LightCache.iBufferDataSizeByte == warmupLighttrace_LightCache.iBufferDataSizeByte, "Different definitions of LightCache SSBO within shaders!");
+	Assert(pathtrace_LightCache.bufferBinding == lighttrace_LightCache.bufferBinding &&
+		pathtrace_LightCache.bufferBinding == warmupLighttrace_LightCache.bufferBinding &&
+		pathtrace_LightCache.bufferDataSizeByte == lighttrace_LightCache.bufferDataSizeByte &&
+		pathtrace_LightCache.bufferDataSizeByte == warmupLighttrace_LightCache.bufferDataSizeByte, "Different definitions of LightCache SSBO within shaders!");
 #endif
 
 

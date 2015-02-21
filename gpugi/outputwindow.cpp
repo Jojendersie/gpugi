@@ -1,7 +1,8 @@
 #include "outputwindow.hpp"
 
-#include "glhelper/texture2d.hpp"
-#include "glhelper/screenalignedtriangle.hpp"
+#include <glhelper/texture2d.hpp>
+#include <glhelper/screenalignedtriangle.hpp>
+#include <glhelper/statemanagement.hpp>
 
 #include "control/globalconfig.hpp"
 #include "utilities/logger.hpp"
@@ -144,7 +145,7 @@ void OutputWindow::DisplayHDRTexture(gl::Texture2D& texture, std::uint32_t _divi
 {
 	bool srgboutput = GlobalConfig::GetParameter("srgb")[0].As<bool>();
 	if (srgboutput)
-		glEnable(GL_FRAMEBUFFER_SRGB);
+		gl::Enable(gl::Cap::FRAMEBUFFER_SRGB);
 
 
 	texture.Bind(0);
@@ -154,7 +155,7 @@ void OutputWindow::DisplayHDRTexture(gl::Texture2D& texture, std::uint32_t _divi
 	screenTri->Draw();
 
 	if (srgboutput)
-		glDisable(GL_FRAMEBUFFER_SRGB);
+		gl::Disable(gl::Cap::FRAMEBUFFER_SRGB);
 
     texture.ResetBinding(0);
 }

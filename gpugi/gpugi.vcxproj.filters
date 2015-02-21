@@ -174,6 +174,9 @@
     <ClCompile Include="application.cpp">
       <Filter>code</Filter>
     </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\statemanagement.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -329,6 +332,9 @@
     <ClInclude Include="glhelperconfig.hpp">
       <Filter>code</Filter>
     </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\statemanagement.hpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\globaluniforms.glsl">
@@ -438,6 +444,9 @@
     </None>
     <None Include="shader\hierarchy\hierarchypropagation_nodes.comp">
       <Filter>shader\hierarchy</Filter>
+    </None>
+    <None Include="..\dependencies\glhelper\glhelper\statemanagement.inl">
+      <Filter>dependencies\glhelper</Filter>
     </None>
   </ItemGroup>
 </Project>
