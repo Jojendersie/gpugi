@@ -4,6 +4,7 @@
 #include <vector>
 #include <functional>
 #include <ei/vector.hpp>
+#include <glhelper/shaderobject.hpp>
 
 #include "../camera/camera.hpp"
 #include "../scene/lighttrianglesampler.hpp"
@@ -130,6 +131,9 @@ public:
 	///		By default the iteration counter will be incremented. Specify false to suppress.
 	void PerIterationBufferUpdate(bool _iterationIncrement = true);
 
+	/// Visualize primary light cache via reprojection
+	void DispatchShowLightCacheShader();
+
 private:
 
 	void InitStandardUBOs(const gl::ShaderObject& _reflectionShader);
@@ -183,6 +187,10 @@ private:
 	unsigned int m_numInitialLightSamples;
 	std::unique_ptr<gl::TextureBufferView> m_initialLightSampleBuffer;
 	LightTriangleSampler m_lightTriangleSampler;
+
+	/// Project light caches to screen. Can be used from any renderer if the
+	/// light <-> eye path is missing. Invoke once per light cache.
+	gl::ShaderObject m_showLightCachesShader;
 
 	Renderer* m_activeRenderer;
 	DebugRenderer* m_activeDebugRenderer;

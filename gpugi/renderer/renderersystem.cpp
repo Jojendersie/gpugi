@@ -19,14 +19,18 @@
 
 
 
-RendererSystem::RendererSystem() : m_iterationCount(0), m_numInitialLightSamples(0), m_activeRenderer(nullptr), m_activeDebugRenderer(nullptr)
+RendererSystem::RendererSystem() : m_iterationCount(0), m_numInitialLightSamples(0), m_activeRenderer(nullptr), m_activeDebugRenderer(nullptr), m_showLightCachesShader("showLightCaches")
 {
 	std::unique_ptr<gl::ShaderObject> dummyShader(new gl::ShaderObject("dummy"));
 	dummyShader->AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/dummy.comp");
 	dummyShader->CreateProgram();
 	InitStandardUBOs(*dummyShader);
+
 	PerIterationBufferUpdate();
 	m_iterationCount = 0;
+
+	m_showLightCachesShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/showlightcaches.comp");
+	m_showLightCachesShader.CreateProgram();
 }
 
 RendererSystem::~RendererSystem()
@@ -202,4 +206,10 @@ void RendererSystem::UpdateGlobalConstUBO()
 	(*m_globalConstUBO)["BackbufferSize"].Set(ei::IVec2(m_backbuffer->GetWidth(), m_backbuffer->GetHeight()));
 	(*m_globalConstUBO)["NumInitialLightSamples"].Set(static_cast<std::int32_t>(m_numInitialLightSamples));
 	m_globalConstUBO->GetBuffer()->Unmap();
+}
+
+void RendererSystem::DispatchShowLightCacheShader()
+{
+	m_showLightCachesShader.Activate();
+	GL_CALL(glDispatchCompute, m_numInitialLightSamples, 1, 1);
 }

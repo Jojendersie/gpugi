@@ -274,6 +274,7 @@
     <None Include="shader\pathtracer_bidir.comp" />
     <None Include="shader\random.glsl" />
     <None Include="shader\scenedata.glsl" />
+    <None Include="shader\showlightcaches.comp" />
     <None Include="shader\stdheader.glsl" />
     <None Include="shader\traceray.glsl" />
     <None Include="shader\utils\screenTri.vert" />
