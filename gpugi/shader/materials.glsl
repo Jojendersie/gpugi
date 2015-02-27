@@ -114,6 +114,14 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	// Choose a random path type.
 	float pathDecisionVar = Random(seed);
 
+#ifdef STOP_ON_DIFFUSE_BOUNCE
+	if(avgPDiffuse > 0)
+	{
+		pathThroughput = vec3(0.0, 0.0, 0.0);
+		return vec3(0.0, 0.0, 0.0);
+	}
+#endif
+
 	// Diffuse:
 	if(avgPDiffuse > pathDecisionVar)	
 	{
@@ -231,6 +239,11 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, Materi
 	// Diffuse
 	bsdf += pdiffuse * materialTexData.Diffuse / PI;
 	pdf += Avg(pdiffuse) * saturate(cosThetaOut) / PI;
+
+#ifdef STOP_ON_DIFFUSE_BOUNCE
+	// No refractive next event estimation
+	return bsdf;
+#endif
 
 	// Refract
 	float eta = cosTheta < 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg;

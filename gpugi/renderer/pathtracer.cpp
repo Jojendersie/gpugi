@@ -8,7 +8,7 @@
 
 const ei::UVec2 Pathtracer::m_localSizePathtracer = ei::UVec2(8, 8);
 
-Pathtracer::Pathtracer(RendererSystem& _rendererSystem) :
+Pathtracer::Pathtracer(RendererSystem& _rendererSystem, bool _whitted) :
 	Renderer(_rendererSystem),
 	m_pathtracerShader("pathtracer")
 {
@@ -16,6 +16,8 @@ Pathtracer::Pathtracer(RendererSystem& _rendererSystem) :
 #ifdef SHOW_SPECIFIC_PATHLENGTH
 	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
 #endif
+	if(_whitted)
+		additionalDefines += "#define STOP_ON_DIFFUSE_BOUNCE\n";
 
 	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer.comp", additionalDefines);
 	m_pathtracerShader.CreateProgram();

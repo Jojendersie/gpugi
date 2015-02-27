@@ -13,7 +13,8 @@ namespace gl
 class Pathtracer : public Renderer
 {
 public:
-	Pathtracer(RendererSystem& _rendererSystem);
+	/// \param [in] _whitted Stop on first diffuse hit.
+	Pathtracer(RendererSystem& _rendererSystem, bool _whitted);
 
 	std::string GetName() const override { return "PT"; }
 

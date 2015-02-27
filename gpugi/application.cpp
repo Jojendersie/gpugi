@@ -96,7 +96,8 @@ void Application::RegisterScriptCommands()
 													"0: Pathtracer\n"
 													"1: LightPathtracer\n"
 													"2: BidirectionalPathtracer\n"
-													"3: HierarchyImportance");
+													"3: HierarchyImportance\n"
+													"4: Whitted Pathtracer");
 	GlobalConfig::AddListener("renderer", "ChangeRenderer", std::bind(&Application::SwitchRenderer, this, std::placeholders::_1));
 
 	GlobalConfig::AddParameter("debugrenderer", { -1 }, "Set active debug renderer (will not change the current renderer).\n"
@@ -167,7 +168,7 @@ void Application::SwitchRenderer(const GlobalConfig::ParameterType& p)
 	{
 	case 0:
 		LOG_LVL2("Switching to Pathtracer...");
-		m_rendererSystem->SetRenderer<Pathtracer>();
+		m_rendererSystem->SetRenderer<Pathtracer>(false);
 		break;
 
 	case 1:
@@ -183,6 +184,11 @@ void Application::SwitchRenderer(const GlobalConfig::ParameterType& p)
 	case 3:
 		LOG_LVL2("Switching to Hierarchy Importance Renderer...");
 		m_rendererSystem->SetRenderer<HierarchyImportance>();
+		break;
+
+	case 4:
+		LOG_LVL2("Switching to Whitted Pathtracer...");
+		m_rendererSystem->SetRenderer<Pathtracer>(true);
 		break;
 
 	default:
