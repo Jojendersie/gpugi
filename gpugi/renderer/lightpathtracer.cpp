@@ -47,5 +47,5 @@ void LightPathtracer::Draw()
 	m_lighttraceShader.Activate();
 	GL_CALL(glDispatchCompute, m_rendererSystem.GetNumInitialLightSamples() * m_numRaysPerLightSample / m_localSizeLightPathtracer, 1, 1);
 
-	//m_rendererSystem.DispatchShowLightCacheShader();
+	m_rendererSystem.DispatchShowLightCacheShader();
 }

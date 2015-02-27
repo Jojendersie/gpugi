@@ -44,21 +44,21 @@ void main()
 				// Add Sample.
 				ivec2 pixelCoord = ivec2((screenCoord*0.5 + vec2(0.5)) * BackbufferSize);
 
-				bool hasWritten = false; // Do not use "break;" instead. There's a bug in the GLSL optimizer!
-				do {
-					if(imageAtomicCompSwap(LockTexture, pixelCoord, uint(0), uint(1)) == 0)
-					{
-						memoryBarrierImage();
+		//		bool hasWritten = false; // Do not use "break;" instead. There's a bug in the GLSL optimizer!
+		//		do {
+		//			if(imageAtomicCompSwap(LockTexture, pixelCoord, uint(0), uint(1)) == 0)
+		//			{
+		//				memoryBarrierImage();
 
 						// Add sample
 						vec4 imageVal = imageLoad(OutputTexture, pixelCoord);
 						imageStore(OutputTexture, pixelCoord, vec4(imageVal.xyz + color, imageVal.w));
 							
 						// Release Lock
-						imageAtomicExchange(LockTexture, pixelCoord, 0);
-						hasWritten = true;
-					}
-				} while(!hasWritten);
+		//				imageAtomicExchange(LockTexture, pixelCoord, 0);
+		//				hasWritten = true;
+		//			}
+		//		} while(!hasWritten);
 			}
 		}
 	}
