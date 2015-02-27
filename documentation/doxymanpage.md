@@ -56,6 +56,11 @@ Renderers are set using RendererSystem::SetRenderer. It is not possible to set m
   * Obtains "importance" for all triangles using a pathtracer. For each path vertex all preceeding triangle-hits will increase their importance by the received radiance.
   * Propagation through the hierachy can be performed using HierarchyImportance::UpdateHierarchyNodeImportance
   * Hierachy information buffer (SSBO) is available as _shared pointer_ (for later use in other renderers) using HierarchyImportance::GetHierachyImportance. This means that the buffer survives a Renderer change, if you hold a copy of the shared_ptr somewhere else. Note however that switching to HierarchyImportance will always create a new buffer.
+  
+* Whitted Pathtracer
+  * Variant of the pathtracer (adds the define STOP_ON_DIFFUSE_BOUNCE)
+  * No indirect lighting or caustics -> no fireflies, strongly biased
+  * 4x faster than Pathtracer and more like a debug renderer (due to bias)
 
 
 ### General Notes ###
@@ -123,6 +128,7 @@ Overview of shader files. Configurations are done via #define macros (can be set
     * BSDF functions come in a normal and "Adjoint" version for particle tracing (see code comments)
     * Configuration options:
       * `SAMPLEBSDF_OUTPUT_PDF`: If set, the propability density at the sampled or evaluated point will also be returned.
+	  * `STOP_ON_DIFFUSE_BOUNCE`: Whitted variant - manipulates throughput for BSDF and Sampling to stop on diffuse bounce and avoid fireflies
   * `pathtracer.comp`
     * Basic pathtracer, see Pathtracer class.
     * Configuration options:
