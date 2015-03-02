@@ -114,17 +114,13 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	// Choose a random path type.
 	float pathDecisionVar = Random(seed);
 
-#ifdef STOP_ON_DIFFUSE_BOUNCE
-	if(avgPDiffuse > 0)
-	{
-		pathThroughput = vec3(0.0, 0.0, 0.0);
-		return vec3(0.0, 0.0, 0.0);
-	}
-#endif
-
 	// Diffuse:
 	if(avgPDiffuse > pathDecisionVar)	
 	{
+#ifdef STOP_ON_DIFFUSE_BOUNCE
+		pathThroughput = vec3(0.0, 0.0, 0.0);
+		return vec3(0.0, 0.0, 0.0);
+#endif
 		//vec3 brdf = (materialTexData.Diffuse * pdiffuse) / PI;
 		//pathThroughput *= brdf * dot(N, outDir) / pdf;
 		pathThroughput *= (materialTexData.Diffuse * pdiffuse) / avgPDiffuse; // Divide with decision propability (avgPDiffuse) for russion roulette.
