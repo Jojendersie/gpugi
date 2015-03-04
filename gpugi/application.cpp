@@ -9,6 +9,7 @@
 
 #include "renderer/renderersystem.hpp"
 #include "renderer/pathtracer.hpp"
+#include "renderer/whittedraytracer.hpp"
 #include "renderer/lightpathtracer.hpp"
 #include "renderer/bidirectionalpathtracer.hpp"
 #include "renderer/hierarchyimportance.hpp"
@@ -168,7 +169,7 @@ void Application::SwitchRenderer(const GlobalConfig::ParameterType& p)
 	{
 	case 0:
 		LOG_LVL2("Switching to Pathtracer...");
-		m_rendererSystem->SetRenderer<Pathtracer>(false);
+		m_rendererSystem->SetRenderer<Pathtracer>();
 		break;
 
 	case 1:
@@ -187,8 +188,8 @@ void Application::SwitchRenderer(const GlobalConfig::ParameterType& p)
 		break;
 
 	case 4:
-		LOG_LVL2("Switching to Whitted Pathtracer...");
-		m_rendererSystem->SetRenderer<Pathtracer>(true);
+		LOG_LVL2("Switching to Whitted Raytracer...");
+		m_rendererSystem->SetRenderer<WhittedRayTracer>();
 		break;
 
 	default:

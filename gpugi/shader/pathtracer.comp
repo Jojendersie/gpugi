@@ -32,6 +32,7 @@ void main()
 		TraceRay(ray, rayHit, barycentricCoord, triangle);
 		if(rayHit == RAY_MAX)
 			break;
+		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
 
 		// Compute hit normal and texture coordinate.
 		vec3 hitNormal; vec2 hitTexcoord;
@@ -42,7 +43,6 @@ void main()
 
 		// Connect to random light samples ("Next Event Estimation")
 		Ray lightRay;
-		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
 		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
 		{
 		#ifdef SHOW_SPECIFIC_PATHLENGTH

@@ -118,7 +118,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	if(avgPDiffuse > pathDecisionVar)	
 	{
 #ifdef STOP_ON_DIFFUSE_BOUNCE
-		pathThroughput = vec3(0.0, 0.0, 0.0);
+		pathThroughput = vec3(-1.0, 0.0, 0.0);
 		return vec3(0.0, 0.0, 0.0);
 #endif
 		//vec3 brdf = (materialTexData.Diffuse * pdiffuse) / PI;

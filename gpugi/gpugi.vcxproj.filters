@@ -177,6 +177,9 @@
     <ClCompile Include="..\dependencies\glhelper\glhelper\statemanagement.cpp">
       <Filter>dependencies\glhelper</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\whittedraytracer.cpp">
+      <Filter>code\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -335,6 +338,9 @@
     <ClInclude Include="..\dependencies\glhelper\glhelper\statemanagement.hpp">
       <Filter>dependencies\glhelper</Filter>
     </ClInclude>
+    <ClInclude Include="renderer\whittedraytracer.hpp">
+      <Filter>code\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\globaluniforms.glsl">
@@ -449,6 +455,9 @@
       <Filter>dependencies\glhelper</Filter>
     </None>
     <None Include="shader\showlightcaches.comp">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\whittedraytracer.comp">
       <Filter>shader</Filter>
     </None>
   </ItemGroup>

@@ -176,6 +176,7 @@
     <ClCompile Include="renderer\lightpathtracer.cpp" />
     <ClCompile Include="renderer\pathtracer.cpp" />
     <ClCompile Include="renderer\renderersystem.cpp" />
+    <ClCompile Include="renderer\whittedraytracer.cpp" />
     <ClCompile Include="scene\lighttrianglesampler.cpp" />
     <ClCompile Include="scene\scene.cpp" />
     <ClCompile Include="Time\Implementation\Stopwatch.cpp" />
@@ -225,6 +226,7 @@
     <ClInclude Include="renderer\pathtracer.hpp" />
     <ClInclude Include="renderer\renderer.hpp" />
     <ClInclude Include="renderer\renderersystem.hpp" />
+    <ClInclude Include="renderer\whittedraytracer.hpp" />
     <ClInclude Include="scene\lighttrianglesampler.hpp" />
     <ClInclude Include="scene\scene.hpp" />
     <ClInclude Include="Time\Implementation\Time_inl.h" />
@@ -279,6 +281,7 @@
     <None Include="shader\traceray.glsl" />
     <None Include="shader\utils\screenTri.vert" />
     <None Include="shader\utils\sqerror.frag" />
+    <None Include="shader\whittedraytracer.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

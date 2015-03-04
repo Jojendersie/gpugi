@@ -10,13 +10,13 @@ namespace gl
 	class TextureBufferView;
 }
 
-class Pathtracer : public Renderer
+class WhittedRayTracer : public Renderer
 {
 public:
 	/// \param [in] _whitted Stop on first diffuse hit.
-	Pathtracer(RendererSystem& _rendererSystem);
+	WhittedRayTracer(RendererSystem& _rendererSystem);
 
-	std::string GetName() const override { return "PT"; }
+	std::string GetName() const override { return "WPT"; }
 
 	void SetScreenSize(const gl::Texture2D& _newBackbuffer) override;
 
