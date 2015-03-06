@@ -337,9 +337,10 @@ void Application::SaveImage(const std::string& name)
 	time_t t = time(0);   // get time now
 	struct tm* now = localtime(&t);
 	std::string date = UIntToMinLengthString(now->tm_mon + 1, 2) + "." + UIntToMinLengthString(now->tm_mday, 2) + " " +
-		UIntToMinLengthString(now->tm_hour, 2) + "h" + UIntToMinLengthString(now->tm_min, 2) + "m" + std::to_string(now->tm_sec) + "s ";
+		UIntToMinLengthString(now->tm_hour, 2) + ";" + UIntToMinLengthString(now->tm_min, 2) + ";" + std::to_string(now->tm_sec) + " ";
 	std::string filename = "../screenshots/" + date + m_rendererSystem->GetActiveRenderer()->GetName() + " " +
-		std::to_string(m_rendererSystem->GetIterationCount()) + "it"
+		std::to_string(m_rendererSystem->GetIterationCount()) + "it " +
+		std::to_string(m_rendererSystem->GetRenderTime()) + "ms"
 		".pfm";
 	if (!name.empty())
 		filename = name + " " + filename;

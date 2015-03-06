@@ -28,6 +28,7 @@ RendererSystem::RendererSystem() : m_iterationCount(0), m_numInitialLightSamples
 
 	PerIterationBufferUpdate();
 	m_iterationCount = 0;
+	m_renderTime = 0;
 
 	m_showLightCachesShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/showlightcaches.comp");
 	m_showLightCachesShader.CreateProgram();
@@ -63,6 +64,7 @@ void RendererSystem::InitStandardUBOs(const gl::ShaderObject& _reflectionShader)
 void RendererSystem::ResetIterationCount()
 {
 	m_iterationCount = 0;
+	m_renderTime = 0;
 
 	(*m_perIterationUBO)["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
 	m_perIterationUBO->GetBuffer()->Flush();
@@ -132,6 +134,7 @@ void RendererSystem::SetScene(std::shared_ptr<Scene> _scene)
 
 
 	m_iterationCount = 0;
+	m_renderTime = 0;
 	if (m_backbuffer)
 		m_backbuffer->ClearToZero(0);
 
@@ -144,6 +147,7 @@ void RendererSystem::SetScene(std::shared_ptr<Scene> _scene)
 void RendererSystem::SetCamera(const Camera& _camera)
 {
 	m_iterationCount = 0;
+	m_renderTime = 0;
 	m_camera = _camera;
 
 	if (m_backbuffer)
@@ -176,6 +180,7 @@ void RendererSystem::SetScreenSize(const ei::IVec2& _newSize)
 	
 	UpdateGlobalConstUBO();
 	m_iterationCount = 0;
+	m_renderTime = 0;
 
 	if (m_activeRenderer)
 		m_activeRenderer->SetScreenSize(*m_backbuffer);
@@ -191,8 +196,12 @@ void RendererSystem::Draw()
 		}
 		else
 		{
+			clock_t begin = clock();
 			m_activeRenderer->Draw();
 			PerIterationBufferUpdate();
+			GL_CALL(glFinish);
+			clock_t end = clock();
+			m_renderTime += (end - begin) * 1000 / CLOCKS_PER_SEC;
 		}
 	}
 }

@@ -71,15 +71,8 @@ void main()
 		vec3 sampleDirection = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, throughput);
 		if(throughput.x == -1.0) // -1 marks the end of the path (diffuse decision) for the Whitted sampler
 		{
-		#ifdef SAVE_PIXEL_CACHE
-			// Direct illumination of directly visible points is added by the light tracer
-			//if(i==0) break;
-		#endif
 			// Connect to random light samples ("Next Event Estimation")
 			Ray lightRay;
-		// #ifdef SAVE_PIXEL_CACHE
-			// if(i==0)
-		// #endif
 			for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
 			{
 			#ifdef SHOW_SPECIFIC_PATHLENGTH
@@ -111,12 +104,7 @@ void main()
 						vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
 
 						vec3 irradiance = (saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in because of shading normals!
-					// #ifdef SAVE_PIXEL_CACHE // Currently using other solution (early break)
-						// float mis = (i==0) ? 0.5 : 1.0;
-						// color += irradiance * pathThroughput * bsdf * (lightSampleWeight * mis);
-					// #else
 						color += irradiance * pathThroughput * bsdf * (lightSampleWeight / pdiffuseAvg);
-					// #endif
 					}
 				}
 			}

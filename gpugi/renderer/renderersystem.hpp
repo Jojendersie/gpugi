@@ -102,10 +102,12 @@ public:
 	/// Returns if a debug renderer is active
 	bool IsDebugRendererActive() { return m_activeDebugRenderer != nullptr; }
 
-	/// Hoy many iterations did the current image already render.
+	/// How many iterations did the current image already render.
 	/// Meaning may differ with concrete renderer.
 	unsigned long GetIterationCount() const { return m_iterationCount;  }
 
+	/// Duration of all passed iterations (time for GetIterationCount()) in milliseconds
+	unsigned long GetRenderTime() const { return m_renderTime; }
 
 	/// Configures the number of so called initial light samples
 	///
@@ -166,6 +168,7 @@ private:
 
 	/// Is reset for SetScene/Camera/Screensize. Other than that its handling is the task of the concrete renderer-impl.
 	unsigned long m_iterationCount;
+	unsigned long m_renderTime;	// Time in ms
 
 	/// Scene data
 	std::shared_ptr<Scene> m_scene;

@@ -144,14 +144,6 @@ void main()
 						// -> We need the solid angle and the projected area of the pixel in this point!
 						// Formulas explained in (6.2) http://www.maw.dk/3d_graphics_projects/downloads/Bidirectional%20Path%20Tracing%202009.pdf
 						// Also a look into SmallVCM is a good idea!
-						
-						// The distance to the image plane  is length(CameraW) == 1.
-						// imagePointToCameraDist = length(pixelPos) = length(CameraU * screenCoord.x + CameraV * screenCoord.y + CameraW) =
-						//					      = 1.0 / dot(-cameraRay.Direction, CameraW)
-						// fluxToIntensity = 1/solidAngle = imagePointToCameraDist / (dot(-cameraRay.Direction, CameraW) * PixelArea) =
-						//				   =  1.0 / (dot(-cameraRay.Direction, CameraW)² * PixelArea)  ------ THIS IS APPROXIMATE!
-						// fluxToIrradiance =(photometric distance law)= fluxToIntensity * dot(cameraRay.Direction, Normal) / cameraDistSq
-
 						float cosAtCamera = saturate(camViewDotRay / cameraDist); // = dot(-cameraRay.Direction, CameraW);
 						float fluxToIrradiance = AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal) /
 												(cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
