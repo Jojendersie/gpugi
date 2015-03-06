@@ -180,6 +180,9 @@
     <ClCompile Include="renderer\whittedraytracer.cpp">
       <Filter>code\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\pixelcachelighttracer.cpp">
+      <Filter>code\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -341,6 +344,9 @@
     <ClInclude Include="renderer\whittedraytracer.hpp">
       <Filter>code\renderer</Filter>
     </ClInclude>
+    <ClInclude Include="renderer\pixelcachelighttracer.hpp">
+      <Filter>code\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\globaluniforms.glsl">
@@ -458,6 +464,9 @@
       <Filter>shader</Filter>
     </None>
     <None Include="shader\whittedraytracer.comp">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\pixelcache.glsl">
       <Filter>shader</Filter>
     </None>
   </ItemGroup>

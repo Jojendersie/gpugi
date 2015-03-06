@@ -27,7 +27,7 @@ layout(binding = 1, r32ui) coherent uniform uimage2D LockTexture;
 
 
 #ifdef SAVE_LIGHT_CACHE
-	#define MAX_PATHLENGTH 4
+	#define MAX_PATHLENGTH 6
 #else
 	#define MAX_PATHLENGTH 16
 #endif

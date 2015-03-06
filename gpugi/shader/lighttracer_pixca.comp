@@ -1,0 +1,225 @@
+#version 440
+
+#define TRINORMAL_OUTPUT
+#include "stdheader.glsl"
+
+#include "pixelcache.glsl"
+
+
+// The problem: There is no atomic vec4 operation, even with GL_NV_shader_atomic_float
+// The solution: (Spin)Locks for every output pixel. (http://stackoverflow.com/questions/10652862/glsl-semaphores)
+// A possible alternative solution: Gather all events in an "append buffer" and apply them via classic vertex scattering (point rendering) and blending
+
+// coherent is necessary!
+layout(binding = 0, rgba32f) coherent uniform image2D OutputTexture;
+layout(binding = 1, r32ui) coherent uniform uimage2D LockTexture;
+
+
+#define MAX_PATHLENGTH 8
+#define CONNECTION_EPSILON 0.0
+
+// The (often underestimated) problem:
+// The number of light rays hitting a triangle does NOT depend on the shading normal!
+// The fix (see also Veach Chapter 5.3 or http://ompf2.com/viewtopic.php?f=3&t=1944):
+float AdjointBSDFShadingNormalCorrectedOutDotN(vec3 incomingLight, vec3 toCamera, vec3 geometryNormal, vec3 shadingNormal)
+{
+	// alternative without if? todo
+	if(dot(incomingLight, geometryNormal) * dot(incomingLight, shadingNormal) < 0 ||
+		dot(toCamera, geometryNormal) * dot(toCamera, shadingNormal) < 0)
+		return 0.0;
+
+	return saturate(abs(dot(incomingLight, shadingNormal) * dot(toCamera, geometryNormal)) / (abs(dot(incomingLight, geometryNormal)) + DIVISOR_EPSILON));
+
+	// Alternative without correction:
+	// return saturate(dot(-toCamera, shadingNormal));
+}
+float AdjointBSDFShadingNormalCorrection(vec3 inDir, vec3 outDir, vec3 geometryNormal, vec3 shadingNormal)
+{
+	// alternative without if? todo
+	if(dot(inDir, geometryNormal) * dot(inDir, shadingNormal) < 0 ||
+		dot(outDir, geometryNormal) * dot(outDir, shadingNormal) < 0)
+		return 0.0;
+
+	return saturate(abs(dot(inDir, shadingNormal) * dot(outDir, geometryNormal)) / (abs(dot(inDir, geometryNormal) * dot(outDir, shadingNormal)) + DIVISOR_EPSILON));
+}
+
+void WriteAtomic(vec3 value, ivec2 pixelCoord)
+{
+	// Lock pixel - there is a lot you can do wrong!
+	// * ..due to shared command counter
+	// * ..due to buggy glsl optimizations
+	// -> Good overview: http://stackoverflow.com/questions/21538555/broken-glsl-spinlock-glsl-locks-compendium
+	bool hasWritten = false; // Do not use "break;" instead. There's a bug in the GLSL optimizer!
+	do {
+		if(imageAtomicCompSwap(LockTexture, pixelCoord, uint(0), uint(1)) == 0)
+		{
+			memoryBarrierImage();
+
+			// Add sample
+			vec4 imageVal = imageLoad(OutputTexture, pixelCoord);
+			imageStore(OutputTexture, pixelCoord, vec4(imageVal.xyz + value, imageVal.w));
+			
+			// Release Lock
+			imageAtomicExchange(LockTexture, pixelCoord, 0);
+			hasWritten = true;
+		}
+	} while(!hasWritten);
+	
+	//vec4 imageVal = imageLoad(OutputTexture, pixelCoord);
+	//imageStore(OutputTexture, pixelCoord, vec4(imageVal.xyz + value, imageVal.w));
+}
+
+
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+	uint randomSeed = InitRandomSeed(FrameSeed, gl_GlobalInvocationID.x);
+	int lightSampleIndex = int(gl_GlobalInvocationID.x / NumRaysPerLightSample);
+	vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2);
+	vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2 + 1);
+
+
+	// Keep in mind that we are tracing flux = photons!
+	// TotalFlux = Integral(I0 * cos Angle) dangle = I0 * PI
+	vec3 pathThroughput = lightIntensity_Norm1.xyz * (PI / NumRaysPerLightSample);
+	
+	Ray ray;
+	ray.Origin = lightSamplePos_Norm0.xyz;
+	vec3 normal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
+	vec3 U, V;
+	CreateONB(normal, U, V);
+	ray.Direction = SampleUnitHemisphere(Random2(randomSeed), U, V, normal);
+
+	for(int i=0; i<MAX_PATHLENGTH; ++i)
+	{
+		// Trace ray.
+		Triangle triangle;
+		vec3 barycentricCoord;
+		float rayHit = RAY_MAX;
+		vec3 geometryNormal;
+		TraceRay(ray, rayHit, barycentricCoord, triangle, geometryNormal);
+		if(rayHit == RAY_MAX)
+			break;
+		//geometryNormal = normalize(geometryNormal); geometryNormal is not normalize, but it actually does not need to be! See AdjointBSDFShadingNormalX functions
+		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
+
+		// Compute hit normal and texture coordinate.
+		vec3 shadingNormal; vec2 hitTexcoord;
+		GetTriangleHitInfo(triangle, barycentricCoord, shadingNormal, hitTexcoord);
+
+		// Get Material infos.
+		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
+		// Diffuse != Diffuse reflectance because of multilayer model. Upper layers might reflect earlier
+		float absCosInToShading = abs(dot(shadingNormal, ray.Direction));
+		vec3 diffuse = GetDiffuseReflectance(triangle.w, materialTexData, absCosInToShading);
+
+		// Direct illumination of directly visible points is added by the Whitted tracer
+		if(GetLuminance(diffuse) > 0.0 && i!=0)
+		{
+			// Try to connect to camera.
+			Ray cameraRay;
+			cameraRay.Direction = CameraPosition - ray.Origin;
+			float camViewDotRay = -dot(CameraW, cameraRay.Direction);
+			if(camViewDotRay > 0.0) // Camera faces point?
+			{
+				// Compute screen coord for this ray.
+				vec3 proj = vec3(-dot(CameraU, cameraRay.Direction), -dot(CameraV, cameraRay.Direction), camViewDotRay);
+				vec2 screenCoord = proj.xy / proj.z;
+				screenCoord.x /= dot(CameraU,CameraU);
+				screenCoord.y /= dot(CameraV,CameraV);
+
+				// Valid screen coords?
+				if(screenCoord.x >= -1.0 && screenCoord.x < 1.0 && screenCoord.y > -1.0 && screenCoord.y <= 1.0)
+				{
+					float cameraDistSq = dot(cameraRay.Direction, cameraRay.Direction);
+					float cameraDist = sqrt(cameraDistSq);
+					cameraRay.Direction /= cameraDist;
+					cameraRay.Origin = cameraRay.Direction * RAY_HIT_EPSILON + ray.Origin;
+
+					// Hits *pinhole* camera
+					if(!TraceRayAnyHit(cameraRay, cameraDist))
+					{
+						// Compute pdf conversion factor from image plane area to surface area.
+						// The problem: A pixel sees more than only a point! -> photometric distance law (E = I cosTheta / d²) not directly applicable!
+						// -> We need the solid angle and the projected area of the pixel in this point!
+						// Formulas explained in (6.2) http://www.maw.dk/3d_graphics_projects/downloads/Bidirectional%20Path%20Tracing%202009.pdf
+						// Also a look into SmallVCM is a good idea!
+						
+						// The distance to the image plane  is length(CameraW) == 1.
+						// imagePointToCameraDist = length(pixelPos) = length(CameraU * screenCoord.x + CameraV * screenCoord.y + CameraW) =
+						//					      = 1.0 / dot(-cameraRay.Direction, CameraW)
+						// fluxToIntensity = 1/solidAngle = imagePointToCameraDist / (dot(-cameraRay.Direction, CameraW) * PixelArea) =
+						//				   =  1.0 / (dot(-cameraRay.Direction, CameraW)² * PixelArea)  ------ THIS IS APPROXIMATE!
+						// fluxToIrradiance =(photometric distance law)= fluxToIntensity * dot(cameraRay.Direction, Normal) / cameraDistSq
+
+						float cosAtCamera = saturate(camViewDotRay / cameraDist); // = dot(-cameraRay.Direction, CameraW);
+						float fluxToIrradiance = AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal) /
+												(cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
+
+						vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal);
+						//float mis = (i==0) ? 0.5 : 1.0;
+						vec3 color = pathThroughput * (fluxToIrradiance / PI) * diffuse;
+
+						// Add Sample.
+						ivec2 pixelCoord = ivec2((screenCoord*0.5 + vec2(0.5)) * BackbufferSize);
+
+						WriteAtomic(color, pixelCoord);
+					}
+				}
+			}
+		}
+		
+		// "Next event estimation" connect to a random pixel via cache
+		ivec2 pixelCoord = ivec2(RandomUInt(randomSeed) % BackbufferSize.x, RandomUInt(randomSeed) % BackbufferSize.y);
+		int cacheIdx = pixelCoord.y * BackbufferSize.x + pixelCoord.x;
+		
+		// Connect the two path vertices and make a visibility test
+		Ray connectionRay;
+		connectionRay.Direction = PixelCacheEntries[cacheIdx].Vertex - ray.Origin;
+		float distanceSq = dot(connectionRay.Direction, connectionRay.Direction);
+		float connectionDist = sqrt(distanceSq);
+		connectionRay.Direction /= connectionDist;
+		
+		// Compute local and target brdf
+		MaterialTextureData targetMat;
+		targetMat.Reflectiveness = vec4(UnpackR11G11B10(PixelCacheEntries[cacheIdx].Reflectiveness), PixelCacheEntries[cacheIdx].Shininess);
+		targetMat.Opacity = UnpackR11G11B10(PixelCacheEntries[cacheIdx].Opacity);
+		targetMat.Diffuse = UnpackR11G11B10(PixelCacheEntries[cacheIdx].Diffuse);
+		vec3 bsdfv0 = AdjointBSDF(ray.Direction, connectionRay.Direction, triangle.w, materialTexData, shadingNormal) *
+					  AdjointBSDFShadingNormalCorrection(ray.Direction, connectionRay.Direction, geometryNormal, shadingNormal);
+		vec3 bsdfv1 = BSDF(connectionRay.Direction, PixelCacheEntries[cacheIdx].Incident,
+						   PixelCacheEntries[cacheIdx].MaterialID, targetMat,
+						   UnpackNormal(PixelCacheEntries[cacheIdx].Normal01));
+		vec3 color = bsdfv0 * bsdfv1 *
+					pathThroughput * LightRayPixelWeight *
+					PixelCacheEntries[cacheIdx].PathThroughput;
+		
+		// Connection can be in the wrong half space of either side. In that case we do not
+		// need the connection.
+		if(GetLuminance(color) > CONNECTION_EPSILON)
+		{
+			connectionRay.Origin = ray.Origin + connectionRay.Direction * RAY_HIT_EPSILON;
+			if(!TraceRayAnyHit(connectionRay, connectionDist - RAY_HIT_EPSILON*2))
+			{
+				//memoryBarrierImage();
+				WriteAtomic(color, pixelCoord);
+			}
+		}
+
+		// Continue ray.
+		vec3 throughput = vec3(1.0);
+		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, throughput);
+		throughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
+		pathThroughput *= throughput;
+
+	#ifdef RUSSIAN_ROULETTE
+		float continuationPropability = saturate(GetLuminance(throughput));
+		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stoped -> >=
+			break;
+		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.
+	#endif
+
+		ray.Direction = newDirection;
+		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
+	}
+}

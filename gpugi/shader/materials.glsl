@@ -68,6 +68,20 @@ void GetBSDFDecisionPropabilities(int material, MaterialTextureData materialTexD
 	prefract = prefract - pdiffuse;
 }
 
+vec3 GetDiffuseReflectance(int material, MaterialTextureData materialTexData, float cosThetaAbs)
+{
+	vec3 preflect = materialTexData.Reflectiveness.xyz * (Materials[material].Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + Materials[material].Fresnel0);
+	vec3 pdiffuse = (vec3(1.0) - saturate(preflect)) * materialTexData.Opacity;
+	return pdiffuse * materialTexData.Diffuse;
+}
+
+vec3 GetDiffuseProbability(int material, MaterialTextureData materialTexData, float cosThetaAbs)
+{
+	vec3 preflect = materialTexData.Reflectiveness.xyz * (Materials[material].Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + Materials[material].Fresnel0);
+	vec3 pdiffuse = (vec3(1.0) - saturate(preflect)) * materialTexData.Opacity;
+	return pdiffuse;
+}
+
 // Note: While BRDFs need to be symmetric to be physical, BSDFs have no such restriction!
 // The restriction is actually f(i->o) / (refrIndex_o²) = f(o->i) / (refrIndex_i²)
 // (See Veach PhD Thesis formular 5.14)
@@ -87,7 +101,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	//    Diff   |  Refr   | Reflect
 	//
 	// pathDecisionVar points now somewhere between 0 and 1.
-	// Decisions are taken using russion roulette. This mea
+	// Decisions are taken using russian roulette.
 
 	float cosTheta = dot(N, incidentDirection);
 	float cosThetaAbs = saturate(abs(cosTheta));
@@ -123,7 +137,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 #endif
 		//vec3 brdf = (materialTexData.Diffuse * pdiffuse) / PI;
 		//pathThroughput *= brdf * dot(N, outDir) / pdf;
-		pathThroughput *= (materialTexData.Diffuse * pdiffuse) / avgPDiffuse; // Divide with decision propability (avgPDiffuse) for russion roulette.
+		pathThroughput *= (materialTexData.Diffuse * pdiffuse) / avgPDiffuse; // Divide with decision probability (avgPDiffuse) for russian roulette.
 
 		// Create diffuse sample
 		vec3 U, V;
@@ -183,7 +197,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	// See also "Physically Based Rendering" page 440.
 
 	// pathThroughput = bsdf * dot(N, outDir) / pdf;
-	pathThroughput *= pphong * (phongNormalization / avgPPhong); // Divide with decision propability (avgPPhong) for russian roulette.
+	pathThroughput *= pphong * (phongNormalization / avgPPhong); // Divide with decision probability (avgPPhong) for russian roulette.
 
 	return outDir;
 }

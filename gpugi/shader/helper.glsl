@@ -81,3 +81,20 @@ vec3 SharedExponentDecode(uint encoded)
 	return (exp2(exponent) * 65536.0) * encodedUnpacked.rgb;
 }
 */
+
+// Expects: vec3([0,1], [0,1], [0,1])
+// Returns discretization of the value
+uint PackR11G11B10(vec3 color)
+{
+	color *= vec3(2047.0, 2047.0, 1023.0);
+	return (uint(color.r) << 21) | (uint(color.g) << 10) | uint(color.b);
+}
+
+vec3 UnpackR11G11B10(uint code)
+{
+	vec3 color;
+	color.r = float(code >> 21) / 2047.0;
+	color.g = float((code >> 10) & 0x7ff) / 2047.0;
+	color.b = float(code & 0x3ff) / 1023.0;
+	return color;
+}
