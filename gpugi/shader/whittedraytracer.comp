@@ -1,6 +1,5 @@
 #version 440
 
-#define SAMPLEBSDF_OUTPUT_PDF
 #include "stdheader.glsl"
 #ifdef SAVE_PIXEL_CACHE
 	#include "pixelcache.glsl"
@@ -28,6 +27,9 @@ void main()
 
 	vec3 color = vec3(0.0);
 	vec3 pathThroughput = vec3(1.0);
+	// If we could have decided for the diffuse case in the last step, then the direct
+	// illumination specular part is already contained. This needs to be masked.
+	bool lastVertexDiffusePossible = false;
 	
 #ifdef SAVE_PIXEL_CACHE
 	// Not sure if the loop will ever write something to the buffer
@@ -53,17 +55,20 @@ void main()
 		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
 		
 		// Add self emissivity of hit material.
-		vec3 emissivity = vec3(Materials[triangle.w].emissivityRG, Materials[triangle.w].emissivityB);
-		color += pathThroughput * emissivity / PI_2;
+		if(!lastVertexDiffusePossible)
+		{
+			vec3 emissivity = vec3(Materials[triangle.w].emissivityRG, Materials[triangle.w].emissivityB);
+			color += pathThroughput * emissivity;
+		}
 
 		// Make a decision
 		vec3 pdiffuse = GetDiffuseProbability(triangle.w, materialTexData, abs(dot(hitNormal, ray.Direction)));
 		float pdiffuseAvg = GetLuminance(pdiffuse);
+		lastVertexDiffusePossible = pdiffuseAvg > 0.0;
 		//if(pdiffuseAvg >= Random(seed) && i==0)
 		// Sample first to make a decision (next event or iterate)
 		vec3 throughput = vec3(1.0);
-		float pdf;
-		vec3 sampleDirection = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, throughput, pdf);
+		vec3 sampleDirection = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, throughput);
 		if(throughput.x == -1.0) // -1 marks the end of the path (diffuse decision) for the Whitted sampler
 		{
 		#ifdef SAVE_PIXEL_CACHE
@@ -72,6 +77,9 @@ void main()
 		#endif
 			// Connect to random light samples ("Next Event Estimation")
 			Ray lightRay;
+		// #ifdef SAVE_PIXEL_CACHE
+			// if(i==0)
+		// #endif
 			for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
 			{
 			#ifdef SHOW_SPECIFIC_PATHLENGTH
@@ -100,7 +108,7 @@ void main()
 					{
 						// Hemispherical lambert emitter. First we want intensity, not radiance
 						vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border
-						vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal, pdf);
+						vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
 
 						vec3 irradiance = (saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in because of shading normals!
 					// #ifdef SAVE_PIXEL_CACHE // Currently using other solution (early break)
@@ -114,6 +122,7 @@ void main()
 			}
 			
 		#ifdef SAVE_PIXEL_CACHE
+			if(i==0) break;
 			// Save from where we came and the information for the current hit point
 			PixelCacheEntries[gridIndex].PathThroughput = pathThroughput;
 			PixelCacheEntries[gridIndex].Diffuse = PackR11G11B10(materialTexData.Diffuse);

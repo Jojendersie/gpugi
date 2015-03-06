@@ -47,7 +47,7 @@ void PixelCacheLighttracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 	// Set constants ...
 	m_lightpathtraceUBO->GetBuffer()->Map();
 	(*m_lightpathtraceUBO)["NumRaysPerLightSample"].Set(static_cast<std::int32_t>(m_numRaysPerLightSample));
-	(*m_lightpathtraceUBO)["LightRayPixelWeight"].Set(float(numPixels) / 128);//???
+	(*m_lightpathtraceUBO)["LightRayPixelWeight"].Set(float(numPixels) / ei::PI);
 	m_lightpathtraceUBO->GetBuffer()->Unmap();
 
 	size_t pixelCacheSizeInBytes = (sizeof(float) * 4 * 4) * _newBackbuffer.GetWidth() * _newBackbuffer.GetHeight();

@@ -185,13 +185,17 @@ void main()
 		targetMat.Reflectiveness = vec4(UnpackR11G11B10(PixelCacheEntries[cacheIdx].Reflectiveness), PixelCacheEntries[cacheIdx].Shininess);
 		targetMat.Opacity = UnpackR11G11B10(PixelCacheEntries[cacheIdx].Opacity);
 		targetMat.Diffuse = UnpackR11G11B10(PixelCacheEntries[cacheIdx].Diffuse);
-		vec3 bsdfv0 = AdjointBSDF(ray.Direction, connectionRay.Direction, triangle.w, materialTexData, shadingNormal) *
-					  AdjointBSDFShadingNormalCorrection(ray.Direction, connectionRay.Direction, geometryNormal, shadingNormal);
+		vec3 cacheNormal = UnpackNormal(PixelCacheEntries[cacheIdx].Normal01);
+		// vec3 bsdfv0 = AdjointBSDF(ray.Direction, connectionRay.Direction, triangle.w, materialTexData, shadingNormal) *
+					  // AdjointBSDFShadingNormalCorrection(ray.Direction, connectionRay.Direction, geometryNormal, shadingNormal);
+		const float cosLight = saturate(dot(connectionRay.Direction, shadingNormal));
+		const float cosCache = saturate(-dot(connectionRay.Direction, cacheNormal));
+		vec3 bsdfv0 = BSDF(ray.Direction, connectionRay.Direction, triangle.w, materialTexData, shadingNormal);
 		vec3 bsdfv1 = BSDF(connectionRay.Direction, PixelCacheEntries[cacheIdx].Incident,
 						   PixelCacheEntries[cacheIdx].MaterialID, targetMat,
-						   UnpackNormal(PixelCacheEntries[cacheIdx].Normal01));
+						   cacheNormal);
 		vec3 color = bsdfv0 * bsdfv1 *
-					pathThroughput * LightRayPixelWeight *
+					pathThroughput * LightRayPixelWeight * cosCache * cosLight *
 					PixelCacheEntries[cacheIdx].PathThroughput;
 		
 		// Connection can be in the wrong half space of either side. In that case we do not
@@ -210,6 +214,7 @@ void main()
 		vec3 throughput = vec3(1.0);
 		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, throughput);
 		throughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
+		//	* abs(dot(ray.Direction, shadingNormal) * dot(newDirection, shadingNormal));
 		pathThroughput *= throughput;
 
 	#ifdef RUSSIAN_ROULETTE

@@ -10,5 +10,5 @@ layout(location = 0) uniform uint Divisor;
 void main()
 {	
 	FragColor = texture(Texture, vs_out_texcoord) / Divisor;
-	if(FragColor.r != FragColor.r) FragColor = vec4(999,0,999,1);
+	if(FragColor.r != FragColor.r) FragColor = vec4(999,999,0,1);
 }

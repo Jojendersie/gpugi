@@ -33,7 +33,7 @@ layout (std430, binding=0) restrict readonly buffer PixelCache
 layout(binding = 4, shared) uniform LightPathTrace
 {
 	int NumRaysPerLightSample;
-	float LightRayPixelWeight; // (Total num pixels) / (Total num light rays) 
+	float LightRayPixelWeight; // (Total num pixels) / (2 pi) 
 //	int LightCacheCapacity;
 //	int AverageLightPathLength;
 };

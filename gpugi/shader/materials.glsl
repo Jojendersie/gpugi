@@ -92,7 +92,11 @@ vec3 GetDiffuseProbability(int material, MaterialTextureData materialTexData, fl
 
 // Sample a direction from the custom surface BSDF
 // pathThroughput *= brdf * cos(Out, N) / pdf
-vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, inout vec3 pathThroughput, const bool adjoint, out float pdf)
+vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, inout vec3 pathThroughput, 		const bool adjoint, out float pdf
+	#ifdef SAMPLING_DECISION_OUTPUT
+		, out bool isReflectedDiffuse
+	#endif
+	)
 {
 	// Probability model:
 	//        
@@ -131,6 +135,9 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	// Diffuse:
 	if(avgPDiffuse > pathDecisionVar)	
 	{
+#ifdef SAMPLING_DECISION_OUTPUT
+		isReflectedDiffuse = true;
+#endif
 #ifdef STOP_ON_DIFFUSE_BOUNCE
 		pathThroughput = vec3(-1.0, 0.0, 0.0);
 		return vec3(0.0, 0.0, 0.0);
@@ -199,25 +206,43 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	// pathThroughput = bsdf * dot(N, outDir) / pdf;
 	pathThroughput *= pphong * (phongNormalization / avgPPhong); // Divide with decision probability (avgPPhong) for russian roulette.
 
+#ifdef SAMPLING_DECISION_OUTPUT
+	isReflectedDiffuse = false;
+#endif
+
 	return outDir;
 }
 
 vec3 SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, inout vec3 pathThroughput
+#ifdef SAMPLING_DECISION_OUTPUT
+		, out bool isReflectedDiffuse
+#endif
 #ifdef SAMPLEBSDF_OUTPUT_PDF
 		, out float pdf) {
 #else 
 	) { float pdf; // Hopefully removed by optimizer if not needed
 #endif
+#ifdef SAMPLING_DECISION_OUTPUT
+	return __SampleBSDF(incidentDirection, material, materialTexData, seed, N, pathThroughput, false, pdf, isReflectedDiffuse);
+#else
 	return __SampleBSDF(incidentDirection, material, materialTexData, seed, N, pathThroughput, false, pdf);
+#endif
 }
 
 vec3 SampleAdjointBSDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, inout vec3 pathThroughput
+#ifdef SAMPLING_DECISION_OUTPUT
+		, out bool isReflectedDiffuse
+#endif
 #ifdef SAMPLEBSDF_OUTPUT_PDF
 		, out float pdf) {
 #else 
 	) { float pdf; // Hopefully removed by optimizer if not needed
 #endif
+#ifdef SAMPLING_DECISION_OUTPUT
+	return __SampleBSDF(incidentDirection, material, materialTexData, seed, N, pathThroughput, true, pdf, isReflectedDiffuse);
+#else
 	return __SampleBSDF(incidentDirection, material, materialTexData, seed, N, pathThroughput, true, pdf);
+#endif
 }
 
 // Sample the custom surface BSDF for two known direction
