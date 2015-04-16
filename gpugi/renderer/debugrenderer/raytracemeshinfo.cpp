@@ -25,7 +25,7 @@ RaytraceMeshInfo::RaytraceMeshInfo(Renderer& _parentRenderer) :
 																"2: Opacity color\n" + 
 																"3: Reflection color");
 	GlobalConfig::AddListener("meshinfotype", "RaytraceMeshInfo", [&](const GlobalConfig::ParameterType& p) {
-		m_settingsUBO->GetBuffer()->Map();
+		m_settingsUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
 		(*m_settingsUBO)["DebugType"].Set(p[0].As<std::int32_t>());
 		m_settingsUBO->GetBuffer()->Unmap();
 	});

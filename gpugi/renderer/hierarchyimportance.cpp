@@ -47,12 +47,12 @@ void HierarchyImportance::SetScene(std::shared_ptr<Scene> _scene)
 {
 	// Contains an importance value (float) for each node (first) and each triangle (after node values)
 	m_hierarchyImportance = std::make_shared<gl::ShaderStorageBufferView>(
-							std::make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::Usage::IMMUTABLE),
+							std::make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::IMMUTABLE),
 							"HierachyImportanceBuffer");
 	m_hierarchyImportance->GetBuffer()->ClearToZero();
 	m_hierarchyImportance->BindBuffer(s_hierarchyImportanceBinding);
 
-	m_hierarchyImportanceUBO->GetBuffer()->Map();
+	m_hierarchyImportanceUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
 	(*m_hierarchyImportanceUBO)["NumInnerNodes"].Set(static_cast<std::int32_t>(_scene->GetNumInnerNodes()));
 	(*m_hierarchyImportanceUBO)["NumTriangles"].Set(static_cast<std::int32_t>(_scene->GetNumTriangles()));
 	m_hierarchyImportanceUBO->GetBuffer()->Unmap();
@@ -99,20 +99,20 @@ void HierarchyImportance::UpdateHierarchyNodeImportance()
 	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
 
 
-	gl::ShaderStorageBufferView doneBuffer(std::make_shared<gl::Buffer>(4, gl::Buffer::Usage::MAP_READ | gl::Buffer::Usage::MAP_WRITE), "DoneFlagBuffer");
+	gl::ShaderStorageBufferView doneBuffer(std::make_shared<gl::Buffer>(4, gl::Buffer::MAP_READ | gl::Buffer::MAP_WRITE), "DoneFlagBuffer");
 	doneBuffer.BindBuffer(1);
 	m_hierarchyImpPropagationNodeShader.Activate();
 
 	bool changedAnything = false;
 	do
 	{
-		*static_cast<int*>(doneBuffer.GetBuffer()->Map()) = 0;
+		*static_cast<int*>(doneBuffer.GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE)) = 0;
 		doneBuffer.GetBuffer()->Unmap();
 
 		GL_CALL(glDispatchCompute, numBlocks, 1, 1);
 		GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
 
-		changedAnything = *static_cast<int*>(doneBuffer.GetBuffer()->Map()) != 0;
+		changedAnything = *static_cast<int*>(doneBuffer.GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE)) != 0;
 		doneBuffer.GetBuffer()->Unmap();
 	} while (changedAnything);
 }

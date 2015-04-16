@@ -45,13 +45,13 @@ void PixelCacheLighttracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 	m_numRaysPerLightSample = std::max(m_localSizeLightPathtracer, (numPixels / m_rendererSystem.GetNumInitialLightSamples() / m_localSizeLightPathtracer) * m_localSizeLightPathtracer);
 
 	// Set constants ...
-	m_lightpathtraceUBO->GetBuffer()->Map();
+	m_lightpathtraceUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
 	(*m_lightpathtraceUBO)["NumRaysPerLightSample"].Set(static_cast<std::int32_t>(m_numRaysPerLightSample));
 	(*m_lightpathtraceUBO)["LightRayPixelWeight"].Set(float(numPixels) / ei::PI);
 	m_lightpathtraceUBO->GetBuffer()->Unmap();
 
 	size_t pixelCacheSizeInBytes = (sizeof(float) * 4 * 4) * _newBackbuffer.GetWidth() * _newBackbuffer.GetHeight();
-	m_pixelCache = std::make_unique<gl::ShaderStorageBufferView>(std::make_shared<gl::Buffer>(pixelCacheSizeInBytes, gl::Buffer::Usage::IMMUTABLE), "PixelCache");
+	m_pixelCache = std::make_unique<gl::ShaderStorageBufferView>(std::make_shared<gl::Buffer>(pixelCacheSizeInBytes, gl::Buffer::IMMUTABLE), "PixelCache");
 	m_pixelCache->BindBuffer(0);			   //?
 	m_eyetraceShader.BindSSBO(*m_pixelCache);  //?
 	m_lighttraceShader.BindSSBO(*m_pixelCache);//?

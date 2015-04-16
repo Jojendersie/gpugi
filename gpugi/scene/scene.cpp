@@ -54,11 +54,11 @@ Scene::Scene( const std::string& _file ) :
 		return;
 	}
 	if( m_bvType == ε::Types3D::BOX )
-		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Box>) * m_numInnerNodes), gl::Buffer::Usage::MAP_WRITE);
+		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Box>) * m_numInnerNodes), gl::Buffer::MAP_WRITE);
 	else if( m_bvType == ε::Types3D::SPHERE )
-		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Sphere>) * m_numInnerNodes), gl::Buffer::Usage::MAP_WRITE);
+		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Sphere>) * m_numInnerNodes), gl::Buffer::MAP_WRITE);
 
-	m_parentBuffer = std::make_shared<gl::Buffer>(uint32(4 * m_numInnerNodes), gl::Buffer::Usage::MAP_WRITE);
+	m_parentBuffer = std::make_shared<gl::Buffer>(uint32(4 * m_numInnerNodes), gl::Buffer::MAP_WRITE);
 	m_parentBufferRAM.resize(m_numInnerNodes);
 
 	// Hold double buffer to find light sources
@@ -99,7 +99,7 @@ Scene::~Scene()
 	// Make all textures non resident
 	for( auto& it : m_textures )
 	{
-		uint64 handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it.second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+		uint64 handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it.second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternHandle());
 	}
 }
 
@@ -124,14 +124,14 @@ std::unique_ptr<FileDecl::Vertex[]> Scene::LoadVertices(std::ifstream& _file, co
 	if (_file.fail()) LOG_ERROR("Why?");
 
 	// Copy to GPU
-	m_vertexPositionBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(ei::Vec3) * _header.numElements), gl::Buffer::Usage::MAP_WRITE);
-	ei::Vec3* positionData = static_cast<ei::Vec3*>(m_vertexPositionBuffer->Map());
+	m_vertexPositionBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(ei::Vec3) * _header.numElements), gl::Buffer::MAP_WRITE);
+	ei::Vec3* positionData = static_cast<ei::Vec3*>(m_vertexPositionBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	for (unsigned int v = 0; v < _header.numElements; ++v)
 		positionData[v] = vertexBuffer[v].position;
 	m_vertexPositionBuffer->Unmap();
 
-	m_vertexInfoBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(VertexInfo) * _header.numElements), gl::Buffer::Usage::MAP_WRITE);
-	VertexInfo* infoData = static_cast<VertexInfo*>(m_vertexInfoBuffer->Map());
+	m_vertexInfoBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(VertexInfo) * _header.numElements), gl::Buffer::MAP_WRITE);
+	VertexInfo* infoData = static_cast<VertexInfo*>(m_vertexInfoBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	for (unsigned int v = 0; v < _header.numElements; ++v)
 	{
 		infoData[v].normalAngles.x = atan2(vertexBuffer[v].normal.y, vertexBuffer[v].normal.x);
@@ -156,8 +156,8 @@ std::unique_ptr<Scene::Triangle[]> Scene::LoadTriangles( std::ifstream& _file, c
 	_file.read( (char*)&triangleBuffer[0], _header.elementSize * _header.numElements );
 
 	// Copy to GPU
-	m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_numTrianglesPerLeaf * sizeof(Triangle) * _header.numElements), gl::Buffer::Usage::MAP_WRITE );
-	Triangle* dest = reinterpret_cast<Triangle*>(m_triangleBuffer->Map());
+	m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_numTrianglesPerLeaf * sizeof(Triangle) * _header.numElements), gl::Buffer::MAP_WRITE );
+	Triangle* dest = reinterpret_cast<Triangle*>(m_triangleBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	memcpy( dest, &triangleBuffer[0], _header.numElements * _header.elementSize );
 	m_triangleBuffer->Unmap();
 
@@ -201,8 +201,8 @@ void LoadHierachyHelper(char* _hierachy, uint32* _parentBuffer, std::ifstream& _
 void Scene::LoadHierarchy( std::ifstream& _file, const FileDecl::NamedArray& _header )
 {
 	// Read element wise and copy the tree structure
-	char* hierachy = reinterpret_cast<char*>(m_hierarchyBuffer->Map());
-	uint32* parentBuffer = reinterpret_cast<uint32*>(m_parentBuffer->Map());
+	char* hierachy = reinterpret_cast<char*>(m_hierarchyBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+	uint32* parentBuffer = reinterpret_cast<uint32*>(m_parentBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	
 	if (m_bvType == ε::Types3D::BOX)
 		LoadHierachyHelper<ei::Box>(hierachy, parentBuffer, _file, _header);
@@ -222,7 +222,7 @@ void Scene::LoadBoundingVolumes( std::ifstream& _file, const FileDecl::NamedArra
 	// Read element wise and copy the volume information
 	if( m_bvType == ε::Types3D::BOX )
 	{
-		TreeNode<ε::Box>* dest = (TreeNode<ε::Box>*)m_hierarchyBuffer->Map();
+		TreeNode<ε::Box>* dest = (TreeNode<ε::Box>*)m_hierarchyBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
 		for (uint32_t i = 0; i < _header.numElements; ++i, ++dest)
 		{
 			ε::Box buffer;
@@ -235,7 +235,7 @@ void Scene::LoadBoundingVolumes( std::ifstream& _file, const FileDecl::NamedArra
 	}
 	else if( m_bvType == ε::Types3D::SPHERE )
 	{
-		TreeNode<ε::Sphere>* dest = (TreeNode<ε::Sphere>*)m_hierarchyBuffer->Map();
+		TreeNode<ε::Sphere>* dest = (TreeNode<ε::Sphere>*)m_hierarchyBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
 		for (uint32_t i = 0; i < _header.numElements; ++i, ++dest)
 		{
 			ε::Sphere buffer;
@@ -307,11 +307,11 @@ uint64 Scene::GetBindlessHandle( const std::string& _name )
 	{
 		it = m_textures.insert( std::pair<std::string, std::unique_ptr<gl::Texture2D>>(
 			_name, gl::Texture2D::LoadFromFile(PathUtils::AppendPath(m_sourceDirectory, _name), false))).first;
-		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternHandle());
 		// Make permanently resident
 		GL_CALL(glMakeTextureHandleResidentARB, handle);
 	} else
-		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternHandle());
 	
 	return handle;
 }
@@ -325,11 +325,11 @@ uint64 Scene::GetBindlessHandle( const ε::Vec3& _data )
 	{
 		it = m_textures.insert( std::pair<std::string, std::unique_ptr<gl::Texture2D>>(
 			genName, std::unique_ptr<gl::Texture2D>(new gl::Texture2D(1, 1, gl::TextureFormat::RGB8, &_data, gl::TextureSetDataFormat::RGB, gl::TextureSetDataType::FLOAT))) ).first;
-		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternHandle());
 		// Make permanently resident
 		GL_CALL(glMakeTextureHandleResidentARB, handle);
 	} else
-		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternHandle());
 	
 	return handle;
 }
@@ -343,11 +343,11 @@ uint64 Scene::GetBindlessHandle( const ε::Vec4& _data )
 	{
 		it = m_textures.insert( std::pair<std::string, std::unique_ptr<gl::Texture2D>>(
 			genName, std::unique_ptr<gl::Texture2D>(new gl::Texture2D(1, 1, gl::TextureFormat::RGBA32F, &_data, gl::TextureSetDataFormat::RGBA, gl::TextureSetDataType::FLOAT))) ).first;
-		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternHandle());
 		// Make permanently resident
 		GL_CALL(glMakeTextureHandleResidentARB, handle);
 	} else
-		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternSamplerId());
+		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternHandle());
 	
 	return handle;
 }

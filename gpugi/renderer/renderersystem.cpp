@@ -52,7 +52,7 @@ void RendererSystem::InitStandardUBOs(const gl::ShaderObject& _reflectionShader)
 {
 	m_globalConstUBO = std::make_unique<gl::UniformBufferView>(_reflectionShader, "GlobalConst");
 	m_cameraUBO = std::make_unique<gl::UniformBufferView>(_reflectionShader, "Camera");
-	m_perIterationUBO = std::make_unique<gl::UniformBufferView>(_reflectionShader, "PerIteration", gl::Buffer::Usage::MAP_PERSISTENT | gl::Buffer::Usage::MAP_WRITE | gl::Buffer::Usage::EXPLICIT_FLUSH);
+	m_perIterationUBO = std::make_unique<gl::UniformBufferView>(_reflectionShader, "PerIteration", gl::Buffer::MAP_PERSISTENT | gl::Buffer::MAP_WRITE | gl::Buffer::EXPLICIT_FLUSH);
 	m_materialUBO = std::make_unique<gl::UniformBufferView>(_reflectionShader, "UMaterials");
 
 	m_globalConstUBO->BindBuffer((int)UniformBufferBindings::GLOBALCONST);
@@ -83,7 +83,8 @@ void RendererSystem::PerIterationBufferUpdate(bool _iterationIncrement)
 	// There could be some performance gain in double/triple buffering this buffer.
 	if (m_initialLightSampleBuffer)
 	{
-		m_lightTriangleSampler.GenerateRandomSamples(static_cast<LightTriangleSampler::LightSample*>(m_initialLightSampleBuffer->GetBuffer()->Map()), m_numInitialLightSamples);
+		m_lightTriangleSampler.GenerateRandomSamples(static_cast<LightTriangleSampler::LightSample*>(
+				m_initialLightSampleBuffer->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::INVALIDATE_BUFFER)),m_numInitialLightSamples);
 		m_initialLightSampleBuffer->GetBuffer()->Flush();
 	}
 
@@ -98,7 +99,7 @@ void RendererSystem::SetNumInitialLightSamples(unsigned int _numInitialLightSamp
 
 	m_initialLightSampleBuffer = std::make_unique<gl::TextureBufferView>(
 		std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(LightTriangleSampler::LightSample) * m_numInitialLightSamples),
-		gl::Buffer::Usage::MAP_WRITE | gl::Buffer::Usage::MAP_PERSISTENT | gl::Buffer::Usage::EXPLICIT_FLUSH), gl::TextureBufferFormat::RGBA32F);
+		gl::Buffer::MAP_WRITE | gl::Buffer::MAP_PERSISTENT | gl::Buffer::EXPLICIT_FLUSH), gl::TextureBufferFormat::RGBA32F);
 	m_initialLightSampleBuffer->BindBuffer((int)TextureBufferBindings::INITIAL_LIGHTSAMPLES);
 
 	// NumInitialLightSamples is part of the globalconst UBO
@@ -122,7 +123,7 @@ void RendererSystem::SetScene(std::shared_ptr<Scene> _scene)
 	m_hierarchyBuffer->BindBuffer((int)TextureBufferBindings::HIERARCHY);
 
 	// Upload materials / set textures
-	m_materialUBO->GetBuffer()->Map();
+	m_materialUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
 	m_materialUBO->Set(&m_scene->GetMaterials().front(), 0, uint32_t(m_scene->GetMaterials().size() * sizeof(Scene::Material)));
 
 	// Set scene for the light triangle sampler
@@ -157,7 +158,7 @@ void RendererSystem::SetCamera(const Camera& _camera)
 		ei::Mat4x4 viewProjection;
 		_camera.ComputeViewProjection(viewProjection);
 
-		m_cameraUBO->GetBuffer()->Map();
+		m_cameraUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
 		(*m_cameraUBO)["CameraU"].Set(camU);
 		(*m_cameraUBO)["CameraV"].Set(camV);
 		(*m_cameraUBO)["CameraW"].Set(camW);
@@ -211,7 +212,7 @@ void RendererSystem::UpdateGlobalConstUBO()
 	if (!m_backbuffer)
 		return; // Backbuffer not yet created - this function will be called again if it is ready, so no hurry.
 
-	m_globalConstUBO->GetBuffer()->Map();
+	m_globalConstUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
 	(*m_globalConstUBO)["BackbufferSize"].Set(ei::IVec2(m_backbuffer->GetWidth(), m_backbuffer->GetHeight()));
 	(*m_globalConstUBO)["NumInitialLightSamples"].Set(static_cast<std::int32_t>(m_numInitialLightSamples));
 	m_globalConstUBO->GetBuffer()->Unmap();

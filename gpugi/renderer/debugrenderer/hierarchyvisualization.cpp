@@ -35,7 +35,7 @@ HierarchyVisualization::HierarchyVisualization(Renderer& _parentRenderer) :
 	m_settingsUBO = std::make_unique<gl::UniformBufferView>(m_shader, "DebugSettings");
 	m_settingsUBO->BindBuffer(8);
 
-	m_settingsUBO->GetBuffer()->Map();
+	m_settingsUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
 	(*m_settingsUBO)["IterationCount"].Set(static_cast<std::int32_t>(m_parentRenderer.GetRendererSystem().GetIterationCount()));
 	m_settingsUBO->GetBuffer()->Unmap();
 
@@ -50,7 +50,7 @@ HierarchyVisualization::HierarchyVisualization(Renderer& _parentRenderer) :
 		ei::Vec3(0.0f, 0.0f, 1.0f),
 		ei::Vec3(1.0f, 0.0f, 1.0f),
 	};
-	m_boxVertexBuffer = std::make_unique<gl::Buffer>(sizeof(ei::Vec3) * 8, gl::Buffer::Usage::IMMUTABLE, boxVertices);
+	m_boxVertexBuffer = std::make_unique<gl::Buffer>(sizeof(ei::Vec3) * 8, gl::Buffer::IMMUTABLE, boxVertices);
 
 	std::uint32_t triIndices[] =
 	{
@@ -67,7 +67,7 @@ HierarchyVisualization::HierarchyVisualization(Renderer& _parentRenderer) :
 		3, 7, 2,    // side 6
 		2, 7, 6,
 	};
-	m_boxSolidIndices = std::make_unique<gl::Buffer>(sizeof(std::uint32_t) * 6 * 2 * 3, gl::Buffer::Usage::IMMUTABLE, triIndices);
+	m_boxSolidIndices = std::make_unique<gl::Buffer>(sizeof(std::uint32_t) * 6 * 2 * 3, gl::Buffer::IMMUTABLE, triIndices);
 
 	std::uint32_t lineIndices[12 * 2] =
 	{
@@ -75,7 +75,7 @@ HierarchyVisualization::HierarchyVisualization(Renderer& _parentRenderer) :
 		4, 5, 5, 7, 7, 6, 6, 4,
 		1, 5, 0, 4, 2, 6, 3, 7
 	};
-	m_boxLineIndices = std::make_unique<gl::Buffer>(sizeof(std::uint32_t) * 12 * 2, gl::Buffer::Usage::IMMUTABLE, lineIndices);
+	m_boxLineIndices = std::make_unique<gl::Buffer>(sizeof(std::uint32_t) * 12 * 2, gl::Buffer::IMMUTABLE, lineIndices);
 
 
 	typedef gl::VertexArrayObject::Attribute Attrib;
@@ -151,7 +151,7 @@ void HierarchyVisualization::SetScene(std::shared_ptr<Scene> _scene)
 	m_hierachyLevelOffset.push_back(_scene->GetNumInnerNodes());
 
 	// Upload
-	m_instanceBuffer = std::make_unique<gl::Buffer>(sizeof(Instance) * _scene->GetNumInnerNodes(), gl::Buffer::Usage::IMMUTABLE, instances.get());
+	m_instanceBuffer = std::make_unique<gl::Buffer>(sizeof(Instance) * _scene->GetNumInnerNodes(), gl::Buffer::IMMUTABLE, instances.get());
 }
 
 void HierarchyVisualization::Draw()
@@ -166,7 +166,7 @@ void HierarchyVisualization::Draw()
 	if (rangeStart > m_hierachyLevelOffset.size() - 2 || rangeStart >= rangeEnd)
 		return;
 
-	m_settingsUBO->GetBuffer()->Map();
+	m_settingsUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
 	(*m_settingsUBO)["MinDepth"].Set(static_cast<std::int32_t>(rangeStart));
 	(*m_settingsUBO)["MaxDepth"].Set(static_cast<std::int32_t>(rangeEnd));
 	m_settingsUBO->GetBuffer()->Unmap();

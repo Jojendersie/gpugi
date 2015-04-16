@@ -37,7 +37,7 @@ void LightPathtracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 	int numPixels = _newBackbuffer.GetWidth() * _newBackbuffer.GetHeight();
 	m_numRaysPerLightSample = std::max(m_localSizeLightPathtracer, (numPixels / m_rendererSystem.GetNumInitialLightSamples() / m_localSizeLightPathtracer) * m_localSizeLightPathtracer);
 
-	m_lightpathtraceUBO->GetBuffer()->Map();
+	m_lightpathtraceUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
 	(*m_lightpathtraceUBO)["NumRaysPerLightSample"].Set(static_cast<std::int32_t>(m_numRaysPerLightSample));
 	m_lightpathtraceUBO->GetBuffer()->Unmap();
 }
