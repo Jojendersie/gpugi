@@ -146,7 +146,7 @@ void main()
 						// Also a look into SmallVCM is a good idea!
 						float cosAtCamera = saturate(camViewDotRay / cameraDist); // = dot(-cameraRay.Direction, CameraW);
 						float fluxToIrradiance = AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal) /
-												(cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
+												(cosAtCamera * cosAtCamera * PixelArea * cameraDistSq + DIVISOR_EPSILON);
 
 						vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal);
 						//float mis = (i==0) ? 0.5 : 1.0;
@@ -170,7 +170,7 @@ void main()
 		connectionRay.Direction = PixelCacheEntries[cacheIdx].Vertex - ray.Origin;
 		float distanceSq = dot(connectionRay.Direction, connectionRay.Direction);
 		float connectionDist = sqrt(distanceSq);
-		connectionRay.Direction /= connectionDist;
+		connectionRay.Direction /= connectionDist + DIVISOR_EPSILON;
 		
 		// Compute local and target brdf
 		MaterialTextureData targetMat;
@@ -213,7 +213,7 @@ void main()
 		float continuationPropability = saturate(GetLuminance(throughput));
 		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stoped -> >=
 			break;
-		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.
+		pathThroughput /= continuationPropability + DIVISOR_EPSILON; // Only change in spectrum, no energy loss. Photon (!) stays the same.
 	#endif
 
 		ray.Direction = newDirection;

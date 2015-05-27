@@ -86,7 +86,7 @@ void main()
 				
 				// Direction to light & distance.
 				lightRay.Direction = lightSamplePos_Norm0.xyz - ray.Origin;
-				float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
+				float lightDistSq = dot(lightRay.Direction, lightRay.Direction) + DIVISOR_EPSILON;
 				float lightDist = sqrt(lightDistSq);
 				lightRay.Direction /= lightDist;
 
@@ -104,7 +104,7 @@ void main()
 						vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
 
 						vec3 irradiance = (saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in because of shading normals!
-						color += irradiance * pathThroughput * bsdf * (lightSampleWeight / pdiffuseAvg);
+						color += irradiance * pathThroughput * bsdf * (lightSampleWeight / (pdiffuseAvg + DIVISOR_EPSILON));
 					}
 				}
 			}
@@ -128,7 +128,7 @@ void main()
 		ray.Direction = sampleDirection;
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 		// Color shift only
-		pathThroughput *= throughput / GetLuminance(throughput);
+		pathThroughput *= throughput / (GetLuminance(throughput) + DIVISOR_EPSILON);
 	}
 	
 	vec4 final = vec4(color, 1.0);
