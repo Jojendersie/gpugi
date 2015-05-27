@@ -4,7 +4,7 @@
 #include <glhelper/screenalignedtriangle.hpp>
 #include <glhelper/framebufferobject.hpp>
 #include <glhelper/shaderobject.hpp>
-#include "../scene/lighttrianglesampler.hpp"
+#include "../scene/lightsampler.hpp"
 
 namespace gl
 {

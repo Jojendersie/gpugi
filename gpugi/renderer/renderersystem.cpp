@@ -83,7 +83,7 @@ void RendererSystem::PerIterationBufferUpdate(bool _iterationIncrement)
 	// There could be some performance gain in double/triple buffering this buffer.
 	if (m_initialLightSampleBuffer)
 	{
-		m_lightTriangleSampler.GenerateRandomSamples(static_cast<LightTriangleSampler::LightSample*>(
+		m_lightSampler.GenerateRandomSamples(static_cast<LightSampler::LightSample*>(
 				m_initialLightSampleBuffer->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::INVALIDATE_BUFFER)),m_numInitialLightSamples);
 		m_initialLightSampleBuffer->GetBuffer()->Flush();
 	}
@@ -98,7 +98,7 @@ void RendererSystem::SetNumInitialLightSamples(unsigned int _numInitialLightSamp
 	m_numInitialLightSamples = _numInitialLightSamples;
 
 	m_initialLightSampleBuffer = std::make_unique<gl::TextureBufferView>(
-		std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(LightTriangleSampler::LightSample) * m_numInitialLightSamples),
+		std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(LightSampler::LightSample) * m_numInitialLightSamples),
 		gl::Buffer::MAP_WRITE | gl::Buffer::MAP_PERSISTENT | gl::Buffer::EXPLICIT_FLUSH), gl::TextureBufferFormat::RGBA32F);
 	m_initialLightSampleBuffer->BindBuffer((int)TextureBufferBindings::INITIAL_LIGHTSAMPLES);
 
@@ -127,7 +127,7 @@ void RendererSystem::SetScene(std::shared_ptr<Scene> _scene)
 	m_materialUBO->Set(&m_scene->GetMaterials().front(), 0, uint32_t(m_scene->GetMaterials().size() * sizeof(Scene::Material)));
 
 	// Set scene for the light triangle sampler
-	m_lightTriangleSampler.SetScene(m_scene);
+	m_lightSampler.SetScene(m_scene);
 
 
 	// Perform a single per iteration update to ensure a valid state.

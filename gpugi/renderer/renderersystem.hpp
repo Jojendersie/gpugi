@@ -7,7 +7,7 @@
 #include <glhelper/shaderobject.hpp>
 
 #include "../camera/camera.hpp"
-#include "../scene/lighttrianglesampler.hpp"
+#include "../scene/lightsampler.hpp"
 
 namespace gl
 {
@@ -189,7 +189,7 @@ private:
 
 	unsigned int m_numInitialLightSamples;
 	std::unique_ptr<gl::TextureBufferView> m_initialLightSampleBuffer;
-	LightTriangleSampler m_lightTriangleSampler;
+	LightSampler m_lightSampler;
 
 	/// Project light caches to screen. Can be used from any renderer if the
 	/// light <-> eye path is missing. Invoke once per light cache.

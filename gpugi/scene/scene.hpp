@@ -87,17 +87,24 @@ public:
 		ε::Vec3 luminance;
 	};
 
+	struct PointLight
+	{
+		ε::Vec3 position;
+		ε::Vec3 intensity;
+	};
+
 	std::shared_ptr<gl::Buffer> GetVertexPositionBuffer() const	{ return m_vertexPositionBuffer; }
 	std::shared_ptr<gl::Buffer> GetVertexInfoBuffer() const		{ return m_vertexInfoBuffer; }
 	std::shared_ptr<gl::Buffer> GetTriangleBuffer() const		{ return m_triangleBuffer; }
 	std::shared_ptr<gl::Buffer> GetHierarchyBuffer() const		{ return m_hierarchyBuffer; }
 	/// The parent buffer supplements the hierachy buffer.
 	/// It contains a parent index for each node.
-	std::shared_ptr<gl::Buffer> GetParentBuffer() const		{ return m_parentBuffer; }
+	std::shared_ptr<gl::Buffer> GetParentBuffer() const			{ return m_parentBuffer; }
 	/// A CPU sided version of the parent buffer.
-	const std::vector<uint32>& GetParentBufferRAM() const	{ return m_parentBufferRAM; }
+	const std::vector<uint32>& GetParentBufferRAM() const		{ return m_parentBufferRAM; }
 
 	const std::vector<Material>& GetMaterials() const			{ return m_materials; }
+	const std::vector<PointLight>& GetPointLights() const		{ return m_pointLights; }
 
 	/// The bvh uses ε:: geometries. Which one can change with the files.
 	ε::Types3D GetBoundingVolumeType() const	{ return m_bvType; }
@@ -111,8 +118,18 @@ public:
 	const LightTriangle* GetLightTriangles() const	{ return m_lightTriangles.data(); }
 	// Normalized (to [0,1]) summed area for all light triangles
 	const float* GetLightSummedAreaTable() const			{ return m_lightSummedArea.data(); }
+	// Normalized (to [0,1]) summed flux for all point light sources
+	const float* GetPointLightSummedFluxTable() const		{ return m_pointLightSummedFlux.data(); }
 	float GetLightAreaSum() const				{ return m_lightAreaSum; }
+	float GetTotalAreaLightFlux() const			{ return m_totalAreaLightFlux; }
+	float GetTotalPointLightFlux() const		{ return m_totalPointLightFlux; }
 	const ε::Box& GetBoundingBox() const		{ return m_boundingBox; }
+
+	// Add a new point light source to the scene
+	void AddPointLight(const PointLight& _light) { m_pointLights.push_back(_light); ComputePointLightTable(); }
+	// Returns false if no light with the index excists
+	bool SetPointLight(size_t _index, const PointLight& _light) { if(_index >= m_pointLights.size()) return false; m_pointLights[_index] = _light; return true; ComputePointLightTable(); }
+//	bool RemovePointLight(size_t _index) { if(_index >= m_pointLights.size()) return false; m_pointLights[_index] = m_pointLights.back(); m_pointLights.pop_back(); return true; }
 
 private:
 	std::shared_ptr<gl::Buffer> m_vertexPositionBuffer;
@@ -124,11 +141,14 @@ private:
 
 	ε::Box m_boundingBox;
 	std::vector<LightTriangle> m_lightTriangles;
+	std::vector<PointLight> m_pointLights;
 	std::vector<float> m_lightSummedArea;
+	std::vector<float> m_pointLightSummedFlux;
 	std::vector<Material> m_materials;
 	uint32_t m_numTrianglesPerLeaf;
 	uint32_t m_numInnerNodes;
 	float m_lightAreaSum;
+	float m_totalAreaLightFlux, m_totalPointLightFlux;
 	ε::Types3D m_bvType;
 	std::unordered_map<std::string, std::unique_ptr<gl::Texture2D>> m_textures;
 	const gl::SamplerObject& m_samplerLinearNoMipMap;
@@ -148,6 +168,8 @@ private:
 	/// \param _triangles Temporary double buffer of all triangles.
 	/// \param _vertices Temporary double buffer of all vertices.
 	void LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::unique_ptr<FileDecl::Vertex[]> _vertices );
+	/// Analyzes the point light list to precompute values of importance sampling.
+	void ComputePointLightTable();
 
 	/// Check references between indices, vertices and materials
 	void SanityCheck(Triangle* _triangles);

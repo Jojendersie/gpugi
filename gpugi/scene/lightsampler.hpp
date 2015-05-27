@@ -6,10 +6,10 @@
 
 class Scene;
 
-class LightTriangleSampler
+class LightSampler
 {
 public:
-	LightTriangleSampler();
+	LightSampler();
 
 	void SetScene(std::shared_ptr<const Scene> _scene);
 

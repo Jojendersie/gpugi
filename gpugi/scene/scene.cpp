@@ -354,6 +354,8 @@ uint64 Scene::GetBindlessHandle( const ε::Vec4& _data )
 
 void Scene::LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::unique_ptr<FileDecl::Vertex[]> _vertices )
 {
+	m_totalAreaLightFlux = 0.0f;
+	float sum = 0.0f;
 	// Read the buffers with SubDataGets (still faster than a second file read pass)
 	for(uint32_t i = 0; i < GetNumTriangles(); ++i)
 	{
@@ -372,16 +374,18 @@ void Scene::LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::uniqu
 			lightSource.triangle.v2 = _vertices[_triangles[i].vertices[2]].position;
 			m_lightTriangles.push_back(lightSource);
 
+			// Flux
+			float area = ε::surface(lightSource.triangle);
+			m_totalAreaLightFlux += dot(ε::Vec3(0.2126f, 0.7152f, 0.0722f), lightSource.luminance) * area * ε::π; // π is the integral over all solid angles of the cosine lobe
+
 			// Compute the area
-			float newSum = ε::surface(lightSource.triangle);
-			if(!m_lightSummedArea.empty())
-				newSum += m_lightSummedArea.back();
-			m_lightSummedArea.push_back(newSum);
+			sum += ε::surface(lightSource.triangle);
+			m_lightSummedArea.push_back(sum);
 		}
 	}
 
 	// Normalize the sum
-	if (!m_lightSummedArea.empty())
+	if(!m_lightSummedArea.empty())
 	{
 		m_lightAreaSum = m_lightSummedArea.back();
 		for (size_t i = 0; i < m_lightSummedArea.size(); ++i)
@@ -394,6 +398,20 @@ void Scene::LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::uniqu
 		mat.emissivityRG /= m_lightAreaSum;
 		mat.emissivityB /= m_lightAreaSum;
 	}*/
+}
+
+void Scene::ComputePointLightTable()
+{
+	m_totalPointLightFlux = 0.0f;
+	m_pointLightSummedFlux.clear();
+	for(auto& light : m_pointLights)
+	{
+		float flux = dot(ε::Vec3(0.2126f, 0.7152f, 0.0722f), light.intensity) * 4 * ε::π;
+		m_totalPointLightFlux += flux;
+		m_pointLightSummedFlux.push_back( m_totalPointLightFlux );
+	}
+	for(size_t i = 0; i < m_pointLightSummedFlux.size(); ++i)
+		m_pointLightSummedFlux[i] /= m_totalPointLightFlux;
 }
 
 void Scene::SanityCheck(Triangle* _triangles)

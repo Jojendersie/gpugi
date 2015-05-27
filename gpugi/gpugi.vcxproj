@@ -178,7 +178,7 @@
     <ClCompile Include="renderer\pixelcachelighttracer.cpp" />
     <ClCompile Include="renderer\renderersystem.cpp" />
     <ClCompile Include="renderer\whittedraytracer.cpp" />
-    <ClCompile Include="scene\lighttrianglesampler.cpp" />
+    <ClCompile Include="scene\lightsampler.cpp" />
     <ClCompile Include="scene\scene.cpp" />
     <ClCompile Include="Time\Implementation\Stopwatch.cpp" />
     <ClCompile Include="Time\Implementation\Time.cpp" />
@@ -229,7 +229,7 @@
     <ClInclude Include="renderer\renderer.hpp" />
     <ClInclude Include="renderer\renderersystem.hpp" />
     <ClInclude Include="renderer\whittedraytracer.hpp" />
-    <ClInclude Include="scene\lighttrianglesampler.hpp" />
+    <ClInclude Include="scene\lightsampler.hpp" />
     <ClInclude Include="scene\scene.hpp" />
     <ClInclude Include="Time\Implementation\Time_inl.h" />
     <ClInclude Include="Time\Stopwatch.h" />

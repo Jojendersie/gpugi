@@ -17,34 +17,6 @@ MaterialTextureData SampleMaterialData(int materialID, vec2 texcoord)
 }
 
 
-// Sample hemisphere with cosine density.
-//    randomSample is a random number between 0-1
-vec3 SampleUnitHemisphere(vec2 randomSample, vec3 U, vec3 V, vec3 W)
-{
-	float phi = PI_2 * randomSample.x;
-	float sinTheta = sqrt(randomSample.y);	// sin(acos(sqrt(1-x))) = sqrt(x)
-	float x = sinTheta * cos(phi);
-	float y = sinTheta * sin(phi);
-	float z = sqrt(1.0 - randomSample.y);	// sqrt(1-sin(theta)^2)
-
-    return x*U + y*V + z*W;
-}
-
-
-// Sample Phong lobe relative to U, V, W frame
-vec3 SamplePhongLobe(vec2 randomSample, float exponent, vec3 U, vec3 V, vec3 W)
-{
-	float phi = PI_2 * randomSample.x;
-	float power = exp(log(randomSample.y) / (exponent+1.0f));
-	float scale = sqrt(1.0 - power*power);
-
-	float x = cos(phi)*scale;
-	float y = sin(phi)*scale;
-	float z = power;
-
-	return x*U + y*V + z*W;
-}
-
 float AvgProbability(vec3 colorProbability)
 {
 	return (colorProbability.x + colorProbability.y + colorProbability.z + DIVISOR_EPSILON) / (3.0 + DIVISOR_EPSILON);
@@ -149,7 +121,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 		// Create diffuse sample
 		vec3 U, V;
 		CreateONB(N, U, V);
-		vec3 outDir = SampleUnitHemisphere(randomSamples, U, V, N);
+		vec3 outDir = SampleHemisphereCosine(randomSamples, U, V, N);
 
 		pdf = saturate(dot(N, outDir)) / PI;
 

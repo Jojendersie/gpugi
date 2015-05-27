@@ -99,9 +99,6 @@
     <ClCompile Include="utilities\color.cpp">
       <Filter>code\utilities</Filter>
     </ClCompile>
-    <ClCompile Include="scene\lighttrianglesampler.cpp">
-      <Filter>code\scene</Filter>
-    </ClCompile>
     <ClCompile Include="renderer\lightpathtracer.cpp">
       <Filter>code\renderer</Filter>
     </ClCompile>
@@ -183,6 +180,9 @@
     <ClCompile Include="renderer\pixelcachelighttracer.cpp">
       <Filter>code\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="scene\lightsampler.cpp">
+      <Filter>code\scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -238,9 +238,6 @@
     </ClInclude>
     <ClInclude Include="utilities\color.hpp">
       <Filter>code\utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="scene\lighttrianglesampler.hpp">
-      <Filter>code\scene</Filter>
     </ClInclude>
     <ClInclude Include="renderer\lightpathtracer.hpp">
       <Filter>code\renderer</Filter>
@@ -346,6 +343,9 @@
     </ClInclude>
     <ClInclude Include="renderer\pixelcachelighttracer.hpp">
       <Filter>code\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="scene\lightsampler.hpp">
+      <Filter>code\scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

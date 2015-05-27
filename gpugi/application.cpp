@@ -130,6 +130,22 @@ void Application::RegisterScriptCommands()
 			icam->SetMoveSpeed(max(m_scene->GetBoundingBox().max - m_scene->GetBoundingBox().min) / 15.0f);
 	});
 
+	// Lighting
+	GlobalConfig::AddParameter("addPointLight", { 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f }, "Create a new point light source.");
+	GlobalConfig::AddListener("addPointLight", "addPointLight", [=](const GlobalConfig::ParameterType& p){
+		Scene::PointLight light;
+		light.position = ei::Vec3(p[0].As<float>(), p[1].As<float>(), p[2].As<float>());
+		light.intensity = ei::Vec3(p[3].As<float>(), p[4].As<float>(), p[5].As<float>());
+		m_scene->AddPointLight(light);
+	});
+	GlobalConfig::AddParameter("setPointLight", { 0, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f }, "Change setting of an existing point light. The index (param 1) depends on creation order.");
+	GlobalConfig::AddListener("setPointLight", "setPointLight", [=](const GlobalConfig::ParameterType& p){
+		Scene::PointLight light;
+		light.position = ei::Vec3(p[1].As<float>(), p[2].As<float>(), p[3].As<float>());
+		light.intensity = ei::Vec3(p[4].As<float>(), p[5].As<float>(), p[6].As<float>());
+		m_scene->SetPointLight(p[0].As<unsigned int>(), light);
+	});
+
 	// MSE check
 	GlobalConfig::AddParameter("referenceImage", { std::string("") }, "Reference for all mse checks.");
 	GlobalConfig::AddListener("referenceImage", "LoadReference", [=](const GlobalConfig::ParameterType& p) {
@@ -146,6 +162,10 @@ void Application::RegisterScriptCommands()
 			m_scriptWaitsForMSE = true;
 	});
 	m_scriptProcessing.AddProcessingPauseCommand("waitMSE");
+
+	// Add those internal methods which are not registered globaly
+	GlobalConfig::AddParameter("waitSeconds", { std::string("") }, "Halt script execution for next x seconds.");
+	GlobalConfig::AddParameter("waitIterations", { std::string("") }, "Halt script execution for next x iterations.");
 }
 	
 
