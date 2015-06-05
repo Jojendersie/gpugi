@@ -1,5 +1,5 @@
 #include "hierarchyvisualization.hpp"
-#include <glhelper/uniformbufferview.hpp>
+#include <glhelper/buffer.hpp>
 #include <glhelper/vertexarrayobject.hpp>
 #include <glhelper/statemanagement.hpp>
 
@@ -32,12 +32,8 @@ HierarchyVisualization::HierarchyVisualization(Renderer& _parentRenderer) :
 	}
 	m_shader.CreateProgram();
 
-	m_settingsUBO = std::make_unique<gl::UniformBufferView>(m_shader, "DebugSettings");
-	m_settingsUBO->BindBuffer(8);
-
-	m_settingsUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
-	(*m_settingsUBO)["IterationCount"].Set(static_cast<std::int32_t>(m_parentRenderer.GetRendererSystem().GetIterationCount()));
-	m_settingsUBO->GetBuffer()->Unmap();
+	m_settingsUBO = std::make_unique<gl::Buffer>(m_shader.GetUniformBufferInfo()["DebugSettings"].bufferDataSizeByte, gl::Buffer::UsageFlag::MAP_WRITE);
+	m_settingsUBO->BindUniformBuffer(8);
 
 
 	ei::Vec3 boxVertices[] = {
@@ -166,10 +162,11 @@ void HierarchyVisualization::Draw()
 	if (rangeStart > m_hierachyLevelOffset.size() - 2 || rangeStart >= rangeEnd)
 		return;
 
-	m_settingsUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
-	(*m_settingsUBO)["MinDepth"].Set(static_cast<std::int32_t>(rangeStart));
-	(*m_settingsUBO)["MaxDepth"].Set(static_cast<std::int32_t>(rangeEnd));
-	m_settingsUBO->GetBuffer()->Unmap();
+	gl::MappedUBOView memoryView(m_shader.GetUniformBufferInfo()["DebugSettings"], m_settingsUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::INVALIDATE_BUFFER));
+	memoryView["IterationCount"].Set(static_cast<std::int32_t>(m_parentRenderer.GetRendererSystem().GetIterationCount()));
+	memoryView["MinDepth"].Set(static_cast<std::int32_t>(rangeStart));
+	memoryView["MaxDepth"].Set(static_cast<std::int32_t>(rangeEnd));
+	m_settingsUBO->Unmap();
 
 
 	m_shader.Activate();

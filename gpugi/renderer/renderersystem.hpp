@@ -13,7 +13,6 @@ namespace gl
 {
 	class Texture2D;
 	class TextureBufferView;
-	class UniformBufferView;
 	class ShaderObject;
 }
 class Scene;
@@ -181,10 +180,14 @@ private:
 	std::unique_ptr<gl::TextureBufferView> m_vertexInfoBuffer;
 	std::unique_ptr<gl::TextureBufferView> m_triangleBuffer;
 
-	std::unique_ptr<gl::UniformBufferView> m_globalConstUBO;
-	std::unique_ptr<gl::UniformBufferView> m_cameraUBO;
-	std::unique_ptr<gl::UniformBufferView> m_materialUBO;
-	std::unique_ptr<gl::UniformBufferView> m_perIterationUBO;
+	std::unique_ptr<gl::Buffer> m_globalConstUBO;
+	gl::UniformBufferMetaInfo m_globalConstUBOInfo;
+	std::unique_ptr<gl::Buffer> m_cameraUBO;
+	gl::UniformBufferMetaInfo m_cameraUBOInfo;
+	std::unique_ptr<gl::Buffer> m_materialUBO;
+	gl::UniformBufferMetaInfo m_materialUBOInfo;
+	std::unique_ptr<gl::Buffer> m_perIterationUBO;
+	gl::UniformBufferMetaInfo m_perIterationUBOInfo;
 
 
 	unsigned int m_numInitialLightSamples;

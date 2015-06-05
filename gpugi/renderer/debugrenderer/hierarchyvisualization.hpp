@@ -34,7 +34,7 @@ private:
 		std::uint32_t depth;
 	};
 
-	std::unique_ptr<gl::UniformBufferView> m_settingsUBO;
+	std::unique_ptr<gl::Buffer> m_settingsUBO;
 
 	std::unique_ptr<gl::VertexArrayObject> m_boxVAO;
 	

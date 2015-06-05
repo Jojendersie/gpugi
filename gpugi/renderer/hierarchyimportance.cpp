@@ -7,8 +7,6 @@
 
 #include <glhelper/texture2d.hpp>
 #include <glhelper/buffer.hpp>
-#include <glhelper/shaderstoragebufferview.hpp>
-#include <glhelper/uniformbufferview.hpp>
 #include <glhelper/texturebufferview.hpp>
 #include <glhelper/utils/flagoperators.hpp>
 
@@ -37,8 +35,9 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 	m_hierarchyImpPropagationNodeShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_nodes.comp");
 	m_hierarchyImpPropagationNodeShader.CreateProgram();
 
-	m_hierarchyImportanceUBO.reset(new gl::UniformBufferView(m_hierarchyImpAcquisitionShader, "HierarchyImportanceUBO"));
-	m_hierarchyImportanceUBO->BindBuffer(4);
+	m_hierarchyImportanceUBOInfo = m_hierarchyImpAcquisitionShader.GetUniformBufferInfo()["HierarchyImportanceUBO"];
+	m_hierarchyImportanceUBO = std::make_unique<gl::Buffer>(m_hierarchyImportanceUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
+	m_hierarchyImportanceUBO->BindUniformBuffer(4);
 
 	m_rendererSystem.SetNumInitialLightSamples(128);
 }
@@ -46,16 +45,14 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 void HierarchyImportance::SetScene(std::shared_ptr<Scene> _scene)
 {
 	// Contains an importance value (float) for each node (first) and each triangle (after node values)
-	m_hierarchyImportance = std::make_shared<gl::ShaderStorageBufferView>(
-							std::make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::IMMUTABLE),
-							"HierachyImportanceBuffer");
-	m_hierarchyImportance->GetBuffer()->ClearToZero();
-	m_hierarchyImportance->BindBuffer(s_hierarchyImportanceBinding);
+	m_hierarchyImportance = std::make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::IMMUTABLE);
+	m_hierarchyImportance->ClearToZero();
+	m_hierarchyImportance->BindShaderStorageBuffer(s_hierarchyImportanceBinding);
 
-	m_hierarchyImportanceUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
-	(*m_hierarchyImportanceUBO)["NumInnerNodes"].Set(static_cast<std::int32_t>(_scene->GetNumInnerNodes()));
-	(*m_hierarchyImportanceUBO)["NumTriangles"].Set(static_cast<std::int32_t>(_scene->GetNumTriangles()));
-	m_hierarchyImportanceUBO->GetBuffer()->Unmap();
+	gl::MappedUBOView mapView(m_hierarchyImportanceUBOInfo, m_hierarchyImportanceUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+	mapView["NumInnerNodes"].Set(static_cast<std::int32_t>(_scene->GetNumInnerNodes()));
+	mapView["NumTriangles"].Set(static_cast<std::int32_t>(_scene->GetNumTriangles()));
+	m_hierarchyImportanceUBO->Unmap();
 
 	// Parent pointer for hierarchy propagation.
 	m_sceneParentPointer = std::make_unique<gl::TextureBufferView>(_scene->GetParentBuffer(), gl::TextureBufferFormat::R32I);
@@ -65,7 +62,7 @@ void HierarchyImportance::SetScene(std::shared_ptr<Scene> _scene)
 void HierarchyImportance::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 {
 	if (m_hierarchyImportance)
-		m_hierarchyImportance->GetBuffer()->ClearToZero();
+		m_hierarchyImportance->ClearToZero();
 
 	_newBackbuffer.BindImage(1, gl::Texture::ImageAccess::READ_WRITE);
 }
@@ -99,20 +96,20 @@ void HierarchyImportance::UpdateHierarchyNodeImportance()
 	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
 
 
-	gl::ShaderStorageBufferView doneBuffer(std::make_shared<gl::Buffer>(4, gl::Buffer::MAP_READ | gl::Buffer::MAP_WRITE), "DoneFlagBuffer");
-	doneBuffer.BindBuffer(1);
+	gl::Buffer doneBuffer(4, gl::Buffer::MAP_READ | gl::Buffer::MAP_WRITE);
+	doneBuffer.BindShaderStorageBuffer(1);
 	m_hierarchyImpPropagationNodeShader.Activate();
 
 	bool changedAnything = false;
 	do
 	{
-		*static_cast<int*>(doneBuffer.GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE)) = 0;
-		doneBuffer.GetBuffer()->Unmap();
+		*static_cast<int*>(doneBuffer.Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE)) = 0;
+		doneBuffer.Unmap();
 
 		GL_CALL(glDispatchCompute, numBlocks, 1, 1);
 		GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
 
-		changedAnything = *static_cast<int*>(doneBuffer.GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE)) != 0;
-		doneBuffer.GetBuffer()->Unmap();
+		changedAnything = *static_cast<int*>(doneBuffer.Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE)) != 0;
+		doneBuffer.Unmap();
 	} while (changedAnything);
 }

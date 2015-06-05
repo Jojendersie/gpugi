@@ -8,8 +8,7 @@
 
 namespace gl
 {
-	class ShaderStorageBufferView;
-	class UniformBufferView;
+	class Buffer;
 }
 
 class BidirectionalPathtracer : public Renderer
@@ -34,14 +33,14 @@ private:
 
 	std::unique_ptr<gl::Texture2D> m_lockTexture;
 
-	std::unique_ptr<gl::ShaderStorageBufferView> m_lightCacheFillCounter;
-	std::unique_ptr<gl::ShaderStorageBufferView> m_lightCache;
+	std::unique_ptr<gl::Buffer> m_lightCacheFillCounter;
+	std::unique_ptr<gl::Buffer> m_lightCache;
 
 	/// If true, the light cache capacity is not known and needs to be recomputed.
 	bool m_needToDetermineNeededLightCacheCapacity;
 
 	int m_numRaysPerLightSample;
-	std::unique_ptr<gl::UniformBufferView> m_lightpathtraceUBO;
+	std::unique_ptr<gl::Buffer> m_lightpathtraceUBO;
 
 	static const unsigned int m_localSizeLightPathtracer;
 	static const ei::UVec2 m_localSizePathtracer;

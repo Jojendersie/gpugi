@@ -1,7 +1,8 @@
 #include "lightpathtracer.hpp"
 #include "renderersystem.hpp"
 #include <glhelper/texture2d.hpp>
-#include <glhelper/uniformbufferview.hpp>
+#include <glhelper/buffer.hpp>
+#include <algorithm>
 
 const unsigned int LightPathtracer::m_localSizeLightPathtracer = 8 * 8;
 
@@ -18,8 +19,9 @@ LightPathtracer::LightPathtracer(RendererSystem& _rendererSystem) :
 	m_lighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp", additionalDefines);
 	m_lighttraceShader.CreateProgram();
 
-	m_lightpathtraceUBO = std::make_unique<gl::UniformBufferView>(m_lighttraceShader, "LightPathTrace");
-	m_lightpathtraceUBO->BindBuffer(4);
+	m_lightpathtraceUBOInfo = m_lighttraceShader.GetUniformBufferInfo().find("LightPathTrace")->second;
+	m_lightpathtraceUBO = std::make_unique<gl::Buffer>(m_lightpathtraceUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
+	m_lightpathtraceUBO->BindUniformBuffer(4);
 
 	_rendererSystem.SetNumInitialLightSamples(256);
 }
@@ -37,9 +39,9 @@ void LightPathtracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 	int numPixels = _newBackbuffer.GetWidth() * _newBackbuffer.GetHeight();
 	m_numRaysPerLightSample = std::max(m_localSizeLightPathtracer, (numPixels / m_rendererSystem.GetNumInitialLightSamples() / m_localSizeLightPathtracer) * m_localSizeLightPathtracer);
 
-	m_lightpathtraceUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
-	(*m_lightpathtraceUBO)["NumRaysPerLightSample"].Set(static_cast<std::int32_t>(m_numRaysPerLightSample));
-	m_lightpathtraceUBO->GetBuffer()->Unmap();
+	gl::MappedUBOView mapView(m_lightpathtraceUBOInfo, m_lightpathtraceUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+	mapView["NumRaysPerLightSample"].Set(static_cast<std::int32_t>(m_numRaysPerLightSample));
+	m_lightpathtraceUBO->Unmap();
 }
 
 void LightPathtracer::Draw()

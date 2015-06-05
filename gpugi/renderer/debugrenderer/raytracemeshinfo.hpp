@@ -23,7 +23,7 @@ public:
 	void Draw() override;
 
 private:
-	std::unique_ptr<gl::UniformBufferView> m_settingsUBO;
+	std::unique_ptr<gl::Buffer> m_settingsUBO;
 	std::unique_ptr<gl::ScreenAlignedTriangle> m_screenTri;
 	gl::ShaderObject m_infoShader;
 };

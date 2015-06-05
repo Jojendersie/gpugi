@@ -1,6 +1,6 @@
 #include "raytracemeshinfo.hpp"
 #include <glhelper/screenalignedtriangle.hpp>
-#include <glhelper/uniformbufferview.hpp>
+#include <glhelper/buffer.hpp>
 
 #include "../../control/scriptprocessing.hpp"
 #include "../../control/globalconfig.hpp"
@@ -16,18 +16,19 @@ RaytraceMeshInfo::RaytraceMeshInfo(Renderer& _parentRenderer) :
 	m_infoShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/debug/raytracemeshinfo.frag");
 	m_infoShader.CreateProgram();
 
-	m_settingsUBO = std::make_unique<gl::UniformBufferView>(m_infoShader, "DebugSettings");
-	m_settingsUBO->BindBuffer(8);
+	auto metaData = m_infoShader.GetUniformBufferInfo()["DebugSettings"];
+	m_settingsUBO = std::make_unique<gl::Buffer>(metaData.bufferDataSizeByte, gl::Buffer::UsageFlag::MAP_WRITE);
+	m_settingsUBO->BindUniformBuffer(8);
 
 	GlobalConfig::AddParameter("meshinfotype", { 0 }, std::string("Displayed meshinfo type:\n") +
 																"0: Normal (*.5 + .5)\n" +
 																"1: Diffuse color\n" + 
 																"2: Opacity color\n" + 
 																"3: Reflection color");
-	GlobalConfig::AddListener("meshinfotype", "RaytraceMeshInfo", [&](const GlobalConfig::ParameterType& p) {
-		m_settingsUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
-		(*m_settingsUBO)["DebugType"].Set(p[0].As<std::int32_t>());
-		m_settingsUBO->GetBuffer()->Unmap();
+	GlobalConfig::AddListener("meshinfotype", "RaytraceMeshInfo", [&, metaData](const GlobalConfig::ParameterType& p) {
+		gl::MappedUBOView dataView(metaData, m_settingsUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+		dataView["DebugType"].Set(p[0].As<std::int32_t>());
+		m_settingsUBO->Unmap();
 	});
 	GlobalConfig::SetParameter("meshinfotype", { 0 });
 }

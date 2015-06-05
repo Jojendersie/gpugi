@@ -8,8 +8,6 @@
 
 namespace gl
 {
-	class UniformBufferView;
-	class ShaderStorageBufferView;
 	class TextureBufferView;
 	class Texture2D;
 }
@@ -29,7 +27,7 @@ public:
 	///
 	/// Contains a float entry for all inner nodes (first) and triangles (after node entries).
 	/// If no call of UpdateHierarchyNodeImportance proceeded, only the triangles have valid importance values.
-	std::shared_ptr<gl::ShaderStorageBufferView>& GetHierachyImportance() { return m_hierarchyImportance; }
+	std::shared_ptr<gl::Buffer>& GetHierachyImportance() { return m_hierarchyImportance; }
 
 	/// Updates the hierarchy importance of all inner nodes by propagating them from the triangles up through the tree.
 	void UpdateHierarchyNodeImportance();
@@ -45,10 +43,11 @@ private:
 	gl::ShaderObject m_hierarchyImpPropagationInitShader;
 	gl::ShaderObject m_hierarchyImpPropagationNodeShader;
 
-	std::unique_ptr<gl::UniformBufferView> m_hierarchyImportanceUBO;
+	gl::UniformBufferMetaInfo m_hierarchyImportanceUBOInfo;
+	std::unique_ptr<gl::Buffer> m_hierarchyImportanceUBO;
 	static const ei::UVec2 m_localSizePathtracer;
 
 	std::unique_ptr<gl::TextureBufferView> m_sceneParentPointer;
-	std::shared_ptr<gl::ShaderStorageBufferView> m_hierarchyImportance;
+	std::shared_ptr<gl::Buffer> m_hierarchyImportance;
 };
 

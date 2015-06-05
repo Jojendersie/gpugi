@@ -2,9 +2,9 @@
 #include "renderer.hpp"
 
 #include <glhelper/texture2d.hpp>
-#include <glhelper/texturebufferview.hpp>
-#include <glhelper/uniformbufferview.hpp>
+#include <glhelper/buffer.hpp>
 #include <glhelper/shaderobject.hpp>
+#include <glhelper/texturebufferview.hpp>
 
 #include "../camera/camera.hpp"
 #include "../scene/scene.hpp"
@@ -50,15 +50,21 @@ void RendererSystem::DisableDebugRenderer()
 
 void RendererSystem::InitStandardUBOs(const gl::ShaderObject& _reflectionShader)
 {
-	m_globalConstUBO = std::make_unique<gl::UniformBufferView>(_reflectionShader, "GlobalConst");
-	m_cameraUBO = std::make_unique<gl::UniformBufferView>(_reflectionShader, "Camera");
-	m_perIterationUBO = std::make_unique<gl::UniformBufferView>(_reflectionShader, "PerIteration", gl::Buffer::MAP_PERSISTENT | gl::Buffer::MAP_WRITE | gl::Buffer::EXPLICIT_FLUSH);
-	m_materialUBO = std::make_unique<gl::UniformBufferView>(_reflectionShader, "UMaterials");
+	m_globalConstUBOInfo = _reflectionShader.GetUniformBufferInfo().find("GlobalConst")->second;
+	m_globalConstUBO = std::make_unique<gl::Buffer>(m_globalConstUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
+	m_globalConstUBO->BindUniformBuffer((int)UniformBufferBindings::GLOBALCONST);
 
-	m_globalConstUBO->BindBuffer((int)UniformBufferBindings::GLOBALCONST);
-	m_cameraUBO->BindBuffer((int)UniformBufferBindings::CAMERA);
-	m_perIterationUBO->BindBuffer((int)UniformBufferBindings::PERITERATION);
-	m_materialUBO->BindBuffer((int)UniformBufferBindings::MATERIAL);
+	m_cameraUBOInfo = _reflectionShader.GetUniformBufferInfo().find("Camera")->second;
+	m_cameraUBO = std::make_unique<gl::Buffer>(m_cameraUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
+	m_cameraUBO->BindUniformBuffer((int)UniformBufferBindings::CAMERA);
+
+	m_perIterationUBOInfo = _reflectionShader.GetUniformBufferInfo().find("PerIteration")->second;
+	m_perIterationUBO = std::make_unique<gl::Buffer>(m_perIterationUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
+	m_perIterationUBO->BindUniformBuffer((int)UniformBufferBindings::PERITERATION);
+
+	m_materialUBOInfo = _reflectionShader.GetUniformBufferInfo().find("UMaterials")->second;
+	m_materialUBO = std::make_unique<gl::Buffer>(m_materialUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
+	m_materialUBO->BindUniformBuffer((int)UniformBufferBindings::MATERIAL);
 }
 
 void RendererSystem::ResetIterationCount()
@@ -66,8 +72,9 @@ void RendererSystem::ResetIterationCount()
 	m_iterationCount = 0;
 	m_renderTime = 0;
 
-	(*m_perIterationUBO)["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
-	m_perIterationUBO->GetBuffer()->Flush();
+	gl::MappedUBOView mappedData(m_perIterationUBOInfo, m_perIterationUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::INVALIDATE_BUFFER));
+	mappedData["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
+	m_perIterationUBO->Unmap();
 
 	GL_CALL(glMemoryBarrier, GL_TEXTURE_FETCH_BARRIER_BIT);
 }
@@ -77,14 +84,15 @@ void RendererSystem::PerIterationBufferUpdate(bool _iterationIncrement)
 	if (_iterationIncrement)
 		++m_iterationCount;
 
-	(*m_perIterationUBO)["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
-	m_perIterationUBO->GetBuffer()->Flush();
+	gl::MappedUBOView mappedData(m_perIterationUBOInfo, m_perIterationUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::INVALIDATE_BUFFER));
+	mappedData["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
+	m_perIterationUBO->Unmap();
 
 	// There could be some performance gain in double/triple buffering this buffer.
 	if (m_initialLightSampleBuffer)
 	{
 		m_lightSampler.GenerateRandomSamples(static_cast<LightSampler::LightSample*>(
-				m_initialLightSampleBuffer->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::INVALIDATE_BUFFER)),m_numInitialLightSamples);
+		m_initialLightSampleBuffer->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::INVALIDATE_BUFFER)),m_numInitialLightSamples);
 		m_initialLightSampleBuffer->GetBuffer()->Flush();
 	}
 
@@ -123,8 +131,9 @@ void RendererSystem::SetScene(std::shared_ptr<Scene> _scene)
 	m_hierarchyBuffer->BindBuffer((int)TextureBufferBindings::HIERARCHY);
 
 	// Upload materials / set textures
-	m_materialUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
-	m_materialUBO->Set(&m_scene->GetMaterials().front(), 0, uint32_t(m_scene->GetMaterials().size() * sizeof(Scene::Material)));
+	char* materialUBOData = static_cast<char*>(m_materialUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::INVALIDATE_BUFFER));
+	memcpy(materialUBOData, m_scene->GetMaterials().data(), uint32_t(m_scene->GetMaterials().size() * sizeof(Scene::Material)));
+	m_materialUBO->Unmap();
 
 	// Set scene for the light triangle sampler
 	m_lightSampler.SetScene(m_scene);
@@ -158,14 +167,15 @@ void RendererSystem::SetCamera(const Camera& _camera)
 		ei::Mat4x4 viewProjection;
 		_camera.ComputeViewProjection(viewProjection);
 
-		m_cameraUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
-		(*m_cameraUBO)["CameraU"].Set(camU);
-		(*m_cameraUBO)["CameraV"].Set(camV);
-		(*m_cameraUBO)["CameraW"].Set(camW);
-		(*m_cameraUBO)["CameraPosition"].Set(_camera.GetPosition());
-		(*m_cameraUBO)["PixelArea"].Set(ei::len(ei::cross(camU * 2.0f / m_backbuffer->GetWidth(), camV * 2.0f / m_backbuffer->GetHeight())));
-		(*m_cameraUBO)["ViewProjection"].Set(viewProjection);
-		m_cameraUBO->GetBuffer()->Unmap();
+
+		gl::MappedUBOView mappedData(m_cameraUBOInfo, m_cameraUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::INVALIDATE_BUFFER));
+		mappedData["CameraU"].Set(camU);
+		mappedData["CameraV"].Set(camV);
+		mappedData["CameraW"].Set(camW);
+		mappedData["CameraPosition"].Set(_camera.GetPosition());
+		mappedData["PixelArea"].Set(ei::len(ei::cross(camU * 2.0f / m_backbuffer->GetWidth(), camV * 2.0f / m_backbuffer->GetHeight())));
+		mappedData["ViewProjection"].Set(viewProjection);
+		m_cameraUBO->Unmap();
 
 		m_backbuffer->ClearToZero(0);
 	}
@@ -200,7 +210,7 @@ void RendererSystem::Draw()
 			clock_t begin = clock();
 			m_activeRenderer->Draw();
 			PerIterationBufferUpdate();
-			GL_CALL(glFinish);
+		//	GL_CALL(glFinish);
 			clock_t end = clock();
 			m_renderTime += (end - begin) * 1000 / CLOCKS_PER_SEC;
 		}
@@ -212,10 +222,10 @@ void RendererSystem::UpdateGlobalConstUBO()
 	if (!m_backbuffer)
 		return; // Backbuffer not yet created - this function will be called again if it is ready, so no hurry.
 
-	m_globalConstUBO->GetBuffer()->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
-	(*m_globalConstUBO)["BackbufferSize"].Set(ei::IVec2(m_backbuffer->GetWidth(), m_backbuffer->GetHeight()));
-	(*m_globalConstUBO)["NumInitialLightSamples"].Set(static_cast<std::int32_t>(m_numInitialLightSamples));
-	m_globalConstUBO->GetBuffer()->Unmap();
+	gl::MappedUBOView mappedData(m_globalConstUBOInfo, m_globalConstUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::INVALIDATE_BUFFER));
+	mappedData["BackbufferSize"].Set(ei::IVec2(m_backbuffer->GetWidth(), m_backbuffer->GetHeight()));
+	mappedData["NumInitialLightSamples"].Set(static_cast<std::int32_t>(m_numInitialLightSamples));
+	m_globalConstUBO->Unmap();
 }
 
 void RendererSystem::DispatchShowLightCacheShader()

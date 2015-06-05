@@ -8,8 +8,7 @@
 
 namespace gl
 {
-	class ShaderStorageBufferView;
-	class UniformBufferView;
+	class Buffer;
 }
 
 class PixelCacheLighttracer : public Renderer
@@ -30,10 +29,11 @@ private:
 
 	std::unique_ptr<gl::Texture2D> m_lockTexture;
 
-	std::unique_ptr<gl::ShaderStorageBufferView> m_pixelCache;
-
+	std::unique_ptr<gl::Buffer> m_pixelCache;
+		
 	int m_numRaysPerLightSample;
-	std::unique_ptr<gl::UniformBufferView> m_lightpathtraceUBO;
+	gl::UniformBufferMetaInfo m_lightpathtraceUBOInfo;
+	std::unique_ptr<gl::Buffer> m_lightpathtraceUBO;
 
 	static const unsigned int m_localSizeLightPathtracer;
 	static const ei::UVec2 m_localSizeEyetracer;
