@@ -18,7 +18,9 @@ Scene::Scene( const std::string& _file ) :
 		gl::SamplerObject::Filter::LINEAR,
 		gl::SamplerObject::Filter::NEAREST,
 		gl::SamplerObject::Border::REPEAT
-	)) )
+	)) ),
+	m_totalPointLightFlux( 0.0f ),
+	m_totalAreaLightFlux( 0.0f )
 {
 	m_sourceDirectory = PathUtils::GetDirectory(_file);
 
