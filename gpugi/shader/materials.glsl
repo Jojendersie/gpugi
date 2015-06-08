@@ -300,3 +300,31 @@ vec3 AdjointBSDF(vec3 incidentDirection, vec3 excidentDirection, int material, M
 #endif
 	return __BSDF(-excidentDirection, -incidentDirection, material, materialTexData, N, pdf, true);
 }
+
+
+
+// The (often underestimated) problem:
+// The number of light rays hitting a triangle does NOT depend on the shading normal!
+// The fix (see also Veach Chapter 5.3 or http://ompf2.com/viewtopic.php?f=3&t=1944):
+float AdjointBSDFShadingNormalCorrectedOutDotN(vec3 incomingLight, vec3 toCamera, vec3 geometryNormal, vec3 shadingNormal)
+{
+	// alternative without if? todo
+	if(dot(incomingLight, geometryNormal) * dot(incomingLight, shadingNormal) < 0 ||
+		dot(toCamera, geometryNormal) * dot(toCamera, shadingNormal) < 0)
+		return 0.0;
+
+	return saturate(abs(dot(incomingLight, shadingNormal) * dot(toCamera, geometryNormal)) / (abs(dot(incomingLight, geometryNormal)) + DIVISOR_EPSILON));
+
+	// Alternative without correction:
+	// return saturate(dot(toCamera, shadingNormal));
+}
+float AdjointBSDFShadingNormalCorrection(vec3 inDir, vec3 outDir, vec3 geometryNormal, vec3 shadingNormal)
+{
+	//return 1.0f;
+	// alternative without if? todo
+	if(dot(inDir, geometryNormal) * dot(inDir, shadingNormal) < 0 ||
+		dot(outDir, geometryNormal) * dot(outDir, shadingNormal) < 0)
+		return 0.0;
+
+	return saturate(abs(dot(inDir, shadingNormal) * dot(outDir, geometryNormal)) / (abs(dot(inDir, geometryNormal) * dot(outDir, shadingNormal)) + DIVISOR_EPSILON));
+}

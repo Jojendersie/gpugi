@@ -16,14 +16,7 @@
     };
 #endif
 
-
-// The problem: There is no atomic vec4 operation, even with GL_NV_shader_atomic_float
-// The solution: (Spin)Locks for every output pixel. (http://stackoverflow.com/questions/10652862/glsl-semaphores)
-// A possible alternative solution: Gather all events in an "append buffer" and apply them via classic vertex scattering (point rendering) and blending
-
-// coherent is necessary!
-layout(binding = 0, rgba32f) coherent uniform image2D OutputTexture;
-layout(binding = 1, r32ui) coherent uniform uimage2D LockTexture;
+#include "screenreproject.glsl"
 
 
 #ifdef SAVE_LIGHT_CACHE
@@ -31,32 +24,6 @@ layout(binding = 1, r32ui) coherent uniform uimage2D LockTexture;
 #else
 	#define MAX_PATHLENGTH 16
 #endif
-
-// The (often underestimated) problem:
-// The number of light rays hitting a triangle does NOT depend on the shading normal!
-// The fix (see also Veach Chapter 5.3 or http://ompf2.com/viewtopic.php?f=3&t=1944):
-float AdjointBSDFShadingNormalCorrectedOutDotN(vec3 incomingLight, vec3 toCamera, vec3 geometryNormal, vec3 shadingNormal)
-{
-	// alternative without if? todo
-	if(dot(incomingLight, geometryNormal) * dot(incomingLight, shadingNormal) < 0 ||
-		dot(toCamera, geometryNormal) * dot(toCamera, shadingNormal) < 0)
-		return 0.0;
-
-	return saturate(abs(dot(incomingLight, shadingNormal) * dot(toCamera, geometryNormal)) / (abs(dot(incomingLight, geometryNormal)) + DIVISOR_EPSILON));
-
-	// Alternative without correction:
-	// return saturate(dot(toCamera, shadingNormal));
-}
-float AdjointBSDFShadingNormalCorrection(vec3 inDir, vec3 outDir, vec3 geometryNormal, vec3 shadingNormal)
-{
-	//return 1.0f;
-	// alternative without if? todo
-	if(dot(inDir, geometryNormal) * dot(inDir, shadingNormal) < 0 ||
-		dot(outDir, geometryNormal) * dot(outDir, shadingNormal) < 0)
-		return 0.0;
-
-	return saturate(abs(dot(inDir, shadingNormal) * dot(outDir, geometryNormal)) / (abs(dot(inDir, geometryNormal) * dot(outDir, shadingNormal)) + DIVISOR_EPSILON));
-}
 
 
 layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
@@ -229,26 +196,8 @@ void main()
 
 					// Add Sample.
 					ivec2 pixelCoord = ivec2((screenCoord*0.5 + vec2(0.5)) * BackbufferSize);
-
-					// Lock pixel - there is a lot you can do wrong!
-					// * ..due to shared command counter
-					// * ..due to buggy glsl optimizations
-					// -> Good overview: http://stackoverflow.com/questions/21538555/broken-glsl-spinlock-glsl-locks-compendium
-					bool hasWritten = false; // Do not use "break;" instead. There's a bug in the GLSL optimizer!
-					do {
-						if(imageAtomicCompSwap(LockTexture, pixelCoord, uint(0), uint(1)) == 0)
-						{
-							memoryBarrierImage();
-
-							// Add sample
-							vec4 imageVal = imageLoad(OutputTexture, pixelCoord);
-							imageStore(OutputTexture, pixelCoord, vec4(imageVal.xyz + color, imageVal.w));
-							
-							// Release Lock
-							imageAtomicExchange(LockTexture, pixelCoord, 0);
-							hasWritten = true;
-						}
-					} while(!hasWritten);
+					
+					WriteAtomic(color, pixelCoord);
 				}
 			}
 		}
