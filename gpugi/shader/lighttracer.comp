@@ -45,10 +45,11 @@ float AdjointBSDFShadingNormalCorrectedOutDotN(vec3 incomingLight, vec3 toCamera
 	return saturate(abs(dot(incomingLight, shadingNormal) * dot(toCamera, geometryNormal)) / (abs(dot(incomingLight, geometryNormal)) + DIVISOR_EPSILON));
 
 	// Alternative without correction:
-	// return saturate(dot(-toCamera, shadingNormal));
+	// return saturate(dot(toCamera, shadingNormal));
 }
 float AdjointBSDFShadingNormalCorrection(vec3 inDir, vec3 outDir, vec3 geometryNormal, vec3 shadingNormal)
 {
+	//return 1.0f;
 	// alternative without if? todo
 	if(dot(inDir, geometryNormal) * dot(inDir, shadingNormal) < 0 ||
 		dot(outDir, geometryNormal) * dot(outDir, shadingNormal) < 0)

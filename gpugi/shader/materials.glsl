@@ -165,10 +165,10 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	vec3 outDir = SamplePhongLobe(randomSamples, materialTexData.Reflectiveness.w, RU, RV, reflectRefractDir);
 
 	// Normalize the probability
-	float phongNormalization = (materialTexData.Reflectiveness.w + 2.0) / (materialTexData.Reflectiveness.w + 1.0);
+	//float phongNormalization = (materialTexData.Reflectiveness.w + 2.0) / (materialTexData.Reflectiveness.w + 1.0);
 
 	pdf = (materialTexData.Reflectiveness.w + 1.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialTexData.Reflectiveness.w);
-	// vec3 bsdf = (materialTexData.Reflectiveness.w + 2.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialTexData.Reflectiveness.w) * pphong / avgPPhong / dot(N, outDir)
+	// vec3 bsdf = (materialTexData.Reflectiveness.w + 1.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialTexData.Reflectiveness.w) * pphong / avgPPhong / dot(N, outDir)
 	
 	// The 1/dot(N, outDir) factor is rather magical: If we would only sample a dirac delta,
 	// we would expect that the scattering (rendering) equation would yield the radiance from the (via dirac delta) sampled direction.
@@ -176,7 +176,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	// See also "Physically Based Rendering" page 440.
 
 	// pathThroughput = bsdf * dot(N, outDir) / pdf;
-	pathThroughput *= pphong * (phongNormalization / avgPPhong); // Divide with decision probability (avgPPhong) for russian roulette.
+	pathThroughput *= pphong / avgPPhong; // Divide with decision probability (avgPPhong) for russian roulette.
 
 #ifdef SAMPLING_DECISION_OUTPUT
 	isReflectedDiffuse = false;
@@ -232,14 +232,15 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, Materi
 	GetBSDFDecisionPropabilities(material, materialTexData, cosThetaAbs, preflect, prefract, pdiffuse);
 
 	// Constants for phong sampling.
-	float phongFactor_brdf = (materialTexData.Reflectiveness.w + 2.0) / (PI_2 * (abs(cosThetaOut)+DIVISOR_EPSILON)); // normalization / abs(cosThetatOut)
+	float phongFactor_brdf = (materialTexData.Reflectiveness.w + 1.0) / (2 * PI_2 * abs(cosThetaOut)+DIVISOR_EPSILON); // normalization / abs(cosThetatOut)
+	//float phongFactor_brdf = (materialTexData.Reflectiveness.w + 1.0) / (2 * PI_2); // normalization / abs(cosThetatOut)
 	float phongNormalization_pdf = (materialTexData.Reflectiveness.w + 1.0) / PI_2;
 
 	// Reflection
 	vec3 reflectRefractDir = normalize(incidentDirection - (2.0 * cosTheta) * N);
-	float reflectionDotRefraction_powN = pow(saturate(dot(reflectRefractDir, excidentDirection)), materialTexData.Reflectiveness.w);
-	float reflrefrBRDFFactor = phongFactor_brdf * reflectionDotRefraction_powN;
-	float reflrefrPDFFactor = phongNormalization_pdf * reflectionDotRefraction_powN;
+	float reflectionDotExcident_powN = pow(saturate(dot(reflectRefractDir, excidentDirection)), materialTexData.Reflectiveness.w);
+	float reflrefrBRDFFactor = phongFactor_brdf * reflectionDotExcident_powN;
+	float reflrefrPDFFactor = phongNormalization_pdf * reflectionDotExcident_powN;
 	bsdf = preflect * reflrefrBRDFFactor;
 	pdf = AvgProbability(preflect) * reflrefrPDFFactor;
 
@@ -264,10 +265,10 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, Materi
 		reflectRefractDir = normalize(eta * incidentDirection + (sign(cosTheta) * (sqrt(saturate(1.0 - sinTheta2Sq)) - eta * cosThetaAbs)) * N);
 
 
-		float refractionDotRefraction_powN = pow(saturate(dot(reflectRefractDir, excidentDirection)), materialTexData.Reflectiveness.w);
+		float refractionDotExcident_powN = pow(saturate(dot(reflectRefractDir, excidentDirection)), materialTexData.Reflectiveness.w);
 		
-		reflrefrBRDFFactor = phongFactor_brdf * refractionDotRefraction_powN;
-		reflrefrPDFFactor = phongNormalization_pdf * refractionDotRefraction_powN;
+		reflrefrBRDFFactor = phongFactor_brdf * refractionDotExcident_powN;
+		reflrefrPDFFactor = phongNormalization_pdf * refractionDotExcident_powN;
 
 		if(!adjoint)
 			reflrefrBRDFFactor /= etaSq;
