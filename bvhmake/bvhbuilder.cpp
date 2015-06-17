@@ -139,19 +139,27 @@ void BVHBuilder::LoadMaterials( const std::string& _materialFileName )
 }
 
 
-void BVHBuilder::ExportGeometry( std::ofstream& _file )
+void BVHBuilder::ExportGeometry( std::ofstream& _file, int _numTexcoords )
 {
     // Prepare file headers and find out how much space is required
     FileDecl::NamedArray vertexHeader;
 	FileDecl::NamedArray tangentsHeader;
+	FileDecl::NamedArray qormalsHeader;
+	FileDecl::NamedArray texcoordsHeader;
     strcpy( vertexHeader.name, "vertices" );
 	strcpy( tangentsHeader.name, "tangents" );
+	strcpy( qormalsHeader.name, "tangents" );
+	strcpy( texcoordsHeader.name, "tangents" );
     vertexHeader.elementSize = sizeof(FileDecl::Vertex);
 	tangentsHeader.elementSize = sizeof(ε::Vec3);
+	qormalsHeader.elementSize = sizeof(ε::Quaternion);
+	texcoordsHeader.elementSize = sizeof(ε::Vec2);
     uint32 numTriangles = 0;
     vertexHeader.numElements = 0;
     CountGeometry( m_scene->mRootNode, vertexHeader.numElements, numTriangles );
 	tangentsHeader.numElements = vertexHeader.numElements;
+	qormalsHeader.numElements = vertexHeader.numElements;
+	texcoordsHeader.numElements = vertexHeader.numElements;
 
     // Allocate space for positions and index buffer (these are required for
     // the hierarchy build algorithm).
@@ -167,6 +175,17 @@ void BVHBuilder::ExportGeometry( std::ofstream& _file )
 	// Export tangents
 	_file.write( (const char*)&tangentsHeader, sizeof(FileDecl::NamedArray) );
 	ExportTangents( _file, m_scene->mRootNode, ε::identity4x4() );
+
+	// Export qormals
+	_file.write( (const char*)&qormalsHeader, sizeof(FileDecl::NamedArray) );
+	ExportQormals( _file, m_scene->mRootNode, ε::identity4x4() );
+
+	// Export more texture coordinates
+	for(int i=1; i<_numTexcoords; ++i)
+	{
+		_file.write( (const char*)&texcoordsHeader, sizeof(FileDecl::NamedArray) );
+		ExportTexcoords( _file, m_scene->mRootNode, i );
+	}
 
     // This is not required anymore, make place for the algorithms
     m_importer.FreeScene();
@@ -283,6 +302,70 @@ void BVHBuilder::ExportTangents( std::ofstream& _file,
 	for( unsigned i = 0; i < _node->mNumChildren; ++i )
         ExportTangents( _file, _node->mChildren[i], transformation );
 }
+
+void BVHBuilder::ExportQormals( std::ofstream& _file,
+    const struct aiNode* _node,
+    const ε::Mat4x4& _transformation)
+{
+    ε::Mat4x4 transformation = hard_cast<ε::Mat4x4>(_node->mTransformation) * _transformation;
+	ε::Mat3x3 invTransTransform(transformation.m00, transformation.m01, transformation.m02,
+								transformation.m10, transformation.m11, transformation.m12,
+								transformation.m20, transformation.m21, transformation.m22);
+	invTransTransform = transpose(invert(invTransTransform));
+    
+	for( unsigned i = 0; i < _node->mNumMeshes; ++i )
+	{
+		const aiMesh* mesh = m_scene->mMeshes[ _node->mMeshes[i] ];
+
+		if(mesh->mTangents == nullptr || mesh->mBitangents == nullptr)
+		{
+			LOG_ERROR("No tangent space generated! Filling qormal buffer with zeros.");
+			ε::Quaternion zero = ε::qidentity();
+			for (unsigned v = 0; v < mesh->mNumVertices; ++v)
+			{
+				_file.write((const char*)&zero, sizeof(ε::Vec3));
+			}
+		} else {
+			for (unsigned v = 0; v < mesh->mNumVertices; ++v)
+			{
+				ε::Vec3 tangent = invTransTransform * hard_cast<ε::Vec3>(mesh->mTangents[v]);
+				ε::Vec3 bitangent = invTransTransform * hard_cast<ε::Vec3>(mesh->mBitangents[v]);
+				ε::Vec3 normal = invTransTransform * hard_cast<ε::Vec3>(mesh->mNormals[v]);
+				ε::Quaternion q(ε::axis(tangent, bitangent, normal));
+				_file.write((const char*)&q, sizeof(ε::Quaternion));
+			}
+		}
+    }
+
+    // Export all children
+	for( unsigned i = 0; i < _node->mNumChildren; ++i )
+        ExportQormals( _file, _node->mChildren[i], transformation );
+}
+
+void BVHBuilder::ExportTexcoords( std::ofstream& _file,
+        const struct aiNode* _node,
+		int _texcoordChannel )
+{
+    for( unsigned i = 0; i < _node->mNumMeshes; ++i )
+	{
+		const aiMesh* mesh = m_scene->mMeshes[ _node->mMeshes[i] ];
+
+        for( unsigned v = 0; v < mesh->mNumVertices; ++v )
+        {
+			ε::Vec2 texcoord;
+            if( mesh->HasTextureCoords(_texcoordChannel) )
+				texcoord = ε::Vec2(mesh->mTextureCoords[_texcoordChannel][v].x, mesh->mTextureCoords[_texcoordChannel][v].y);
+			else
+                texcoord = ε::Vec2(sqrtf(-1), sqrtf(-1));
+            _file.write( (const char*)&texcoord, sizeof(ε::Vec2) );
+        }
+    }
+
+    // Export all children
+	for( unsigned i = 0; i < _node->mNumChildren; ++i )
+        ExportTexcoords( _file, _node->mChildren[i], _texcoordChannel );
+}
+
 
 
 void BVHBuilder::BuildBVH()

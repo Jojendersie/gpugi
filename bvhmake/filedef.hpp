@@ -20,7 +20,6 @@ namespace FileDecl
     {
         ε::Vec3 position;
         ε::Vec3 normal;
-        // TODO: tangente?
         ε::Vec2 texcoord;
     };
 

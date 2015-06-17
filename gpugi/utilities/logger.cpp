@@ -59,7 +59,7 @@ namespace Logger {
 		// Add a header to the message from the user
 		std::stringstream message;	message.str("");
 
-		// Shorten the full file name done to just the file
+		// Shorten the full file name down to the file only
 		const char* fileShort = strrchr(_file, '\\');
 		if( !fileShort ) fileShort = strrchr(_file, '/');
 		if( !fileShort ) fileShort = _file;

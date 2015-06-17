@@ -55,12 +55,14 @@ int main( int _numArgs, const char** _args )
                      << "      The default is aabox." << std::endl
                   << "  o=[output directory]: OPTIONAL. A path where the scene\n"\
                      "      directory should be created. Otherwise the output is\n"\
-                     "      located at the import file location." << std::endl;
+                     "      located at the import file location." << std::endl
+				  << "  t=[X]: OPTIONAL. Number of texture coordinates to export." << std::endl;
         return 1;
     }
 
     // Set defaults for optional arguments
     std::string outputPath = PathUtils::GetDirectory( std::string(_args[1]) );
+	int numTextureCoordinates = 1;
     // Get the optional arguments
     for( int i = 2; i < _numArgs; ++i )
     {
@@ -83,6 +85,9 @@ int main( int _numArgs, const char** _args )
         case 'o':
             outputPath = _args[i] + 2;
             break;
+		case 't':
+			numTextureCoordinates = atoi(_args[i] + 2);
+			break;
         default:
             std::cerr << "Unknown optional argument!" << std::endl;
             return 1;
@@ -119,7 +124,7 @@ int main( int _numArgs, const char** _args )
 	// Export geometry must be first because it organizes the data for the
     // other calls
     std::cerr << "Exporting geometry..." << std::endl;
-    builder.ExportGeometry( sceneOut );
+    builder.ExportGeometry( sceneOut, numTextureCoordinates );
 
     std::cerr << "Computing hierarchy..." << std::endl;
     builder.BuildBVH();

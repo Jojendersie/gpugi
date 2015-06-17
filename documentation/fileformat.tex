@@ -4,13 +4,13 @@
 \usepackage{listings}
 \lstset{
 	language=C++,
-	commentstyle=\color{darkgreen}\textit,
+	commentstyle=\color[rgb]{0.1, 0.3, 0.1},
 	frame=single,
 	tabsize=4,
-	keywordstyle=\color{blue}\bfseries,
+	keywordstyle=\color{blue},
 	stringstyle=\color[gray]{0.4},
-	basicstyle=\lst@ifdisplaystyle\scriptsize\else\ttfamily\fi,
-	morekeywords={uint16, uint32, Vec2, Vec3}
+	basicstyle=\lst@ifdisplaystyle\scriptsize\ttfamily\else\ttfamily\fi,
+	morekeywords={uint16, uint32, uint64, Vec2, Vec3, Vec4}
 }
 
 \begin{document}
@@ -23,7 +23,7 @@
 		\end{center}
 	\end{minipage}}
 %	\subject{File Format Documentation}
-	\title{The *.rawscene Format from GPUGI Project\\Version 1.2}
+	\title{The *.rawscene Format from GPUGI Project\\Version 1.3}
 	\authors{Johannes Jendersie}
 	\abstract{Abstract}{
 		This is a complete overview about the contents of *.rawscene format. The file contains a list of different arrays. Each array has a name where some must exist in the file and some are optional.
@@ -66,15 +66,39 @@ struct Vertex
 };
 	\end{lstlisting}
 	
-		% ************************************************************************ %
-	\subsection{Tangents}
+	% ************************************************************************ %
+	\subsection{Tangents (V1.2) (V1.3 deprecated)}
 	\lstinline|header.name == "tangents"|
 	
-	Additional vertex information. To compute the full tangent space calculate \lstinline|cross(tangent, normal)|
+	Additional vertex information. To compute the full tangent space calculate \lstinline|cross(tangent, normal)|.
+	\textbf{Deprecation}: This array is missing the handness of the tangent space! Use Qormals instead.
 	\begin{lstlisting}
 Vec3 tangent;
 	\end{lstlisting}
-		
+	
+	% ************************************************************************ %
+	\subsection{Qormals (V1.3)}
+	\lstinline|header.name == "qormals"|
+	
+	A full tangent space in form of a quaternion. Transform the quaternion into an matrix to get normal, tangent and bitangent vectors.
+	\begin{lstlisting}
+Vec4 qormal; // i,j,k,r
+	\end{lstlisting}
+	
+	% ************************************************************************ %
+	\subsection{Additional Texture Coordinates [Optional] (V1.3)}
+	\lstinline|header.name == "texcoords"|
+	
+	Additional texture coordinates for each vertex. It is possible, that there are multiple additional coordinate arrays. The number of dimensions of each coordinate is \lstinline|elementSize/sizeof(float)|.
+	\begin{lstlisting}
+float texcoord;
+// or
+Vec2 texcoord;
+// or
+Vec3 texcoord;
+// or
+Vec4 texcoord;
+	\end{lstlisting}		
 	% ************************************************************************ %
 	\subsection{Triangles}
 	\lstinline|header.name == "triangles"|
@@ -142,7 +166,56 @@ struct Box
 	\end{lstlisting}
 	
 	
+	% ************************************************************************ %
+	\subsection{Surfel Hierarchy [Optional] (V1.3)}
+	\lstinline|header.name == "surfels"|
+	
+	An n-ary tree of surfels. Each cut through the tree roughly represents the scene in form of surfels.
+\begin{lstlisting}
+	struct SurfelNode
+	{
+		Vec3 position;
+		float area;
+		Vec3 color;
+		Vec3 normal;
+		Vec2 uv[2]; // 2 texcoords, NaN if not used
+		uint64 offset;
+		uint32 numChildren;
+	};
+\end{lstlisting}
+	The \lstinline|normal| is a non-normalized average over all children. Only leaf nodes have real normals. Further, \lstinline|position| and \lstinline|color| are averaged from child nodes and \lstinline|area| is the sum of child areas. A leaf node can be identified by \lstinline|numChildren == 0|.
+	
+	% ************************************************************************ %
+	\subsection{Light probes [Optional] (V1.3)}
+	\lstinline|header.name == "lightprobes"|
+	
+	Precomputed probes for Radiosity like simulation. The number of links to SurfelNodes is dynamic. At is stored as a range of links into the \lstinline|"lightprobegraph"| array.
+	
+\begin{lstlisting}
+struct LightProbe
+{
+	Vec3 position;
+	Vec3 normal;
+	float skyVisibilitySH[16]; // 4 band SH
+	uint32 offset; // offset into "Link" array
+	uint8 numLinks;
+};
+\end{lstlisting}
+
+	The \lstinline|normal| can be zero if the light probe is placed in empty space.
 		
+	\subsection{Light probe graph [Optional] (V1.3)}
+	\lstinline|header.name == "lightprobegraph"|
+	
+	The links span a graph for light transport simulation. It contains precomputed visibility SHs for the surfel(groups) from the view of the light probe. The first omnidirectional factor is the form factor. 
+\begin{lstlisting}
+struct Link
+{
+	float visibility[16]; // 4 band SH
+	uint64 surfelIndex;
+};
+\end{lstlisting}
+	
 	% ************************************************************************ %
 	\section{Material File}
 	\label{sec:materialjson}
@@ -161,7 +234,7 @@ struct Box
 	... more materials
 }
 	\end{lstlisting}
-	Each data except\lstinline|"emissivity"|, \lstinline|"refractionIndexN"| and \lstinline|"refractionIndexK"| comes in two variants: One without \lstinline|"Tex"| suffix (must be a RGB constant) and one with this suffix containing (e.g. \lstinline|"diffuseTex"|) a file name of a RGB texture. One of both must exist. If both are given only the texture is used.
+	Each data except \lstinline|"refractionIndexN"| and \lstinline|"refractionIndexK"| comes in two variants: One without \lstinline|"Tex"| suffix (must be a RGB constant) and one with this suffix containing (e.g. \lstinline|"diffuseTex"|) a file name of a RGB texture. One of both must exist. If both are given only the texture is used.
 	
 	\subsection{Intended Interpretation}
 	The light is divided into components of different reflection pattern.
@@ -221,6 +294,15 @@ struct Box
 	\end{tabular}
 	
 	\subsection{Changelog}
+	\subsubsection{Version 1.3}
+	\begin{itemize}
+		\item Added full tangent space \lstinline|"qormals"|
+		\item Added additional texture coordinate arrays \lstinline|"texcoords"|
+		\item Added Surfel hierarchy \lstinline|"surfles"|
+		\item Added light probe graph \lstinline|"lightprobegraph"| and \lstinline|"lightprobes"|
+		\item Deprecated \lstinline|"tangents"|
+	\end{itemize}
+	This version is backward compatible to V1.1 and V1.2.
 	\subsubsection{Version 1.2}
 	\begin{itemize}
 		\item Introduced \lstinline|header.name == "tangents"| as required data

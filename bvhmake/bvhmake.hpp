@@ -129,7 +129,9 @@ public:
 	void LoadMaterials( const std::string& _materialFileName );
 
     /// \brief Write the vertex, triangle and material arrays to file
-    void ExportGeometry( std::ofstream& _file );
+	/// \param [in] _numTexcoords Number of texture coordinates (2D) to be expected.
+	///		Meshs with fewer coordinates get NaN vectors instead.
+    void ExportGeometry( std::ofstream& _file, int _numTexcoords );
 
     /// \brief Allocate space for the tree and the BVs and compute them.
     void BuildBVH();
@@ -210,6 +212,16 @@ private:
     void ExportTangents( std::ofstream& _file,
         const struct aiNode* _node,
         const ε::Mat4x4& _transformation );
+
+	/// \brief Recursive export for full tangent space
+    void ExportQormals( std::ofstream& _file,
+        const struct aiNode* _node,
+        const ε::Mat4x4& _transformation );
+
+	/// \brief Recursive export additional texture coordinates
+    void ExportTexcoords( std::ofstream& _file,
+        const struct aiNode* _node,
+		int _texcoordChannel );
 
 	/// \brief Converts Node(s) to FileDecl::Node(s)
 	void RecursiveWriteHierarchy( std::ofstream& _file, uint32 _this, uint32 _parent, uint32 _escape );
