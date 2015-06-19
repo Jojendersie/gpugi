@@ -148,8 +148,8 @@ void BVHBuilder::ExportGeometry( std::ofstream& _file, int _numTexcoords )
 	FileDecl::NamedArray texcoordsHeader;
     strcpy( vertexHeader.name, "vertices" );
 	strcpy( tangentsHeader.name, "tangents" );
-	strcpy( qormalsHeader.name, "tangents" );
-	strcpy( texcoordsHeader.name, "tangents" );
+	strcpy( qormalsHeader.name, "qormals" );
+	strcpy( texcoordsHeader.name, "texcoords" );
     vertexHeader.elementSize = sizeof(FileDecl::Vertex);
 	tangentsHeader.elementSize = sizeof(ε::Vec3);
 	qormalsHeader.elementSize = sizeof(ε::Quaternion);
@@ -332,6 +332,9 @@ void BVHBuilder::ExportQormals( std::ofstream& _file,
 				ε::Vec3 bitangent = invTransTransform * hard_cast<ε::Vec3>(mesh->mBitangents[v]);
 				ε::Vec3 normal = invTransTransform * hard_cast<ε::Vec3>(mesh->mNormals[v]);
 				ε::Quaternion q(ε::axis(tangent, bitangent, normal));
+				ε::Vec3 n = zaxis(q);
+				n = xaxis(q);
+				n = yaxis(q);
 				_file.write((const char*)&q, sizeof(ε::Quaternion));
 			}
 		}
