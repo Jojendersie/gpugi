@@ -112,7 +112,7 @@ bool BVHBuilder::LoadSceneWithAssimp( const char* _file )
 		aiProcess_GenSmoothNormals		|	// TODO: is angle 80% already set?
 		aiProcess_ValidateDataStructure	|
 		aiProcess_SortByPType			|
-		aiProcess_RemoveRedundantMaterials	|
+		//aiProcess_RemoveRedundantMaterials	|
 		//aiProcess_FixInfacingNormals	|
 		aiProcess_FindInvalidData		|
 		aiProcess_GenUVCoords			|
@@ -120,6 +120,7 @@ bool BVHBuilder::LoadSceneWithAssimp( const char* _file )
         aiProcess_ImproveCacheLocality  |
         aiProcess_JoinIdenticalVertices |
 		aiProcess_FlipUVs
+		//  aiProcess_MakeLeftHanded
 	);
 
 	return m_scene != nullptr;
@@ -173,8 +174,8 @@ void BVHBuilder::ExportGeometry( std::ofstream& _file, int _numTexcoords )
     ExportVertices( _file, m_scene->mRootNode, ε::identity4x4() );
 
 	// Export tangents
-	_file.write( (const char*)&tangentsHeader, sizeof(FileDecl::NamedArray) );
-	ExportTangents( _file, m_scene->mRootNode, ε::identity4x4() );
+	//_file.write( (const char*)&tangentsHeader, sizeof(FileDecl::NamedArray) );
+	//ExportTangents( _file, m_scene->mRootNode, ε::identity4x4() );
 
 	// Export qormals
 	_file.write( (const char*)&qormalsHeader, sizeof(FileDecl::NamedArray) );
@@ -323,7 +324,7 @@ void BVHBuilder::ExportQormals( std::ofstream& _file,
 			ε::Quaternion zero = ε::qidentity();
 			for (unsigned v = 0; v < mesh->mNumVertices; ++v)
 			{
-				_file.write((const char*)&zero, sizeof(ε::Vec3));
+				_file.write((const char*)&zero, sizeof(ε::Quaternion));
 			}
 		} else {
 			for (unsigned v = 0; v < mesh->mNumVertices; ++v)
@@ -331,10 +332,17 @@ void BVHBuilder::ExportQormals( std::ofstream& _file,
 				ε::Vec3 tangent = invTransTransform * hard_cast<ε::Vec3>(mesh->mTangents[v]);
 				ε::Vec3 bitangent = invTransTransform * hard_cast<ε::Vec3>(mesh->mBitangents[v]);
 				ε::Vec3 normal = invTransTransform * hard_cast<ε::Vec3>(mesh->mNormals[v]);
+				if(!ε::orthonormalize(normal, tangent, bitangent))
+					bitangent = cross(normal, tangent);
+				float handness = dot(normal, cross(tangent, bitangent));
+				// If handness is wrong invert bitangent and encode the sign in the quaternion
+				// which has a guaranty, that r is always positive.
+				if(handness < 0.0f) bitangent = -bitangent;
 				ε::Quaternion q(ε::axis(tangent, bitangent, normal));
-				ε::Vec3 n = zaxis(q);
-				n = xaxis(q);
-				n = yaxis(q);
+				if(handness < 0.0f) q = -q;
+				eiAssert(dot(xaxis(q), tangent) > 0.99f, "Bad qormal!");
+				eiAssert(dot(yaxis(q), bitangent) > 0.99f, "Bad qormal!");
+				eiAssert(dot(zaxis(q), normal) > 0.99f, "Bad qormal!");
 				_file.write((const char*)&q, sizeof(ε::Quaternion));
 			}
 		}
@@ -403,14 +411,10 @@ void BVHBuilder::ExportBVH( std::ofstream& _file )
 {
     // Prepare file headers and find out how much space is required
     FileDecl::NamedArray treeHeader;
-    FileDecl::NamedArray indexHeader;
     FileDecl::NamedArray bvHeader;
     strcpy( treeHeader.name, "hierarchy" );
-    strcpy( indexHeader.name, "triangles" );
     treeHeader.elementSize = sizeof(FileDecl::Node);
-    indexHeader.elementSize = sizeof(FileDecl::Triangle) * FileDecl::Leaf::NUM_PRIMITIVES;
     treeHeader.numElements = m_innerNodeCount;
-    indexHeader.numElements = m_leafNodeCount;
     bvHeader.numElements = m_innerNodeCount;
     switch(m_fitMethod->Type())
     {
@@ -433,11 +437,21 @@ void BVHBuilder::ExportBVH( std::ofstream& _file )
 	// Write the hierarchy as it is in the memory
     _file.write( (const char*)&treeHeader, sizeof(FileDecl::NamedArray) );
 	RecursiveWriteHierarchy( _file, 0, 0, 0 );
+}
+
+void BVHBuilder::ExportTriangles( std::ofstream& _file )
+{
+    // Prepare file headers and find out how much space is required
+    FileDecl::NamedArray indexHeader;
+    strcpy( indexHeader.name, "triangles" );
+    indexHeader.elementSize = sizeof(FileDecl::Triangle) * FileDecl::Leaf::NUM_PRIMITIVES;
+    indexHeader.numElements = m_leafNodeCount;
 
     // Write a "resorted index buffer" to file
     _file.write( (const char*)&indexHeader, sizeof(FileDecl::NamedArray) );
     _file.write( (const char*)m_leaves, indexHeader.elementSize * indexHeader.numElements );
 }
+
 
 
 void BVHBuilder::ExportMaterials( std::ofstream& _file, const std::string& _materialFileName )

@@ -10,7 +10,7 @@
 	keywordstyle=\color{blue},
 	stringstyle=\color[gray]{0.4},
 	basicstyle=\lst@ifdisplaystyle\scriptsize\ttfamily\else\ttfamily\fi,
-	morekeywords={uint16, uint32, uint64, Vec2, Vec3, Vec4}
+	morekeywords={uint8, uint16, uint32, uint64, Vec2, Vec3, Vec4}
 }
 
 \begin{document}
@@ -167,23 +167,37 @@ struct Box
 	
 	
 	% ************************************************************************ %
-	\subsection{Surfel Hierarchy [Optional] (V1.3)}
+	\subsection{Surfel Data [Optional] (V1.3)}
 	\lstinline|header.name == "surfels"|
 	
+	Small area elements which represent the scene.
+	\begin{lstlisting}
+struct Surfel
+{
+	Vec3 position;
+	float area;
+	Vec3 albedo;
+	Vec3 normal;
+	Vec2 uv[2]; // 2 texcoords, NaN if not used
+	float relativeEmissiveRadiosity;
+};
+	\end{lstlisting}
+	The \lstinline|normal| is a non-normalized average over all children. Only leaf nodes have real normals. Further, \lstinline|position| and \lstinline|albedo| are averaged from child nodes and \lstinline|area| is the sum of child areas. From the last field \lstinline|relativeEmissiveRadiosity| the self-emitted radiosity can be computed as \lstinline|albedo * relativeEmissiveRadiosity| in $lm/m^2$.
+	
+	% ************************************************************************ %
+	\subsection{Surfel Hierarchy [Optional] (V1.3)}
+	\lstinline|header.name == "surfeltree"|
+	
 	An n-ary tree of surfels. Each cut through the tree roughly represents the scene in form of surfels.
-\begin{lstlisting}
-	struct SurfelNode
-	{
-		Vec3 position;
-		float area;
-		Vec3 color;
-		Vec3 normal;
-		Vec2 uv[2]; // 2 texcoords, NaN if not used
-		uint64 offset;
-		uint32 numChildren;
-	};
-\end{lstlisting}
-	The \lstinline|normal| is a non-normalized average over all children. Only leaf nodes have real normals. Further, \lstinline|position| and \lstinline|color| are averaged from child nodes and \lstinline|area| is the sum of child areas. A leaf node can be identified by \lstinline|numChildren == 0|.
+	\begin{lstlisting}
+struct SurfelNode
+{
+	uint64 surfelIndex;
+	uint64 offset;
+	uint8 numChildren;
+};
+	\end{lstlisting}
+	Each tree node references n-children in a row and its surfel which represents the cluster. A leaf node can be identified by \lstinline|numChildren == 0|.
 	
 	% ************************************************************************ %
 	\subsection{Light probes [Optional] (V1.3)}
@@ -298,7 +312,7 @@ struct Link
 	\begin{itemize}
 		\item Added full tangent space \lstinline|"qormals"|
 		\item Added additional texture coordinate arrays \lstinline|"texcoords"|
-		\item Added Surfel hierarchy \lstinline|"surfles"|
+		\item Added Surfel hierarchy \lstinline|"surfles"|, \lstinline|"surfletree"|
 		\item Added light probe graph \lstinline|"lightprobegraph"| and \lstinline|"lightprobes"|
 		\item Deprecated \lstinline|"tangents"|
 	\end{itemize}

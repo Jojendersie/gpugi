@@ -28,7 +28,8 @@ int main( int _numArgs, const char** _args )
 {
     // Logger init.
 	Logger::g_logger.Initialize(new Logger::FilePolicy("log.txt"));
-    Assimp::DefaultLogger::get()->setLogSeverity( Assimp::Logger::LogSeverity::VERBOSE );
+	Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE);
+   // Assimp::DefaultLogger::get()->setLogSeverity( Assimp::Logger::LogSeverity::VERBOSE );
     Assimp::DefaultLogger::get()->attachStream( new LogDebugStream, Assimp::Logger::Debugging);
 	Assimp::DefaultLogger::get()->attachStream( new LogInfoStream, Assimp::Logger::Info);
 	Assimp::DefaultLogger::get()->attachStream( new LogWarnStream, Assimp::Logger::Warn);
@@ -98,7 +99,7 @@ int main( int _numArgs, const char** _args )
     std::string sceneName = PathUtils::GetFilename(std::string(_args[1]));
     sceneName.erase( sceneName.find_last_of( '.' ) );
 	std::string materialFileName = outputPath + '/' + sceneName + ".json";
-    sceneName = outputPath + '/' + sceneName + ".rawscene";
+    sceneName = outputPath + '/' + sceneName + ".bim";
     std::ofstream sceneOut( sceneName, std::ofstream::binary );
     if( sceneOut.bad() )
     {
@@ -131,6 +132,7 @@ int main( int _numArgs, const char** _args )
 
     std::cerr << "Exporting hierarchy..." << std::endl;
     builder.ExportBVH( sceneOut );
+	builder.ExportTriangles( sceneOut );
 
     return 0;
 }

@@ -138,6 +138,7 @@ public:
 
     /// \brief Write the bounding volume hierarchy to file.
     void ExportBVH( std::ofstream& _file );
+	void ExportTriangles( std::ofstream& _file );
 
 	/// \brief Create the "materialref", the "materialassociation" arrays
 	///		and import new material entries for the json file.

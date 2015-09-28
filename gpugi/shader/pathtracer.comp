@@ -78,6 +78,7 @@ void main()
 
 					vec3 irradiance = (saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in because of shading normals!
 					color += irradiance * pathThroughput * bsdf;
+					//color += min(irradiance * pathThroughput * bsdf, 1); // <- surpress fire flies
 				}
 			}
 		}
