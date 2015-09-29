@@ -17,6 +17,19 @@ void LightSampler::SetScene(std::shared_ptr<const Scene> _scene)
 
 void LightSampler::GenerateRandomSamples(LightSample* _destinationBuffer, unsigned int _numSamples, float _positionBias)
 {
+	// If there is no uniform light source (pure texture light) create black dummy lights
+	if(m_scene->GetTotalAreaLightFlux() + m_scene->GetTotalPointLightFlux() == 0.0f)
+	{
+		for(uint sampleIdx = 0; sampleIdx < _numSamples; ++sampleIdx, ++_destinationBuffer)
+		{
+			_destinationBuffer->intensity = ε::Vec3(0.0f);
+			_destinationBuffer->position = ε::Vec3(0.0f);
+			_destinationBuffer->normalPhi = 0.0f;
+			_destinationBuffer->normalThetaCos = 0.0f;
+		}
+		return;
+	}
+
 	float pointLightPercentage = m_scene->GetTotalPointLightFlux() / (m_scene->GetTotalAreaLightFlux() + m_scene->GetTotalPointLightFlux());
 	unsigned numPointSamples = unsigned(pointLightPercentage * _numSamples);
 	unsigned numAreaSamples = _numSamples - numPointSamples;

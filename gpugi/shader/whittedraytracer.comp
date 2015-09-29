@@ -55,11 +55,13 @@ void main()
 		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
 		
 		// Add self emissivity of hit material.
-		if(!lastVertexDiffusePossible)
-		{
-			vec3 emissivity = vec3(Materials[triangle.w].emissivityRG, Materials[triangle.w].emissivityB);
-			color += pathThroughput * emissivity;
-		}
+		//if(!lastVertexDiffusePossible)
+		//{
+			// TODO: currently light source have black emissivity textures -> not visible in the whitted one.
+			//vec3 emissivity = textureLod(sampler2D(Materials[triangle.w].emissivityTexHandle), hitTexcoord, 0.0).xyz;
+		//	color += pathThroughput * emissivity;
+		//}
+		color += pathThroughput * materialTexData.Emissivity;
 
 		// Make a decision
 		vec3 pdiffuse = GetDiffuseProbability(triangle.w, materialTexData, abs(dot(hitNormal, ray.Direction)));

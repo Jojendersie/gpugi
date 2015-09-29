@@ -12,6 +12,8 @@ layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attentio
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
 void main()
 {
+	const float lightSampleWeight = float(NumInitialLightSamples) / NUM_LIGHT_SAMPLES; // This could be a uniform!
+
 	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
 	uint randomSeed = InitRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
 	vec2 screenCoord = (Random2(randomSeed) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
@@ -40,7 +42,10 @@ void main()
 		// Get Material infos.
 		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
 
-
+		// Add self emissivity of hit material.
+		// This can only happen for texture lights which are not part of the look ahead sampling
+		color += pathThroughput * materialTexData.Emissivity;
+		
 		// Connect to random light samples ("Next Event Estimation")
 		Ray lightRay;
 		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
@@ -77,16 +82,11 @@ void main()
 					// L(hitPoint, lightRay.Direction) = lightSampleIntensity / lightDistSq
 
 					vec3 irradiance = (saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in because of shading normals!
-					color += irradiance * pathThroughput * bsdf;
+					color += irradiance * (pathThroughput * lightSampleWeight) * bsdf;
 					//color += min(irradiance * pathThroughput * bsdf, 1); // <- surpress fire flies
 				}
 			}
 		}
-
-		// Add self emissivity of hit material.
-		//vec3 emissivity = vec3(Materials[triangle.w].emissivityRG, Materials[triangle.w].emissivityB);
-		//color += pathThroughput * saturate(-dot(ray.Direction, hitNormal)) * emissivity; // Lambert emitter! I(angle) = cos(angle) * I0
-
 
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
 		vec3 throughput = vec3(1.0);
@@ -100,9 +100,6 @@ void main()
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.
 	#endif
 	}
-
-	const float lightSampleWeight = float(NumInitialLightSamples) / NUM_LIGHT_SAMPLES; // This could be a uniform!
-	color *= lightSampleWeight;
 
 	vec4 final = vec4(color, 1.0);
 	final += imageLoad(OutputTexture, gridPosition);

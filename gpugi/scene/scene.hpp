@@ -69,11 +69,11 @@ public:
 		uint64 diffuseTexHandle;
 		uint64 opacityTexHandle;
 		uint64 reflectivenessTexHandle;
-		ε::Vec2 emissivityRG;			///< Split emissive for padding reasons
+		uint64 emissivityTexHandle;
 		ε::Vec3 fresnel0;				///< Fist precomputed coefficient for Fresnel approximation (rgb)
 		float refractionIndexAvg;
 		ε::Vec3 fresnel1;				///< Second precomputed coefficient for Fresnel approximation (rgb)
-		float emissivityB;				///< Split emissive for padding reasons
+		float padding;
 	};
 
 	/// Light source triangles.
@@ -83,7 +83,7 @@ public:
 	struct LightTriangle 
 	{
 		ε::Triangle triangle;
-		ε::Vec3 normal[3];
+		//ε::Vec2 texcoord[3];
 		ε::Vec3 luminance;
 	};
 
@@ -145,8 +145,10 @@ private:
 	std::vector<float> m_lightSummedArea;
 	std::vector<float> m_pointLightSummedFlux;
 	std::vector<Material> m_materials;
-	uint32_t m_numTrianglesPerLeaf;
-	uint32_t m_numInnerNodes;
+	std::vector<ε::Vec3> m_emissivity;	///< Additional material info. The emissivity is used to sample virtual lights
+	uint64 m_noFluxEmissiveTexture;		///< Dummy texture for all unlit surfaces
+	uint32 m_numTrianglesPerLeaf;
+	uint32 m_numInnerNodes;
 	float m_lightAreaSum;
 	float m_totalAreaLightFlux, m_totalPointLightFlux;
 	ε::Types3D m_bvType;

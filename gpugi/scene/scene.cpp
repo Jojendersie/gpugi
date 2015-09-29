@@ -256,8 +256,11 @@ void Scene::LoadBoundingVolumes( std::ifstream& _file, const FileDecl::NamedArra
 void Scene::LoadMaterial( const Jo::Files::MetaFileWrapper::Node& _material )
 {
 	Material mat;
+	ε::Vec3 emissivity(0.0f); // Additional material info for uniform area lights
+	m_noFluxEmissiveTexture = GetBindlessHandle(ε::Vec3(0.0f));
 	// "String pool"
 	static const std::string s_emissivity("emissivity");
+	static const std::string s_emissivityTex("emissivityTex");
 	static const std::string s_refrN("refractionIndexN");
 	static const std::string s_refrK("refractionIndexK");
 	static const std::string s_diffuse("diffuse");
@@ -267,10 +270,6 @@ void Scene::LoadMaterial( const Jo::Files::MetaFileWrapper::Node& _material )
 	static const std::string s_specular("reflectiveness");
 	static const std::string s_specularTex("reflectivenessTex");
 	try {
-		// Emissivity
-		mat.emissivityRG.r = _material[s_emissivity][0].Get( 0.0f );
-		mat.emissivityRG.g = _material[s_emissivity][1].Get( 0.0f );
-		mat.emissivityB = _material[s_emissivity][2].Get( 0.0f );
 		// Refraction parameters for Fresnel
 		ε::Vec3 n(_material[s_refrN][0].Get(1.0f), _material[s_refrN][1].Get(1.0f), _material[s_refrN][2].Get(1.0f));
 		ε::Vec3 k(_material[s_refrK][0].Get(0.0f), _material[s_refrK][1].Get(0.0f), _material[s_refrK][2].Get(0.0f));
@@ -293,12 +292,20 @@ void Scene::LoadMaterial( const Jo::Files::MetaFileWrapper::Node& _material )
 			mat.reflectivenessTexHandle = GetBindlessHandle(_material[s_specularTex]);
 		else mat.reflectivenessTexHandle = GetBindlessHandle(
 			ε::Vec4(_material[s_specular][0].Get(1.0f), _material[s_specular][1].Get(1.0f), _material[s_specular][2].Get(1.0f), _material[s_specular][3].Get(1.0f)));
+		// Load or create emmisive texture
+		if(_material.HasChild(s_emissivityTex))
+			mat.emissivityTexHandle = GetBindlessHandle(_material[s_emissivityTex]);
+		else{
+			mat.emissivityTexHandle = m_noFluxEmissiveTexture;
+			emissivity = ε::Vec3(_material[s_emissivity][0].Get(0.0f), _material[s_emissivity][1].Get(0.0f), _material[s_emissivity][2].Get(0.0f));
+		}
 	} catch(const std::string& _msg ) {
 		LOG_ERROR("Failed to load the material. Exception: " + _msg);
 	} catch(...) {
 		LOG_ERROR("Failed to load the material. Material file or textures corrupted (unknown exception).");
 	}
 	m_materials.push_back( mat );
+	m_emissivity.push_back( emissivity );
 }
 
 uint64 Scene::GetBindlessHandle( const std::string& _name )
@@ -363,14 +370,14 @@ void Scene::LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::uniqu
 	{
 		// Is this a valid light source triangle?
 		if( _triangles[i].vertices[0] != _triangles[i].vertices[1]
-			&& (any(m_materials[_triangles[i].material].emissivityRG > 0.0f)
-			|| (m_materials[_triangles[i].material].emissivityB > 0.0f)) )
+			&& any(m_emissivity[_triangles[i].material] != ε::Vec3(0.0f)) )
 		{
 			LightTriangle lightSource;
-			lightSource.luminance = ε::Vec3(m_materials[_triangles[i].material].emissivityRG, m_materials[_triangles[i].material].emissivityB);
+			lightSource.luminance = m_emissivity[_triangles[i].material];
+			//lightSource.emissivityTexHandle = m_materials[_triangles[i].material].emissivityTexHandle;
 			// Get the 3 vertices from vertex buffer
-			for(int j = 0; j < 3; ++j)
-				lightSource.normal[j] = _vertices[_triangles[i].vertices[j]].normal;
+			//for(int j = 0; j < 3; ++j)
+			//	lightSource.texcoord[j] = _vertices[_triangles[i].vertices[j]].texcoord;
 			lightSource.triangle.v0 = _vertices[_triangles[i].vertices[0]].position;
 			lightSource.triangle.v1 = _vertices[_triangles[i].vertices[1]].position;
 			lightSource.triangle.v2 = _vertices[_triangles[i].vertices[2]].position;
@@ -379,9 +386,11 @@ void Scene::LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::uniqu
 			// Flux
 			float area = ε::surface(lightSource.triangle);
 			m_totalAreaLightFlux += dot(ε::Vec3(0.2126f, 0.7152f, 0.0722f), lightSource.luminance) * area * ε::π; // π is the integral over all solid angles of the cosine lobe
+			// Assume average luminance of 0.5
+			//m_totalAreaLightFlux += 0.5f * area * ε::π;
 
 			// Compute the area
-			sum += ε::surface(lightSource.triangle);
+			sum += area;
 			m_lightSummedArea.push_back(sum);
 		}
 	}

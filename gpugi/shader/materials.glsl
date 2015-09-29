@@ -6,6 +6,7 @@ struct MaterialTextureData
 	vec4 Reflectiveness;
 	vec3 Opacity;
 	vec3 Diffuse;
+	vec3 Emissivity;	// Self emissivity luminance
 };
 MaterialTextureData SampleMaterialData(int materialID, vec2 texcoord)
 {
@@ -13,6 +14,7 @@ MaterialTextureData SampleMaterialData(int materialID, vec2 texcoord)
 	materialTexData.Reflectiveness = textureLod(sampler2D(Materials[materialID].reflectivenessTexHandle), texcoord, 0.0);
 	materialTexData.Opacity = textureLod(sampler2D(Materials[materialID].opacityTexHandle), texcoord, 0.0).xyz;
 	materialTexData.Diffuse = textureLod(sampler2D(Materials[materialID].diffuseTexHandle), texcoord, 0.0).xyz;
+	materialTexData.Emissivity = textureLod(sampler2D(Materials[materialID].emissivityTexHandle), texcoord, 0.0).xyz;
 	return materialTexData;
 }
 
