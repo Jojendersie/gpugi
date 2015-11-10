@@ -315,7 +315,7 @@ uint64 Scene::GetBindlessHandle( const std::string& _name )
 	if( it == m_textures.end() )
 	{
 		it = m_textures.insert( std::pair<std::string, std::unique_ptr<gl::Texture2D>>(
-			_name, gl::Texture2D::LoadFromFile(PathUtils::AppendPath(m_sourceDirectory, _name), false))).first;
+			_name, gl::Texture2D::LoadFromFile(PathUtils::AppendPath(m_sourceDirectory, _name), false, true))).first;
 		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternHandle());
 		// Make permanently resident
 		GL_CALL(glMakeTextureHandleResidentARB, handle);

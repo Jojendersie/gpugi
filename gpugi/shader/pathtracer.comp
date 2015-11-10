@@ -43,7 +43,7 @@ void main()
 		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
 
 		// Add self emissivity of hit material.
-		// This can only happen for texture lights which are not part of the look ahead sampling
+		// This can only happen for texture lights which are not part of the next event estimation sampling
 		color += pathThroughput * materialTexData.Emissivity;
 		
 		// Connect to random light samples ("Next Event Estimation")
