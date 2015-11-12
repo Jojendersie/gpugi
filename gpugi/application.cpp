@@ -1,6 +1,14 @@
-#include "application.hpp"
-
 #include <iostream>
+#include <ctime>
+#include <limits>
+
+#ifdef _WIN32
+#undef APIENTRY
+#define NOMINMAX
+#include <windows.h>	
+#endif
+
+#include "application.hpp"
 #include "outputwindow.hpp"
 
 #include "utilities/loggerinit.hpp"
@@ -26,14 +34,6 @@
 #include "imageut/hdrimage.hpp"
 #include "imageut/texturemse.hpp"
 
-#include <ctime>
-#include <limits>
-
-#ifdef _WIN32
-	#undef APIENTRY
-	#define NOMINMAX
-	#include <windows.h>	
-#endif
 
 Application::Application(int argc, char** argv) : m_shutdown(false),
 		m_iterationSinceLastMSECheck(0), m_scriptWaitsForMSE(false)

@@ -1,5 +1,5 @@
 ﻿#include "aaboxfit.hpp"
-#include "ei/3dfunctions.hpp"
+#include <ei/3dtypes.hpp>
 #include "../../gpugi/utilities/assert.hpp"
 
 void FitBox::operator()(uint32 _left, uint32 _right, uint32 _target) const

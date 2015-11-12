@@ -6,7 +6,7 @@
 #include "../utilities/assert.hpp"
 #include "../utilities/flagoperators.hpp"
 #include "../dependencies/glhelper/glhelper/utils/pathutils.hpp"
-#include "ei/3dfunctions.hpp"
+#include <ei/3dtypes.hpp>
 
 #include <fstream>
 
