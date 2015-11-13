@@ -118,17 +118,14 @@ int main( int _numArgs, const char** _args )
         return 3;
     }
 
-	// Material before geom. because geom. deletes the assimp scene.
+	std::cerr << "Computing hierarchy..." << std::endl;
+	builder.BuildBVH();
+
 	std::cerr << "Exporting materials..." << std::endl;
 	builder.ExportMaterials( sceneOut, materialFileName );
 
-	// Export geometry must be first because it organizes the data for the
-    // other calls
     std::cerr << "Exporting geometry..." << std::endl;
     builder.ExportGeometry( sceneOut, numTextureCoordinates );
-
-    std::cerr << "Computing hierarchy..." << std::endl;
-    builder.BuildBVH();
 
     std::cerr << "Exporting hierarchy..." << std::endl;
     builder.ExportBVH( sceneOut );

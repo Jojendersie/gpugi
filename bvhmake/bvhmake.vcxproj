@@ -92,7 +92,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>jofile.lib;assimp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>jofileD.lib;assimp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>
       </SubSystem>
     </Link>
@@ -146,6 +146,7 @@
     <ClCompile Include="fitmethods\aaboxfit.cpp" />
     <ClCompile Include="fitmethods\aaellipsoidfit.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="preprocessing\tesselate.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="buildmethods\kdtree.hpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="fitmethods\aaellipsoidfit.hpp" />
     <ClInclude Include="fitmethods\optimize.hpp" />
     <ClInclude Include="glhelperconfig.hpp" />
+    <ClInclude Include="preprocessing\tesselate.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="fitmethods\optimize.inl" />

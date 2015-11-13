@@ -1,4 +1,4 @@
-sceneFilename = ../scenes/cryteksponza/sponza.rawscene
+sceneFilename = ../scenes/cryteksponza/sponza.bim
 cameraPos= 784.069214, 525.171387, -123.871895
 cameraLookAt = -784.925598, -525.603210, 124.154999
 cameraFOV = 70

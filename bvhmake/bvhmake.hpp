@@ -4,6 +4,7 @@
 #include <functional>
 #include <assimp/importer.hpp>
 #include <ei/3dtypes.hpp>
+#include <ei/stdextensions.hpp>
 #include <memory>
 #include <jofilelib.hpp>
 
@@ -88,6 +89,22 @@ protected:
     BVHBuilder* m_manager;
 };
 
+
+/// \brief Helper type to use Vertices in hashmaps without doublicating them.
+struct VertexHandle
+{
+	uint32 id;
+	// Compare content not the pointers
+	bool operator == (VertexHandle _rhs) const;
+};
+namespace std {
+	/// \brief Hash method to find redundant vertices
+	template <> struct hash<VertexHandle>
+	{
+		size_t operator()(const VertexHandle& _x) const;
+	};
+}
+
 /// \brief Central manager class for the import and export.
 class BVHBuilder
 {
@@ -144,15 +161,22 @@ public:
 	///		and import new material entries for the json file.
 	void ExportMaterials( std::ofstream& _file, const std::string& _materialFileName );
 
-    /// \brief A tree node which should be used from any build method
+	/// \brief Adds/finds a vertex and returns its index.
+	/// \details Unique vertices are joined automatically.
+	uint32 AddVertex( const FileDecl::Vertex& _vertex );
+
+	/// \brief Adds a triangle by its indices.
+	void AddTriangle( const FileDecl::Triangle& _triangle );
+	
+	/// \brief A tree node which should be used from any build method
     struct Node
     {
         uint32 left;            ///< Index of the left child in the node pool. The first bit denotes if the children is a leaf. In this case right is undefined
         uint32 right;           ///< Index of the right child in the node pool
     };
 
-    uint32 GetTriangleCount() const { return m_triangleCount; }
-    uint32 GetVertexCount() const { return m_vertexCount; }
+    uint32 GetTriangleCount() const { return (uint32)(m_triangles.size()/4); }
+    uint32 GetVertexCount() const { return (uint32)m_vertices.size(); }
 
     /// \brief Read/write access to bounding volumes
     template<typename T>
@@ -166,6 +190,8 @@ public:
 
     /// \brief Get the index buffer for a triangle.
     FileDecl::Triangle GetTriangleIdx( uint32 _index ) const;
+
+	const FileDecl::Vertex& GetVertex( uint32 _index ) const;
 
     /// \brief Allocate a new leaf from the pool.
     /// \returns Index of the new leaf.
@@ -186,12 +212,14 @@ private:
     FitMethod* m_fitMethod;
     std::unordered_map<std::string, BuildMethod*> m_buildMethods;
     std::unordered_map<std::string, FitMethod*> m_fitMethods;
-    Assimp::Importer m_importer;	///< Importer which is cleaning up everything automatically
-    const struct aiScene* m_scene;	///< The Assimp scene from the loaded file.
-    std::unique_ptr<ε::Vec3[]> m_positions;
-    std::unique_ptr<uint32[]> m_triangles;
-    uint32 m_triangleCount;         ///< Point to the end of m_triangles during filling
-    uint32 m_vertexCount;           ///< Point to the end of m_positions during filling
+	std::vector<FileDecl::Vertex> m_vertices;
+	std::vector<uint32> m_triangles;
+	std::vector<FileDecl::Material> m_materialTable;
+
+	// Mechanism to detect doublicated vertices on add (for tesselation).
+	// Instead of storing the real vertex, only a pointer is used and hashing/comparison
+	// are done over default hash and == implementations.
+	std::unordered_map<VertexHandle, uint32> m_vertexToIndex;
 
     // Memory during build
     void* m_bvbuffer;               ///< Buffer containing space for m_maxInnerNodeCount bounding volumes
@@ -203,14 +231,19 @@ private:
     /// \brief Prepare headers for geometry export by counting elements
     /// \param [out] _numVertices Counter for the vertices must be 0 before call.
     /// \param [out] _numFaces Counter for the vertices must be 0 before call.
-    void CountGeometry( const struct aiNode* _node, uint& _numVertices, uint& _numFaces );
-    /// \brief Recursive export function
-    void ExportVertices( std::ofstream& _file,
+    //void CountGeometry( const struct aiNode* _node, uint& _numVertices, uint& _numFaces );
+    /// \brief Recursive import function to copy data from assimp graph
+    void ImportVertices(
+		const struct aiScene* _scene,
         const struct aiNode* _node,
         const ε::Mat4x4& _transformation );
 
+	/// \brief Import a list of materials ready for export
+	/// \param [in] _scene The assimp scene from which the material gets imported.
+	void ImportMaterials( const struct aiScene* _scene );
+
 	/// \brief Recursive export for tangents
-    void ExportTangents( std::ofstream& _file,
+    /*void ExportTangents( std::ofstream& _file,
         const struct aiNode* _node,
         const ε::Mat4x4& _transformation );
 
@@ -222,7 +255,7 @@ private:
 	/// \brief Recursive export additional texture coordinates
     void ExportTexcoords( std::ofstream& _file,
         const struct aiNode* _node,
-		int _texcoordChannel );
+		int _texcoordChannel );*/
 
 	/// \brief Converts Node(s) to FileDecl::Node(s)
 	void RecursiveWriteHierarchy( std::ofstream& _file, uint32 _this, uint32 _parent, uint32 _escape );

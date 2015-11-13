@@ -19,6 +19,9 @@
     <Filter Include="code\buildmethods">
       <UniqueIdentifier>{11e5fc34-6e91-4453-b4c1-1184608c2718}</UniqueIdentifier>
     </Filter>
+    <Filter Include="code\preprocessing">
+      <UniqueIdentifier>{7c989e6d-283e-4487-8e43-84000cf62f87}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -72,6 +75,9 @@
     <ClCompile Include="..\dependencies\epsilon\src\2dtypes.cpp">
       <Filter>dependencies\epsilon</Filter>
     </ClCompile>
+    <ClCompile Include="preprocessing\tesselate.cpp">
+      <Filter>code\preprocessing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bvhmake.hpp">
@@ -97,6 +103,9 @@
     </ClInclude>
     <ClInclude Include="glhelperconfig.hpp">
       <Filter>dependencies</Filter>
+    </ClInclude>
+    <ClInclude Include="preprocessing\tesselate.hpp">
+      <Filter>code\preprocessing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
