@@ -87,7 +87,8 @@ uint32 BuildKdtree::Build( const std::unique_ptr<uint32[]>* _sorted, Vec3* _cent
     auto fit = m_manager->GetFitMethod();
 
     // Create a leaf if less than NUM_PRIMITIVES elements remain.
-	if( _max - _min < FileDecl::Leaf::NUM_PRIMITIVES )
+	Assert(_min <= _max, "Leaf without triangles!");
+	if( (_max - _min + 1) < FileDecl::Leaf::NUM_PRIMITIVES )
 	{
         // Allocate a new leaf
         uint32 leafIdx = m_manager->GetNewLeaf();
@@ -105,7 +106,7 @@ uint32 BuildKdtree::Build( const std::unique_ptr<uint32[]>* _sorted, Vec3* _cent
         node.left = 0x80000000 | leafIdx;
 
         // Compute a bounding volume for the new node
-        (*fit)( trianglesPtr, _max - _min + 1, nodeIdx );
+        (*fit)( leaf.triangles, _max - _min + 1, nodeIdx );
 
 		return nodeIdx;
 	}
