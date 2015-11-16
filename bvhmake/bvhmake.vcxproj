@@ -141,6 +141,7 @@
     <ClCompile Include="..\gpugi\utilities\policy.cpp" />
     <ClCompile Include="..\gpugi\utilities\random.cpp" />
     <ClCompile Include="buildmethods\kdtree.cpp" />
+    <ClCompile Include="buildmethods\lds.cpp" />
     <ClCompile Include="buildmethods\sweep.cpp" />
     <ClCompile Include="bvhbuilder.cpp" />
     <ClCompile Include="fitmethods\aaboxfit.cpp" />
@@ -150,6 +151,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="buildmethods\kdtree.hpp" />
+    <ClInclude Include="buildmethods\lds.hpp" />
     <ClInclude Include="buildmethods\sweep.hpp" />
     <ClInclude Include="bvhmake.hpp" />
     <ClInclude Include="filedef.hpp" />

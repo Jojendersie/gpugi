@@ -78,6 +78,9 @@
     <ClCompile Include="preprocessing\tesselate.cpp">
       <Filter>code\preprocessing</Filter>
     </ClCompile>
+    <ClCompile Include="buildmethods\lds.cpp">
+      <Filter>code\buildmethods</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bvhmake.hpp">
@@ -106,6 +109,9 @@
     </ClInclude>
     <ClInclude Include="preprocessing\tesselate.hpp">
       <Filter>code\preprocessing</Filter>
+    </ClInclude>
+    <ClInclude Include="buildmethods\lds.hpp">
+      <Filter>code\buildmethods</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

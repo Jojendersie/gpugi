@@ -86,9 +86,12 @@ uint32 BuildKdtree::Build( const std::unique_ptr<uint32[]>* _sorted, Vec3* _cent
 {
     auto fit = m_manager->GetFitMethod();
 
-    // Create a leaf if less than NUM_PRIMITIVES elements remain.
-	Assert(_min <= _max, "Leaf without triangles!");
-	if( (_max - _min + 1) < FileDecl::Leaf::NUM_PRIMITIVES )
+	uint32 nodeIdx = m_manager->GetNewNode();
+	BVHBuilder::Node& node = m_manager->GetNode( nodeIdx );
+
+	// Create a leaf if less than NUM_PRIMITIVES elements remain.
+	Assert(_min <= _max, "Node without triangles!");
+	if( (_max - _min) < FileDecl::Leaf::NUM_PRIMITIVES )
 	{
         // Allocate a new leaf
         uint32 leafIdx = m_manager->GetNewLeaf();
@@ -101,18 +104,14 @@ uint32 BuildKdtree::Build( const std::unique_ptr<uint32[]>* _sorted, Vec3* _cent
             *(trianglesPtr++) = FileDecl::INVALID_TRIANGLE;
 
         // Allocate a new node pointing to this leaf
-        uint32 nodeIdx = m_manager->GetNewNode();
-	    BVHBuilder::Node& node = m_manager->GetNode( nodeIdx );
         node.left = 0x80000000 | leafIdx;
+		node.right = 0;
 
         // Compute a bounding volume for the new node
         (*fit)( leaf.triangles, _max - _min + 1, nodeIdx );
 
 		return nodeIdx;
 	}
-
-    uint32 nodeIdx = m_manager->GetNewNode();
-	BVHBuilder::Node& node = m_manager->GetNode( nodeIdx );
 
 	// Find dimension with largest extension
     Box bb;

@@ -43,7 +43,6 @@ void BuildSweep::Initialize( const std::unique_ptr<uint32[]>* _sorted ) const
 		_sorted[0][i] = i;
 		_sorted[1][i] = i;
 		_sorted[2][i] = i;
-        Triangle t = m_manager->GetTriangle( i );
 	}
 
 	std::unique_ptr<Vec3[]> centers(new Vec3[n]);

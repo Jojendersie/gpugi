@@ -4,6 +4,7 @@
 #include "fitmethods/aaellipsoidfit.hpp"
 #include "buildmethods/kdtree.hpp"
 #include "buildmethods/sweep.hpp"
+#include "buildmethods/lds.hpp"
 #include "preprocessing/tesselate.hpp"
 #include "../gpugi/utilities/assert.hpp"
 #include "../gpugi/utilities/logger.hpp"
@@ -45,7 +46,8 @@ BVHBuilder::BVHBuilder() :
     // Register methods
     m_buildMethods.insert( {"kdtree", new BuildKdtree(this)} );
 	m_buildMethods.insert( {"sweep", new BuildSweep(this)} );
-    m_fitMethods.insert( {"aabox", new FitBox(this)} );
+	m_buildMethods.insert( {"lds", new BuildLDS(this)} );
+	m_fitMethods.insert( {"aabox", new FitBox(this)} );
 	m_fitMethods.insert( {"ellipsoid", new FitEllipsoid(this)} );
 
     // Set defaults
@@ -540,7 +542,7 @@ void BVHBuilder::BuildBVH()
 
     // Build now
     uint32 root = (*m_buildMethod)();
-	Assert( root == 0, "The root must be always the first node! Resort or allocte in perorder." );
+	Assert( root == 0, "The root must be always the first node! Resort or allocate in perorder." );
 }
 
 void BVHBuilder::ExportBVH( std::ofstream& _file )
