@@ -1,7 +1,7 @@
 ﻿#include "tesselate.hpp"
 #include "bvhmake.hpp"
 
-void TesselateNone(const FileDecl::Triangle& _triangle, BVHBuilder* _manager, float _maxEdgeLen)
+void TesselateNone(const FileDecl::Triangle& _triangle, BVHBuilder* _manager)
 {
 	_manager->AddTriangle(_triangle);
 }

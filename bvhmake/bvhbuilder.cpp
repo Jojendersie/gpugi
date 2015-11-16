@@ -294,8 +294,9 @@ void BVHBuilder::ImportVertices(
 				triangle.vertices[j] = AddVertex(vertex);
 			}
 			triangle.material = materialIndex;
-			//TesselateSimple(triangle, this, 100.0f);
-			TesselateNone(triangle, this, 100.0f);
+			if( m_triangleSplitThreshold > 0.0f )
+				TesselateSimple(triangle, this, m_triangleSplitThreshold);
+			else TesselateNone(triangle, this);
 		}
 
 	//	meshVertexOffset += mesh->mNumVertices;

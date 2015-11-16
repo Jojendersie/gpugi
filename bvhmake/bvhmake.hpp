@@ -130,6 +130,12 @@ public:
     /// \returns false if the type method is unknown
     bool SetGeometryType( const char* _geometryName );
 
+	/// \brief Set a threshold for the edge length of triangles.
+	/// \details During LoadScene... too large tringles are tesselated.
+	/// \param [in] _threshold The absolute maximal edge length or 0 to disable
+	///		automatic splits.
+	void SetTriangleSplitThreshold( float _value ) { m_triangleSplitThreshold = _value; }
+
     /// \brief Get the current fit method.
     /// \detail The build method is responsible to use this method and to
     ///     fill the array of bounding volumes with it.
@@ -210,6 +216,7 @@ private:
 	Jo::Files::MetaFileWrapper m_materials;
     BuildMethod* m_buildMethod;
     FitMethod* m_fitMethod;
+	float m_triangleSplitThreshold;
     std::unordered_map<std::string, BuildMethod*> m_buildMethods;
     std::unordered_map<std::string, FitMethod*> m_fitMethods;
 	std::vector<FileDecl::Vertex> m_vertices;

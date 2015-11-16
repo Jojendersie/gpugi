@@ -57,13 +57,17 @@ int main( int _numArgs, const char** _args )
                   << "  o=[output directory]: OPTIONAL. A path where the scene\n"\
                      "      directory should be created. Otherwise the output is\n"\
                      "      located at the import file location." << std::endl
-				  << "  t=[X]: OPTIONAL. Number of texture coordinates to export." << std::endl;
+				  << "  t=[X]: OPTIONAL. Number of texture coordinates to export." << std::endl
+				  << "  s=[threshold(float)]: OPTIONAL. Split the triangles such\n"\
+					 "      that no edge is longer than threshold (absolute).\n"\
+					 "      The default is 0 which disables splitting." << std::endl;
         return 1;
     }
 
     // Set defaults for optional arguments
     std::string outputPath = PathUtils::GetDirectory( std::string(_args[1]) );
 	int numTextureCoordinates = 1;
+	float splitThreshold = 0.0f;
     // Get the optional arguments
     for( int i = 2; i < _numArgs; ++i )
     {
@@ -89,11 +93,16 @@ int main( int _numArgs, const char** _args )
 		case 't':
 			numTextureCoordinates = atoi(_args[i] + 2);
 			break;
+		case 's':
+			splitThreshold = (float)atof(_args[i] + 2);
+			break;
         default:
             std::cerr << "Unknown optional argument!" << std::endl;
             return 1;
         }
     }
+
+	builder.SetTriangleSplitThreshold(splitThreshold);
     
     // Try to create output files before spending time for Assimp
     std::string sceneName = PathUtils::GetFilename(std::string(_args[1]));

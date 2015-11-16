@@ -3,7 +3,7 @@
 #include "filedef.hpp" 
 
 /// Fallback method: Simply add the triangle without tesselation.
-void TesselateNone(const FileDecl::Triangle& _triangle, class BVHBuilder* _manager, float _maxEdgeLen);
+void TesselateNone(const FileDecl::Triangle& _triangle, class BVHBuilder* _manager);
 
 /// Split an input triangle such that no side of the resulting triangles is
 ///	larger than the threshold.
