@@ -516,6 +516,11 @@ void BVHBuilder::ExportTexcoords( std::ofstream& _file,
 }*/
 
 
+static int RecursiveTreeDepth(uint32 _idx, BVHBuilder::Node* _nodes)
+{
+	if(_nodes[_idx].left & 0x80000000) return 1;
+	else return ε::max(RecursiveTreeDepth(_nodes[_idx].left, _nodes), RecursiveTreeDepth(_nodes[_idx].right, _nodes)) + 1;
+}
 
 void BVHBuilder::BuildBVH()
 {
@@ -543,6 +548,9 @@ void BVHBuilder::BuildBVH()
     // Build now
     uint32 root = (*m_buildMethod)();
 	Assert( root == 0, "The root must be always the first node! Resort or allocate in perorder." );
+
+	std::cout << "Created tree with " << m_innerNodeCount << " inner nodes and " << m_leafNodeCount << " leaves.\n";
+	std::cout << "Max depth is " << RecursiveTreeDepth(0, m_nodes) << '\n';
 }
 
 void BVHBuilder::ExportBVH( std::ofstream& _file )
@@ -653,6 +661,7 @@ void BVHBuilder::AddTriangle( const FileDecl::Triangle& _triangle )
 
 FileDecl::Triangle BVHBuilder::GetTriangleIdx( uint32 _index ) const
 {
+	Assert( _index < GetTriangleCount(), "Out-of-Bounds in triangle access!" );
     FileDecl::Triangle t;
     t.vertices[0] = m_triangles[_index * 4 + 0];
     t.vertices[1] = m_triangles[_index * 4 + 1];

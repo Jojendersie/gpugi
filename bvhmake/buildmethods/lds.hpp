@@ -2,6 +2,9 @@
 
 #include "../bvhmake.hpp"
 
+//#define LDS_SPLITMODE_MEDIAN
+#define LDS_SPLITMODE_SWEEP
+
 /// \brief Build with splits along the largest dimensions
 class BuildLDS: public BuildMethod
 {
@@ -22,4 +25,6 @@ private:
 
     /// \brief Create new tree-nodes recursively.
     uint32 Build( uint32* _ids, ProjCoordinate* _centers, uint32 _min, uint32 _max ) const;
+
+	void ComputeBoundingVolume( const uint32* _ids, uint32 _min, uint32 _max, uint32 _target, const FitMethod& _fit ) const;
 };

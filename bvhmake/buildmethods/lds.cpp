@@ -1,4 +1,5 @@
 ﻿#include "lds.hpp"
+#include "sweep.hpp"
 #include "../../gpugi/utilities/assert.hpp"
 #include <iostream>
 #include <vector>
@@ -85,7 +86,7 @@ uint32 BuildLDS::Build( uint32* _ids, ProjCoordinate* _centers, uint32 _min, uin
 	Mat3x3 Q;
 	Vec3 λ;
 	decomposeQl( cov, Q, λ, false );
-	/*// Fake-max-dim behavior from kdtree
+	/*// Fake max-dim behavior from kdtree
 	Q = identity3x3();
 	Vec3 vmin = _centers[_ids[_min]].pos;
 	Vec3 vmax = _centers[_ids[_min]].pos;
@@ -110,41 +111,82 @@ uint32 BuildLDS::Build( uint32* _ids, ProjCoordinate* _centers, uint32 _min, uin
 
 	// Find a split position using different strategies
 	uint32 splitIndex;
+#ifdef LDS_SPLITMODE_MEDIAN
 	// 1. Median (kd-tree) like
 	splitIndex = (_min + _max) / 2;
+#endif
 
+#ifdef LDS_SPLITMODE_SWEEP
 	// 2. Sweep
-	// TODO
+	ComputeBoundingVolume(_ids, _min, _max, nodeIdx, *fit);
+/*	Vec3 bbsize = bbox.max - bbox.min;
+	// Fake sorting along straight dimensions
+	int d = 0;
+	if( bbsize.y > bbsize.z && bbsize.y > bbsize.x ) d = 1;
+	else if(bbsize.z > bbsize.x) d = 2;
+	std::sort( _ids + _min, _ids + _max + 1,
+		[&](const uint32 _lhs, const uint32 _rhs) { return _centers[_lhs].pos[d] < _centers[_rhs].pos[d]; }
+	);*/
+	// Reserve some nodes for temporary work Assume the last indices to be unused
+	uint32 tmpIdx0 = 4 * m_manager->GetTriangleCount() / FileDecl::Leaf::NUM_PRIMITIVES - 1;
+	uint32 tmpIdx1 = tmpIdx0 - 1;
+	uint32 tmpIdx2 = tmpIdx0 - 2;
+	// Compute lhs/rhs bounding volumes for all splits. This is done from left
+	// and right adding one triangle at a time.
+	// Uses the current node's BV memory and three additional.
+	std::unique_ptr<Vec2[]> heuristics(new Vec2[_max - _min]);
+	FileDecl::Triangle t = m_manager->GetTriangleIdx( _ids[_min] );
+	(*fit)(&t, 1, tmpIdx0);
+	t = m_manager->GetTriangleIdx( _ids[_max] );
+	(*fit)(&t, 1, tmpIdx1);
+	for(uint32 i = _min; i < _max; ++i)
+	{
+		// Left
+		t = m_manager->GetTriangleIdx( _ids[i] );
+		(*fit)(&t, 1, tmpIdx2);
+		(*fit)(tmpIdx0, tmpIdx2, tmpIdx0);
+		// Again for the right side
+		t = m_manager->GetTriangleIdx( _ids[_max-i+_min] );
+		(*fit)(&t, 1, tmpIdx2);
+		(*fit)(tmpIdx1, tmpIdx2, tmpIdx1);
+		// The volumes are rejected in the next iteration but remember
+		// the result for the split decision.
+		heuristics[i-_min].x   = SurfaceAreaHeuristic( *fit, tmpIdx0, nodeIdx, i-_min+1, _max-i );
+		heuristics[_max-i-1].y = SurfaceAreaHeuristic( *fit, tmpIdx1, nodeIdx, _max-i, i-_min+1 );
+	}
+
+	// Find the minimum for the current dimension
+	float minCost = std::numeric_limits<float>::infinity();
+	for(uint32 i = 0; i < (_max-_min); ++i)
+	{
+		if(sum(heuristics[i]) < minCost)
+		{
+			minCost = sum(heuristics[i]);
+			splitIndex = i + _min;
+		}
+	}
+#endif
 
 	node.left = Build( _ids, _centers, _min, splitIndex );
 	node.right = Build( _ids, _centers, splitIndex+1, _max );
 
+#ifdef LDS_SPLITMODE_MEDIAN
 	(*fit)( node.left, node.right, nodeIdx );
+#endif
 
 	return nodeIdx;
 }
 
-/*const float COST_UNDERFUL_LEAF = 0.01f;
-const float COST_UNBALANCED = 0.05f;
-const float COST_TRAVERSAL = 1.0f;
-float BuildSweep::Costs( const FitMethod& _fit, uint32 _target, uint32 _parent, int _num, int _numOther ) const
+void BuildLDS::ComputeBoundingVolume( const uint32* _ids, uint32 _min, uint32 _max, uint32 _target, const FitMethod& _fit ) const
 {
-	return _fit.Surface(_target) / _fit.Surface(_parent) * COST_TRAVERSAL
-		+ max(0, int(FileDecl::Leaf::NUM_PRIMITIVES) - _num) * COST_UNDERFUL_LEAF / FileDecl::Leaf::NUM_PRIMITIVES
-		+ (max(_numOther / float(_num), _num / float(_numOther)) - 1.0f) * COST_UNBALANCED;
-}
-
-
-void BuildSweep::ComputeBoundingVolume( const std::unique_ptr<uint32[]>* _sorted, uint32 _min, uint32 _max, uint32 _target, const FitMethod& _fit ) const
-{
-	FileDecl::Triangle t = m_manager->GetTriangleIdx( _sorted[0][_max] );
+	FileDecl::Triangle t = m_manager->GetTriangleIdx( _ids[_max] );
 	_fit(&t, 1, _target);
 	// Assume the last index to be unused
 	uint32 tmpIdx = 4 * m_manager->GetTriangleCount() / FileDecl::Leaf::NUM_PRIMITIVES - 1;
 	for(uint32 i = _min; i < _max; ++i)
 	{
-		t = m_manager->GetTriangleIdx( _sorted[0][i] );
+		t = m_manager->GetTriangleIdx( _ids[i] );
 		_fit(&t, 1, tmpIdx);
 		_fit(_target, tmpIdx, _target);
 	}
-}*/
+}

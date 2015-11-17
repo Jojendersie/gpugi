@@ -10,3 +10,4 @@ addPointLight = 487.4, 160.0, -180.0, 50000.0, 50000.0, 50000.0
 addPointLight = 487.4, 160.0, 150.0, 50000.0, 50000.0, 50000.0
 
 renderer=0
+//debugrenderer=1

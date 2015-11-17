@@ -18,6 +18,7 @@ void FitBox::operator()(FileDecl::Triangle* _tringles, uint32 _num, uint32 _targ
     // Add triangles successive
     for( uint32 i = 1; i < _num && IsTriangleValid(_tringles[i]); ++i )
         box = ε::Box(ε::Box(m_manager->GetTriangle(_tringles[i])), box);
+	Assert(box.min <= box.max, "Created invalid bounding box.");
     m_manager->GetBoundingVolume<ε::Box>(_target) = box;
 }
 
