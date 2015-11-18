@@ -152,7 +152,7 @@ uint32 BuildLDS::Build( uint32* _ids, ProjCoordinate* _centers, uint32 _min, uin
 		// The volumes are rejected in the next iteration but remember
 		// the result for the split decision.
 		heuristics[i-_min].x   = SurfaceAreaHeuristic( *fit, tmpIdx0, nodeIdx, i-_min+1, _max-i );
-		heuristics[_max-i-1].y = SurfaceAreaHeuristic( *fit, tmpIdx1, nodeIdx, _max-i, i-_min+1 );
+		heuristics[_max-i-1].y = SurfaceAreaHeuristic( *fit, tmpIdx1, nodeIdx, i-_min+1, _max-i );
 	}
 
 	// Find the minimum for the current dimension

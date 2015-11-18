@@ -13,11 +13,12 @@ const float COST_UNBALANCED = 0.88f;
 const float COST_TRAVERSAL = 1.0f;
 float SurfaceAreaHeuristic( const FitMethod& _fit, uint32 _target, uint32 _parent, int _num, int _numOther )
 {
-	float val = _fit.Surface(_target) / _fit.Surface(_parent) * COST_TRAVERSAL
+	/*float val = _fit.Surface(_target) / _fit.Surface(_parent) * COST_TRAVERSAL
 		+ max(0, int(FileDecl::Leaf::NUM_PRIMITIVES) - _num) * COST_UNDERFUL_LEAF / FileDecl::Leaf::NUM_PRIMITIVES
 		+ pow(1.0f - min(_numOther / float(_num), _num / float(_numOther)), 8.0f) * COST_UNBALANCED;
 	//	+ (max(_numOther / float(_num), _num / float(_numOther)) - 1.0f) * COST_UNBALANCED; // with COST_UNBALANCED == 0.05
-	Assert( val >= 0.0f && val <= 3.0f, "Unexpected heuristic value." );
+	Assert( val >= 0.0f && val <= 3.0f, "Unexpected heuristic value." );*/
+	float val = _fit.Surface(_target) / _fit.Surface(_parent) * _num;
 	return val;
 }
 
@@ -47,7 +48,40 @@ void BuildSweep::EstimateNodeCounts( uint32& _numInnerNodes, uint32& _numLeafNod
 
 // Two sources to derive the z-order comparator
 // (floats - unused) http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.150.9547&rep=rep1&type=pdf
-// (ints - the below one uses this int-algorithm on floats) http://delivery.acm.org/10.1145/550000/545444/p472-chan.pdf?ip=141.44.23.5&id=545444&acc=ACTIVE%20SERVICE&key=2BA2C432AB83DA15.88D216EC9FFA262E.4D4702B0C3E38B35.4D4702B0C3E38B35&CFID=730905114&CFTOKEN=27227246&__acm__=1447753526_a3d46db41abc6cfb69d7f59065a4be76
+// (ints - the below one uses this int-algorithm on floats) http://dl.acm.org/citation.cfm?id=545444
+// http://www.forceflow.be/2013/10/07/morton-encodingdecoding-through-bit-interleaving-implementations/ Computing morton codes
+
+// Insert a 0 bit before each bit. This transforms a 8 bit number xxxxxxxx into a 16 bit number 0x0x0x0x0x0x0x0x
+static uint32 partby1(uint8 _x)
+{
+	uint32 r = _x;
+	r = (r | (r << 4)) & 0x0f0f;
+	r = (r | (r << 2)) & 0x3333;
+	r = (r | (r << 1)) & 0x5555;
+	return r;
+}
+// Insert two 0 bits before each bit. This transforms a 8 bit number xxxxxxxx into a 24 bit number 00x00x00x00x00x00x00x00x
+static uint32 partby2(uint8 _x)
+{
+	uint32 r = _x;
+	r = (r | (r << 8)) & 0x00f00f;
+	r = (r | (r << 4)) & 0x0c30c3;
+	r = (r | (r << 2)) & 0x249249;
+	return r;
+}
+static uint64 partby2(uint16 _x)
+{
+	uint64 r = _x;
+	r = (r | (r << 16)) & 0x0000ff0000ff;
+	r = (r | (r <<  8)) & 0x00f00f00f00f;
+	r = (r | (r <<  4)) & 0x0c30c30c30c3;
+	r = (r | (r <<  2)) & 0x249249249249;
+	return r;
+}
+static uint64 morton(uint16 _a, uint16 _b, uint16 _c)
+{
+	return partby2(_a) | (partby2(_b) << 1) | (partby2(_c) << 2);
+}
 
 // Compare if the floor base-2 logarithm of _x0^_x1 is smaller than that of _y0^_y1.
 static bool lessMSB(float _x0, float _x1, float _y0, float _y1)
@@ -59,21 +93,67 @@ static bool lessMSB(float _x0, float _x1, float _y0, float _y1)
 	// is important.
 	// We require the property, that floating points are ordered in their binary
 	// representation.
-	uint x = *reinterpret_cast<uint*>(&_x0) ^ *reinterpret_cast<uint*>(&_x1);
-	uint y = *reinterpret_cast<uint*>(&_y0) ^ *reinterpret_cast<uint*>(&_y1);
+//	uint x = *reinterpret_cast<uint*>(&_x0) ^ *reinterpret_cast<uint*>(&_x1);
+//	uint y = *reinterpret_cast<uint*>(&_y0) ^ *reinterpret_cast<uint*>(&_y1);
 	// Alternative with rounding
-//	uint x = static_cast<uint>(_x0 * 100.0f) ^ static_cast<uint>(_x1 * 100.0f);
-//	uint y = static_cast<uint>(_y0 * 100.0f) ^ static_cast<uint>(_y1 * 100.0f);
+	uint x = static_cast<uint>(_x0 * 4096.0f) ^ static_cast<uint>(_x1 * 4096.0f);
+	uint y = static_cast<uint>(_y0 * 4096.0f) ^ static_cast<uint>(_y1 * 4096.0f);
 	return x < y && x < (x^y);
 }
 
 static bool zordercmp(const Vec3& _a, const Vec3& _b)
 {
-	int d = 0;
+	/*int d = 0;
 	for(int i = 1; i < 3; ++i)
 		if( lessMSB(_a[d], _b[d], _a[i], _b[i]) )
 			d = i;
-	return _a[d] < _b[d];
+	return _a[d] < _b[d];*/
+	// Reference implementation which computes real keys
+	// Even though it should not differ to the above one the trees are different.
+	UVec3 a = UVec3(_a * 4096.0f);
+	UVec3 b = UVec3(_b * 4096.0f);
+	// Interleave packages of 16 bit, convert to inverse Gray code and compare.
+	uint64 codeA = morton(a.x >> 16, a.y >> 16, a.z >> 16);
+	uint64 codeB = morton(b.x >> 16, b.y >> 16, b.z >> 16);
+	// If they are equal take the next 16 less significant bit.
+	if(codeA == codeB) {
+		codeA = morton(a.x & 0xffff, a.y & 0xffff, a.z & 0xffff);
+		codeB = morton(b.x & 0xffff, b.y & 0xffff, b.z & 0xffff);
+	}
+	return codeA < codeB;
+}
+
+// Usefull sources for hilber curve implementations:
+// http://www.tiac.net/~sw/2008/10/Hilbert/moore/ Non recursive c-code
+// http://stackoverflow.com/questions/8459562/hilbert-sort-by-divide-and-conquer-algorithm Idea with inverse gray code
+static uint64 binaryToGray(uint64 num)
+{
+	return num ^ (num >> 1);
+}
+static uint64 grayToBinary(uint64 num)
+{
+	num = num ^ (num >> 32);
+	num = num ^ (num >> 16);
+	num = num ^ (num >> 8);
+	num = num ^ (num >> 4);
+	num = num ^ (num >> 2);
+	num = num ^ (num >> 1);
+	return num;
+}
+static bool hilbertcurvecmp(const Vec3& _a, const Vec3& _b)
+{
+	// Get (positive) integer vectors
+	UVec3 a = UVec3(_a * 4096.0f);
+	UVec3 b = UVec3(_b * 4096.0f);
+	// Interleave packages of 16 bit, convert to inverse Gray code and compare.
+	uint64 codeA = grayToBinary(morton(a.x >> 16, a.y >> 16, a.z >> 16));
+	uint64 codeB = grayToBinary(morton(b.x >> 16, b.y >> 16, b.z >> 16));
+	// If they are equal take the next 16 less significant bit.
+	if(codeA == codeB) {
+		codeA = grayToBinary(morton(a.x & 0xffff, a.y & 0xffff, a.z & 0xffff));
+		codeB = grayToBinary(morton(b.x & 0xffff, b.y & 0xffff, b.z & 0xffff));
+	}
+	return codeA < codeB;
 }
 
 void BuildSweep::Initialize( uint32* _sorted ) const
@@ -96,10 +176,10 @@ void BuildSweep::Initialize( uint32* _sorted ) const
 	for( uint32 i = 0; i < n; ++i )
 		centers[i] -= minCenter;
 
-	// Sort with morton order
-	/*std::sort( &_sorted[0], &_sorted[n],
-		[&centers](const uint32 _lhs, const uint32 _rhs) { return zordercmp(centers[_lhs], centers[_rhs]); }
-	);*/
+	// Sort with a space filling curve order
+	std::sort( &_sorted[0], &_sorted[n],
+		[&centers](const uint32 _lhs, const uint32 _rhs) { return hilbertcurvecmp(centers[_lhs], centers[_rhs]); }
+	);
 }
 
 uint32 BuildSweep::Build( const uint32* _sorted, uint32 _min, uint32 _max ) const
@@ -155,7 +235,7 @@ uint32 BuildSweep::Build( const uint32* _sorted, uint32 _min, uint32 _max ) cons
 			// The volumes are rejected in the next iteration but remember
 			// the result for the split decision.
 			heuristics[i-_min].x   = SurfaceAreaHeuristic( *fit, tmpIdx0, nodeIdx, i-_min+1, _max-i );
-			heuristics[_max-i-1].y = SurfaceAreaHeuristic( *fit, tmpIdx1, nodeIdx, _max-i, i-_min+1 );
+			heuristics[_max-i-1].y = SurfaceAreaHeuristic( *fit, tmpIdx1, nodeIdx, i-_min+1, _max-i );//_max-i, i-_min+1 );
 		}
 
 		// Find the minimum in sum
