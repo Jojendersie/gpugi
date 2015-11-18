@@ -1,15 +1,27 @@
-// Use this function to get an initial random seed.
+uint wanghash(uint x)
+{
+	x = (x ^ 61) ^ (x >> 16);
+	x *= 9;
+	x = x ^ (x >> 4);
+	x *= 0x27d4eb2d;
+	x = x ^ (x >> 15);
+	return x;
+}
+
+// Use this function to get an initial random seed in eye-paths or not at all.
+// It introduces structured noise and leads to artifacts in all light-tracing paths.
+uint InitCoherentRandomSeed(uint frameSeed, uint invocationID)
+{
+	uint seed = frameSeed + wanghash(invocationID) % 5;
+
+	return wanghash(seed);
+}
+// Use this standard with another rng sequence per sample
 uint InitRandomSeed(uint frameSeed, uint invocationID)
 {
 	uint seed = frameSeed + invocationID;
 
-	// Wang hash.
-	seed = (seed ^ 61) ^ (seed >> 16);
-	seed *= 9;
-	seed = seed ^ (seed >> 4);
-	seed *= 0x27d4eb2d;
-	seed = seed ^ (seed >> 15);
-	return seed;
+	return wanghash(seed);
 }
 
 uint RandomUInt(inout uint seed)
