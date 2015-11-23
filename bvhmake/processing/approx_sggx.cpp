@@ -133,7 +133,7 @@ SGGX RecursiveComputeSGGXBases(const BVHBuilder* _bvhBuilder, uint32 _index, std
 		s.zz = s.zz * lw + s2.zz * rw;
 	}
 	// Store compressed form
-	_output[_index].σ = Vec<uint16, 3>(sqrt(Vec3(s.xx, s.yy, s.zz)) * 65535.0f);
+	_output[_index].σ = Vec<int16, 3>(sqrt(Vec3(s.xx, s.yy, s.zz)) * 65535.0f - 32768.0f);
 	_output[_index].r = Vec<int16, 3>(Vec3(s.xy, s.xz, s.yz) / sqrt(Vec3(s.xx*s.yy, s.xx*s.zz, s.yy*s.zz)) * 32767.0f);
 	return s;
 }

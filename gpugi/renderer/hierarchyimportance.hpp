@@ -34,7 +34,12 @@ public:
 
 	void Draw() override;
 
-	/// Internal ssbo binding point of the hierarchy importance buffer.
+	/// Internal ssbo binding points
+	enum class Binding {
+		HIERARCHY_IMPORTANCE = 0,	///< The hierarchy importance buffer
+		PARENT_POINTER = 6,			///< Additional hierarchy information (parent pointers per node)
+		SGGX_NDF = 7,				///< An NDF for each node stored in SGGX basis
+	};
 	static const unsigned int s_hierarchyImportanceBinding = 0;
 
 private:
@@ -48,6 +53,7 @@ private:
 	static const ei::UVec2 m_localSizePathtracer;
 
 	std::unique_ptr<gl::TextureBufferView> m_sceneParentPointer;
+	std::unique_ptr<gl::TextureBufferView> m_sggxBufferView;
 	std::shared_ptr<gl::Buffer> m_hierarchyImportance;
 };
 

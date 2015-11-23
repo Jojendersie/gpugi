@@ -88,7 +88,7 @@ namespace FileDecl
 	///		S_yz = r.z * σ.y * σ.z
 	struct SGGX
 	{
-		ε::Vec<uint16, 3> σ;	///< Values in [0,1] discretized to 16 bit
+		ε::Vec<int16, 3> σ;		///< Values in [0,1] discretized to 16 bit (the interval is shifted by *2-1 to fit the same format like r)
 		ε::Vec<int16, 3> r;		///< Values in [-1,1] descretized to 16 bit
 	};
 }

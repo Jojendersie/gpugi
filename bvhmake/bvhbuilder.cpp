@@ -562,6 +562,7 @@ void BVHBuilder::ExportApproximation( std::ofstream& _file )
 	strcpy( header.name, "approx_sggx" );
 	header.elementSize = sizeof(FileDecl::SGGX);
 	header.numElements = m_innerNodeCount;
+	_file.write( (const char*)&header, sizeof(FileDecl::NamedArray) );
 	_file.write( (const char*)m_hierarchyApproximation.data(), header.numElements * header.elementSize );
 }
 

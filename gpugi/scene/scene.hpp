@@ -97,6 +97,7 @@ public:
 	std::shared_ptr<gl::Buffer> GetVertexInfoBuffer() const		{ return m_vertexInfoBuffer; }
 	std::shared_ptr<gl::Buffer> GetTriangleBuffer() const		{ return m_triangleBuffer; }
 	std::shared_ptr<gl::Buffer> GetHierarchyBuffer() const		{ return m_hierarchyBuffer; }
+	std::shared_ptr<gl::Buffer> GetSGGXBuffer() const			{ return m_sggxBuffer; }
 	/// The parent buffer supplements the hierachy buffer.
 	/// It contains a parent index for each node.
 	std::shared_ptr<gl::Buffer> GetParentBuffer() const			{ return m_parentBuffer; }
@@ -137,6 +138,7 @@ private:
 	std::shared_ptr<gl::Buffer> m_triangleBuffer;
 	std::shared_ptr<gl::Buffer> m_hierarchyBuffer;
 	std::shared_ptr<gl::Buffer> m_parentBuffer;
+	std::shared_ptr<gl::Buffer> m_sggxBuffer;	///< One SGGX NDF per node
 	std::vector<uint32> m_parentBufferRAM;
 
 	ε::Box m_boundingBox;
@@ -165,6 +167,7 @@ private:
 	void LoadMatRef( std::ifstream& _file, const Jo::Files::MetaFileWrapper::Node& _materials, const FileDecl::NamedArray& _header );
 	void LoadHierarchy( std::ifstream& _file, const FileDecl::NamedArray& _header );
 	void LoadBoundingVolumes( std::ifstream& _file, const FileDecl::NamedArray& _header );
+	void LoadHierarchyApproximation( std::ifstream& _file, const FileDecl::NamedArray& _header );
 	/// Analyzes the data and searches the emissive triangles. Requires the other
 	/// methods to be executed before.
 	/// \param _triangles Temporary double buffer of all triangles.

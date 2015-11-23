@@ -40,7 +40,7 @@ Scene::Scene( const std::string& _file ) :
 	}
 
 	// First find the bounding volume header. Otherwise the hierarchy
-	// cannot be build correctly.
+	// cannot be allocated correctly.
 	while( !file.eof() )
 	{
 		FileDecl::NamedArray header;
@@ -78,6 +78,7 @@ Scene::Scene( const std::string& _file ) :
 		else if(strcmp(header.name, "hierarchy") == 0) LoadHierarchy(file, header);
 		else if(strcmp(header.name, "bounding_aabox") == 0) LoadBoundingVolumes(file, header);
 		else if(strcmp(header.name, "bounding_sphere") == 0) LoadBoundingVolumes(file, header);
+		else if(strcmp(header.name, "approx_sggx") == 0) LoadHierarchyApproximation(file, header);
         else file.seekg(header.elementSize * header.numElements, std::ios_base::cur);
 		Assert( !file.fail(), "Failed to load the last block correctly." );
 	}
@@ -251,6 +252,14 @@ void Scene::LoadBoundingVolumes( std::ifstream& _file, const FileDecl::NamedArra
 	else
 		LOG_ERROR("Unimplemented bvh type!");
 	m_hierarchyBuffer->Unmap();
+}
+
+void Scene::LoadHierarchyApproximation( std::ifstream& _file, const FileDecl::NamedArray& _header )
+{
+	m_sggxBuffer = std::make_shared<gl::Buffer>(_header.elementSize * _header.numElements, gl::Buffer::MAP_WRITE);
+	char* data = static_cast<char*>(m_sggxBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+	_file.read(data, _header.elementSize * _header.numElements);
+	m_sggxBuffer->Unmap();
 }
 
 void Scene::LoadMaterial( const Jo::Files::MetaFileWrapper::Node& _material )

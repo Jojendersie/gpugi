@@ -57,6 +57,9 @@ void HierarchyImportance::SetScene(std::shared_ptr<Scene> _scene)
 	// Parent pointer for hierarchy propagation.
 	m_sceneParentPointer = std::make_unique<gl::TextureBufferView>(_scene->GetParentBuffer(), gl::TextureBufferFormat::R32I);
 	m_sceneParentPointer->BindBuffer(6);
+
+	m_sggxBufferView = std::make_unique<gl::TextureBufferView>(_scene->GetSGGXBuffer(), gl::TextureBufferFormat::R16);
+	m_sggxBufferView->BindBuffer(7);
 }
 
 void HierarchyImportance::SetScreenSize(const gl::Texture2D& _newBackbuffer)
