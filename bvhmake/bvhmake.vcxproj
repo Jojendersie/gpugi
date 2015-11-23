@@ -147,7 +147,8 @@
     <ClCompile Include="fitmethods\aaboxfit.cpp" />
     <ClCompile Include="fitmethods\aaellipsoidfit.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="preprocessing\tesselate.cpp" />
+    <ClCompile Include="processing\approx_sggx.cpp" />
+    <ClCompile Include="processing\tesselate.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="buildmethods\kdtree.hpp" />
@@ -159,7 +160,8 @@
     <ClInclude Include="fitmethods\aaellipsoidfit.hpp" />
     <ClInclude Include="fitmethods\optimize.hpp" />
     <ClInclude Include="glhelperconfig.hpp" />
-    <ClInclude Include="preprocessing\tesselate.hpp" />
+    <ClInclude Include="processing\approx_sggx.hpp" />
+    <ClInclude Include="processing\tesselate.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="fitmethods\optimize.inl" />

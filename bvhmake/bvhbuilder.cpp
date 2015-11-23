@@ -553,6 +553,10 @@ void BVHBuilder::BuildBVH()
 	std::cout << "Max depth is " << RecursiveTreeDepth(0, m_nodes) << '\n';
 }
 
+void BVHBuilder::BuildApproximation()
+{
+}
+
 void BVHBuilder::ExportBVH( std::ofstream& _file )
 {
     // Prepare file headers and find out how much space is required

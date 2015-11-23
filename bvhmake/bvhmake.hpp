@@ -159,6 +159,10 @@ public:
     /// \brief Allocate space for the tree and the BVs and compute them.
     void BuildBVH();
 
+	/// \brief Compute a basis per node which approximates all underlying geometry.
+	// TODO: maybe involve projected area to make node hit probability more similar to underlying geometry.
+	void BuildApproximation();
+
     /// \brief Write the bounding volume hierarchy to file.
     void ExportBVH( std::ofstream& _file );
 	void ExportTriangles( std::ofstream& _file );

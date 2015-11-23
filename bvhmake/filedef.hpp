@@ -67,4 +67,20 @@ namespace FileDecl
         Triangle triangles[NUM_PRIMITIVES];
         //uint32 numTriangles;
     };
+
+	/// \brief A simplification of a node by SGGX base function.
+	/// \details This stores the encoded entries of a symmetric matrix S:
+	///		σ = (sqrt(S_xx), sqrt(S_yy), sqrt(S_zz))
+	///		r = (S_xy/sqrt(S_xx S_yy), S_xz/sqrt(S_xx S_zz), S_yz/sqrt(S_yy S_zz))
+	///
+	///		To reconstruct tha matrix do the following:
+	///		S_xx = σ.x^2    S_yy = σ.y^2    S_zz = σ.z^2
+	///		S_xy = r.x * σ.x * σ.y
+	///		S_xz = r.y * σ.x * σ.z
+	///		S_yz = r.z * σ.y * σ.z
+	struct SGGX
+	{
+		ε::Vec<uint16, 3> σ;	///< Values in [0,1] discretized to 16 bit
+		ε::Vec<int16, 3> r;		///< Values in [-1,1] descretized to 16 bit
+	};
 }
