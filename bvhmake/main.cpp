@@ -140,5 +140,8 @@ int main( int _numArgs, const char** _args )
     builder.ExportBVH( sceneOut );
 	builder.ExportTriangles( sceneOut );
 
+	std::cerr << "Building and Exporting hierarchy approximation..." << std::endl;
+	builder.ExportApproximation( sceneOut );
+
     return 0;
 }

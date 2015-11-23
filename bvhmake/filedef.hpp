@@ -28,6 +28,14 @@ namespace FileDecl
     {
         uint32 vertices[3]; ///< Indices of the vertices (array: vertices)
         uint32 material;    ///< ID of the material (array: materialref)
+
+		bool operator == (const Triangle& _rhs) const
+		{
+			return vertices[0] == _rhs.vertices[0]
+				&& vertices[1] == _rhs.vertices[1]
+				&& vertices[2] == _rhs.vertices[2]
+				&& material == _rhs.material;
+		}
     };
 
     extern const Triangle INVALID_TRIANGLE;

@@ -5,7 +5,8 @@
 #include "buildmethods/kdtree.hpp"
 #include "buildmethods/sweep.hpp"
 #include "buildmethods/lds.hpp"
-#include "preprocessing/tesselate.hpp"
+#include "processing/tesselate.hpp"
+#include "processing/approx_sggx.hpp"
 #include "../gpugi/utilities/assert.hpp"
 #include "../gpugi/utilities/logger.hpp"
 #include <assimp/matrix4x4.h>
@@ -553,8 +554,15 @@ void BVHBuilder::BuildBVH()
 	std::cout << "Max depth is " << RecursiveTreeDepth(0, m_nodes) << '\n';
 }
 
-void BVHBuilder::BuildApproximation()
+void BVHBuilder::ExportApproximation( std::ofstream& _file )
 {
+	ComputeSGGXBases(this, m_hierarchyApproximation);
+
+	FileDecl::NamedArray header;
+	strcpy( header.name, "approx_sggx" );
+	header.elementSize = sizeof(FileDecl::SGGX);
+	header.numElements = m_innerNodeCount;
+	_file.write( (const char*)m_hierarchyApproximation.data(), header.numElements * header.elementSize );
 }
 
 void BVHBuilder::ExportBVH( std::ofstream& _file )
@@ -661,6 +669,11 @@ void BVHBuilder::AddTriangle( const FileDecl::Triangle& _triangle )
 						m_vertices[ _triangle.vertices[1] ].position,
 						m_vertices[ _triangle.vertices[2] ].position
         );
+}
+
+ε::Vec3 BVHBuilder::GetNormal( uint32 _vertexIndex ) const
+{
+	return m_vertices[ _vertexIndex ].normal;
 }
 
 FileDecl::Triangle BVHBuilder::GetTriangleIdx( uint32 _index ) const

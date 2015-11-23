@@ -140,6 +140,7 @@ public:
     /// \detail The build method is responsible to use this method and to
     ///     fill the array of bounding volumes with it.
     FitMethod* GetFitMethod()  { return m_fitMethod; }
+	const FitMethod* GetFitMethod() const  { return m_fitMethod; }
 
 	/// \brief Import all with assimp and preprocess.
     /// \returns Success or not.
@@ -161,7 +162,7 @@ public:
 
 	/// \brief Compute a basis per node which approximates all underlying geometry.
 	// TODO: maybe involve projected area to make node hit probability more similar to underlying geometry.
-	void BuildApproximation();
+	void ExportApproximation( std::ofstream& _file );
 
     /// \brief Write the bounding volume hierarchy to file.
     void ExportBVH( std::ofstream& _file );
@@ -198,6 +199,8 @@ public:
     ε::Triangle GetTriangle( uint32 _index ) const;
     ε::Triangle GetTriangle( FileDecl::Triangle _triangle ) const;
 
+	ε::Vec3 BVHBuilder::GetNormal( uint32 _vertexIndex ) const;
+
     /// \brief Get the index buffer for a triangle.
     FileDecl::Triangle GetTriangleIdx( uint32 _index ) const;
 
@@ -209,12 +212,16 @@ public:
 
     /// \brief Get write access to the leaf memory.
     FileDecl::Leaf& GetLeaf( uint32 _index ) { return m_leaves[_index]; }
+	const FileDecl::Leaf& GetLeaf( uint32 _index ) const { return m_leaves[_index]; }
 
     /// \brief Allocate a new inner node from the pool.
     uint32 GetNewNode();
 
     /// \brief Get write access to the leaf memory.
     Node& GetNode( uint32 _index ) { return m_nodes[_index]; }
+	const Node& GetNode( uint32 _index ) const { return m_nodes[_index]; }
+
+	uint32 GetNumNodes() const { return m_innerNodeCount; }
 
 private:
 	Jo::Files::MetaFileWrapper m_materials;
@@ -226,6 +233,7 @@ private:
 	std::vector<FileDecl::Vertex> m_vertices;
 	std::vector<uint32> m_triangles;
 	std::vector<FileDecl::Material> m_materialTable;
+	std::vector<FileDecl::SGGX> m_hierarchyApproximation;
 
 	// Mechanism to detect doublicated vertices on add (for tesselation).
 	// Instead of storing the real vertex, only a pointer is used and hashing/comparison
