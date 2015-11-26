@@ -53,7 +53,7 @@ void PixelCacheLighttracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 	mappedData["LightRayPixelWeight"].Set(float(numPixels) / ei::PI);
 	m_lightpathtraceUBO->Unmap();
 
-	size_t pixelCacheSizeInBytes = (sizeof(float) * 4 * 4) * _newBackbuffer.GetWidth() * _newBackbuffer.GetHeight();
+	size_t pixelCacheSizeInBytes = (sizeof(float) * 4 * 3) * _newBackbuffer.GetWidth() * _newBackbuffer.GetHeight();
 	m_pixelCache = std::make_unique<gl::Buffer>(pixelCacheSizeInBytes, gl::Buffer::IMMUTABLE);
 	m_lighttraceShader.BindSSBO(*m_pixelCache, "PixelCache");
 	m_pixelCache->ClearToZero();

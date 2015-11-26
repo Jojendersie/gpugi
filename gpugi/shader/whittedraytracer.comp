@@ -115,14 +115,10 @@ void main()
 			if(i==0) break;
 			// Save from where we came and the information for the current hit point
 			PixelCacheEntries[gridIndex].PathThroughput = pathThroughput;
-			PixelCacheEntries[gridIndex].Diffuse = PackR11G11B10(materialTexData.Diffuse);
-			PixelCacheEntries[gridIndex].Vertex = ray.Origin;
-			PixelCacheEntries[gridIndex].Normal01 = PackNormal(hitNormal);
+			PixelCacheEntries[gridIndex].triangle = triangle;
 			PixelCacheEntries[gridIndex].Incident = ray.Direction; // TODO is the sign correct?
-			PixelCacheEntries[gridIndex].Shininess = materialTexData.Reflectiveness.w;
-			PixelCacheEntries[gridIndex].Reflectiveness = PackR11G11B10(materialTexData.Reflectiveness.rgb);
-			PixelCacheEntries[gridIndex].Opacity = PackR11G11B10(materialTexData.Opacity);
-			PixelCacheEntries[gridIndex].MaterialID = triangle.w;
+			PixelCacheEntries[gridIndex].Barycentric0 = barycentricCoord.x;
+			PixelCacheEntries[gridIndex].Barycentric1 = barycentricCoord.y;
 		#endif
 			break;
 		}

@@ -105,26 +105,31 @@ void main()
 		ivec2 pixelCoord = ivec2(RandomUInt(randomSeed) % BackbufferSize.x, RandomUInt(randomSeed) % BackbufferSize.y);
 		int cacheIdx = pixelCoord.y * BackbufferSize.x + pixelCoord.x;
 		
+		vec3 barycentricCoordCache = vec3(PixelCacheEntries[cacheIdx].Barycentric0,
+										  PixelCacheEntries[cacheIdx].Barycentric1,
+										  1 - PixelCacheEntries[cacheIdx].Barycentric0 - PixelCacheEntries[cacheIdx].Barycentric1);
+		vec3 cachePosition = texelFetch(VertexPositionBuffer, PixelCacheEntries[cacheIdx].triangle.x).xyz * barycentricCoordCache.x;
+				texelFetch(VertexPositionBuffer, PixelCacheEntries[cacheIdx].triangle.y).xyz * barycentricCoordCache.y;
+				texelFetch(VertexPositionBuffer, PixelCacheEntries[cacheIdx].triangle.z).xyz * barycentricCoordCache.z;
+		
 		// Connect the two path vertices and make a visibility test
 		Ray connectionRay;
-		connectionRay.Direction = PixelCacheEntries[cacheIdx].Vertex - ray.Origin;
+		connectionRay.Direction = cachePosition - ray.Origin;
 		float distanceSq = dot(connectionRay.Direction, connectionRay.Direction);
 		float connectionDist = sqrt(distanceSq);
 		connectionRay.Direction /= connectionDist + DIVISOR_EPSILON;
 		
 		// Compute local and target brdf
-		MaterialTextureData targetMat;
-		targetMat.Reflectiveness = vec4(UnpackR11G11B10(PixelCacheEntries[cacheIdx].Reflectiveness), PixelCacheEntries[cacheIdx].Shininess);
-		targetMat.Opacity = UnpackR11G11B10(PixelCacheEntries[cacheIdx].Opacity);
-		targetMat.Diffuse = UnpackR11G11B10(PixelCacheEntries[cacheIdx].Diffuse);
-		vec3 cacheNormal = UnpackNormal(PixelCacheEntries[cacheIdx].Normal01);
+		vec3 cacheNormal;
+		GetTriangleHitInfo(PixelCacheEntries[cacheIdx].triangle, barycentricCoordCache, cacheNormal, hitTexcoord);
+		MaterialTextureData targetMat = SampleMaterialData(PixelCacheEntries[cacheIdx].triangle.w, hitTexcoord);
 		// vec3 bsdfv0 = AdjointBSDF(ray.Direction, connectionRay.Direction, triangle.w, materialTexData, shadingNormal) *
 					  // AdjointBSDFShadingNormalCorrection(ray.Direction, connectionRay.Direction, geometryNormal, shadingNormal);
 		const float cosLight = saturate(dot(connectionRay.Direction, shadingNormal));
 		const float cosCache = saturate(-dot(connectionRay.Direction, cacheNormal));
 		vec3 bsdfv0 = BSDF(ray.Direction, connectionRay.Direction, triangle.w, materialTexData, shadingNormal);
 		vec3 bsdfv1 = BSDF(connectionRay.Direction, PixelCacheEntries[cacheIdx].Incident,
-						   PixelCacheEntries[cacheIdx].MaterialID, targetMat,
+						   PixelCacheEntries[cacheIdx].triangle.w, targetMat,
 						   cacheNormal);
 		vec3 color = bsdfv0 * bsdfv1 *
 					pathThroughput * LightRayPixelWeight * cosCache * cosLight *

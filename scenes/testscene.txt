@@ -4,7 +4,7 @@ cameraLookAt = 0.0, 1.5, 2.0
 cameraFOV = 67
 resolution = 1024, 768
 
-renderer=0
+renderer=5
 
 //waitSeconds=2
 
@@ -12,11 +12,15 @@ renderer=0
 //mseCheckInterval = 10
 //waitMSE = 0.001
 
-waitIterations=80000
+waitIterations=100
+screenshot
+waitIterations=900
+screenshot
+waitIterations=9000
 screenshot
 
-renderer=2
-waitIterations=80000
-screenshot
+//renderer=2
+//waitIterations=80000
+//screenshot
 
 exit

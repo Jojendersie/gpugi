@@ -1,17 +1,22 @@
 struct PixelCacheEntry
 {
 	vec3 PathThroughput;	// Spectral transformation along the path back to the pixel
-	uint Diffuse;			// R11G11B10 diffuse reflectance
+	float Barycentric0;		// α: barycentric coordinate for vertex 0
 	
-	vec3 Vertex;			// The last position on the eye-path
-	uint Reflectiveness;	// R11G11B10 value for the reflected percentage
+	Triangle triangle;		// The 3 vertex-indices and the material index
+	
+//	uint Diffuse;			// R11G11B10 diffuse reflectance
+	
+//	vec3 Vertex;			// The last position on the eye-path
+//	uint Reflectiveness;	// R11G11B10 value for the reflected percentage
 	
 	vec3 Incident;			// Last direction of the eye-path
-	uint Opacity;			// R11G11B10 value for the transmitted percentage
+	float Barycentric1;		// β: barycentric coordinate for vertex 0
+//	uint Opacity;			// R11G11B10 value for the transmitted percentage
 	
-	vec2 Normal01;
-	float Shininess;		// Exponent of reflective lobes
-	int MaterialID;
+//	vec2 Normal01;
+//	float Shininess;		// Exponent of reflective lobes
+//	int MaterialID;
 };
 
 // WRITE VERSION

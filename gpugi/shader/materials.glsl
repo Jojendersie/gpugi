@@ -66,7 +66,7 @@ vec3 GetDiffuseProbability(int material, MaterialTextureData materialTexData, fl
 
 // Sample a direction from the custom surface BSDF
 // pathThroughput *= brdf * cos(Out, N) / pdf
-vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, inout vec3 pathThroughput, 		const bool adjoint, out float pdf
+vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, inout vec3 pathThroughput, const bool adjoint, out float pdf
 	#ifdef SAMPLING_DECISION_OUTPUT
 		, out bool isReflectedDiffuse
 	#endif
