@@ -266,7 +266,7 @@ void Scene::LoadMaterial( const Jo::Files::MetaFileWrapper::Node& _material )
 {
 	Material mat;
 	ε::Vec3 emissivity(0.0f); // Additional material info for uniform area lights
-	m_noFluxEmissiveTexture = GetBindlessHandle(ε::Vec3(0.0f));
+	m_noFluxEmissiveTexture = GetBindlessHandle(ε::Vec3(0.0f), false);
 	// "String pool"
 	static const std::string s_emissivity("emissivity");
 	static const std::string s_emissivityTex("emissivityTex");
@@ -290,23 +290,24 @@ void Scene::LoadMaterial( const Jo::Files::MetaFileWrapper::Node& _material )
 		if(_material.HasChild(s_diffuseTex))
 			mat.diffuseTexHandle = GetBindlessHandle(_material[s_diffuseTex]);
 		else mat.diffuseTexHandle = GetBindlessHandle(
-			ε::Vec3(_material[s_diffuse][0].Get(0.5f), _material[s_diffuse][1].Get(0.5f), _material[s_diffuse][2].Get(0.5f)));
+			ε::Vec3(_material[s_diffuse][0].Get(0.5f), _material[s_diffuse][1].Get(0.5f), _material[s_diffuse][2].Get(0.5f)), false);
 		// Load or create opacity texture
 		if(_material.HasChild(s_opacityTex))
 			mat.opacityTexHandle = GetBindlessHandle(_material[s_opacityTex]);
 		else mat.opacityTexHandle = GetBindlessHandle(
-			ε::Vec3(_material[s_opacity][0].Get(1.0f), _material[s_opacity][1].Get(1.0f), _material[s_opacity][2].Get(1.0f)));
+			ε::Vec3(_material[s_opacity][0].Get(1.0f), _material[s_opacity][1].Get(1.0f), _material[s_opacity][2].Get(1.0f)), false);
 		// Load or create specular texture
 		if(_material.HasChild(s_specularTex))
 			mat.reflectivenessTexHandle = GetBindlessHandle(_material[s_specularTex]);
 		else mat.reflectivenessTexHandle = GetBindlessHandle(
-			ε::Vec4(_material[s_specular][0].Get(1.0f), _material[s_specular][1].Get(1.0f), _material[s_specular][2].Get(1.0f), _material[s_specular][3].Get(1.0f)));
+			ε::Vec4(_material[s_specular][0].Get(1.0f), _material[s_specular][1].Get(1.0f), _material[s_specular][2].Get(1.0f), _material[s_specular][3].Get(1.0f)), true);
 		// Load or create emmisive texture
 		if(_material.HasChild(s_emissivityTex))
 			mat.emissivityTexHandle = GetBindlessHandle(_material[s_emissivityTex]);
 		else{
-			mat.emissivityTexHandle = m_noFluxEmissiveTexture;
+			//mat.emissivityTexHandle = m_noFluxEmissiveTexture;
 			emissivity = ε::Vec3(_material[s_emissivity][0].Get(0.0f), _material[s_emissivity][1].Get(0.0f), _material[s_emissivity][2].Get(0.0f));
+			mat.emissivityTexHandle = GetBindlessHandle(emissivity, true);
 		}
 	} catch(const std::string& _msg ) {
 		LOG_ERROR("Failed to load the material. Exception: " + _msg);
@@ -334,15 +335,16 @@ uint64 Scene::GetBindlessHandle( const std::string& _name )
 	return handle;
 }
 
-uint64 Scene::GetBindlessHandle( const ε::Vec3& _data )
+uint64 Scene::GetBindlessHandle( const ε::Vec3& _data, bool _hdr )
 {
 	uint64 handle;
-	std::string genName = "gen" + std::to_string(_data.x) + '_' + std::to_string(_data.y) + '_' + std::to_string(_data.z);
+	std::string genName = "gen" + std::to_string(_data.x) + '_' + std::to_string(_data.y) + '_' + std::to_string(_data.z) + (_hdr?"_1":"_0");
 	auto it = m_textures.find(genName);
 	if( it == m_textures.end() )
 	{
+		gl::TextureFormat format = _hdr ? gl::TextureFormat::RGB32F : gl::TextureFormat::RGB8;
 		it = m_textures.insert( std::pair<std::string, std::unique_ptr<gl::Texture2D>>(
-			genName, std::unique_ptr<gl::Texture2D>(new gl::Texture2D(1, 1, gl::TextureFormat::RGB8, &_data, gl::TextureSetDataFormat::RGB, gl::TextureSetDataType::FLOAT))) ).first;
+			genName, std::unique_ptr<gl::Texture2D>(new gl::Texture2D(1, 1, format, &_data, gl::TextureSetDataFormat::RGB, gl::TextureSetDataType::FLOAT))) ).first;
 		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternHandle());
 		// Make permanently resident
 		GL_CALL(glMakeTextureHandleResidentARB, handle);
@@ -352,15 +354,16 @@ uint64 Scene::GetBindlessHandle( const ε::Vec3& _data )
 	return handle;
 }
 
-uint64 Scene::GetBindlessHandle( const ε::Vec4& _data )
+uint64 Scene::GetBindlessHandle( const ε::Vec4& _data, bool _hdr )
 {
 	uint64 handle;
-	std::string genName = "gen" + std::to_string(_data.x) + '_' + std::to_string(_data.y) + '_' + std::to_string(_data.z) + '_' + std::to_string(_data.w);
+	std::string genName = "gen" + std::to_string(_data.x) + '_' + std::to_string(_data.y) + '_' + std::to_string(_data.z) + '_' + std::to_string(_data.w) + (_hdr?"_1":"_0");
 	auto it = m_textures.find(genName);
 	if( it == m_textures.end() )
 	{
+		gl::TextureFormat format = _hdr ? gl::TextureFormat::RGBA32F : gl::TextureFormat::RGBA8;
 		it = m_textures.insert( std::pair<std::string, std::unique_ptr<gl::Texture2D>>(
-			genName, std::unique_ptr<gl::Texture2D>(new gl::Texture2D(1, 1, gl::TextureFormat::RGBA32F, &_data, gl::TextureSetDataFormat::RGBA, gl::TextureSetDataType::FLOAT))) ).first;
+			genName, std::unique_ptr<gl::Texture2D>(new gl::Texture2D(1, 1, format, &_data, gl::TextureSetDataFormat::RGBA, gl::TextureSetDataType::FLOAT))) ).first;
 		handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it->second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternHandle());
 		// Make permanently resident
 		GL_CALL(glMakeTextureHandleResidentARB, handle);

@@ -184,9 +184,9 @@ private:
 	/// Load texture from file and makes it resident
 	uint64 GetBindlessHandle( const std::string& _name );
 	/// Create RGB8 texture with single data value and makes it resident
-	uint64 GetBindlessHandle( const ε::Vec3& _data );
+	uint64 GetBindlessHandle( const ε::Vec3& _data, bool _hdr );
 	/// Create RGBA32F texture with single data value and makes it resident
-	uint64 GetBindlessHandle( const ε::Vec4& _data );
+	uint64 GetBindlessHandle( const ε::Vec4& _data, bool _hdr );
 };
 
 // IDEA for out of core loading support:

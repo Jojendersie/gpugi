@@ -15,7 +15,7 @@ layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) 
 void main()
 {
 	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
-	uint randomSeed = InitCoherentRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
+	uint randomSeed = InitRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
 	vec2 screenCoord = (Random2(randomSeed) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
 
 	Ray ray;

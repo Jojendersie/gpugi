@@ -43,5 +43,5 @@ void Pathtracer::Draw()
 	m_pathtracerShader.Activate();
 	GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localSizePathtracer.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localSizePathtracer.y, 1);
 
-	m_rendererSystem.DispatchShowLightCacheShader();
+	//m_rendererSystem.DispatchShowLightCacheShader();
 }
