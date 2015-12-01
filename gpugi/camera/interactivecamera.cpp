@@ -3,7 +3,7 @@
 #include "../control/globalconfig.hpp"
 
 InteractiveCamera::InteractiveCamera(GLFWwindow* window, const Camera& camera) :
-	Camera(camera.GetPosition(), camera.GetLookAt(), camera.GetAspectRatio(), camera.GetHFov(), camera.GetUp()),
+	Camera(camera.GetPosition(), camera.GetLookAt(), camera.GetAspectRatio(), camera.GetVFov(), camera.GetUp()),
 	m_window(window),
 	m_rotSpeed(0.01f),
 	m_moveSpeed(16.0f),
@@ -17,7 +17,7 @@ void InteractiveCamera::Reset(const Camera& camera)
 	m_position = camera.GetPosition();
 	m_lookat = camera.GetLookAt();
 	m_aspectRatio = camera.GetAspectRatio();
-	m_yfov = camera.GetHFov();
+	m_yfov = camera.GetVFov();
 	m_up = camera.GetUp();
 }
 

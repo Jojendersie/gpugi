@@ -20,12 +20,12 @@ public:
 	const ei::Vec3& GetLookAt() const  { return m_lookat; }
 
 	virtual void SetAspectRatio(float aspect)				{ m_aspectRatio = aspect; }
-	virtual void SetVFov(float hfov)						{ m_yfov = hfov; }
+	virtual void SetVFov(float vfov)						{ m_yfov = vfov; }
 	virtual void SetPosition(const ei::Vec3& position)		{ m_position = position; }
 	virtual void SetLookAt(const ei::Vec3& lookat)			{ m_lookat = lookat; }
 	
 	const ei::Vec3& GetUp() const  { return m_up; }
-	const float GetHFov() const  { return m_yfov; }
+	const float GetVFov() const  { return m_yfov; }
 	const float GetAspectRatio() const  { return m_aspectRatio; }
 
 	void ComputeCameraParams(ei::Vec3& cameraU, ei::Vec3& cameraV, ei::Vec3& cameraW) const;

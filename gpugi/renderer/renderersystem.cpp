@@ -173,7 +173,10 @@ void RendererSystem::SetCamera(const Camera& _camera)
 		mappedData["CameraV"].Set(camV);
 		mappedData["CameraW"].Set(camW);
 		mappedData["CameraPosition"].Set(_camera.GetPosition());
-		mappedData["PixelArea"].Set(ei::len(ei::cross(camU * 2.0f / m_backbuffer->GetWidth(), camV * 2.0f / m_backbuffer->GetHeight())));
+		float pixelArea = ei::len(ei::cross(camU * 2.0f / m_backbuffer->GetWidth(), camV * 2.0f / m_backbuffer->GetHeight()));
+		//float tanFOV = tanf(_camera.GetVFov() / 2.0f * (ei::PI / 180.0f));
+		float pixelArea2 = 4.0f / (m_backbuffer->GetWidth() * m_backbuffer->GetHeight());
+		mappedData["PixelArea"].Set(pixelArea2);
 		mappedData["ViewProjection"].Set(viewProjection);
 		m_cameraUBO->Unmap();
 

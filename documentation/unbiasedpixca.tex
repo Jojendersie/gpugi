@@ -1,0 +1,60 @@
+\documentclass[]{article}
+\usepackage{amsmath}
+\usepackage{bbm}
+
+%opening
+\title{Unbiased Pixel Cache Tracing}
+\author{Johannes Jendersie}
+
+\begin{document}
+
+\maketitle
+
+\section{Pixel Cache Projection}
+
+For a randomly chosen cache with position $\mathbbm{c}_{i}$ and a random point on the light path $\mathbbm{p}_{i}$ the unbiased light transport is
+\begin{equation}
+	w = \frac{f_r(\overrightarrow{\mathbbm{p}_{i-1}\mathbbm{p}_i}, \overrightarrow{\mathbbm{p}_i\mathbbm{c}_i})
+	f_r(\overrightarrow{\mathbbm{p}_i\mathbbm{c}_i}, \overrightarrow{\mathbbm{c}_i, \mathbbm{c}_{i-1}})}
+	{p_{cf}(\overrightarrow{\mathbbm{p}_i\mathbbm{c}_i})/p_c(\overrightarrow{\mathbbm{p}_i\mathbbm{c}_i})}
+	\label{eq:transport0}
+\end{equation}
+where the denominator $p_{cf}/p_c$ is the probability for the connection direction under the distribution of caches.
+It depends on the global spherical distribution of pixel caches $p_c(\mathbbm{d})$ with respect to $\mathbbm{p}$ and on the distribution of directions from the BRDF $p_f(\mathbbm{d}) = f_r(\overrightarrow{\mathbbm{p}_{i-1}\mathbbm{p}_i}, \mathbbm{d})$.
+The common probability is
+\begin{equation}
+	p_{cf}(\mathbbm{d}) = \frac{p_c(\mathbbm{d})p_f(\mathbbm{d})}{\int_\Omega\int_\Omega p_c(\mathbbm{d})p_f(\mathbbm{d}) d\mathbbm{d} d\mathbbm{d}}
+\end{equation}
+because both destributions are independent.
+The integrals normalize the distribution function to 1 and are the only reason why $w$ depends on $p_c$.
+Putting this back into equation \ref{eq:transport0} gives
+\begin{equation}
+w = f_r(\overrightarrow{\mathbbm{p}_{i-1}\mathbbm{p}_i}, \overrightarrow{\mathbbm{p}_i\mathbbm{c}_i})
+	f_r(\overrightarrow{\mathbbm{p}_i\mathbbm{c}_i}, \overrightarrow{\mathbbm{c}_i, \mathbbm{c}_{i-1}})
+	\frac{\int_\Omega\int_\Omega p_c(\mathbbm{d})p_f(\mathbbm{d}) d\mathbbm{d} d\mathbbm{d}}
+	{p_f(\overrightarrow{\mathbbm{p}_i\mathbbm{c}_i})}
+\end{equation}
+
+To solve the integral we would need to iterate over all existing caches which is unfeasible.
+However, making assumptions to $p_f$ can remove this ugly term.
+
+\subsection{Diffuse case}
+
+Setting $p_f$ to an uniform distribution on the hemisphere gives the following quotient.
+\begin{align}
+p_f(\mathbbm{d}) &= \frac{1}{2\pi}\\
+q &= \int_\frac{\Omega}{2}\int_\frac{\Omega}{2} p_c(\mathbbm{d}) d\mathbbm{d} d\mathbbm{d}\\
+&= 2\pi p_c\left(\in\frac{\Omega}{2}\right)
+\end{align}
+Problem: we need to integrate over $\frac{\Omega}{2}$! $p_f$ is 0 otherwise.
+I.e. the inner integral is the probability that the cache is in the positive hemisphere $p_c(\in\frac{\Omega}{2})$ which is constant.
+The constant integrated over the hemisphere just adds another $2\pi$.
+%With the assumption that $p_f=1/2\pi$ for the entire sphere we can go further.
+%This is allowed because we discard the path anyway and the further weight is irrelevant.
+%In that case the inner integral resolves to 1 (as this is a property of the density function $p_c$).
+%\begin{align}
+%q &= \int_\Omega 1 d\mathbbm{d}\\
+%&= 4\pi
+%\end{align}
+
+\end{document}

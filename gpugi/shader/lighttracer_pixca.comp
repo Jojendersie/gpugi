@@ -1,12 +1,14 @@
 #version 440
 
 #define TRINORMAL_OUTPUT
+#define SAMPLING_DECISION_OUTPUT
 #include "stdheader.glsl"
 
 #include "pixelcache.glsl"
 #include "screenreproject.glsl"
+#include "lightsource.glsl"
 
-#define MAX_PATHLENGTH 8
+#define MAX_PATHLENGTH 10
 #define CONNECTION_EPSILON 0.0
 
 
@@ -29,6 +31,31 @@ void main()
 	vec3 U, V;
 	CreateONB(normal, U, V);
 	ray.Direction = SampleHemisphereCosine(Random2(randomSeed), U, V, normal);
+	
+	// Choose a single pixel-cache for the entire light-path
+	ivec2 cachePixelCoord = ivec2(RandomUInt(randomSeed) % BackbufferSize.x, RandomUInt(randomSeed) % BackbufferSize.y);
+	int cacheIdx = cachePixelCoord.y * BackbufferSize.x + cachePixelCoord.x;
+	vec3 barycentricCoordCache = vec3(PixelCacheEntries[cacheIdx].Barycentric0,
+									  PixelCacheEntries[cacheIdx].Barycentric1,
+									  1 - PixelCacheEntries[cacheIdx].Barycentric0 - PixelCacheEntries[cacheIdx].Barycentric1);
+	vec3 cachePosition = texelFetch(VertexPositionBuffer, PixelCacheEntries[cacheIdx].triangle.x).xyz * barycentricCoordCache.x
+			+ texelFetch(VertexPositionBuffer, PixelCacheEntries[cacheIdx].triangle.y).xyz * barycentricCoordCache.y
+			+ texelFetch(VertexPositionBuffer, PixelCacheEntries[cacheIdx].triangle.z).xyz * barycentricCoordCache.z;
+	vec3 cacheNormal; vec2 texcoord;
+	GetTriangleHitInfo(PixelCacheEntries[cacheIdx].triangle, barycentricCoordCache, cacheNormal, texcoord);
+	MaterialTextureData cacheMaterial = SampleMaterialData(PixelCacheEntries[cacheIdx].triangle.w, texcoord);
+	vec3 viewDir = UnpackNormal(PixelCacheEntries[cacheIdx].Incident01);
+	
+	// Compute direct lighting for the chosen cache
+	vec3 cacheColor = EstimateDirectLight(cachePosition, cacheNormal, lightSamplePos_Norm0.xyz, normal,
+									lightIntensity_Norm1.xyz, viewDir,
+									PixelCacheEntries[cacheIdx].triangle.w, cacheMaterial);
+	cacheColor *= LightRayPixelWeight / NumRaysPerLightSample;
+	//cacheColor = vec3(0.0);
+	//cacheColor *= PixelCacheEntries[cacheIdx].PathThroughput;
+	//WriteAtomic(cacheColor, cachePixelCoord);return;
+	
+	bool lastBounceDiffuse = true;
 
 	for(int i=0; i<MAX_PATHLENGTH; ++i)
 	{
@@ -50,11 +77,13 @@ void main()
 		// Get Material infos.
 		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
 		// Diffuse != Diffuse reflectance because of multilayer model. Upper layers might reflect earlier
+		float cosInToShading = dot(shadingNormal, ray.Direction);
 		float absCosInToShading = abs(dot(shadingNormal, ray.Direction));
+		cosInToShading = saturate(-cosInToShading);
 		vec3 diffuse = GetDiffuseReflectance(triangle.w, materialTexData, absCosInToShading);
+		float avgDiffuse = GetLuminance(diffuse);
 
-		// Direct illumination of directly visible points is added by the Whitted tracer
-		if(GetLuminance(diffuse) > 0.0 && i!=0)
+		if(avgDiffuse > 0.0 && i>0)// && !lastBounceDiffuse)
 		{
 			// Try to connect to camera.
 			Ray cameraRay;
@@ -85,12 +114,14 @@ void main()
 						// Formulas explained in (6.2) http://www.maw.dk/3d_graphics_projects/downloads/Bidirectional%20Path%20Tracing%202009.pdf
 						// Also a look into SmallVCM is a good idea!
 						float cosAtCamera = saturate(camViewDotRay / cameraDist); // = dot(-cameraRay.Direction, CameraW);
+						cosAtCamera *= cosAtCamera;
 						float fluxToIrradiance = AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal) /
 												(cosAtCamera * cosAtCamera * PixelArea * cameraDistSq + DIVISOR_EPSILON);
 
-						vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal);
-						//float mis = (i==0) ? 0.5 : 1.0;
+						//vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal);
+						//* cosInToShading * saturate(dot(cameraRay.Direction, shadingNormal))
 						vec3 color = pathThroughput * (fluxToIrradiance / PI) * diffuse;
+						//vec3 color = pathThroughput * (fluxToIrradiance) * bsdf;
 
 						// Add Sample.
 						ivec2 pixelCoord = ivec2((screenCoord*0.5 + vec2(0.5)) * BackbufferSize);
@@ -99,59 +130,27 @@ void main()
 					}
 				}
 			}
-		}
+		}//*/
 		
 		// "Next event estimation" connect to a random pixel via cache
-		ivec2 pixelCoord = ivec2(RandomUInt(randomSeed) % BackbufferSize.x, RandomUInt(randomSeed) % BackbufferSize.y);
-		int cacheIdx = pixelCoord.y * BackbufferSize.x + pixelCoord.x;
-		
-		vec3 barycentricCoordCache = vec3(PixelCacheEntries[cacheIdx].Barycentric0,
-										  PixelCacheEntries[cacheIdx].Barycentric1,
-										  1 - PixelCacheEntries[cacheIdx].Barycentric0 - PixelCacheEntries[cacheIdx].Barycentric1);
-		vec3 cachePosition = texelFetch(VertexPositionBuffer, PixelCacheEntries[cacheIdx].triangle.x).xyz * barycentricCoordCache.x;
-				texelFetch(VertexPositionBuffer, PixelCacheEntries[cacheIdx].triangle.y).xyz * barycentricCoordCache.y;
-				texelFetch(VertexPositionBuffer, PixelCacheEntries[cacheIdx].triangle.z).xyz * barycentricCoordCache.z;
-		
 		// Connect the two path vertices and make a visibility test
-		Ray connectionRay;
-		connectionRay.Direction = cachePosition - ray.Origin;
-		float distanceSq = dot(connectionRay.Direction, connectionRay.Direction);
-		float connectionDist = sqrt(distanceSq);
-		connectionRay.Direction /= connectionDist + DIVISOR_EPSILON;
-		
-		// Compute local and target brdf
-		vec3 cacheNormal;
-		GetTriangleHitInfo(PixelCacheEntries[cacheIdx].triangle, barycentricCoordCache, cacheNormal, hitTexcoord);
-		MaterialTextureData targetMat = SampleMaterialData(PixelCacheEntries[cacheIdx].triangle.w, hitTexcoord);
-		// vec3 bsdfv0 = AdjointBSDF(ray.Direction, connectionRay.Direction, triangle.w, materialTexData, shadingNormal) *
-					  // AdjointBSDFShadingNormalCorrection(ray.Direction, connectionRay.Direction, geometryNormal, shadingNormal);
-		const float cosLight = saturate(dot(connectionRay.Direction, shadingNormal));
-		const float cosCache = saturate(-dot(connectionRay.Direction, cacheNormal));
-		vec3 bsdfv0 = BSDF(ray.Direction, connectionRay.Direction, triangle.w, materialTexData, shadingNormal);
-		vec3 bsdfv1 = BSDF(connectionRay.Direction, PixelCacheEntries[cacheIdx].Incident,
-						   PixelCacheEntries[cacheIdx].triangle.w, targetMat,
-						   cacheNormal);
-		vec3 color = bsdfv0 * bsdfv1 *
-					pathThroughput * LightRayPixelWeight * cosCache * cosLight *
-					PixelCacheEntries[cacheIdx].PathThroughput;
-		
-		// Connection can be in the wrong half space of either side. In that case we do not
-		// need the connection.
-		if(GetLuminance(color) > CONNECTION_EPSILON)
+		if(!PixelCacheEntries[cacheIdx].DirectlyVisible && PixelCacheEntries[cacheIdx].PathThroughput != vec3(0.0) && avgDiffuse > 0.0)// && lastBounceDiffuse)
 		{
-			connectionRay.Origin = ray.Origin + connectionRay.Direction * RAY_HIT_EPSILON;
-			if(!TraceRayAnyHit(connectionRay, connectionDist - RAY_HIT_EPSILON*2))
-			{
-				//memoryBarrierImage();
-				WriteAtomic(color, pixelCoord);
-			}
-		}
+			vec3 intensity = diffuse * pathThroughput * (cosInToShading / PI);
+			vec3 color = EstimateDirectLight(cachePosition, cacheNormal, ray.Origin, shadingNormal,
+									intensity, viewDir,
+									PixelCacheEntries[cacheIdx].triangle.w, cacheMaterial);
+			color *= LightRayPixelWeight * 2;
+			cacheColor += color;
+		}//*/
 
 		// Continue ray.
 		vec3 throughput = vec3(1.0);
-		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, throughput);
+		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, throughput, lastBounceDiffuse);
 		throughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
 		//	* abs(dot(ray.Direction, shadingNormal) * dot(newDirection, shadingNormal));
+		//pathThroughput *= absCosInToShading;
+		//pathThroughput *= abs(dot(newDirection, shadingNormal));
 		pathThroughput *= throughput;
 
 	#ifdef RUSSIAN_ROULETTE
@@ -164,4 +163,7 @@ void main()
 		ray.Direction = newDirection;
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 	}
+	
+	cacheColor *= PixelCacheEntries[cacheIdx].PathThroughput;
+	WriteAtomic(cacheColor, cachePixelCoord);
 }

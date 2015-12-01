@@ -50,7 +50,7 @@ void PixelCacheLighttracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 	// Set constants ...
 	gl::MappedUBOView mappedData(m_lightpathtraceUBOInfo, m_lightpathtraceUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::INVALIDATE_BUFFER));
 	mappedData["NumRaysPerLightSample"].Set(static_cast<std::int32_t>(m_numRaysPerLightSample));
-	mappedData["LightRayPixelWeight"].Set(float(numPixels) / ei::PI);
+	mappedData["LightRayPixelWeight"].Set(float(numPixels) / 2.0f); // div 2 for the hemisphere bias
 	m_lightpathtraceUBO->Unmap();
 
 	size_t pixelCacheSizeInBytes = (sizeof(float) * 4 * 3) * _newBackbuffer.GetWidth() * _newBackbuffer.GetHeight();
