@@ -85,9 +85,6 @@ void main()
 		float avgDiffuse = GetLuminance(diffuse);
 
 		// Mask path on pure specular materials but keep those which are specular over the entire path.
-		//if(avgDiffuse > 0.0 && i>0)// && !lastBounceDiffuse)
-		//if(i >= PixelCacheEntries[cacheIdx].EyePathLength)// != i+1 && i>0)
-		//if(i>0)
 		if((i>0 && avgDiffuse > 0.0) || (pureSpecular && avgDiffuse == 0.0))
 		{
 			// Try to connect to camera.
@@ -121,7 +118,7 @@ void main()
 						float cosAtCamera = saturate(camViewDotRay / cameraDist); // = dot(-cameraRay.Direction, CameraW);
 						cosAtCamera *= cosAtCamera;
 						float fluxToIrradiance = AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal) /
-												(cosAtCamera * cosAtCamera * PixelArea * cameraDistSq + DIVISOR_EPSILON);
+												(cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
 
 						vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal);
 						//* cosInToShading * saturate(dot(cameraRay.Direction, shadingNormal))
