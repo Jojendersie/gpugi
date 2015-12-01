@@ -12,7 +12,7 @@ struct PixelCacheEntry
 	
 	vec2 Incident01;		// Last direction of the eye-path (compressed)
 	float Barycentric1;		// β: barycentric coordinate for vertex 0
-	bool DirectlyVisible;	// Path to this cache has lenght 1
+	int EyePathLength;		// Path to this cache has lenght 1 if directly visible
 //	uint Opacity;			// R11G11B10 value for the transmitted percentage
 	
 //	vec2 Normal01;

@@ -63,7 +63,7 @@ void main()
 			//vec3 emissivity = textureLod(sampler2D(Materials[triangle.w].emissivityTexHandle), hitTexcoord, 0.0).xyz;
 		//	color += pathThroughput * emissivity;
 		//}
-		color += pathThroughput * materialTexData.Emissivity;
+//		color += pathThroughput * materialTexData.Emissivity;
 
 		// Make a decision
 		vec3 pdiffuse = GetDiffuseProbability(triangle.w, materialTexData, abs(dot(hitNormal, ray.Direction)));
@@ -103,7 +103,7 @@ void main()
 			PixelCacheEntries[gridIndex].Incident01 = PackNormal(ray.Direction); // TODO is the sign correct?
 			PixelCacheEntries[gridIndex].Barycentric0 = barycentricCoord.x;
 			PixelCacheEntries[gridIndex].Barycentric1 = barycentricCoord.y;
-			PixelCacheEntries[gridIndex].DirectlyVisible = i == 0;
+			PixelCacheEntries[gridIndex].EyePathLength = i + 1;
 		#endif
 			break;
 		}
