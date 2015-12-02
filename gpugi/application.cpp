@@ -24,6 +24,7 @@
 #include "renderer/hierarchyimportance.hpp"
 #include "renderer/debugrenderer/hierarchyvisualization.hpp"
 #include "renderer/debugrenderer/raytracemeshinfo.hpp"
+#include "renderer/debugrenderer/importancevisualization.hpp"
 
 #include "camera/interactivecamera.hpp"
 
@@ -106,7 +107,8 @@ void Application::RegisterScriptCommands()
 	GlobalConfig::AddParameter("debugrenderer", { -1 }, "Set active debug renderer (will not change the current renderer).\n"
 														"-1: to disable any debug rendering.\n"
 														"0: RayTraceMeshInfo\n"
-														"1: Hierachyvisualization");
+														"1: Hierachyvisualization\n"
+														"2: Hierarchy Importance Visualization");
 	GlobalConfig::AddListener("debugrenderer", "Renderer", std::bind(&Application::SwitchDebugRenderer, this, std::placeholders::_1));
 
 
@@ -239,6 +241,9 @@ void Application::SwitchDebugRenderer(const GlobalConfig::ParameterType& p)
 		break;
 	case 1:
 		m_rendererSystem->SetDebugRenderer<HierarchyVisualization>();
+		break;
+	case 2:
+		m_rendererSystem->SetDebugRenderer<ImportanceVisualization>();
 		break;
 
 	default:

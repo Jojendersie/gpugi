@@ -206,7 +206,11 @@ void RendererSystem::Draw()
 	{
 		if (m_activeDebugRenderer)
 		{
+			clock_t begin = clock();
 			m_activeDebugRenderer->Draw();
+			PerIterationBufferUpdate();
+			clock_t end = clock();
+			m_renderTime += (end - begin) * 1000 / CLOCKS_PER_SEC;
 		}
 		else
 		{

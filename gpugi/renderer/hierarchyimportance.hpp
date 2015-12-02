@@ -44,7 +44,6 @@ public:
 
 private:
 	gl::ShaderObject m_hierarchyImpAcquisitionShader;
-	gl::ShaderObject m_hierarchyImpTriagVisShader;
 	gl::ShaderObject m_hierarchyImpPropagationInitShader;
 	gl::ShaderObject m_hierarchyImpPropagationNodeShader;
 

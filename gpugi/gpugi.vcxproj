@@ -170,6 +170,7 @@
     <ClCompile Include="imageut\texturemse.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="outputwindow.cpp" />
+    <ClCompile Include="renderer\debugrenderer\importancevisualization.cpp" />
     <ClCompile Include="renderer\hierarchyimportance.cpp" />
     <ClCompile Include="renderer\bidirectionalpathtracer.cpp" />
     <ClCompile Include="renderer\debugrenderer\hierarchyvisualization.cpp" />
@@ -220,6 +221,7 @@
     <ClInclude Include="imageut\hdrimage.hpp" />
     <ClInclude Include="imageut\texturemse.hpp" />
     <ClInclude Include="outputwindow.hpp" />
+    <ClInclude Include="renderer\debugrenderer\importancevisualization.hpp" />
     <ClInclude Include="renderer\hierarchyimportance.hpp" />
     <ClInclude Include="renderer\bidirectionalpathtracer.hpp" />
     <ClInclude Include="renderer\debugrenderer\debugrenderer.hpp" />

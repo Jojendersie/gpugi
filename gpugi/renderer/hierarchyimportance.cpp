@@ -17,7 +17,6 @@ const ei::UVec2 HierarchyImportance::m_localSizePathtracer = ei::UVec2(8, 8);
 HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 	Renderer(_rendererSystem),
 	m_hierarchyImpAcquisitionShader("hierarchyImpAcquisition"),
-	m_hierarchyImpTriagVisShader("hierarchyImpTriagVis"),
 	m_hierarchyImpPropagationInitShader("hierarchyImpPropagation_Init"),
 	m_hierarchyImpPropagationNodeShader("hierarchyImpPropagation_Node")
 {
@@ -28,8 +27,6 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 
 	m_hierarchyImpAcquisitionShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/acquisition.comp", additionalDefines);
 	m_hierarchyImpAcquisitionShader.CreateProgram();
-	m_hierarchyImpTriagVisShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/trianglevis.comp");
-	m_hierarchyImpTriagVisShader.CreateProgram();
 	m_hierarchyImpPropagationInitShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_init.comp");
 	m_hierarchyImpPropagationInitShader.CreateProgram();
 	m_hierarchyImpPropagationNodeShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_nodes.comp");
@@ -76,11 +73,6 @@ void HierarchyImportance::Draw()
 	GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localSizePathtracer.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localSizePathtracer.y, 1);
 
 	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
-
-	m_hierarchyImpTriagVisShader.Activate();
-	GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localSizePathtracer.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localSizePathtracer.y, 1);
-
-	GL_CALL(glMemoryBarrier, GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
 void HierarchyImportance::UpdateHierarchyNodeImportance()

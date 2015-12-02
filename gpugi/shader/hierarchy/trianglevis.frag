@@ -5,28 +5,25 @@
 #include "importanceubo.glsl"
 
 
-layout(binding = 1, rgba32f) restrict writeonly uniform image2D OutputTexture;
+layout(location = 0) in vec2 Texcoord;
 
 layout(binding = 0, std430) restrict readonly buffer HierarchyImportanceBuffer
 {
 	float HierarchyImportance[];
 };
 
-#define LOCAL_SIZE 8
-layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
+layout(location = 0, index = 0) out vec4 FragColor;
+
 void main()
 {
-	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
-	uint randomSeed = InitRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
-	vec2 screenCoord = (vec2(0.5) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
+	//uint randomSeed = InitRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
+	vec2 screenCoord = Texcoord * 2.0 - vec2(1.0);
 
 	Ray ray;
 	ray.Origin = CameraPosition;
 	ray.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
 
 	float outputImportance = 0.0;
-
-	int numTouchedTriangles = 0;
 
 	// Trace ray.
 	int triangleIndex;
@@ -38,6 +35,7 @@ void main()
 	{
 		outputImportance = HierarchyImportance[NumInnerNodes + triangleIndex];
 	}
+	outputImportance = pow(outputImportance, 0.17);
 
-	imageStore(OutputTexture, gridPosition, vec4(outputImportance * 0.0001));
+	FragColor = vec4(outputImportance * 0.05);
 }

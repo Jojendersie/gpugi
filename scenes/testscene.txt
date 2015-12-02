@@ -4,7 +4,8 @@ cameraLookAt = 0.0, 1.5, 2.0
 cameraFOV = 67
 resolution = 1024, 768
 
-renderer=5
+renderer=3
+debugrenderer=2
 
 //waitSeconds=2
 

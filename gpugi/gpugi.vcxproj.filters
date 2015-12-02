@@ -186,6 +186,9 @@
     <ClCompile Include="..\dependencies\glhelper\glhelper\statemanagement.cpp">
       <Filter>dependencies\glhelper</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\debugrenderer\importancevisualization.cpp">
+      <Filter>code\renderer\debugrenderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -352,6 +355,9 @@
     </ClInclude>
     <ClInclude Include="..\dependencies\glhelper\glhelper\shaderobject.hpp">
       <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\debugrenderer\importancevisualization.hpp">
+      <Filter>code\renderer\debugrenderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

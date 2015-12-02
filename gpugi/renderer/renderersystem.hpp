@@ -54,6 +54,7 @@ public:
 
 	/// Returns internal HDR backbuffer.
 	gl::Texture2D& GetBackbuffer() { return *m_backbuffer; }
+	const gl::Texture2D& GetBackbuffer() const { return *m_backbuffer; }
 
 
 
