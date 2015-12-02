@@ -86,6 +86,7 @@ void RendererSystem::PerIterationBufferUpdate(bool _iterationIncrement)
 
 	gl::MappedUBOView mappedData(m_perIterationUBOInfo, m_perIterationUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::INVALIDATE_BUFFER));
 	mappedData["FrameSeed"].Set(WangHash(static_cast<std::uint32_t>(m_iterationCount)));
+	mappedData["IterationCount"].Set(static_cast<std::uint32_t>(m_iterationCount));
 	m_perIterationUBO->Unmap();
 
 	// There could be some performance gain in double/triple buffering this buffer.

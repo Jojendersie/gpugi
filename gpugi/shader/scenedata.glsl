@@ -57,6 +57,15 @@ layout(binding=5) uniform samplerBuffer InitialLightSampleBuffer;
 	float normalThetaCos;	// normal.z
 };*/
 
+#ifdef TRACERAY_IMPORTANCE_BREAK
+// Importance buffer must be bound in normal scene setup for traceray.
+// Including it in traceray causes the buffer to appear twice.
+layout(std430, binding = 10) restrict readonly buffer HierarchyImportanceBuffer
+{
+	float HierarchyImportance[];
+}; 
+#endif
+
 struct Material
 {
 	uvec2 diffuseTexHandle;

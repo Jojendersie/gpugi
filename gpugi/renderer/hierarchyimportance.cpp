@@ -18,7 +18,8 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 	Renderer(_rendererSystem),
 	m_hierarchyImpAcquisitionShader("hierarchyImpAcquisition"),
 	m_hierarchyImpPropagationInitShader("hierarchyImpPropagation_Init"),
-	m_hierarchyImpPropagationNodeShader("hierarchyImpPropagation_Node")
+	m_hierarchyImpPropagationNodeShader("hierarchyImpPropagation_Node"),
+	m_hierarchyPathTracer("hierarchyPathTracer")
 {
 	std::string additionalDefines;
 #ifdef SHOW_SPECIFIC_PATHLENGTH
@@ -31,6 +32,8 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 	m_hierarchyImpPropagationInitShader.CreateProgram();
 	m_hierarchyImpPropagationNodeShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_nodes.comp");
 	m_hierarchyImpPropagationNodeShader.CreateProgram();
+	m_hierarchyPathTracer.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer.comp", additionalDefines + "#define TRACERAY_IMPORTANCE_BREAK");
+	m_hierarchyPathTracer.CreateProgram();
 
 	m_hierarchyImportanceUBOInfo = m_hierarchyImpAcquisitionShader.GetUniformBufferInfo()["HierarchyImportanceUBO"];
 	m_hierarchyImportanceUBO = std::make_unique<gl::Buffer>(m_hierarchyImportanceUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
@@ -64,15 +67,28 @@ void HierarchyImportance::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 	if (m_hierarchyImportance)
 		m_hierarchyImportance->ClearToZero();
 
-	_newBackbuffer.BindImage(1, gl::Texture::ImageAccess::READ_WRITE);
+	_newBackbuffer.BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
 }
 
 void HierarchyImportance::Draw()
 {
+	// Reset importance on camera movement...
+	if(m_rendererSystem.GetIterationCount() == 0)
+		m_hierarchyImportance->ClearToZero();
+
+	// Compute triangle importance
 	m_hierarchyImpAcquisitionShader.Activate();
 	GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localSizePathtracer.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localSizePathtracer.y, 1);
-
 	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
+
+	// Propagate importance through hierarchy
+	UpdateHierarchyNodeImportance();
+
+	// Render
+	//GL_CALL(glMemoryBarrier, GL_ALL_BARRIER_BITS);
+	//GL_CALL(glFinish);
+	m_hierarchyPathTracer.Activate();
+	GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localSizePathtracer.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localSizePathtracer.y, 1);
 }
 
 void HierarchyImportance::UpdateHierarchyNodeImportance()
@@ -84,7 +100,7 @@ void HierarchyImportance::UpdateHierarchyNodeImportance()
 	//  Idea would be to perform "pull tries" that finish only if there is importance to pull and busy loop otherwise.
 	//  This is not possible with GPUs since a running shader invocation might be waiting for another invocation that was not yet triggered!
 
-	GLuint numBlocks = (m_rendererSystem.GetScene()->GetNumInnerNodes() / 64) + (m_rendererSystem.GetScene()->GetNumInnerNodes() % 64 > 0 ? 1 : 0);
+	GLuint numBlocks = (m_rendererSystem.GetScene()->GetNumInnerNodes() + 63) / 64;
 
 	m_hierarchyImpPropagationInitShader.Activate();
 	GL_CALL(glDispatchCompute, numBlocks, 1, 1);
@@ -104,7 +120,7 @@ void HierarchyImportance::UpdateHierarchyNodeImportance()
 		GL_CALL(glDispatchCompute, numBlocks, 1, 1);
 		GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
 
-		changedAnything = *static_cast<int*>(doneBuffer.Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE)) != 0;
+		changedAnything = *static_cast<int*>(doneBuffer.Map(gl::Buffer::MapType::READ, gl::Buffer::MapWriteFlag::NONE)) != 0;
 		doneBuffer.Unmap();
 	} while (changedAnything);
 }

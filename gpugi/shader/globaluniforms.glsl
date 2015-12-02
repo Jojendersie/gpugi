@@ -17,6 +17,7 @@ layout(binding = 1, shared) uniform Camera
 layout(binding = 2, shared) uniform PerIteration
 {
 	uint FrameSeed;
+	uint IterationCount;
 };
 
 layout(binding = 3, shared) uniform UMaterials

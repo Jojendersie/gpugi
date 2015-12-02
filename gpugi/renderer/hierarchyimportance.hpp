@@ -40,12 +40,13 @@ public:
 		PARENT_POINTER = 6,			///< Additional hierarchy information (parent pointers per node)
 		SGGX_NDF = 7,				///< An NDF for each node stored in SGGX basis
 	};
-	static const unsigned int s_hierarchyImportanceBinding = 0;
+	static const unsigned int s_hierarchyImportanceBinding = 10;
 
 private:
 	gl::ShaderObject m_hierarchyImpAcquisitionShader;
 	gl::ShaderObject m_hierarchyImpPropagationInitShader;
 	gl::ShaderObject m_hierarchyImpPropagationNodeShader;
+	gl::ShaderObject m_hierarchyPathTracer;
 
 	gl::UniformBufferMetaInfo m_hierarchyImportanceUBOInfo;
 	std::unique_ptr<gl::Buffer> m_hierarchyImportanceUBO;

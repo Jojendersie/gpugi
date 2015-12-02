@@ -5,6 +5,7 @@
 
 // #define TRINORMAL_OUTPUT
 // #define TRIINDEX_OUTPUT
+// #define TRACERAY_IMPORTANCE_BREAK
 
 // TRINORMAL_OUTPUT: Attention! triangleNormal is not normalized
 
@@ -43,11 +44,22 @@
 			//if(IntersectVirtualEllipsoid(ray, currentNode0.xyz, currentNode1.xyz, newHit) && newHit <= rayLength)
 			if(IntersectBox(ray, invRayDir, currentNode0.xyz, currentNode1.xyz, newHit) && newHit <= rayLength)
 			{
+				#ifdef TRACERAY_IMPORTANCE_BREAK
+					if(HierarchyImportance[currentNodeIndex] < 5.0)
+					{
+						#ifdef ANY_HIT
+							//return true;
+						#else
+							rayLength = RAY_MAX;
+							return;
+						#endif
+					}
+				#endif
 				uint childCode = floatBitsToUint(currentNode0.w);
-				// Most significant bit tells us is this is a leaf.
+				// Most significant bit tells us if this is a leaf.
 				currentNodeIndex = int(childCode & uint(0x7FFFFFFF));
 				nextIsLeafNode = currentNodeIndex != childCode;
-				// If we go into leave mode...
+				// If yes, we go into leave mode...
 				if(nextIsLeafNode)
 				{
 					currentLeafIndex = int(TRIANGLES_PER_LEAF * currentNodeIndex);
