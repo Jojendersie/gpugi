@@ -65,8 +65,8 @@ float MISHeuristic(float p)
 	//return 1.0;
 
 	// Balance heuristic
-	return p;
+	return min(1000, p);
 
 	// Power heuristic beta=2
-	//return p*p;
+	//return min(1000, p*p);
 }
