@@ -1,7 +1,7 @@
 #version 450
 #extension GL_NV_shader_atomic_float : require
 
-#define TRIINDEX_OUTPUT
+#define HIT_INDEX_MASKING
 #include "../stdheader.glsl"
 #include "importanceubo.glsl"
 
@@ -39,9 +39,11 @@ void main()
 		Triangle triangle;
 		vec3 barycentricCoord;
 		float rayHit = RAY_MAX;
-		TraceRay(ray, rayHit, barycentricCoord, triangle, touchedTriangleIndices[numTouchedTriangles]);
+		ivec2 hitIndex = ivec2(0xFFFFFFFF);
+		TraceRay(ray, rayHit, hitIndex, barycentricCoord, triangle);
 		if(rayHit == RAY_MAX)
 			break;
+		touchedTriangleIndices[numTouchedTriangles] = hitIndex.y;
 
 		// Compute hit normal and texture coordinate.
 		vec3 hitNormal; vec2 hitTexcoord;
@@ -76,9 +78,10 @@ void main()
 			float lightSampleIntensityFactor = saturate(dot(lightSampleDir, -lightRay.Direction));
 			if(lightSampleIntensityFactor > 0.0)
 			{
-				lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + ray.Origin;
+				lightRay.Origin = ray.Origin;
 
-				if(!TraceRayAnyHit(lightRay, lightDist))
+				hitIndex.x = 0xFFFFFFFF;
+				if(!TraceRayAnyHit(lightRay, lightDist, hitIndex))
 				{
 					// Hemispherical lambert emitter. First we want intensity, not radiance
 					vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border

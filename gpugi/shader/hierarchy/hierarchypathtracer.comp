@@ -1,0 +1,117 @@
+#version 450
+
+#define HIT_INDEX_MASKING
+#include "../stdheader.glsl"
+
+
+layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
+
+#define NUM_LIGHT_SAMPLES 1
+#define MAX_PATHLENGTH 16
+
+#define LOCAL_SIZE 8
+layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
+void main()
+{
+	const float lightSampleWeight = float(NumInitialLightSamples) / NUM_LIGHT_SAMPLES; // This could be a uniform!
+
+	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
+	uint randomSeed = InitRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
+	vec2 screenCoord = (Random2(randomSeed) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
+
+	Ray ray;
+	ray.Origin = CameraPosition;
+	ray.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
+
+	vec3 color = vec3(0.0);
+	vec3 pathThroughput = vec3(1.0);
+	bool didNextEventEstimation = false;
+	ivec2 hitMask = ivec2(0xFFFFFFFF);
+
+	for(int i=0; i<MAX_PATHLENGTH; ++i)
+	{
+		// Trace ray.
+		Triangle triangle;
+		vec3 barycentricCoord;
+		float rayHit = RAY_MAX;
+		TraceRay(ray, rayHit, hitMask, barycentricCoord, triangle);
+		if(rayHit == RAY_MAX)
+			break;
+		hitMask.x = 0xFFFFFFFF;
+		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon because of masking!)
+
+		// Compute hit normal and texture coordinate.
+		vec3 hitNormal; vec2 hitTexcoord;
+		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
+		// Get Material infos.
+		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
+
+		// Add self emissivity of hit material.
+		// To avoid double counting use either next event estimation or this sampling. In general,
+		// next event estimation performs better, but for specular bounces or direct view sampling
+		// is more probable to find the correct light.
+		if( !didNextEventEstimation )
+			color += pathThroughput * materialTexData.Emissivity;
+		
+		// Connect to random light samples ("Next Event Estimation")
+		didNextEventEstimation = materialTexData.Reflectiveness.w < 500.0;
+		if( didNextEventEstimation )
+		{
+			Ray lightRay;
+			for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
+			{
+			#ifdef SHOW_SPECIFIC_PATHLENGTH
+				if(i+1 != SHOW_SPECIFIC_PATHLENGTH)
+					break;
+			#endif
+
+				int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
+				vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2);
+				vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1);
+				
+				// Direction to light & distance.
+				lightRay.Direction = lightSamplePos_Norm0.xyz - ray.Origin;
+				float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
+				float lightDist = sqrt(lightDistSq);
+				lightRay.Direction /= lightDist;
+
+				// Facing the light?
+				vec3 lightSampleDir = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
+				float lightSampleIntensityFactor = saturate(dot(lightSampleDir, -lightRay.Direction));
+				if(lightSampleIntensityFactor > 0.0)
+				{
+					lightRay.Origin = ray.Origin;
+
+					if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON, hitMask))
+					{
+						// Hemispherical lambert emitter. First we want intensity, not radiance
+						vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border
+						vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
+
+						// Add Sample (L): L(hitPoint, lightRay.Direction) * bsdf * dot(lightRay.Direction, hitNormal)
+						// L(hitPoint, lightRay.Direction) = lightSampleIntensity / lightDistSq
+
+						vec3 irradiance = (saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in because of shading normals!
+						color += irradiance * (pathThroughput * lightSampleWeight) * bsdf;
+						//color += min(irradiance * pathThroughput * bsdf, 1); // <- surpress fire flies
+					}
+				}
+			}
+		}
+
+		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
+		vec3 throughput = vec3(1.0);
+		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, throughput);
+		pathThroughput *= throughput;
+	#ifdef RUSSIAN_ROULETTE
+		float continuationPropability = saturate(GetLuminance(throughput));
+		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stoped -> >=
+			break;
+		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.
+	#endif
+	}
+
+	vec4 final = vec4(color, 1.0);
+	final += imageLoad(OutputTexture, gridPosition);
+	imageStore(OutputTexture, gridPosition, final);
+}

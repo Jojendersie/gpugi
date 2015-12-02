@@ -9,22 +9,36 @@
 
 // TRINORMAL_OUTPUT: Attention! triangleNormal is not normalized
 
+/// \param [inout] _hitIndex Node and triangle index of the final hit position. The trinagle index
+///		might not be defined if TRACERAY_IMPORTANCE_BREAK is enabled. The index is 0xFFFFFFFF then.
+///		As input parameter this can be used to mask the intersection with a certain node or triangle
+///		(e.g. that of the last hit if continuing a path). Use 0xFFFFFFFF if you do not want masking.
+///
+///		The AnyHit method does not change the mask.
 #ifdef ANY_HIT
-	bool TraceRayAnyHit(in Ray ray, in float rayLength)
+	bool TraceRayAnyHit(in Ray ray, in float rayLength
+		#ifdef HIT_INDEX_MASKING
+			, in ivec2 _hitIndex
+		#endif
+	)
 #else
-	void TraceRay(in Ray ray, inout float rayLength, out vec3 outBarycentricCoord, out Triangle outTriangle
-		
-	#ifdef TRINORMAL_OUTPUT
-		, out vec3 triangleNormal
-	#endif
-	#ifdef TRIINDEX_OUTPUT
-		, out int triangleIndex
-	#endif
-		)
+	void TraceRay(in Ray ray, inout float rayLength
+		#ifdef HIT_INDEX_MASKING
+			, inout ivec2 _hitIndex
+		#endif
+		, out vec3 outBarycentricCoord, out Triangle outTriangle
+		#ifdef TRINORMAL_OUTPUT
+			, out vec3 triangleNormal
+		#endif
+	)
 #endif
 {
 	int currentNodeIndex = 0;
 	int currentLeafIndex = 0; // For highly arcane, currently unknown reasons an initial value gives a distinct performance improvement: 10ms!!
+	#ifdef HIT_INDEX_MASKING
+		ivec2 inputHitIndex = _hitIndex;
+		_hitIndex.y = 0xFFFFFFFF;
+	#endif
 
 	vec3 invRayDir = 1.0 / ray.Direction;
 	bool nextIsLeafNode = false;
@@ -40,16 +54,28 @@
 				++numBoxesVisited;
 			#endif
 
-			float newHit;
+			float newHit, exitDist;
 			//if(IntersectVirtualEllipsoid(ray, currentNode0.xyz, currentNode1.xyz, newHit) && newHit <= rayLength)
-			if(IntersectBox(ray, invRayDir, currentNode0.xyz, currentNode1.xyz, newHit) && newHit <= rayLength)
+			if(IntersectBox(ray, invRayDir, currentNode0.xyz, currentNode1.xyz, newHit, exitDist)
+				&& newHit <= rayLength
+				#ifdef HIT_INDEX_MASKING
+					&& inputHitIndex.x != currentNodeIndex
+				#endif
+				)
 			{
+				#if defined(HIT_INDEX_MASKING) && !defined(ANY_HIT)
+					_hitIndex.x = currentNodeIndex;
+				#endif
 				#ifdef TRACERAY_IMPORTANCE_BREAK
 					if(HierarchyImportance[currentNodeIndex] < 5.0)
 					{
 						#ifdef ANY_HIT
-							//return true;
+							if(exitDist <= rayLength) return true;
 						#else
+							// TODO modify newHit?
+							//
+							//currentNodeIndex = floatBitsToInt(currentNode1.w);
+							//continue;
 							rayLength = RAY_MAX;
 							return;
 						#endif
@@ -96,7 +122,12 @@
 				// Check hit.
 				vec3 newTriangleNormal;
 				float newHit; vec3 newBarycentricCoord;
-				if (IntersectTriangle(ray, positions[0], positions[1], positions[2], newHit, newBarycentricCoord, newTriangleNormal) && newHit < rayLength)
+				if (IntersectTriangle(ray, positions[0], positions[1], positions[2], newHit, newBarycentricCoord, newTriangleNormal)
+					&& newHit < rayLength
+					#ifdef HIT_INDEX_MASKING
+						&& inputHitIndex.y != currentLeafIndex
+					#endif
+					)
 				{
 					#ifdef ANY_HIT
 						return true;
@@ -104,13 +135,12 @@
 						rayLength = newHit;
 						outTriangle = triangle;
 						outBarycentricCoord = newBarycentricCoord;
+						#ifdef HIT_INDEX_MASKING
+							_hitIndex.y = currentLeafIndex;
+						#endif
 
 					#ifdef TRINORMAL_OUTPUT
 						triangleNormal = newTriangleNormal;
-					#endif
-
-					#ifdef TRIINDEX_OUTPUT
-						triangleIndex = currentLeafIndex;
 					#endif
 
 						// Cannot return yet, there might be a triangle that is hit before this one!

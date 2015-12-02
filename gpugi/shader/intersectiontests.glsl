@@ -7,7 +7,7 @@ struct Ray
 	vec3 Direction;
 };
 
-bool IntersectBox(Ray ray, vec3 invRayDir, vec3 aabbMin, vec3 aabbMax, out float firstHit)
+bool IntersectBox(Ray ray, vec3 invRayDir, vec3 aabbMin, vec3 aabbMax, out float firstHit, out float lastHit)
 {
 	vec3 tbot = invRayDir * (aabbMin - ray.Origin);
 	vec3 ttop = invRayDir * (aabbMax - ray.Origin);
@@ -16,12 +16,12 @@ bool IntersectBox(Ray ray, vec3 invRayDir, vec3 aabbMin, vec3 aabbMax, out float
 	vec2 t = max(tmin.xx, tmin.yz);
 	firstHit = max(0.0f, max(t.x, t.y));
 	t = min(tmax.xx, tmax.yz);
-	float lastHit = min(t.x, t.y);
+	lastHit = min(t.x, t.y);
 	return firstHit <= lastHit;
 }
-bool IntersectBox(Ray ray, vec3 aabbMin, vec3 aabbMax, out float firstHit)
+bool IntersectBox(Ray ray, vec3 aabbMin, vec3 aabbMax, out float firstHit, out float lastHit)
 {
-	return IntersectBox(ray, vec3(1.0) / ray.Direction, aabbMin, aabbMax, firstHit);
+	return IntersectBox(ray, vec3(1.0) / ray.Direction, aabbMin, aabbMax, firstHit, lastHit);
 }
 
 bool IntersectVirtualEllipsoid(Ray ray, vec3 aabbMin, vec3 aabbMax, out float firstHit)
