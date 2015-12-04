@@ -5,7 +5,7 @@ cameraFOV = 67
 resolution = 1024, 768
 
 renderer=3
-//debugrenderer=2
+debugrenderer=2
 
 //waitSeconds=2
 

@@ -4,7 +4,7 @@
 // #define TRACERAY_DEBUG_VARS
 
 // #define TRINORMAL_OUTPUT
-// #define TRIINDEX_OUTPUT
+// #define HIT_INDEX_MASKING
 // #define TRACERAY_IMPORTANCE_BREAK
 
 // TRINORMAL_OUTPUT: Attention! triangleNormal is not normalized

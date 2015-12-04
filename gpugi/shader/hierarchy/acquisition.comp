@@ -49,7 +49,7 @@ void main()
 		vec3 hitNormal; vec2 hitTexcoord;
 		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
 		// Get Material infos.
-		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
+		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 
 		float totalRadiance = 0.0f;
 
@@ -85,7 +85,7 @@ void main()
 				{
 					// Hemispherical lambert emitter. First we want intensity, not radiance
 					vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border
-					vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
+					vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, materialData, hitNormal);
 
 					// Add Sample (L): L(hitPoint, lightRay.Direction) * bsdf * dot(lightRay.Direction, hitNormal)
 					// L(hitPoint, lightRay.Direction) = lightSampleIntensity / lightDistSq
@@ -109,7 +109,7 @@ void main()
 		}
 
 		vec3 throughput = vec3(1.0);
-		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, throughput);
+		ray.Direction = SampleBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput);
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 		pathThroughput *= throughput;
 	#ifdef RUSSIAN_ROULETTE

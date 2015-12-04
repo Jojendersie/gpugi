@@ -100,7 +100,7 @@ void main()
 		GetTriangleHitInfo(triangle, barycentricCoord, shadingNormal, hitTexcoord);
 
 		// Get Material infos.
-		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
+		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 
 		// Save light cache entry.
 #ifdef SAVE_LIGHT_CACHE 
@@ -178,9 +178,9 @@ void main()
 
 				#ifdef SAMPLEBSDF_OUTPUT_PDF
 					float pdf;
-					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal, pdf);
+					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal, pdf);
 				#else
-					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, triangle.w, materialTexData, shadingNormal);
+					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal);
 				#endif
 
 				#ifdef SAVE_LIGHT_CACHE
@@ -212,9 +212,9 @@ void main()
 		vec3 throughput = vec3(1.0);
 	#ifdef SAMPLEBSDF_OUTPUT_PDF
 		float samplePDF;
-		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, throughput, samplePDF);
+		vec3 newDirection = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, shadingNormal, throughput, samplePDF);
 	#else
-		vec3 newDirection = SampleAdjointBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, shadingNormal, throughput);
+		vec3 newDirection = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, shadingNormal, throughput);
 	#endif
 		throughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
 		pathThroughput *= throughput;

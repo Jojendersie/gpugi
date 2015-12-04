@@ -48,14 +48,14 @@ void main()
 		vec3 hitNormal; vec2 hitTexcoord;
 		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
 		// Get Material infos.
-		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
+		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 		
 		// See pathtracer.comp
 		if( !didNextEventEstimation )
-			color += pathThroughput * materialTexData.Emissivity;
+			color += pathThroughput * materialData.Emissivity;
 
 		// Connect to random light samples ("Next Event Estimation")
-		didNextEventEstimation = materialTexData.Reflectiveness.w < 500.0;
+		didNextEventEstimation = materialData.Reflectiveness.w < 500.0;
 		if( didNextEventEstimation )
 		{
 			Ray lightRay;
@@ -93,11 +93,11 @@ void main()
 					// Triangle material
 					if(lightSampleMaterialIndex != -1)
 					{
-						MaterialTextureData lightSampleMaterialTexData = SampleMaterialData(lightSampleMaterialIndex, LightCacheEntries[lightCacheSampleIndex].Texcoord);
+						MaterialData lightSampleMaterialData = SampleMaterialData(lightSampleMaterialIndex, LightCacheEntries[lightCacheSampleIndex].Texcoord);
 
 						float pdf;
 						vec3 lightBSDF = AdjointBSDF(LightCacheEntries[lightCacheSampleIndex].IncidentDirection, -lightRay.Direction,
-												lightSampleMaterialIndex, lightSampleMaterialTexData, lightSampleHitNormal, pdf);
+												lightSampleMaterialData, lightSampleHitNormal, pdf);
 
 						lightSampleIntensity = lightSampleFlux * lightBSDF * cosLight;
 
@@ -119,7 +119,7 @@ void main()
 					float cosCamera = saturate(dot(lightRay.Direction, hitNormal));
 
 					float pdf;
-					vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal, pdf); // Note that this is also 1/samplingProbability!
+					vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, materialData, hitNormal, pdf); // Note that this is also 1/samplingProbability!
 
 				#ifdef RUSSIAN_ROULETTE
 					// path continuation probability (russian roulette): saturate(bsdf * dot(N, outDir) / pdf)
@@ -145,7 +145,7 @@ void main()
 
 		float samplePDF;
 		vec3 throughput = vec3(1.0);
-		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, throughput, samplePDF);
+		ray.Direction = SampleBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput, samplePDF);
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 		pathThroughput *= throughput;
 	#ifdef RUSSIAN_ROULETTE

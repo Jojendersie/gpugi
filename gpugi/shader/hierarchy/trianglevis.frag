@@ -1,6 +1,6 @@
 #version 450
 
-#define TRIINDEX_OUTPUT
+#define HIT_INDEX_MASKING
 #include "../stdheader.glsl"
 #include "importanceubo.glsl"
 
@@ -26,14 +26,14 @@ void main()
 	float outputImportance = 0.0;
 
 	// Trace ray.
-	int triangleIndex;
+	ivec2 triangleIndex = ivec2(0xFFFFFFFF);
 	Triangle triangle;
 	vec3 barycentricCoord;
 	float rayHit = RAY_MAX;
-	TraceRay(ray, rayHit, barycentricCoord, triangle, triangleIndex);
+	TraceRay(ray, rayHit, triangleIndex, barycentricCoord, triangle);
 	if(rayHit != RAY_MAX)
 	{
-		outputImportance = HierarchyImportance[NumInnerNodes + triangleIndex] / IterationCount;
+		outputImportance = HierarchyImportance[NumInnerNodes + triangleIndex.y] / IterationCount;
 	}
 	outputImportance = pow(outputImportance, 0.17) * 0.2;
 	//outputImportance *= 0.1;

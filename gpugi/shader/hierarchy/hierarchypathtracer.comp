@@ -44,17 +44,17 @@ void main()
 		vec3 hitNormal; vec2 hitTexcoord;
 		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
 		// Get Material infos.
-		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
+		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 		if(hitMask.y == 0xFFFFFFFF)
 		{
 			// Unpack material from hierarchy buffer
-			materialTexData.Reflectiveness = texelFetch(HierarchyMaterialBuffer, hitMask.x * 4);
-			materialTexData.Opacity = texelFetch(HierarchyMaterialBuffer, hitMask.x * 4 + 1).xyz;
-			materialTexData.Diffuse = texelFetch(HierarchyMaterialBuffer, hitMask.x * 4 + 2).xyz;
-			materialTexData.Emissivity = texelFetch(HierarchyMaterialBuffer, hitMask.x * 4 + 3).xyz;
+			materialData.Reflectiveness = texelFetch(HierarchyMaterialBuffer, hitMask.x * 4);
+			materialData.Opacity = texelFetch(HierarchyMaterialBuffer, hitMask.x * 4 + 1).xyz;
+			materialData.Diffuse = texelFetch(HierarchyMaterialBuffer, hitMask.x * 4 + 2).xyz;
+			materialData.Emissivity = texelFetch(HierarchyMaterialBuffer, hitMask.x * 4 + 3).xyz;
 			hitNormal = vec3(0.0, 1.0, 0.0);
 			//color = vec3(hitMask.x * 0.0001);
-			color = materialTexData.Reflectiveness.xyw;
+			color = materialData.Reflectiveness.xyw;
 			break;
 		}
 
@@ -63,10 +63,10 @@ void main()
 		// next event estimation performs better, but for specular bounces or direct view sampling
 		// is more probable to find the correct light.
 		if( !didNextEventEstimation )
-			color += pathThroughput * materialTexData.Emissivity;
+			color += pathThroughput * materialData.Emissivity;
 		
 		// Connect to random light samples ("Next Event Estimation")
-		didNextEventEstimation = materialTexData.Reflectiveness.w < 500.0;
+		didNextEventEstimation = materialData.Reflectiveness.w < 500.0;
 		if( didNextEventEstimation )
 		{
 			Ray lightRay;
@@ -100,7 +100,7 @@ void main()
 					{
 						// Hemispherical lambert emitter. First we want intensity, not radiance
 						vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border
-						vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, triangle.w, materialTexData, hitNormal);
+						vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, materialData, hitNormal);
 
 						// Add Sample (L): L(hitPoint, lightRay.Direction) * bsdf * dot(lightRay.Direction, hitNormal)
 						// L(hitPoint, lightRay.Direction) = lightSampleIntensity / lightDistSq
@@ -115,7 +115,7 @@ void main()
 
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
 		vec3 throughput = vec3(1.0);
-		ray.Direction = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, throughput);
+		ray.Direction = SampleBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput);
 		pathThroughput *= throughput;
 	#ifdef RUSSIAN_ROULETTE
 		float continuationPropability = saturate(GetLuminance(throughput));

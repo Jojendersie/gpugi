@@ -1,21 +1,27 @@
 #define DIVISOR_EPSILON 1e-5
 
 // Data from material textures.
-struct MaterialTextureData
+struct MaterialData
 {
 	vec4 Reflectiveness;
 	vec3 Opacity;
 	vec3 Diffuse;
 	vec3 Emissivity;	// Self emissivity luminance
+	vec3 Fresnel0;	// Fist precomputed coefficient for fresnel approximation (rgb)
+	float RefractionIndexAvg;
+	vec3 Fresnel1;	// Second precomputed coefficient for fresnel approximation (rgb)
 };
-MaterialTextureData SampleMaterialData(int materialID, vec2 texcoord)
+MaterialData SampleMaterialData(int materialID, vec2 texcoord)
 {
-	MaterialTextureData materialTexData;
-	materialTexData.Reflectiveness = textureLod(sampler2D(Materials[materialID].reflectivenessTexHandle), texcoord, 0.0);
-	materialTexData.Opacity = textureLod(sampler2D(Materials[materialID].opacityTexHandle), texcoord, 0.0).xyz;
-	materialTexData.Diffuse = textureLod(sampler2D(Materials[materialID].diffuseTexHandle), texcoord, 0.0).xyz;
-	materialTexData.Emissivity = textureLod(sampler2D(Materials[materialID].emissivityTexHandle), texcoord, 0.0).xyz;
-	return materialTexData;
+	MaterialData materialData;
+	materialData.Reflectiveness = textureLod(sampler2D(Materials[materialID].reflectivenessTexHandle), texcoord, 0.0);
+	materialData.Opacity = textureLod(sampler2D(Materials[materialID].opacityTexHandle), texcoord, 0.0).xyz;
+	materialData.Diffuse = textureLod(sampler2D(Materials[materialID].diffuseTexHandle), texcoord, 0.0).xyz;
+	materialData.Emissivity = textureLod(sampler2D(Materials[materialID].emissivityTexHandle), texcoord, 0.0).xyz;
+	materialData.Fresnel0 = Materials[materialID].Fresnel0;
+	materialData.RefractionIndexAvg = Materials[materialID].RefractionIndexAvg;
+	materialData.Fresnel1 = Materials[materialID].Fresnel1;
+	return materialData;
 }
 
 
@@ -29,30 +35,30 @@ float Avg(vec3 colorProbability)
 	return (colorProbability.x + colorProbability.y + colorProbability.z ) / 3.0;
 }
 
-void GetBSDFDecisionPropabilities(int material, MaterialTextureData materialTexData, float cosThetaAbs,
+void GetBSDFDecisionPropabilities(MaterialData materialData, float cosThetaAbs,
 									out vec3 preflect, out vec3 prefract, out vec3 pdiffuse)
 {
 	// Compute reflection probabilities with rescaled fresnel approximation from:
 	// Fresnel Term Approximations for Metals
 	// ((n-1)²+k²) / ((n+1)²+k²) + 4n / ((n+1)²+k²) * (1-cos theta)^5
 	// = Fresnel0 + Fresnel1 * (1-cos theta)^5
-	preflect = materialTexData.Reflectiveness.xyz * (Materials[material].Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + Materials[material].Fresnel0);
+	preflect = materialData.Reflectiveness.xyz * (materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0);
 	prefract = vec3(1.0) - saturate(preflect);
-	pdiffuse = prefract * materialTexData.Opacity;
+	pdiffuse = prefract * materialData.Opacity;
 	prefract = prefract - pdiffuse;
 }
 
-vec3 GetDiffuseReflectance(int material, MaterialTextureData materialTexData, float cosThetaAbs)
+vec3 GetDiffuseReflectance(MaterialData materialData, float cosThetaAbs)
 {
-	vec3 preflect = materialTexData.Reflectiveness.xyz * (Materials[material].Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + Materials[material].Fresnel0);
-	vec3 pdiffuse = (vec3(1.0) - saturate(preflect)) * materialTexData.Opacity;
-	return pdiffuse * materialTexData.Diffuse;
+	vec3 preflect = materialData.Reflectiveness.xyz * (materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0);
+	vec3 pdiffuse = (vec3(1.0) - saturate(preflect)) * materialData.Opacity;
+	return pdiffuse * materialData.Diffuse;
 }
 
-vec3 GetDiffuseProbability(int material, MaterialTextureData materialTexData, float cosThetaAbs)
+vec3 GetDiffuseProbability(MaterialData materialData, float cosThetaAbs)
 {
-	vec3 preflect = materialTexData.Reflectiveness.xyz * (Materials[material].Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + Materials[material].Fresnel0);
-	vec3 pdiffuse = (vec3(1.0) - saturate(preflect)) * materialTexData.Opacity;
+	vec3 preflect = materialData.Reflectiveness.xyz * (materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0);
+	vec3 pdiffuse = (vec3(1.0) - saturate(preflect)) * materialData.Opacity;
 	return pdiffuse;
 }
 
@@ -66,7 +72,7 @@ vec3 GetDiffuseProbability(int material, MaterialTextureData materialTexData, fl
 
 // Sample a direction from the custom surface BSDF
 // pathThroughput *= brdf * cos(Out, N) / pdf
-vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, inout vec3 pathThroughput, const bool adjoint, out float pdf
+vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint seed, vec3 N, inout vec3 pathThroughput, const bool adjoint, out float pdf
 	#ifdef SAMPLING_DECISION_OUTPUT
 		, out bool isReflectedDiffuse
 	#endif
@@ -92,7 +98,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 
 	// Propabilities - colors
 	vec3 preflect, prefract, pdiffuse;
-	GetBSDFDecisionPropabilities(material, materialTexData, cosThetaAbs, preflect, prefract, pdiffuse);
+	GetBSDFDecisionPropabilities(materialData, cosThetaAbs, preflect, prefract, pdiffuse);
 	// Propabilites - average
 	float avgPReflect = AvgProbability(preflect);
 	float avgPRefract = AvgProbability(prefract);
@@ -116,9 +122,9 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 		pathThroughput = vec3(-1.0, 0.0, 0.0);
 		return vec3(0.0, 0.0, 0.0);
 #endif
-		//vec3 brdf = (materialTexData.Diffuse * pdiffuse) / PI;
+		//vec3 brdf = (materialData.Diffuse * pdiffuse) / PI;
 		//pathThroughput *= brdf * dot(N, outDir) / pdf;
-		pathThroughput *= (materialTexData.Diffuse * pdiffuse) / avgPDiffuse; // Divide with decision probability (avgPDiffuse) for russian roulette.
+		pathThroughput *= (materialData.Diffuse * pdiffuse) / avgPDiffuse; // Divide with decision probability (avgPDiffuse) for russian roulette.
 
 		// Create diffuse sample
 		vec3 U, V;
@@ -139,7 +145,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 		avgPPhong = avgPRefract;
 
 		// Compute refraction direction.		
-		float eta = cosTheta < 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg;
+		float eta = cosTheta < 0.0 ? 1.0/materialData.RefractionIndexAvg : materialData.RefractionIndexAvg;
 		float etaSq = eta * eta;
 		float sinTheta2Sq = etaSq * (1.0f - cosTheta * cosTheta);
 		
@@ -164,13 +170,13 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	reflectRefractDir = normalize(reflectRefractDir);
 	vec3 RU, RV;
 	CreateONB(reflectRefractDir, RU, RV);
-	vec3 outDir = SamplePhongLobe(randomSamples, materialTexData.Reflectiveness.w, RU, RV, reflectRefractDir);
+	vec3 outDir = SamplePhongLobe(randomSamples, materialData.Reflectiveness.w, RU, RV, reflectRefractDir);
 
 	// Normalize the probability
-	//float phongNormalization = (materialTexData.Reflectiveness.w + 2.0) / (materialTexData.Reflectiveness.w + 1.0);
+	//float phongNormalization = (materialData.Reflectiveness.w + 2.0) / (materialData.Reflectiveness.w + 1.0);
 
-	pdf = (materialTexData.Reflectiveness.w + 1.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialTexData.Reflectiveness.w);
-	// vec3 bsdf = (materialTexData.Reflectiveness.w + 1.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialTexData.Reflectiveness.w) * pphong / avgPPhong / dot(N, outDir)
+	pdf = (materialData.Reflectiveness.w + 1.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialData.Reflectiveness.w);
+	// vec3 bsdf = (materialData.Reflectiveness.w + 1.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialData.Reflectiveness.w) * pphong / avgPPhong / dot(N, outDir)
 	
 	// The 1/dot(N, outDir) factor is rather magical: If we would only sample a dirac delta,
 	// we would expect that the scattering (rendering) equation would yield the radiance from the (via dirac delta) sampled direction.
@@ -187,7 +193,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData mate
 	return outDir;
 }
 
-vec3 SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, inout vec3 pathThroughput
+vec3 SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint seed, vec3 N, inout vec3 pathThroughput
 #ifdef SAMPLING_DECISION_OUTPUT
 		, out bool isReflectedDiffuse
 #endif
@@ -197,13 +203,13 @@ vec3 SampleBSDF(vec3 incidentDirection, int material, MaterialTextureData materi
 	) { float pdf; // Hopefully removed by optimizer if not needed
 #endif
 #ifdef SAMPLING_DECISION_OUTPUT
-	return __SampleBSDF(incidentDirection, material, materialTexData, seed, N, pathThroughput, false, pdf, isReflectedDiffuse);
+	return __SampleBSDF(incidentDirection, materialData, seed, N, pathThroughput, false, pdf, isReflectedDiffuse);
 #else
-	return __SampleBSDF(incidentDirection, material, materialTexData, seed, N, pathThroughput, false, pdf);
+	return __SampleBSDF(incidentDirection, materialData, seed, N, pathThroughput, false, pdf);
 #endif
 }
 
-vec3 SampleAdjointBSDF(vec3 incidentDirection, int material, MaterialTextureData materialTexData, inout uint seed, vec3 N, inout vec3 pathThroughput
+vec3 SampleAdjointBSDF(vec3 incidentDirection, MaterialData materialData, inout uint seed, vec3 N, inout vec3 pathThroughput
 #ifdef SAMPLING_DECISION_OUTPUT
 		, out bool isReflectedDiffuse
 #endif
@@ -213,16 +219,16 @@ vec3 SampleAdjointBSDF(vec3 incidentDirection, int material, MaterialTextureData
 	) { float pdf; // Hopefully removed by optimizer if not needed
 #endif
 #ifdef SAMPLING_DECISION_OUTPUT
-	return __SampleBSDF(incidentDirection, material, materialTexData, seed, N, pathThroughput, true, pdf, isReflectedDiffuse);
+	return __SampleBSDF(incidentDirection, materialData, seed, N, pathThroughput, true, pdf, isReflectedDiffuse);
 #else
-	return __SampleBSDF(incidentDirection, material, materialTexData, seed, N, pathThroughput, true, pdf);
+	return __SampleBSDF(incidentDirection, materialData, seed, N, pathThroughput, true, pdf);
 #endif
 }
 
 // Sample the custom surface BSDF for two known direction
 // incidentDirection points to the surface
 // excidentDirection points away from the surface
-vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, MaterialTextureData materialTexData, vec3 N, out float pdf, bool adjoint)
+vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materialData, vec3 N, out float pdf, bool adjoint)
 {
 	vec3 bsdf;
 	float cosTheta = dot(N, incidentDirection);
@@ -231,23 +237,23 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, Materi
 
 	// Propabilities.
 	vec3 preflect, prefract, pdiffuse;
-	GetBSDFDecisionPropabilities(material, materialTexData, cosThetaAbs, preflect, prefract, pdiffuse);
+	GetBSDFDecisionPropabilities(materialData, cosThetaAbs, preflect, prefract, pdiffuse);
 
 	// Constants for phong sampling.
-	float phongFactor_brdf = (materialTexData.Reflectiveness.w + 1.0) / (2 * PI_2 * abs(cosThetaOut)+DIVISOR_EPSILON); // normalization / abs(cosThetatOut)
-	//float phongFactor_brdf = (materialTexData.Reflectiveness.w + 1.0) / (2 * PI_2); // normalization / abs(cosThetatOut)
-	float phongNormalization_pdf = (materialTexData.Reflectiveness.w + 1.0) / PI_2;
+	float phongFactor_brdf = (materialData.Reflectiveness.w + 1.0) / (2 * PI_2 * abs(cosThetaOut)+DIVISOR_EPSILON); // normalization / abs(cosThetatOut)
+	//float phongFactor_brdf = (materialData.Reflectiveness.w + 1.0) / (2 * PI_2); // normalization / abs(cosThetatOut)
+	float phongNormalization_pdf = (materialData.Reflectiveness.w + 1.0) / PI_2;
 
 	// Reflection
 	vec3 reflectRefractDir = normalize(incidentDirection - (2.0 * cosTheta) * N);
-	float reflectionDotExcident_powN = pow(saturate(dot(reflectRefractDir, excidentDirection)), materialTexData.Reflectiveness.w);
+	float reflectionDotExcident_powN = pow(saturate(dot(reflectRefractDir, excidentDirection)), materialData.Reflectiveness.w);
 	float reflrefrBRDFFactor = phongFactor_brdf * reflectionDotExcident_powN;
 	float reflrefrPDFFactor = phongNormalization_pdf * reflectionDotExcident_powN;
 	bsdf = preflect * reflrefrBRDFFactor;
 	pdf = AvgProbability(preflect) * reflrefrPDFFactor;
 
 	// Diffuse
-	bsdf += pdiffuse * materialTexData.Diffuse / PI;
+	bsdf += pdiffuse * materialData.Diffuse / PI;
 	pdf += Avg(pdiffuse) * saturate(cosThetaOut) / PI;
 
 #ifdef STOP_ON_DIFFUSE_BOUNCE
@@ -257,7 +263,7 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, Materi
 
 	//if(cosTheta * cosThetaOut > 0.0) return bsdf;
 	// Refract
-	float eta = cosTheta < 0.0 ? 1.0/Materials[material].RefractionIndexAvg : Materials[material].RefractionIndexAvg;
+	float eta = cosTheta < 0.0 ? 1.0/materialData.RefractionIndexAvg : materialData.RefractionIndexAvg;
 	float etaSq = eta*eta;
 	float sinTheta2Sq = etaSq * (1.0f - cosTheta * cosTheta);
 
@@ -267,7 +273,7 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, Materi
 		// N * sign(cosTheta) = "faceForwardNormal"; -cosThetaAbs = -dot(faceForwardNormal, incidentDirection)
 		reflectRefractDir = normalize(eta * incidentDirection + (sign(cosTheta) * (sqrt(saturate(1.0 - sinTheta2Sq)) - eta * cosThetaAbs)) * N);
 
-		float refractionDotExcident_powN = pow(saturate(dot(reflectRefractDir, excidentDirection)), materialTexData.Reflectiveness.w);
+		float refractionDotExcident_powN = pow(saturate(dot(reflectRefractDir, excidentDirection)), materialData.Reflectiveness.w);
 		
 		reflrefrBRDFFactor = phongFactor_brdf * refractionDotExcident_powN;
 		reflrefrPDFFactor = phongNormalization_pdf * refractionDotExcident_powN;
@@ -283,24 +289,24 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, Materi
 	return bsdf;
 }
 
-vec3 BSDF(vec3 incidentDirection, vec3 excidentDirection, int material, MaterialTextureData materialTexData, vec3 N
+vec3 BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materialData, vec3 N
 #ifdef SAMPLEBSDF_OUTPUT_PDF
 		, out float pdf) {
 #else 
 	) { float pdf; // Hopefully removed by optimizer if not needed
 #endif
-	return __BSDF(incidentDirection, excidentDirection, material, materialTexData, N, pdf, false);
+	return __BSDF(incidentDirection, excidentDirection, materialData, N, pdf, false);
 }
 
 // Adjoint in the sense of Veach PhD Thesis 3.7.6
 // Use this for tracing light particles, use BSDF for tracing camera paths.
-vec3 AdjointBSDF(vec3 incidentDirection, vec3 excidentDirection, int material, MaterialTextureData materialTexData, vec3 N
+vec3 AdjointBSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materialData, vec3 N
 #ifdef SAMPLEBSDF_OUTPUT_PDF
 		, out float pdf) {
 #else 
 	) { float pdf; // Hopefully removed by optimizer if not needed
 #endif
-	return __BSDF(-excidentDirection, -incidentDirection, material, materialTexData, N, pdf, true);
+	return __BSDF(-excidentDirection, -incidentDirection, materialData, N, pdf, true);
 }
 
 

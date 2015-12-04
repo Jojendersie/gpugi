@@ -54,7 +54,7 @@ void main()
 		vec3 hitNormal; vec2 hitTexcoord;
 		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
 		// Get Material infos.
-		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
+		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 		
 		// Add self emissivity of hit material.
 		//if(!lastVertexDiffusePossible)
@@ -63,16 +63,16 @@ void main()
 			//vec3 emissivity = textureLod(sampler2D(Materials[triangle.w].emissivityTexHandle), hitTexcoord, 0.0).xyz;
 		//	color += pathThroughput * emissivity;
 		//}
-//		color += pathThroughput * materialTexData.Emissivity;
+//		color += pathThroughput * materialData.Emissivity;
 
 		// Make a decision
-		vec3 pdiffuse = GetDiffuseProbability(triangle.w, materialTexData, abs(dot(hitNormal, ray.Direction)));
+		vec3 pdiffuse = GetDiffuseProbability(materialData, abs(dot(hitNormal, ray.Direction)));
 		float pdiffuseAvg = GetLuminance(pdiffuse);
 		lastVertexDiffusePossible = pdiffuseAvg > 0.0;
 		//if(pdiffuseAvg >= Random(seed) && i==0)
 		// Sample first to make a decision (next event or iterate)
 		vec3 throughput = vec3(1.0);
-		vec3 sampleDirection = SampleBSDF(ray.Direction, triangle.w, materialTexData, randomSeed, hitNormal, throughput);
+		vec3 sampleDirection = SampleBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput);
 		if(throughput.x == -1.0) // -1 marks the end of the path (diffuse decision) for the Whitted sampler
 		{
 			// Connect to random light samples ("Next Event Estimation")
@@ -91,7 +91,7 @@ void main()
 				vec3 lightNormal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
 				
 				vec3 radiance = EstimateDirectLight(ray.Origin, hitNormal, lightSamplePos_Norm0.xyz, lightNormal,
-									lightIntensity_Norm1.xyz, ray.Direction, triangle.w, materialTexData);
+									lightIntensity_Norm1.xyz, ray.Direction, materialData);
 				color += radiance * pathThroughput * (lightSampleWeight / (pdiffuseAvg + DIVISOR_EPSILON));
 			}
 		#endif
