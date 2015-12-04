@@ -38,6 +38,7 @@
 	#ifdef HIT_INDEX_MASKING
 		ivec2 inputHitIndex = _hitIndex;
 		_hitIndex.y = 0xFFFFFFFF;
+		int lastNodeIndex = 0;
 	#endif
 
 	vec3 invRayDir = 1.0 / ray.Direction;
@@ -63,23 +64,29 @@
 				#endif
 				)
 			{
-				#if defined(HIT_INDEX_MASKING) && !defined(ANY_HIT)
-					_hitIndex.x = currentNodeIndex;
+				//#if defined(HIT_INDEX_MASKING) && !defined(ANY_HIT)
+				//	_hitIndex.x = currentNodeIndex;
+				//#endif
+				#ifdef HIT_INDEX_MASKING
+					lastNodeIndex = currentNodeIndex;
 				#endif
 				#ifdef TRACERAY_IMPORTANCE_BREAK
 					if(HierarchyImportance[currentNodeIndex] < 5.0)
+					//if((floatBitsToUint(currentNode0.w) & 0x80000000u) == 0x80000000u)
 					{
 						#ifdef ANY_HIT
 							if(exitDist <= rayLength) return true;
+							currentNodeIndex = floatBitsToInt(currentNode1.w);
 						#else
+							_hitIndex.x = currentNodeIndex;
 							// TODO modify newHit?
-							//
-							//currentNodeIndex = floatBitsToInt(currentNode1.w);
-							//continue;
-							rayLength = RAY_MAX;
-							return;
+							rayLength = newHit;
+							currentNodeIndex = floatBitsToInt(currentNode1.w);
+							_hitIndex.y = 0xFFFFFFFF;
+				//			rayLength = RAY_MAX;
+				//			continue;
 						#endif
-					}
+					} else {
 				#endif
 				uint childCode = floatBitsToUint(currentNode0.w);
 				// Most significant bit tells us if this is a leaf.
@@ -91,6 +98,9 @@
 					currentLeafIndex = int(TRIANGLES_PER_LEAF * currentNodeIndex);
 					currentNodeIndex = floatBitsToInt(currentNode1.w);
 				}
+				#ifdef TRACERAY_IMPORTANCE_BREAK
+					}
+				#endif
 			}
 			// No hit, go to escape pointer and repeat.
 			else
@@ -136,6 +146,7 @@
 						outTriangle = triangle;
 						outBarycentricCoord = newBarycentricCoord;
 						#ifdef HIT_INDEX_MASKING
+							_hitIndex.x = lastNodeIndex;
 							_hitIndex.y = currentLeafIndex;
 						#endif
 

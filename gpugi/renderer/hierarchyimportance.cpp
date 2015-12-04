@@ -12,6 +12,8 @@
 
 #include <fstream>
 
+using namespace std;
+
 const ei::UVec2 HierarchyImportance::m_localSizePathtracer = ei::UVec2(8, 8);
 
 HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
@@ -21,7 +23,7 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 	m_hierarchyImpPropagationNodeShader("hierarchyImpPropagation_Node"),
 	m_hierarchyPathTracer("hierarchyPathTracer")
 {
-	std::string additionalDefines;
+	string additionalDefines;
 #ifdef SHOW_SPECIFIC_PATHLENGTH
 	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
 #endif
@@ -36,30 +38,35 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 	m_hierarchyPathTracer.CreateProgram();
 
 	m_hierarchyImportanceUBOInfo = m_hierarchyImpAcquisitionShader.GetUniformBufferInfo()["HierarchyImportanceUBO"];
-	m_hierarchyImportanceUBO = std::make_unique<gl::Buffer>(m_hierarchyImportanceUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
+	m_hierarchyImportanceUBO = make_unique<gl::Buffer>(m_hierarchyImportanceUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
 	m_hierarchyImportanceUBO->BindUniformBuffer(4);
 
 	m_rendererSystem.SetNumInitialLightSamples(128);
 }
 
-void HierarchyImportance::SetScene(std::shared_ptr<Scene> _scene)
+void HierarchyImportance::SetScene(shared_ptr<Scene> _scene)
 {
 	// Contains an importance value (float) for each node (first) and each triangle (after node values)
-	m_hierarchyImportance = std::make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::IMMUTABLE);
+	m_hierarchyImportance = make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::IMMUTABLE);
 	m_hierarchyImportance->ClearToZero();
 	m_hierarchyImportance->BindShaderStorageBuffer(s_hierarchyImportanceBinding);
 
 	gl::MappedUBOView mapView(m_hierarchyImportanceUBOInfo, m_hierarchyImportanceUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
-	mapView["NumInnerNodes"].Set(static_cast<std::int32_t>(_scene->GetNumInnerNodes()));
-	mapView["NumTriangles"].Set(static_cast<std::int32_t>(_scene->GetNumTriangles()));
+	mapView["NumInnerNodes"].Set(static_cast<int32_t>(_scene->GetNumInnerNodes()));
+	mapView["NumTriangles"].Set(static_cast<int32_t>(_scene->GetNumTriangles()));
 	m_hierarchyImportanceUBO->Unmap();
 
 	// Parent pointer for hierarchy propagation.
-	m_sceneParentPointer = std::make_unique<gl::TextureBufferView>(_scene->GetParentBuffer(), gl::TextureBufferFormat::R32I);
+	m_sceneParentPointer = make_unique<gl::TextureBufferView>(_scene->GetParentBuffer(), gl::TextureBufferFormat::R32I);
 	m_sceneParentPointer->BindBuffer(6);
 
-	m_sggxBufferView = std::make_unique<gl::TextureBufferView>(_scene->GetSGGXBuffer(), gl::TextureBufferFormat::R16);
+	m_sggxBufferView = make_unique<gl::TextureBufferView>(_scene->GetSGGXBuffer(), gl::TextureBufferFormat::R16);
 	m_sggxBufferView->BindBuffer(7);
+
+	m_hierarchyMaterialBuffer = make_shared<gl::Buffer>(2 * 4 * 4 * _scene->GetNumInnerNodes(), gl::Buffer::IMMUTABLE);
+	m_hierarchyMaterialBufferView = make_unique<gl::TextureBufferView>(m_hierarchyMaterialBuffer, gl::TextureBufferFormat::RGBA16F);
+	m_hierarchyMaterialBufferView->BindBuffer(8);
+	ComputeHierarchyMaterials(_scene);
 }
 
 void HierarchyImportance::SetScreenSize(const gl::Texture2D& _newBackbuffer)
@@ -123,4 +130,20 @@ void HierarchyImportance::UpdateHierarchyNodeImportance()
 		changedAnything = *static_cast<int*>(doneBuffer.Map(gl::Buffer::MapType::READ, gl::Buffer::MapWriteFlag::NONE)) != 0;
 		doneBuffer.Unmap();
 	} while (changedAnything);
+}
+
+void HierarchyImportance::ComputeHierarchyMaterials(shared_ptr<Scene> _scene)
+{
+	// To average the material per leaf node we need to sample the textures on
+	// all triangles uniformly. Best to do that in a shader...
+	unique_ptr<gl::ShaderObject> sampleLeaves = make_unique<gl::ShaderObject>("sampleLeafMaterials");
+	sampleLeaves->AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/sampleleafmaterials.comp");
+	sampleLeaves->CreateProgram();
+	sampleLeaves->Activate();
+	m_hierarchyMaterialBuffer->BindShaderStorageBuffer(0);
+	GLuint numBlocks = (_scene->GetNumInnerNodes() + 63) / 64;
+	GL_CALL(glDispatchCompute, numBlocks, 1, 1);
+	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
+
+	// Pull materials up in the hierarchy
 }

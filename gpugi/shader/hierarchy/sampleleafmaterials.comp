@@ -1,0 +1,91 @@
+#version 450
+
+#include "../stdheader.glsl"
+#include "importanceubo.glsl"
+
+// Each of the uvec2 represents four halfs
+struct HierarchyMaterial
+{
+	uvec2 Reflectiveness;
+	uvec2 Opacity;
+	uvec2 Diffuse;
+	uvec2 Emissivity;
+};
+
+layout(std430, binding = 0) restrict writeonly buffer HierarchyMaterialBuffer
+{
+	HierarchyMaterial hierarchyMaterial[];
+};
+
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+	// It is possible that more threads than nodes are scheduled
+	if(gl_GlobalInvocationID.x >= NumInnerNodes)
+		return;
+			
+	uint childCode = floatBitsToUint(texelFetch(HierachyBuffer, int(gl_GlobalInvocationID.x * 2)).w);
+	// Most significant bit tells us if this is a leaf.
+	int leafBaseIndex = int(childCode & uint(0x7FFFFFFF));
+	if(leafBaseIndex == childCode) return; // It is not
+	leafBaseIndex *= TRIANGLES_PER_LEAF;
+	
+	// Accumulate from all linked triangles
+	MaterialTextureData mat;
+	mat.Reflectiveness = vec4(0.0);
+	mat.Opacity = vec3(0.0);
+	mat.Diffuse = vec3(0.0);
+	mat.Emissivity = vec3(0.0);
+	float area = 0.0;
+	for(int i=0; i<TRIANGLES_PER_LEAF; ++i)
+	{
+		Triangle triangle = texelFetch(TriangleBuffer, leafBaseIndex+i);
+		// There are invalid triangles for padding reasons
+		if(triangle.x == triangle.y) break;
+		
+		// Load vertex positions
+		vec3 positions[3];
+		positions[0] = texelFetch(VertexPositionBuffer, triangle.x).xyz;
+		positions[1] = texelFetch(VertexPositionBuffer, triangle.y).xyz;
+		positions[2] = texelFetch(VertexPositionBuffer, triangle.z).xyz;
+		
+		float triangleArea = length(cross(positions[1] - positions[0], positions[2] - positions[0])) / 2.0;
+		area += triangleArea;
+		
+		// TODO: take more than one central sample
+		vec3 barycentricCoord = vec3(1.0/3.0);
+		vec2 texCoord = texelFetch(VertexInfoBuffer, triangle.x).zw * barycentricCoord.x +
+						texelFetch(VertexInfoBuffer, triangle.y).zw * barycentricCoord.y +
+						texelFetch(VertexInfoBuffer, triangle.z).zw * barycentricCoord.z;
+		
+		MaterialTextureData triangleTexData = SampleMaterialData(triangle.w, texCoord);
+		mat.Reflectiveness += triangleTexData.Reflectiveness * triangleArea; // TODO: linear interpolation of exponent .w bad
+		mat.Opacity += triangleTexData.Opacity * triangleArea;
+		mat.Diffuse += triangleTexData.Diffuse * triangleArea;
+		mat.Emissivity += triangleTexData.Emissivity * triangleArea;
+	}
+	
+	// Average by area
+	mat.Reflectiveness /= area;
+	mat.Opacity /= area;
+	mat.Diffuse /= area;
+	mat.Emissivity /= area;
+	
+	// Compress and store
+	hierarchyMaterial[gl_GlobalInvocationID.x].Reflectiveness = uvec2(
+		packHalf2x16(mat.Reflectiveness.xy),
+		packHalf2x16(mat.Reflectiveness.zw)
+	);
+	hierarchyMaterial[gl_GlobalInvocationID.x].Opacity = uvec2(
+		packHalf2x16(mat.Opacity.xy),
+		packHalf2x16(vec2(mat.Opacity.z, area))
+	);
+	hierarchyMaterial[gl_GlobalInvocationID.x].Diffuse = uvec2(
+		packHalf2x16(mat.Diffuse.xy),
+		packHalf2x16(vec2(mat.Diffuse.z, 0.0))
+	);
+	hierarchyMaterial[gl_GlobalInvocationID.x].Emissivity = uvec2(
+		packHalf2x16(mat.Emissivity.xy),
+		packHalf2x16(vec2(mat.Emissivity.z, 0.0))
+	);
+}

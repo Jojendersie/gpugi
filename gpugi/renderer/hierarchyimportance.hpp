@@ -55,5 +55,10 @@ private:
 	std::unique_ptr<gl::TextureBufferView> m_sceneParentPointer;
 	std::unique_ptr<gl::TextureBufferView> m_sggxBufferView;
 	std::shared_ptr<gl::Buffer> m_hierarchyImportance;
+
+	// Extra buffer with average material information per node
+	std::shared_ptr<gl::Buffer> m_hierarchyMaterialBuffer;
+	std::unique_ptr<gl::TextureBufferView> m_hierarchyMaterialBufferView;
+	void ComputeHierarchyMaterials(std::shared_ptr<Scene> _scene);
 };
 
