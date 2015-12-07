@@ -139,7 +139,7 @@ private:
 	std::shared_ptr<gl::Buffer> m_triangleBuffer;
 	std::shared_ptr<gl::Buffer> m_hierarchyBuffer;
 	std::shared_ptr<gl::Buffer> m_parentBuffer;
-	std::shared_ptr<gl::Buffer> m_sggxBuffer;	///< One SGGX NDF per node
+	std::shared_ptr<gl::Buffer> m_sggxBuffer;	///< One SGGX NDF per node stored as 6 parameters in [-1,1] range as 16-bit signed integer. see filedef.hpp for more details
 	std::vector<uint32> m_parentBufferRAM;
 
 	ε::Box m_boundingBox;
