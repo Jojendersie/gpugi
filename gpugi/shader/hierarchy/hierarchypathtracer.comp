@@ -40,22 +40,31 @@ void main()
 			break;
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon because of masking!)
 
-		// Compute hit normal and texture coordinate.
-		vec3 hitNormal; vec2 hitTexcoord;
-		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
-		// Get Material infos.
-		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
+		// Get Material infos and normal either from node or from triangle hit point.
+		vec3 hitNormal;
+		MaterialData materialData;
 		if(hitMask.y == 0xFFFFFFFF)
 		{
 			// Unpack material from hierarchy buffer
-			materialData.Reflectiveness = texelFetch(HierarchyMaterialBuffer, hitMask.x * 4);
-			materialData.Opacity = texelFetch(HierarchyMaterialBuffer, hitMask.x * 4 + 1).xyz;
-			materialData.Diffuse = texelFetch(HierarchyMaterialBuffer, hitMask.x * 4 + 2).xyz;
-			materialData.Emissivity = texelFetch(HierarchyMaterialBuffer, hitMask.x * 4 + 3).xyz;
-			hitNormal = vec3(0.0, 1.0, 0.0);
+			materialData.Reflectiveness = texelFetch(HierarchyMaterialBuffer, hitMask.x * 6);
+			materialData.Opacity = texelFetch(HierarchyMaterialBuffer, hitMask.x * 6 + 1).xyz;
+			materialData.Diffuse = texelFetch(HierarchyMaterialBuffer, hitMask.x * 6 + 2).xyz;
+			materialData.Emissivity = texelFetch(HierarchyMaterialBuffer, hitMask.x * 6 + 3).xyz;
+			vec4 tmp = texelFetch(HierarchyMaterialBuffer, hitMask.x * 6 + 4);
+			materialData.Fresnel0 = tmp.xyz;
+			materialData.RefractionIndexAvg = tmp.w;
+			materialData.Fresnel1 = texelFetch(HierarchyMaterialBuffer, hitMask.x * 6 + 5).xyz;
+			// Just for test cases
+			hitNormal = -ray.Direction;
 			//color = vec3(hitMask.x * 0.0001);
-			color = materialData.Reflectiveness.xyw;
-			break;
+			//color = materialData.Reflectiveness.xyw;
+			//break;
+		} else {
+			// Compute normal and texture coordinate from barycentric coordinates
+			vec2 hitTexcoord;
+			GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
+			// Sample material
+			materialData = SampleMaterialData(triangle.w, hitTexcoord);
 		}
 
 		// Add self emissivity of hit material.

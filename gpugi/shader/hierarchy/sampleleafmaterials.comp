@@ -10,6 +10,8 @@ struct HierarchyMaterial
 	uvec2 Opacity;
 	uvec2 Diffuse;
 	uvec2 Emissivity;
+	uvec2 Fresnel0_RefrIndex;
+	uvec2 Fresnel1;
 };
 
 layout(std430, binding = 0) restrict writeonly buffer HierarchyMaterialBuffer
@@ -96,5 +98,13 @@ void main()
 	hierarchyMaterial[gl_GlobalInvocationID.x].Emissivity = uvec2(
 		packHalf2x16(mat.Emissivity.xy),
 		packHalf2x16(vec2(mat.Emissivity.z, 0.0))
+	);
+	hierarchyMaterial[gl_GlobalInvocationID.x].Fresnel0_RefrIndex = uvec2(
+		packHalf2x16(mat.Fresnel0.xy),
+		packHalf2x16(vec2(mat.Fresnel0.z, mat.RefractionIndexAvg))
+	);
+	hierarchyMaterial[gl_GlobalInvocationID.x].Fresnel1 = uvec2(
+		packHalf2x16(mat.Fresnel1.xy),
+		packHalf2x16(vec2(mat.Fresnel1.z, 0.0))
 	);
 }
