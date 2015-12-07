@@ -1,0 +1,91 @@
+#version 450
+
+#include "../stdheader.glsl"
+#include "importanceubo.glsl"
+#include "hierarchymaterialbuffer.glsl"
+
+layout(binding = 6) uniform samplerBuffer ParentPointerBuffer;
+
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+	// It is possible that more threads than nodes are scheduled
+	if(gl_GlobalInvocationID.x >= NumInnerNodes)
+		return;
+			
+	uint childCode = floatBitsToUint(texelFetch(HierachyBuffer, int(gl_GlobalInvocationID.x * 2)).w);
+	// Most significant bit tells us if this is a leaf.
+	int childNodeIndex = int(childCode & uint(0x7FFFFFFF));
+	if(childNodeIndex != childCode) return; // It is a leaf
+	
+	// Accumulate from all children
+	MaterialData mat;
+	mat.Reflectiveness = vec4(0.0);
+	mat.Opacity = vec3(0.0);
+	mat.Diffuse = vec3(0.0);
+	mat.Emissivity = vec3(0.0);
+	mat.Fresnel0 = vec3(0.0);
+	mat.Fresnel1 = vec3(0.0);
+	mat.RefractionIndexAvg = 0.0;
+	float area = 0.0;
+	int parentPointer = int(gl_GlobalInvocationID.x);
+	do {
+		// Load material and add
+		float childArea = unpackHalf2x16(hierarchyMaterial[childNodeIndex].Opacity.y).y;
+		area += childArea;
+		mat.Reflectiveness.xy += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Reflectiveness.x) * childArea;
+		mat.Reflectiveness.zw += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Reflectiveness.y) * childArea;
+		mat.Opacity.xy += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Opacity.x) * childArea;
+		mat.Opacity.z += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Opacity.y).x * childArea;
+		mat.Diffuse.xy += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Diffuse.x) * childArea;
+		mat.Diffuse.z += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Diffuse.y).x * childArea;
+		mat.Emissivity.xy += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Emissivity.x) * childArea;
+		mat.Emissivity.z += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Emissivity.y).x * childArea;
+		mat.Fresnel0.xy += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Fresnel0_RefrIndex.x) * childArea;
+		mat.Fresnel0.z += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Fresnel0_RefrIndex.y).x * childArea;
+		mat.RefractionIndexAvg += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Fresnel0_RefrIndex.y).y * childArea;
+		mat.Fresnel1.xy += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Fresnel1.x) * childArea;
+		mat.Fresnel1.z += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Fresnel1.y).x * childArea;
+		
+		// Next child
+		childNodeIndex = floatBitsToInt(texelFetch(HierachyBuffer, childNodeIndex * 2 + 1).w); 	// w = Escape
+		if(childNodeIndex == 0) // No escape pointer, done!
+			break; 
+		parentPointer = floatBitsToInt(texelFetch(ParentPointerBuffer, childNodeIndex).r);
+	} while(parentPointer == gl_GlobalInvocationID.x);
+	
+	// Average by area
+	mat.Reflectiveness /= area;
+	mat.Opacity /= area;
+	mat.Diffuse /= area;
+	mat.Emissivity /= area;
+	mat.Fresnel0 /= area;//TODO: store
+	mat.Fresnel1 /= area;
+	mat.RefractionIndexAvg /= area;
+		
+	// Compress and store
+	hierarchyMaterial[gl_GlobalInvocationID.x].Reflectiveness = uvec2(
+		packHalf2x16(mat.Reflectiveness.xy),
+		packHalf2x16(mat.Reflectiveness.zw)
+	);
+	hierarchyMaterial[gl_GlobalInvocationID.x].Opacity = uvec2(
+		packHalf2x16(mat.Opacity.xy),
+		packHalf2x16(vec2(mat.Opacity.z, area))
+	);
+	hierarchyMaterial[gl_GlobalInvocationID.x].Diffuse = uvec2(
+		packHalf2x16(mat.Diffuse.xy),
+		packHalf2x16(vec2(mat.Diffuse.z, 0.0))
+	);
+	hierarchyMaterial[gl_GlobalInvocationID.x].Emissivity = uvec2(
+		packHalf2x16(mat.Emissivity.xy),
+		packHalf2x16(vec2(mat.Emissivity.z, 0.0))
+	);
+	hierarchyMaterial[gl_GlobalInvocationID.x].Fresnel0_RefrIndex = uvec2(
+		packHalf2x16(mat.Fresnel0.xy),
+		packHalf2x16(vec2(mat.Fresnel0.z, mat.RefractionIndexAvg))
+	);
+	hierarchyMaterial[gl_GlobalInvocationID.x].Fresnel1 = uvec2(
+		packHalf2x16(mat.Fresnel1.xy),
+		packHalf2x16(vec2(mat.Fresnel1.z, 0.0))
+	);
+}

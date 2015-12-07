@@ -52,7 +52,7 @@ void main()
 		if(childNodeIndex == 0) // No escape pointer, done!
 			break; 
 
-		int parentPointer = floatBitsToInt(texelFetch(ParentPointerBuffer, childNodeIndex).r);
+		parentPointer = floatBitsToInt(texelFetch(ParentPointerBuffer, childNodeIndex).r);
 		childImportance = HierarchyImportance[childNodeIndex];
 
 	} while(parentPointer == gl_GlobalInvocationID.x); // Continue until this is no longer the child's parent.

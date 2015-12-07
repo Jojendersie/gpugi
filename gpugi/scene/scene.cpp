@@ -201,6 +201,24 @@ void LoadHierachyHelper(char* _hierachy, uint32* _parentBuffer, std::ifstream& _
 	}
 }
 
+static uint32 computeTreeDepth(const std::vector<uint32>& _parentBuffer)
+{
+	uint32 maxDepth = 0;
+	for(uint i = 0; i < (uint)_parentBuffer.size(); ++i)
+	{
+		uint32 currentPathDepth = 0;
+		uint32 parent = _parentBuffer[i];
+		while(parent)
+		{
+			parent = _parentBuffer[parent];
+			++currentPathDepth;
+		}
+		if(currentPathDepth > maxDepth)
+			maxDepth = currentPathDepth;
+	}
+	return maxDepth;
+}
+
 void Scene::LoadHierarchy( std::ifstream& _file, const FileDecl::NamedArray& _header )
 {
 	// Read element wise and copy the tree structure
@@ -215,6 +233,7 @@ void Scene::LoadHierarchy( std::ifstream& _file, const FileDecl::NamedArray& _he
 		LOG_ERROR("Unimplemented bvh type!");
 
 	memcpy(m_parentBufferRAM.data(), parentBuffer, 4 * m_numInnerNodes);
+	m_numTreeLevels = computeTreeDepth(m_parentBufferRAM);
 
 	m_parentBuffer->Unmap();
 	m_hierarchyBuffer->Unmap();

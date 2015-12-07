@@ -146,4 +146,13 @@ void HierarchyImportance::ComputeHierarchyMaterials(shared_ptr<Scene> _scene)
 	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
 
 	// Pull materials up in the hierarchy
+	unique_ptr<gl::ShaderObject> pullMaterials = make_unique<gl::ShaderObject>("pullMaterials");
+	pullMaterials->AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/pullmaterials.comp");
+	pullMaterials->CreateProgram();
+	pullMaterials->Activate();
+	for(uint i=0; i < _scene->GetNumTreeLevels(); ++i)
+	{
+		GL_CALL(glDispatchCompute, numBlocks, 1, 1);
+		GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
+	}
 }

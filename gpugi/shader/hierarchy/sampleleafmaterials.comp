@@ -2,22 +2,7 @@
 
 #include "../stdheader.glsl"
 #include "importanceubo.glsl"
-
-// Each of the uvec2 represents four halfs
-struct HierarchyMaterial
-{
-	uvec2 Reflectiveness;
-	uvec2 Opacity;
-	uvec2 Diffuse;
-	uvec2 Emissivity;
-	uvec2 Fresnel0_RefrIndex;
-	uvec2 Fresnel1;
-};
-
-layout(std430, binding = 0) restrict writeonly buffer HierarchyMaterialBuffer
-{
-	HierarchyMaterial hierarchyMaterial[];
-};
+#include "hierarchymaterialbuffer.glsl"
 
 layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 void main()
@@ -78,7 +63,7 @@ void main()
 	mat.Opacity /= area;
 	mat.Diffuse /= area;
 	mat.Emissivity /= area;
-	mat.Fresnel0 /= area;//TODO: store
+	mat.Fresnel0 /= area;
 	mat.Fresnel1 /= area;
 	mat.RefractionIndexAvg /= area;
 		

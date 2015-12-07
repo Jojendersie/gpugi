@@ -116,6 +116,7 @@ public:
 	uint32 GetNumMaterials() const				{ return static_cast<uint32>(m_materials.size()); }
 	uint32 GetNumVertices() const				{ return static_cast<uint32>(m_vertexPositionBuffer->GetSize() / sizeof(ei::Vec3)); }
 	uint32 GetNumLightTriangles() const			{ return static_cast<uint32>(m_lightTriangles.size()); }
+	uint32 GetNumTreeLevels() const				{ return m_numTreeLevels; }
 	const LightTriangle* GetLightTriangles() const	{ return m_lightTriangles.data(); }
 	// Normalized (to [0,1]) summed area for all light triangles
 	const float* GetLightSummedAreaTable() const			{ return m_lightSummedArea.data(); }
@@ -151,6 +152,7 @@ private:
 	uint64 m_noFluxEmissiveTexture;		///< Dummy texture for all unlit surfaces
 	uint32 m_numTrianglesPerLeaf;
 	uint32 m_numInnerNodes;
+	uint32 m_numTreeLevels;
 	float m_lightAreaSum;
 	float m_totalAreaLightFlux, m_totalPointLightFlux;
 	ε::Types3D m_bvType;
