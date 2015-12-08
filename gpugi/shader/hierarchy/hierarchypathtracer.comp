@@ -10,7 +10,7 @@ layout(binding=8) uniform samplerBuffer HierarchyMaterialBuffer;
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
 #define NUM_LIGHT_SAMPLES 1
-#define MAX_PATHLENGTH 16
+#define MAX_PATHLENGTH 2
 
 #define LOCAL_SIZE 8
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
@@ -67,10 +67,11 @@ void main()
 			sggx[0][2] = sggx[2][0] = r.y * sigma.x * sigma.z;
 			sggx[1][2] = sggx[2][1] = r.z * sigma.y * sigma.z;
 			hitNormal = sampleNormal(ray.Direction, sggx, randomSeed);
+		//	hitNormal = normalize(hitNormal);
 			// Just for test cases
-			//hitNormal = -ray.Direction;
+			hitNormal = -ray.Direction;
 			//color = vec3(hitMask.x * 0.0001);
-			//color = materialData.Reflectiveness.xyw;
+			//color = materialData.RefractionIndexAvg.xxx*0.5;
 			//break;
 		} else {
 			// Compute normal and texture coordinate from barycentric coordinates
@@ -114,11 +115,11 @@ void main()
 				float lightSampleIntensityFactor = saturate(dot(lightSampleDir, -lightRay.Direction));
 				if(lightSampleIntensityFactor > 0.0)
 				{
-					lightRay.Origin = ray.Origin;
+					lightRay.Origin = ray.Origin + lightRay.Direction * RAY_HIT_EPSILON;
 
 					if(hitMask.y != 0xFFFFFFFF)
 						hitMask.x = 0xFFFFFFFF;
-					if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON, hitMask))
+					if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON*2, hitMask))
 					{
 						// Hemispherical lambert emitter. First we want intensity, not radiance
 						vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border
@@ -138,6 +139,7 @@ void main()
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
 		vec3 throughput = vec3(1.0);
 		ray.Direction = SampleBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput);
+		ray.Origin = ray.Origin + ray.Direction * RAY_HIT_EPSILON;
 		pathThroughput *= throughput;
 	#ifdef RUSSIAN_ROULETTE
 		float continuationPropability = saturate(GetLuminance(throughput));

@@ -57,22 +57,20 @@
 
 			float newHit, exitDist;
 			//if(IntersectVirtualEllipsoid(ray, currentNode0.xyz, currentNode1.xyz, newHit) && newHit <= rayLength)
-			if(IntersectBox(ray, invRayDir, currentNode0.xyz, currentNode1.xyz, newHit, exitDist)
-				&& newHit <= rayLength
+			if(
 				#ifdef HIT_INDEX_MASKING
-					&& inputHitIndex.x != currentNodeIndex
+					inputHitIndex.x != currentNodeIndex &&
 				#endif
+				IntersectBox(ray, invRayDir, currentNode0.xyz, currentNode1.xyz, newHit, exitDist)
+				&& newHit <= rayLength
 				)
 			{
-				//#if defined(HIT_INDEX_MASKING) && !defined(ANY_HIT)
-				//	_hitIndex.x = currentNodeIndex;
-				//#endif
 				#ifdef HIT_INDEX_MASKING
 					lastNodeIndex = currentNodeIndex;
 				#endif
 				#ifdef TRACERAY_IMPORTANCE_BREAK
-					if(HierarchyImportance[currentNodeIndex] < 5.0)
-					//if((floatBitsToUint(currentNode0.w) & 0x80000000u) == 0x80000000u)
+					//if(HierarchyImportance[currentNodeIndex] < 5.0)
+					if((floatBitsToUint(currentNode0.w) & 0x80000000u) == 0x80000000u)
 					{
 						#ifdef ANY_HIT
 							if(exitDist <= rayLength) return true;
