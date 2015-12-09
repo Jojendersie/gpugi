@@ -60,7 +60,7 @@ void HierarchyImportance::SetScene(shared_ptr<Scene> _scene)
 	m_sceneParentPointer = make_unique<gl::TextureBufferView>(_scene->GetParentBuffer(), gl::TextureBufferFormat::R32I);
 	m_sceneParentPointer->BindBuffer(6);
 
-	m_sggxBufferView = make_unique<gl::TextureBufferView>(_scene->GetSGGXBuffer(), gl::TextureBufferFormat::R16);
+	m_sggxBufferView = make_unique<gl::TextureBufferView>(_scene->GetSGGXBuffer(), gl::TextureBufferFormat::RG16);
 	m_sggxBufferView->BindBuffer(7);
 
 	m_hierarchyMaterialBuffer = make_shared<gl::Buffer>(2 * 4 * 6 * _scene->GetNumInnerNodes(), gl::Buffer::IMMUTABLE);

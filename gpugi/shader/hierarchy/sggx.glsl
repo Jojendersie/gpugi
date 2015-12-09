@@ -31,6 +31,7 @@ vec3 sampleNormal(vec3 _incident, mat3x3 _sggx, inout uint seed)
 	float u = chi0 * cos(chi1);
 	float v = chi0 * sin(chi1);
 	
+	return _sggx[0];
 	// Compute normal and transform back to world space
 	vec3 normal = u * m_i + v * m_j + w * m_k;
 	return normalize(local * normal);

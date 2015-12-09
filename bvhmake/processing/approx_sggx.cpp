@@ -70,7 +70,7 @@ SGGX ComputeLeafSGGXBase(const BVHBuilder* _bvhBuilder, const FileDecl::Leaf& _l
 	E.m10 = E.m01; E.m20 = E.m02; E.m21 = E.m12;
 	// Get eigenvectors they are the same as for the SGGX base
 	Mat3x3 Q; Vec3 λ;
-	decomposeQl(E, Q, λ);
+	decomposeQl(E, Q, λ, false);
 
 	// Compute projected areas in the directions of eigenvectors using the same
 	// distribution as before.
@@ -89,9 +89,9 @@ SGGX ComputeLeafSGGXBase(const BVHBuilder* _bvhBuilder, const FileDecl::Leaf& _l
 			if(α + β > 1.0f) { α = 1.0f - α; β = 1.0f - β; }
 			float γ = 1.0f - α - β;
 			Vec3 normal = normalize(nrm[i*3] * α + nrm[i*3+1] * β + nrm[i*3+1] * γ);
-			λ[0] += dot(transpose(Q(0)), normal);
-			λ[1] += dot(transpose(Q(1)), normal);
-			λ[2] += dot(transpose(Q(2)), normal);
+			λ[0] += abs(Q(0) * normal);
+			λ[1] += abs(Q(1) * normal);
+			λ[2] += abs(Q(2) * normal);
 		}
 	}
 	λ /= nTotalSamples;// TODO: /4π ?
@@ -133,8 +133,8 @@ SGGX RecursiveComputeSGGXBases(const BVHBuilder* _bvhBuilder, uint32 _index, std
 		s.zz = s.zz * lw + s2.zz * rw;
 	}
 	// Store compressed form
-	_output[_index].σ = Vec<int16, 3>(sqrt(Vec3(s.xx, s.yy, s.zz)) * 65535.0f - 32768.0f);
-	_output[_index].r = Vec<int16, 3>(Vec3(s.xy, s.xz, s.yz) / sqrt(Vec3(s.xx*s.yy, s.xx*s.zz, s.yy*s.zz)) * 32767.0f);
+	_output[_index].σ = Vec<uint16, 3>(sqrt(Vec3(s.xx, s.yy, s.zz)) * 65535.0f);
+	_output[_index].r = Vec<uint16, 3>(Vec3(s.xy, s.xz, s.yz) / sqrt(Vec3(s.xx*s.yy, s.xx*s.zz, s.yy*s.zz)) * 32767.0f + 32767.0f);
 	return s;
 }
 
@@ -144,4 +144,6 @@ void ComputeSGGXBases(const BVHBuilder* _bvhBuilder,
 	// The number of output nodes is known in advance.
 	// After resize writing is possible with random access.
 	_output.resize(_bvhBuilder->GetNumNodes());
+
+	RecursiveComputeSGGXBases(_bvhBuilder, 0, _output);
 }
