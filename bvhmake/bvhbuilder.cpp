@@ -719,17 +719,6 @@ void BVHBuilder::RecursiveWriteHierarchy( std::ofstream& _file, uint32 _this, ui
 		RecursiveWriteHierarchy( _file, m_nodes[_this].left, _this, m_nodes[_this].right );
 		RecursiveWriteHierarchy( _file, m_nodes[_this].right, _this, _escape );
 	}
-
-	// Use the processor stack to find the right escape pointer
-/*	static uint32 escape = 0;
-	// Push (oldEscape) is stored on the stack automatically and escape is the
-	// top of the stack.
-	uint32 oldEscape = escape;
-	escape = m_nodes[_this].right;
-	RecursiveWriteHierarchy( _file, m_nodes[_this].left, _this );
-	// Pop
-	escape = oldEscape;
-	RecursiveWriteHierarchy( _file, m_nodes[_this].right, _this );*/
 }
 
 
