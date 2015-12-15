@@ -38,17 +38,17 @@ void main()
 		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
 
 		// Get Material infos.
-		MaterialTextureData materialTexData = SampleMaterialData(triangle.w, hitTexcoord);
+		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 
 		// Output debug color
 		if(DebugType == 0)
 			FragColor.rgb = hitNormal * 0.5 + 0.5;
 		else if(DebugType == 1)
-			FragColor.rgb = materialTexData.Diffuse;
+			FragColor.rgb = materialData.Diffuse;
 		else if(DebugType == 2)
-			FragColor.rgb = materialTexData.Opacity;
+			FragColor.rgb = materialData.Opacity;
 		else if(DebugType == 3)
-			FragColor.rgb = materialTexData.Reflectiveness.xyz;
+			FragColor.rgb = materialData.Reflectiveness.xyz;
 
 
 		FragColor.a = 1.0;	
