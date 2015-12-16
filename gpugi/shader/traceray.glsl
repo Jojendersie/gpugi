@@ -78,7 +78,7 @@
 						#else
 							_hitIndex.x = currentNodeIndex;
 							// TODO modify newHit?
-							rayLength = newHit;
+							rayLength = (newHit + exitDist) * 0.5;
 							currentNodeIndex = floatBitsToInt(currentNode1.w);
 							_hitIndex.y = 0xFFFFFFFF;
 				//			rayLength = RAY_MAX;
