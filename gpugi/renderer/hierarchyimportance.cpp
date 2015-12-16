@@ -34,7 +34,7 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 	m_hierarchyImpPropagationInitShader.CreateProgram();
 	m_hierarchyImpPropagationNodeShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_nodes.comp");
 	m_hierarchyImpPropagationNodeShader.CreateProgram();
-	m_hierarchyPathTracer.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypathtracer.comp", additionalDefines + "#define TRACERAY_IMPORTANCE_BREAK");
+	m_hierarchyPathTracer.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypathtracer.comp", additionalDefines);
 	m_hierarchyPathTracer.CreateProgram();
 
 	m_hierarchyImportanceUBOInfo = m_hierarchyImpAcquisitionShader.GetUniformBufferInfo()["HierarchyImportanceUBO"];

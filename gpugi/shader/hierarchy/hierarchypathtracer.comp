@@ -1,6 +1,7 @@
 #version 450
 
-#define HIT_INDEX_MASKING
+#define HIT_INDEX_OUTPUT
+#define TRACERAY_IMPORTANCE_BREAK
 #include "../stdheader.glsl"
 #include "sggx.glsl"
 
@@ -115,9 +116,7 @@ void main()
 				{
 					lightRay.Origin = ray.Origin + lightRay.Direction * epsilon;
 
-					if(hitMask.y != 0xFFFFFFFF)
-						hitMask.x = 0xFFFFFFFF;
-					if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON - epsilon, hitMask))
+					if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON - epsilon))
 					{
 						// Hemispherical lambert emitter. First we want intensity, not radiance
 						vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border

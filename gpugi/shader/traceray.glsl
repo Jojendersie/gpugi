@@ -4,7 +4,7 @@
 // #define TRACERAY_DEBUG_VARS
 
 // #define TRINORMAL_OUTPUT
-// #define HIT_INDEX_MASKING
+// #define HIT_INDEX_OUTPUT
 // #define TRACERAY_IMPORTANCE_BREAK
 
 // TRINORMAL_OUTPUT: Attention! triangleNormal is not normalized
@@ -16,15 +16,11 @@
 ///
 ///		The AnyHit method does not change the mask.
 #ifdef ANY_HIT
-	bool TraceRayAnyHit(in Ray ray, in float rayLength
-		#ifdef HIT_INDEX_MASKING
-			, in ivec2 _hitIndex
-		#endif
-	)
+	bool TraceRayAnyHit(in Ray ray, in float rayLength)
 #else
 	void TraceRay(in Ray ray, inout float rayLength
-		#ifdef HIT_INDEX_MASKING
-			, inout ivec2 _hitIndex
+		#ifdef HIT_INDEX_OUTPUT
+			, out ivec2 _hitIndex
 		#endif
 		, out vec3 outBarycentricCoord, out Triangle outTriangle
 		#ifdef TRINORMAL_OUTPUT
@@ -35,8 +31,8 @@
 {
 	int currentNodeIndex = 0;
 	int currentLeafIndex = 0; // For highly arcane, currently unknown reasons an initial value gives a distinct performance improvement: 10ms!!
-	#ifdef HIT_INDEX_MASKING
-		ivec2 inputHitIndex = _hitIndex;
+	#if defined(HIT_INDEX_OUTPUT) && !defined(ANY_HIT)
+		_hitIndex.x = 0xFFFFFFFF;
 		_hitIndex.y = 0xFFFFFFFF;
 		int lastNodeIndex = 0;
 	#endif
@@ -57,15 +53,10 @@
 
 			float newHit, exitDist;
 			//if(IntersectVirtualEllipsoid(ray, currentNode0.xyz, currentNode1.xyz, newHit) && newHit <= rayLength)
-			if(
-				#ifdef HIT_INDEX_MASKING
-					inputHitIndex.x != currentNodeIndex &&
-				#endif
-				IntersectBox(ray, invRayDir, currentNode0.xyz, currentNode1.xyz, newHit, exitDist)
-				&& newHit <= rayLength
-				)
+			if(IntersectBox(ray, invRayDir, currentNode0.xyz, currentNode1.xyz, newHit, exitDist)
+				&& newHit <= rayLength)
 			{
-				#ifdef HIT_INDEX_MASKING
+				#if defined(HIT_INDEX_OUTPUT) && !defined(ANY_HIT)
 					lastNodeIndex = currentNodeIndex;
 				#endif
 				#ifdef TRACERAY_IMPORTANCE_BREAK
@@ -130,12 +121,8 @@
 				// Check hit.
 				vec3 newTriangleNormal;
 				float newHit; vec3 newBarycentricCoord;
-				if (IntersectTriangle(ray, positions[0], positions[1], positions[2], newHit, newBarycentricCoord, newTriangleNormal)
-					&& newHit < rayLength
-					#ifdef HIT_INDEX_MASKING
-						&& inputHitIndex.y != currentLeafIndex
-					#endif
-					)
+				if(IntersectTriangle(ray, positions[0], positions[1], positions[2], newHit, newBarycentricCoord, newTriangleNormal)
+					&& newHit < rayLength)
 				{
 					#ifdef ANY_HIT
 						return true;
@@ -143,7 +130,7 @@
 						rayLength = newHit;
 						outTriangle = triangle;
 						outBarycentricCoord = newBarycentricCoord;
-						#ifdef HIT_INDEX_MASKING
+						#ifdef HIT_INDEX_OUTPUT
 							_hitIndex.x = lastNodeIndex;
 							_hitIndex.y = currentLeafIndex;
 						#endif
