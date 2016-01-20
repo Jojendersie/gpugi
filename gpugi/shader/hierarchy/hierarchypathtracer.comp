@@ -11,7 +11,7 @@ layout(binding=8) uniform samplerBuffer HierarchyMaterialBuffer;
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
 #define NUM_LIGHT_SAMPLES 1
-#define MAX_PATHLENGTH 3
+#define MAX_PATHLENGTH 4
 
 #define LOCAL_SIZE 8
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
@@ -135,7 +135,7 @@ void main()
 
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
 		vec3 throughput = vec3(1.0);
-		ray.Direction = SampleBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput);
+		ray.Direction = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput);
 		ray.Origin = ray.Origin + ray.Direction * epsilon;
 		pathThroughput *= throughput;
 	#ifdef RUSSIAN_ROULETTE

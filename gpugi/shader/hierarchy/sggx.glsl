@@ -37,5 +37,6 @@ vec3 sampleNormal(vec3 _incident, mat3x3 _sggx, inout uint _seed)
 	
 	// Compute normal and transform back to world space
 	vec3 normal = u * m_i + v * m_j + w * m_k;
+	//normal = m_k;
 	return normalize(local * normal);
 }
