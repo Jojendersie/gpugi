@@ -55,6 +55,9 @@
     <Filter Include="shader\hierarchy">
       <UniqueIdentifier>{fcf52a70-e3b8-4829-ad31-2ccd2b2e3090}</UniqueIdentifier>
     </Filter>
+    <Filter Include="dependencies\bim">
+      <UniqueIdentifier>{f7d7e54a-cdc0-4831-bf14-db6d7c0601a9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="outputwindow.cpp">
@@ -188,6 +191,30 @@
     </ClCompile>
     <ClCompile Include="renderer\debugrenderer\importancevisualization.cpp">
       <Filter>code\renderer\debugrenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\io.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\kdtree.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\material.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\tangentspace.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\bim.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\chunk.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\exportObj.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\hierarchy.cpp">
+      <Filter>dependencies\bim</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -358,6 +385,21 @@
     </ClInclude>
     <ClInclude Include="renderer\debugrenderer\importancevisualization.hpp">
       <Filter>code\renderer\debugrenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\exporter.hpp">
+      <Filter>dependencies\bim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\json.hpp">
+      <Filter>dependencies\bim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\material.hpp">
+      <Filter>dependencies\bim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\bim.hpp">
+      <Filter>dependencies\bim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\chunk.hpp">
+      <Filter>dependencies\bim</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

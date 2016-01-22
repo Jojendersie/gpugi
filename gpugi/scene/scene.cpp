@@ -10,9 +10,9 @@
 
 #include <fstream>
 
+using namespace bim;
+
 Scene::Scene( const std::string& _file ) :
-	m_numTrianglesPerLeaf(0),
-	m_bvType( ε::Types3D::NUM_TYPES ),	// invalid type so far
 	m_samplerLinearNoMipMap( gl::SamplerObject::GetSamplerObject(gl::SamplerObject::Desc(
 		gl::SamplerObject::Filter::NEAREST,
 		gl::SamplerObject::Filter::LINEAR,
@@ -20,81 +20,36 @@ Scene::Scene( const std::string& _file ) :
 		gl::SamplerObject::Border::REPEAT
 	)) ),
 	m_totalPointLightFlux( 0.0f ),
-	m_totalAreaLightFlux( 0.0f )
+	m_totalAreaLightFlux( 0.0f ),
+	m_lightAreaSum( 0.0f )
 {
 	m_sourceDirectory = PathUtils::GetDirectory(_file);
 
 	// Load materials from dedicated material file
 	std::string matFileName = _file.substr(0, _file.find_last_of('.')) + ".json";
-	Jo::Files::MetaFileWrapper materialFile;
-	if( Jo::Files::Utils::Exists(matFileName) )
-		materialFile.Read( Jo::Files::HDDFile(matFileName) );
-	else
+	if( !Jo::Files::Utils::Exists(matFileName) )
 		LOG_ERROR("No material file '" + matFileName + "' found.");
 
-	std::ifstream file( _file, std::ios_base::binary );
-	if( file.fail() )
+	if(!m_model.load(_file.c_str(), matFileName.c_str(),
+		Property::Val(Property::NORMAL | Property::TEXCOORD0 | Property::AABOX_BVH | Property::HIERARCHY | Property::TRIANGLE_MAT)))
 	{
-		LOG_ERROR( "Cannot open scene file \"" + _file + "\"!" );
+		LOG_ERROR("Failed to load scene " + _file);
 		return;
 	}
+	m_model.makeChunkResident(ε::IVec3(0));
+	m_sceneChunk = m_model.getChunk(ε::IVec3(0));
 
-	// First find the bounding volume header. Otherwise the hierarchy
-	// cannot be allocated correctly.
-	while( !file.eof() )
-	{
-		FileDecl::NamedArray header;
-		file.read( reinterpret_cast<char*>(&header), sizeof(header) );
-		if(strcmp(header.name, "bounding_aabox") == 0) { m_bvType = ε::Types3D::BOX; m_numInnerNodes = header.numElements; break; }
-		if(strcmp(header.name, "bounding_sphere") == 0) { m_bvType = ε::Types3D::SPHERE; m_numInnerNodes = header.numElements; break; }
-		file.seekg( header.elementSize * header.numElements, std::ios_base::cur );
-	}
+	// The scene is loaded now, but must be mapped to GPU
+	UploadGeometry();
+	UploadHierarchy();
+	for(uint i = 0; i < m_model.getNumMaterials(); ++i)
+		LoadMaterial(m_model.getMaterial(i));
 
-	if( m_bvType == ε::Types3D::NUM_TYPES )
-	{
-		LOG_ERROR("Cannot load file. It does not contain a bounding volume array!");
-		return;
-	}
-	if( m_bvType == ε::Types3D::BOX )
-		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Box>) * m_numInnerNodes), gl::Buffer::MAP_WRITE);
-	else if( m_bvType == ε::Types3D::SPHERE )
-		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Sphere>) * m_numInnerNodes), gl::Buffer::MAP_WRITE);
-
-	m_parentBuffer = std::make_shared<gl::Buffer>(uint32(4 * m_numInnerNodes), gl::Buffer::MAP_WRITE);
-	m_parentBufferRAM.resize(m_numInnerNodes);
-
-	// Hold double buffer to find light sources
-	std::unique_ptr<FileDecl::Vertex[]> tmpVertexBuffer;
-	std::unique_ptr<Triangle[]> tmpTriangleBuffer;
-
-	// Read one data array after another. The order is undefined.
-	file.seekg( 0 );
-	FileDecl::NamedArray header;
-	while( file.read( reinterpret_cast<char*>(&header), sizeof(header) ) )
-	{
-		if(strcmp(header.name, "vertices") == 0) tmpVertexBuffer = LoadVertices(file, header);
-		else if(strcmp(header.name, "triangles") == 0) tmpTriangleBuffer = LoadTriangles(file, header);
-		else if(strcmp(header.name, "materialref") == 0) LoadMatRef(file, materialFile.RootNode, header);
-		else if(strcmp(header.name, "hierarchy") == 0) LoadHierarchy(file, header);
-		else if(strcmp(header.name, "bounding_aabox") == 0) LoadBoundingVolumes(file, header);
-		else if(strcmp(header.name, "bounding_sphere") == 0) LoadBoundingVolumes(file, header);
-		else if(strcmp(header.name, "approx_sggx") == 0) LoadHierarchyApproximation(file, header);
-        else file.seekg(header.elementSize * header.numElements, std::ios_base::cur);
-		Assert( !file.fail(), "Failed to load the last block correctly." );
-	}
-
-	if( m_numTrianglesPerLeaf == 0 )
-		LOG_ERROR("Did not find a \"triangles\" buffer in" + _file + "!");
-	if (m_vertexPositionBuffer == nullptr || m_vertexInfoBuffer == nullptr)
-		LOG_ERROR("Did not find a \"vertices\" buffer in" + _file + "!");
-	if( m_hierarchyBuffer == nullptr )
-		LOG_ERROR("Did not find a \"hierarchy\" buffer in" + _file + "!");
-
-#if defined(_DEBUG) || !defined(NDEBUG)
+/*#if defined(_DEBUG) || !defined(NDEBUG)
 	SanityCheck(tmpTriangleBuffer.get());
-#endif
+#endif*/
 
-	LoadLightSources(std::move(tmpTriangleBuffer), std::move(tmpVertexBuffer));
+	LoadLightSources();
 }
 
 Scene::~Scene()
@@ -106,226 +61,88 @@ Scene::~Scene()
 	}
 }
 
-size_t Scene::size(ε::Types3D _type)
+void Scene::UploadGeometry()
 {
-	static size_t s_sizes[] = {sizeof(ε::Sphere), 0/*sizeof(ε::Plane)*/, sizeof(ε::Box),
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/*sizeof(ε::OBox), sizeof(ε::Disc), sizeof(ε::Triangle),
-		sizeof(ε::Thetrahedron), sizeof(ε::Ray), sizeof(ε::Line), sizeof(ε::Frustum),
-		sizeof(ε::PyramidFrustum), sizeof(ε::Ellipsoid), sizeof(ε::OEllipsoid),
-		sizeof(ε::Capsule)*/};
-	return s_sizes[int(_type)];
-}
+	// Allocate and partially upload directly (where matching)
+	m_vertexPositionBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(ei::Vec3) * m_sceneChunk->getNumVertices()), gl::Buffer::IMMUTABLE, m_sceneChunk->getPositions());
+	m_vertexInfoBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(VertexInfo) * m_sceneChunk->getNumVertices()), gl::Buffer::MAP_WRITE);
+	m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_sceneChunk->getNumTrianglesPerLeaf() * sizeof(ei::UVec4) * m_sceneChunk->getNumLeafNodes()), gl::Buffer::IMMUTABLE, m_sceneChunk->getLeafNodes() );
 
-std::unique_ptr<FileDecl::Vertex[]> Scene::LoadVertices(std::ifstream& _file, const FileDecl::NamedArray& _header)
-{
-	// Vertices can be loaded directly (same format).
-	Assert(_header.elementSize == sizeof(FileDecl::Vertex), "Format seems to contain other vertices.");
-
-	// Double buffer
-	std::unique_ptr<FileDecl::Vertex[]> vertexBuffer(new FileDecl::Vertex[_header.numElements]);
-	_file.read((char*)&vertexBuffer[0], _header.elementSize * _header.numElements);
-	if (_file.fail()) LOG_ERROR("Why?");
-
-	// Copy to GPU
-	m_vertexPositionBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(ei::Vec3) * _header.numElements), gl::Buffer::MAP_WRITE);
-	ei::Vec3* positionData = static_cast<ei::Vec3*>(m_vertexPositionBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
-	for (unsigned int v = 0; v < _header.numElements; ++v)
-		positionData[v] = vertexBuffer[v].position;
-	m_vertexPositionBuffer->Unmap();
-
-	m_vertexInfoBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(VertexInfo) * _header.numElements), gl::Buffer::MAP_WRITE);
 	VertexInfo* infoData = static_cast<VertexInfo*>(m_vertexInfoBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
-	for (unsigned int v = 0; v < _header.numElements; ++v)
+	for(uint v = 0; v < m_sceneChunk->getNumVertices(); ++v)
 	{
-		infoData[v].normalAngles.x = atan2(vertexBuffer[v].normal.y, vertexBuffer[v].normal.x);
-		infoData[v].normalAngles.y = vertexBuffer[v].normal.z;
-		infoData[v].texcoord = vertexBuffer[v].texcoord;
+		infoData[v].normalAngles.x = atan2(m_sceneChunk->getNormals()[v].y, m_sceneChunk->getNormals()[v].x);
+		infoData[v].normalAngles.y = m_sceneChunk->getNormals()[v].z;
+		infoData[v].texcoord = m_sceneChunk->getTexCoords0()[v];
 	}
-
 	m_vertexInfoBuffer->Unmap();
-
-	return std::move(vertexBuffer);
 }
 
-std::unique_ptr<Scene::Triangle[]> Scene::LoadTriangles( std::ifstream& _file, const FileDecl::NamedArray& _header )
+void Scene::UploadHierarchy()
 {
-	// Mapping file<->GPU currently equal, read directly
-	Assert(sizeof(Triangle) == sizeof(FileDecl::Triangle), "File or triangle format changed. Load buffered!");
-
-	m_numTrianglesPerLeaf = _header.elementSize/sizeof(FileDecl::Triangle);
-
-	// Double buffer
-	std::unique_ptr<Triangle[]> triangleBuffer( new Triangle[m_numTrianglesPerLeaf * _header.numElements] );
-	_file.read( (char*)&triangleBuffer[0], _header.elementSize * _header.numElements );
-
-	// Copy to GPU
-	m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_numTrianglesPerLeaf * sizeof(Triangle) * _header.numElements), gl::Buffer::MAP_WRITE );
-	Triangle* dest = reinterpret_cast<Triangle*>(m_triangleBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
-	memcpy( dest, &triangleBuffer[0], _header.numElements * _header.elementSize );
-	m_triangleBuffer->Unmap();
-
-	return std::move(triangleBuffer);
-}
-
-void Scene::LoadMatRef( std::ifstream& _file, const Jo::Files::MetaFileWrapper::Node& _materials, const FileDecl::NamedArray& _header )
-{
-	Assert( _header.elementSize == 32, "Material reference seems to be changed!" );
-	char name[32];
-	for(uint i = 0; i < _header.numElements; ++i)
-	{
-		_file.read( name, _header.elementSize );
-		std::string stdName = name;
-		// Directly load from json now!
-		const Jo::Files::MetaFileWrapper::Node* material;
-		if(_materials.HasChild( stdName, &material ))
-		{
-			// Fill a structure for GPU
-			LoadMaterial(*material);
-		} else
-			LOG_ERROR("Material '" + stdName + "' referenced but not found!");
-	}
-}
-
-template<typename BVType>
-void LoadHierachyHelper(char* _hierachy, uint32* _parentBuffer, std::ifstream& _file, const FileDecl::NamedArray& _header)
-{
-	Scene::TreeNode<BVType>* hierachy = reinterpret_cast<Scene::TreeNode<BVType>*>(_hierachy);
-	for (uint32_t i = 0; i < _header.numElements; ++i, ++hierachy, ++_parentBuffer)
-	{
-		FileDecl::Node node;
-		_file.read((char*)&node, sizeof(FileDecl::Node));
-
-		hierachy->firstChild = node.firstChild;
-		hierachy->escape = node.escape;
-		*_parentBuffer = node.parent;
-	}
-}
-
-static uint32 computeTreeDepth(const std::vector<uint32>& _parentBuffer)
-{
-	uint32 maxDepth = 0;
-	for(uint i = 0; i < (uint)_parentBuffer.size(); ++i)
-	{
-		uint32 currentPathDepth = 0;
-		uint32 parent = _parentBuffer[i];
-		while(parent)
-		{
-			parent = _parentBuffer[parent];
-			++currentPathDepth;
-		}
-		if(currentPathDepth > maxDepth)
-			maxDepth = currentPathDepth;
-	}
-	return maxDepth;
-}
-
-void Scene::LoadHierarchy( std::ifstream& _file, const FileDecl::NamedArray& _header )
-{
-	// Read element wise and copy the tree structure
-	char* hierachy = reinterpret_cast<char*>(m_hierarchyBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+	// Allocate
+	m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Box>) * m_sceneChunk->getNumNodes()), gl::Buffer::MAP_WRITE);
+	m_parentBuffer = std::make_shared<gl::Buffer>(uint32(4 * m_sceneChunk->getNumNodes()), gl::Buffer::MAP_WRITE);
+	// Map
+	TreeNode<ei::Box>* hierachy = reinterpret_cast<TreeNode<ei::Box>*>(m_hierarchyBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	uint32* parentBuffer = reinterpret_cast<uint32*>(m_parentBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
-	
-	if (m_bvType == ε::Types3D::BOX)
-		LoadHierachyHelper<ei::Box>(hierachy, parentBuffer, _file, _header);
-	else if (m_bvType == ε::Types3D::SPHERE)
-		LoadHierachyHelper<ei::Sphere>(hierachy, parentBuffer, _file, _header);
-	else
-		LOG_ERROR("Unimplemented bvh type!");
-
-	memcpy(m_parentBufferRAM.data(), parentBuffer, 4 * m_numInnerNodes);
-	m_numTreeLevels = computeTreeDepth(m_parentBufferRAM);
-
+	for(uint i = 0; i < m_sceneChunk->getNumNodes(); ++i)
+	{
+		hierachy[i].min = m_sceneChunk->getHierarchyAABoxes()[i].min;
+		hierachy[i].max = m_sceneChunk->getHierarchyAABoxes()[i].max;
+		hierachy[i].escape = m_sceneChunk->getHierarchy()[i].escape;
+		hierachy[i].firstChild = m_sceneChunk->getHierarchy()[i].firstChild;
+		parentBuffer[i] = m_sceneChunk->getHierarchy()[i].parent;
+	}
+	m_hierarchyBuffer->Unmap();
 	m_parentBuffer->Unmap();
-	m_hierarchyBuffer->Unmap();
-}
 
-void Scene::LoadBoundingVolumes( std::ifstream& _file, const FileDecl::NamedArray& _header )
-{
-	// Read element wise and copy the volume information
-	if( m_bvType == ε::Types3D::BOX )
-	{
-		TreeNode<ε::Box>* dest = (TreeNode<ε::Box>*)m_hierarchyBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
-		for (uint32_t i = 0; i < _header.numElements; ++i, ++dest)
-		{
-			ε::Box buffer;
-			_file.read(reinterpret_cast<char*>(&buffer), sizeof(ε::Box));
-			dest->max = buffer.max;
-			dest->min = buffer.min;
-		}
-		dest -= _header.numElements;
-		m_boundingBox = ε::Box(dest->min, dest->max);
-	}
-	else if( m_bvType == ε::Types3D::SPHERE )
-	{
-		TreeNode<ε::Sphere>* dest = (TreeNode<ε::Sphere>*)m_hierarchyBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE);
-		for (uint32_t i = 0; i < _header.numElements; ++i, ++dest)
-		{
-			ε::Sphere buffer;
-			_file.read(reinterpret_cast<char*>(&buffer), sizeof(ε::Sphere));
-			dest->center = buffer.center;
-			dest->radius = buffer.radius;
-		}
-		dest -= _header.numElements;
-		m_boundingBox = ε::Box(ε::Sphere(dest->center, dest->radius));
-	}
-	else
-		LOG_ERROR("Unimplemented bvh type!");
-	m_hierarchyBuffer->Unmap();
-}
-
-void Scene::LoadHierarchyApproximation( std::ifstream& _file, const FileDecl::NamedArray& _header )
-{
+	//if(SGGX is available).... // TODO needs a check metod if something was loaded (optional+required properties?). Don'.t default some?
+	/*
 	m_sggxBuffer = std::make_shared<gl::Buffer>(_header.elementSize * _header.numElements, gl::Buffer::MAP_WRITE);
 	char* data = static_cast<char*>(m_sggxBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	_file.read(data, _header.elementSize * _header.numElements);
 	m_sggxBuffer->Unmap();
+	*/
 }
 
-void Scene::LoadMaterial( const Jo::Files::MetaFileWrapper::Node& _material )
+void Scene::LoadMaterial( const bim::Material& _material )
 {
 	Material mat;
 	ε::Vec3 emissivity(0.0f); // Additional material info for uniform area lights
 	m_noFluxEmissiveTexture = GetBindlessHandle(ε::Vec3(0.0f), false);
 	// "String pool"
 	static const std::string s_emissivity("emissivity");
-	static const std::string s_emissivityTex("emissivityTex");
 	static const std::string s_refrN("refractionIndexN");
 	static const std::string s_refrK("refractionIndexK");
 	static const std::string s_diffuse("diffuse");
-	static const std::string s_diffuseTex("diffuseTex");
 	static const std::string s_opacity("opacity");
-	static const std::string s_opacityTex("opacityTex");
 	static const std::string s_specular("reflectiveness");
-	static const std::string s_specularTex("reflectivenessTex");
 	try {
 		// Refraction parameters for Fresnel
-		ε::Vec3 n(_material[s_refrN][0].Get(1.0f), _material[s_refrN][1].Get(1.0f), _material[s_refrN][2].Get(1.0f));
-		ε::Vec3 k(_material[s_refrK][0].Get(0.0f), _material[s_refrK][1].Get(0.0f), _material[s_refrK][2].Get(0.0f));
+		ε::Vec3 n = _material.get(s_refrN, ε::Vec4(1.0f)).subcol<0,3>();
+		ε::Vec3 k = _material.get(s_refrK).subcol<0,3>();
 		ε::Vec3 den = 1.0f / (sq(n+1.0f) + sq(k));
 		mat.refractionIndexAvg = avg(n);
 		mat.fresnel0 = (sq(n-1.0f) + sq(k)) * den;
 		mat.fresnel1 = 4.0f * n * den;
 		// Load or create diffuse texture
-		if(_material.HasChild(s_diffuseTex))
-			mat.diffuseTexHandle = GetBindlessHandle(_material[s_diffuseTex]);
-		else mat.diffuseTexHandle = GetBindlessHandle(
-			ε::Vec3(_material[s_diffuse][0].Get(0.5f), _material[s_diffuse][1].Get(0.5f), _material[s_diffuse][2].Get(0.5f)), false);
+		if(_material.getTexture(s_diffuse))
+			mat.diffuseTexHandle = GetBindlessHandle(*_material.getTexture(s_diffuse));
+		else mat.diffuseTexHandle = GetBindlessHandle(_material.get(s_diffuse, ε::Vec4(0.5f)).subcol<0,3>(), false);
 		// Load or create opacity texture
-		if(_material.HasChild(s_opacityTex))
-			mat.opacityTexHandle = GetBindlessHandle(_material[s_opacityTex]);
-		else mat.opacityTexHandle = GetBindlessHandle(
-			ε::Vec3(_material[s_opacity][0].Get(1.0f), _material[s_opacity][1].Get(1.0f), _material[s_opacity][2].Get(1.0f)), false);
+		if(_material.getTexture(s_opacity))
+			mat.opacityTexHandle = GetBindlessHandle(*_material.getTexture(s_opacity));
+		else mat.opacityTexHandle = GetBindlessHandle(_material.get(s_opacity, ε::Vec4(1.0f)).subcol<0,3>(), false);
 		// Load or create specular texture
-		if(_material.HasChild(s_specularTex))
-			mat.reflectivenessTexHandle = GetBindlessHandle(_material[s_specularTex]);
-		else mat.reflectivenessTexHandle = GetBindlessHandle(
-			ε::Vec4(_material[s_specular][0].Get(1.0f), _material[s_specular][1].Get(1.0f), _material[s_specular][2].Get(1.0f), _material[s_specular][3].Get(1.0f)), true);
-		// Load or create emmisive texture
-		if(_material.HasChild(s_emissivityTex))
-			mat.emissivityTexHandle = GetBindlessHandle(_material[s_emissivityTex]);
+		if(_material.getTexture(s_specular))
+			mat.reflectivenessTexHandle = GetBindlessHandle(*_material.getTexture(s_specular));
+		else mat.reflectivenessTexHandle = GetBindlessHandle(_material.get(s_specular, ε::Vec4(1.0f)), true);
+		// Load or create emissive texture
+		if(_material.getTexture(s_emissivity))
+			mat.emissivityTexHandle = GetBindlessHandle(*_material.getTexture(s_emissivity));
 		else{
-			//mat.emissivityTexHandle = m_noFluxEmissiveTexture;
-			emissivity = ε::Vec3(_material[s_emissivity][0].Get(0.0f), _material[s_emissivity][1].Get(0.0f), _material[s_emissivity][2].Get(0.0f));
+			emissivity = _material.get(s_emissivity).subcol<0,3>();
 			mat.emissivityTexHandle = GetBindlessHandle(emissivity, true);
 		}
 	} catch(const std::string& _msg ) {
@@ -392,26 +209,27 @@ uint64 Scene::GetBindlessHandle( const ε::Vec4& _data, bool _hdr )
 	return handle;
 }
 
-void Scene::LoadLightSources( std::unique_ptr<Triangle[]> _triangles, std::unique_ptr<FileDecl::Vertex[]> _vertices )
+void Scene::LoadLightSources()
 {
 	m_totalAreaLightFlux = 0.0f;
 	float sum = 0.0f;
 	// Read the buffers with SubDataGets (still faster than a second file read pass)
-	for(uint32_t i = 0; i < GetNumTriangles(); ++i)
+	for(uint32_t i = 0; i < m_sceneChunk->getNumTriangles(); ++i)
 	{
+		const ε::UVec3& tri = m_sceneChunk->getTriangles()[i];
 		// Is this a valid light source triangle?
-		if( _triangles[i].vertices[0] != _triangles[i].vertices[1]
-			&& any(m_emissivity[_triangles[i].material] != ε::Vec3(0.0f)) )
+		if( tri[0] != tri[1]
+			&& any(m_emissivity[m_sceneChunk->getTriangleMaterials()[i]] != ε::Vec3(0.0f)) )
 		{
 			LightTriangle lightSource;
-			lightSource.luminance = m_emissivity[_triangles[i].material];
+			lightSource.luminance = m_emissivity[m_sceneChunk->getTriangleMaterials()[i]];
 			//lightSource.emissivityTexHandle = m_materials[_triangles[i].material].emissivityTexHandle;
 			// Get the 3 vertices from vertex buffer
 			//for(int j = 0; j < 3; ++j)
 			//	lightSource.texcoord[j] = _vertices[_triangles[i].vertices[j]].texcoord;
-			lightSource.triangle.v0 = _vertices[_triangles[i].vertices[0]].position;
-			lightSource.triangle.v1 = _vertices[_triangles[i].vertices[1]].position;
-			lightSource.triangle.v2 = _vertices[_triangles[i].vertices[2]].position;
+			lightSource.triangle.v0 = m_sceneChunk->getPositions()[tri[0]];
+			lightSource.triangle.v1 = m_sceneChunk->getPositions()[tri[1]];
+			lightSource.triangle.v2 = m_sceneChunk->getPositions()[tri[2]];
 			m_lightTriangles.push_back(lightSource);
 
 			// Flux
