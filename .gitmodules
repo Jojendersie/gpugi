@@ -10,3 +10,6 @@
 [submodule "dependencies/bim"]
 	path = dependencies/bim
 	url = git@github.com:Jojendersie/Bim.git
+[submodule "dependencies/chinoise"]
+	path = dependencies/chinoise
+	url = git@github.com:Jojendersie/Chi-Noise.git

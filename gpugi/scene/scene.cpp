@@ -31,7 +31,8 @@ Scene::Scene( const std::string& _file ) :
 		LOG_ERROR("No material file '" + matFileName + "' found.");
 
 	if(!m_model.load(_file.c_str(), matFileName.c_str(),
-		Property::Val(Property::NORMAL | Property::TEXCOORD0 | Property::AABOX_BVH | Property::HIERARCHY | Property::TRIANGLE_MAT)))
+		Property::Val(Property::NORMAL | Property::TEXCOORD0 | Property::AABOX_BVH | Property::HIERARCHY | Property::TRIANGLE_MAT),
+		Property::NDF_SGGX))
 	{
 		LOG_ERROR("Failed to load scene " + _file);
 		return;
@@ -97,13 +98,9 @@ void Scene::UploadHierarchy()
 	m_hierarchyBuffer->Unmap();
 	m_parentBuffer->Unmap();
 
-	//if(SGGX is available).... // TODO needs a check metod if something was loaded (optional+required properties?). Don'.t default some?
-	/*
-	m_sggxBuffer = std::make_shared<gl::Buffer>(_header.elementSize * _header.numElements, gl::Buffer::MAP_WRITE);
-	char* data = static_cast<char*>(m_sggxBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
-	_file.read(data, _header.elementSize * _header.numElements);
-	m_sggxBuffer->Unmap();
-	*/
+	// Upload SGGX NDFs only if available
+	if(m_sceneChunk->getNodeNDFs())
+		m_sggxBuffer = std::make_shared<gl::Buffer>(sizeof(bim::SGGX) * m_sceneChunk->getNumNodes(), gl::Buffer::IMMUTABLE, m_sceneChunk->getNodeNDFs());
 }
 
 void Scene::LoadMaterial( const bim::Material& _material )

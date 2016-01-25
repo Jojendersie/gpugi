@@ -58,6 +58,9 @@
     <Filter Include="dependencies\bim">
       <UniqueIdentifier>{f7d7e54a-cdc0-4831-bf14-db6d7c0601a9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="dependencies\chinoise">
+      <UniqueIdentifier>{effc9632-bd60-43a8-a877-7a294d32daa6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="outputwindow.cpp">
@@ -215,6 +218,15 @@
     </ClCompile>
     <ClCompile Include="..\dependencies\bim\src\hierarchy.cpp">
       <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\chinoise\src\fieldnoise.cpp">
+      <Filter>dependencies\chinoise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\chinoise\src\rnd.cpp">
+      <Filter>dependencies\chinoise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\chinoise\src\chinoise.cpp">
+      <Filter>dependencies\chinoise</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

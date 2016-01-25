@@ -71,7 +71,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>../dependencies/bim/include/;../dependencies/jofilelib/include/;../dependencies/stb;../dependencies/epsilon/include/;..\dependencies\glfw\include;../dependencies/glhelper/;..\dependencies\glew\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)</IncludePath>
+    <IncludePath>../dependencies/chinoise/include/;../dependencies/bim/include/;../dependencies/jofilelib/include/;../dependencies/stb;../dependencies/epsilon/include/;..\dependencies\glfw\include;../dependencies/glhelper/;..\dependencies\glew\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)</IncludePath>
     <LibraryPath>..\dependencies\glfw\lib-msvc140;../dependencies/jofilelib/lib;..\dependencies\glew\lib-msvc120;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -79,7 +79,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>../dependencies/bim/include/;../dependencies/jofilelib/include/;../dependencies/stb;../dependencies/epsilon/include/;../dependencies/glhelper/;..\dependencies\glfw\include;..\dependencies\glew\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)</IncludePath>
+    <IncludePath>../dependencies/chinoise/include/;../dependencies/bim/include/;../dependencies/jofilelib/include/;../dependencies/stb;../dependencies/epsilon/include/;../dependencies/glhelper/;..\dependencies\glfw\include;..\dependencies\glew\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)</IncludePath>
     <LibraryPath>..\dependencies\glfw\lib-msvc140;../dependencies/jofilelib/lib;..\dependencies\glew\lib-msvc120;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -153,6 +153,9 @@
     <ClCompile Include="..\dependencies\bim\src\kdtree.cpp" />
     <ClCompile Include="..\dependencies\bim\src\material.cpp" />
     <ClCompile Include="..\dependencies\bim\src\tangentspace.cpp" />
+    <ClCompile Include="..\dependencies\chinoise\src\chinoise.cpp" />
+    <ClCompile Include="..\dependencies\chinoise\src\fieldnoise.cpp" />
+    <ClCompile Include="..\dependencies\chinoise\src\rnd.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\buffer.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\framebufferobject.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\gl.cpp" />
