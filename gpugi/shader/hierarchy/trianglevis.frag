@@ -1,6 +1,6 @@
 #version 450
 
-#define HIT_INDEX_MASKING
+#define HIT_INDEX_OUTPUT
 #include "../stdheader.glsl"
 #include "importanceubo.glsl"
 
