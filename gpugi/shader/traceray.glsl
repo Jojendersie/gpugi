@@ -60,8 +60,8 @@
 					lastNodeIndex = currentNodeIndex;
 				#endif
 				#ifdef TRACERAY_IMPORTANCE_BREAK
-					//if(HierarchyImportance[currentNodeIndex] < 5.0)
-					if((floatBitsToUint(currentNode0.w) & 0x80000000u) == 0x80000000u)
+					if(HierarchyImportance[currentNodeIndex] < 5.0)
+					//if((floatBitsToUint(currentNode0.w) & 0x80000000u) == 0x80000000u)
 					{
 						#ifdef ANY_HIT
 							if(exitDist <= rayLength) return true;

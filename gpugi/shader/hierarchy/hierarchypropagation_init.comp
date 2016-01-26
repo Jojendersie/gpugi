@@ -35,7 +35,7 @@ void main()
 		{
 			totalImportance += HierarchyImportance[NumInnerNodes + currentTriangleIndex];
 		}
-		HierarchyImportance[gl_GlobalInvocationID.x] = totalImportance / IterationCount + NotificationBias;
+		HierarchyImportance[gl_GlobalInvocationID.x] = totalImportance / NumImportanceIterations + NotificationBias;
 	}
 	else
 	{

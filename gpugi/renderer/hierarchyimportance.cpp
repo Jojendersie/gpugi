@@ -89,7 +89,7 @@ void HierarchyImportance::Draw()
 		m_hierarchyImportance->ClearToZero();
 
 		m_numImportanceIterations = 10;
-		for(int i = 0; i < m_numImportanceIterations; ++i) // Until convergence (TODO measure that)
+		for(int i = 1; i <= m_numImportanceIterations; ++i) // Until convergence (TODO measure that)
 		{
 			gl::MappedUBOView mapView(m_hierarchyImportanceUBOInfo, m_hierarchyImportanceUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 			mapView["NumImportanceIterations"].Set(static_cast<int32_t>(i));
@@ -99,10 +99,9 @@ void HierarchyImportance::Draw()
 			m_hierarchyImpAcquisitionShader.Activate();
 			GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localSizePathtracer.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localSizePathtracer.y, 1);
 			GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
-
-			// Propagate importance through hierarchy
-			UpdateHierarchyNodeImportance();
 		}
+		// Propagate importance through hierarchy
+		UpdateHierarchyNodeImportance();
 	}
 
 	// Render
