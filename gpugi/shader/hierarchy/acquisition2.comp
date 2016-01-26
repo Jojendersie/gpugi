@@ -6,7 +6,7 @@
 // only ray density is measured. This can be done in different configurations:
 // Pathtracing/Lighttracing w or w/o next event estimation
 // TODO: light tracing option
-#define NEXT_EVENT_IMPORTANCE
+//#define NEXT_EVENT_IMPORTANCE
 
 
 #define HIT_INDEX_OUTPUT
@@ -20,14 +20,14 @@ layout(std430, binding = 10) restrict coherent buffer HierarchyImportanceBuffer
 };
 
 #define NUM_LIGHT_SAMPLES 1
-#define MAX_PATHLENGTH 16
+#define MAX_PATHLENGTH 8
 
 #define LOCAL_SIZE 8
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
 void main()
 {
 	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
-	uint randomSeed = InitRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
+	uint randomSeed = InitRandomSeed(wanghash(uint(NumImportanceIterations)), gridPosition.x + gridPosition.y * BackbufferSize.x);
 	vec2 screenCoord = (Random2(randomSeed) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
 	
 	// Each path has a ground importance of 1.0.
@@ -92,11 +92,11 @@ void main()
 		vec3 throughput = vec3(1.0);
 		ray.Direction = SampleBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput);
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
-	#ifdef RUSSIAN_ROULETTE
+	/*#ifdef RUSSIAN_ROULETTE
 		float continuationPropability = saturate(GetLuminance(throughput));
 		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stoped -> >=
 			break;
 		pathImportance /= continuationPropability;
-	#endif
+	#endif*/
 	}
 }

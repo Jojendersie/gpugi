@@ -6,6 +6,7 @@
 
 
 layout(location = 0) in vec2 Texcoord;
+//layout(location = 101) uniform int NumImportanceIterations;
 
 layout(binding = 10, std430) restrict readonly buffer HierarchyImportanceBuffer
 {
@@ -33,7 +34,7 @@ void main()
 	TraceRay(ray, rayHit, triangleIndex, barycentricCoord, triangle);
 	if(rayHit != RAY_MAX)
 	{
-		outputImportance = HierarchyImportance[NumInnerNodes + triangleIndex.y] / IterationCount;
+		outputImportance = HierarchyImportance[NumInnerNodes + triangleIndex.y] / NumImportanceIterations;
 	}
 	outputImportance = pow(outputImportance, 0.17) * 0.2;
 	//outputImportance *= 0.1;

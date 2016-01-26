@@ -85,15 +85,25 @@ void HierarchyImportance::Draw()
 {
 	// Reset importance on camera movement...
 	if(m_rendererSystem.GetIterationCount() == 0)
+	{
 		m_hierarchyImportance->ClearToZero();
 
-	// Compute triangle importance
-	m_hierarchyImpAcquisitionShader.Activate();
-	GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localSizePathtracer.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localSizePathtracer.y, 1);
-	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
+		m_numImportanceIterations = 10;
+		for(int i = 0; i < m_numImportanceIterations; ++i) // Until convergence (TODO measure that)
+		{
+			gl::MappedUBOView mapView(m_hierarchyImportanceUBOInfo, m_hierarchyImportanceUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+			mapView["NumImportanceIterations"].Set(static_cast<int32_t>(i));
+			m_hierarchyImportanceUBO->Unmap();
 
-	// Propagate importance through hierarchy
-	UpdateHierarchyNodeImportance();
+			// Compute triangle importance
+			m_hierarchyImpAcquisitionShader.Activate();
+			GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localSizePathtracer.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localSizePathtracer.y, 1);
+			GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
+
+			// Propagate importance through hierarchy
+			UpdateHierarchyNodeImportance();
+		}
+	}
 
 	// Render
 	//GL_CALL(glMemoryBarrier, GL_ALL_BARRIER_BITS);

@@ -29,6 +29,8 @@ public:
 	/// If no call of UpdateHierarchyNodeImportance proceeded, only the triangles have valid importance values.
 	std::shared_ptr<gl::Buffer>& GetHierachyImportance() { return m_hierarchyImportance; }
 
+	int GetNumImportanceIterations() const { return m_numImportanceIterations; }
+
 	/// Updates the hierarchy importance of all inner nodes by propagating them from the triangles up through the tree.
 	void UpdateHierarchyNodeImportance();
 
@@ -55,6 +57,7 @@ private:
 	std::unique_ptr<gl::TextureBufferView> m_sceneParentPointer;
 	std::unique_ptr<gl::TextureBufferView> m_sggxBufferView;
 	std::shared_ptr<gl::Buffer> m_hierarchyImportance;
+	int m_numImportanceIterations;
 
 	// Extra buffer with average material information per node
 	std::shared_ptr<gl::Buffer> m_hierarchyMaterialBuffer;

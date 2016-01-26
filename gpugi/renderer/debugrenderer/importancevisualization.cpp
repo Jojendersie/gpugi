@@ -33,11 +33,13 @@ ImportanceVisualization::~ImportanceVisualization()
 
 void ImportanceVisualization::Draw()
 {
-	if(dynamic_cast<HierarchyImportance*>(&m_parentRenderer))
+	HierarchyImportance* parentRenderer = dynamic_cast<HierarchyImportance*>(&m_parentRenderer);
+	if(parentRenderer)
 	{
 		m_parentRenderer.Draw();
 
 		m_infoShader.Activate();
+		//GL_CALL(glUniform1i, 101, parentRenderer->GetNumImportanceIterations());
 		m_screenTri->Draw();
 	}
 }
