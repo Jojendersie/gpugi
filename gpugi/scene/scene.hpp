@@ -112,7 +112,7 @@ public:
 	ε::Types3D GetBoundingVolumeType() const	{ return ei::Types3D::BOX; }
 
 	uint32 GetNumTrianglesPerLeaf() const		{ return m_sceneChunk->getNumTrianglesPerLeaf(); }
-	uint32 GetNumTriangles() const				{ return m_sceneChunk->getNumTriangles(); }
+	uint32 GetNumLeafTriangles() const			{ return m_sceneChunk->getNumLeafNodes() * m_sceneChunk->getNumTrianglesPerLeaf(); }
 	uint32 GetNumInnerNodes() const				{ return m_sceneChunk->getNumNodes(); }
 	uint32 GetNumMaterials() const				{ return m_model.getNumMaterials(); }
 	uint32 GetNumVertices() const				{ return m_sceneChunk->getNumVertices(); }
@@ -130,7 +130,7 @@ public:
 
 	// Add a new point light source to the scene
 	void AddPointLight(const PointLight& _light) { m_pointLights.push_back(_light); ComputePointLightTable(); }
-	// Returns false if no light with the index excists
+	// Returns false if no light with the index exists
 	bool SetPointLight(size_t _index, const PointLight& _light) { if(_index >= m_pointLights.size()) return false; m_pointLights[_index] = _light; return true; ComputePointLightTable(); }
 //	bool RemovePointLight(size_t _index) { if(_index >= m_pointLights.size()) return false; m_pointLights[_index] = m_pointLights.back(); m_pointLights.pop_back(); return true; }
 

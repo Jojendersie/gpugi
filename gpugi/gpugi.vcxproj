@@ -152,6 +152,7 @@
     <ClCompile Include="..\dependencies\bim\src\io.cpp" />
     <ClCompile Include="..\dependencies\bim\src\kdtree.cpp" />
     <ClCompile Include="..\dependencies\bim\src\material.cpp" />
+    <ClCompile Include="..\dependencies\bim\src\sahspilt.cpp" />
     <ClCompile Include="..\dependencies\bim\src\tangentspace.cpp" />
     <ClCompile Include="..\dependencies\chinoise\src\chinoise.cpp" />
     <ClCompile Include="..\dependencies\chinoise\src\fieldnoise.cpp" />

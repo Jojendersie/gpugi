@@ -228,6 +228,9 @@
     <ClCompile Include="..\dependencies\chinoise\src\chinoise.cpp">
       <Filter>dependencies\chinoise</Filter>
     </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\sahspilt.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">

@@ -1,0 +1,102 @@
+#version 450
+#extension GL_NV_shader_atomic_float : require
+
+
+// This is a simplified version of acquisition.comp. Instead of path throughput
+// only ray density is measured. This can be done in different configurations:
+// Pathtracing/Lighttracing w or w/o next event estimation
+// TODO: light tracing option
+#define NEXT_EVENT_IMPORTANCE
+
+
+#define HIT_INDEX_OUTPUT
+#include "../stdheader.glsl"
+#include "importanceubo.glsl"
+
+//layout(binding = 1, r32f) coherent uniform image2D HierarchyImportanceBuffer;
+layout(std430, binding = 10) restrict coherent buffer HierarchyImportanceBuffer
+{
+	float HierarchyImportance[];
+};
+
+#define NUM_LIGHT_SAMPLES 1
+#define MAX_PATHLENGTH 16
+
+#define LOCAL_SIZE 8
+layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
+void main()
+{
+	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
+	uint randomSeed = InitRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
+	vec2 screenCoord = (Random2(randomSeed) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
+	
+	// Each path has a ground importance of 1.0.
+	// Due to Russian Roulette a single path might represent more than one path after some time.
+	float pathImportance = 1.0;
+
+	Ray ray;
+	ray.Origin = CameraPosition;
+	ray.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
+
+	for(int i=0; i<MAX_PATHLENGTH; ++i)
+	{
+		// Trace ray.
+		Triangle triangle;
+		vec3 barycentricCoord;
+		float rayHit = RAY_MAX;
+		ivec2 hitIndex = ivec2(0xFFFFFFFF);
+		TraceRay(ray, rayHit, hitIndex, barycentricCoord, triangle);
+		if(rayHit == RAY_MAX)
+			break;
+		atomicAdd(HierarchyImportance[NumInnerNodes + hitIndex.y], pathImportance);
+
+		// Compute hit normal and texture coordinate.
+		vec3 hitNormal; vec2 hitTexcoord;
+		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
+		// Get Material infos.
+		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
+		
+		// Go to surface with recursive ray (no epsilon yet!)
+		ray.Origin = ray.Origin + rayHit * ray.Direction;	
+
+		// Connect to random light samples ("Next Event Estimation")
+	#ifdef NEXT_EVENT_IMPORTANCE
+		pathImportance *= 0.5;
+		Ray lightRay;
+		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
+		{
+			int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
+			vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2);
+			vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1);
+			
+			// Direction to light & distance.
+			lightRay.Direction = lightSamplePos_Norm0.xyz - ray.Origin;
+			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
+			float lightDist = sqrt(lightDistSq);
+			lightRay.Direction /= lightDist;
+
+			// Facing the light?
+			vec3 lightSampleDir = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
+			float lightSampleIntensityFactor = saturate(dot(lightSampleDir, -lightRay.Direction));
+			if(lightSampleIntensityFactor > 0.0)
+			{
+				lightRay.Origin = ray.Origin;
+				rayHit = lightDist;
+				TraceRay(lightRay, rayHit, hitIndex, barycentricCoord, triangle);
+				if(rayHit < lightDist)
+					atomicAdd(HierarchyImportance[NumInnerNodes + hitIndex.y], pathImportance);
+			}
+		}
+	#endif
+
+		vec3 throughput = vec3(1.0);
+		ray.Direction = SampleBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput);
+		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
+	#ifdef RUSSIAN_ROULETTE
+		float continuationPropability = saturate(GetLuminance(throughput));
+		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stoped -> >=
+			break;
+		pathImportance /= continuationPropability;
+	#endif
+	}
+}

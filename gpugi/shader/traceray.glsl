@@ -9,7 +9,7 @@
 
 // TRINORMAL_OUTPUT: Attention! triangleNormal is not normalized
 
-/// \param [inout] _hitIndex Node and triangle index of the final hit position. The trinagle index
+/// \param [inout] _hitIndex Node and triangle index of the final hit position. The triangle index
 ///		might not be defined if TRACERAY_IMPORTANCE_BREAK is enabled. The index is 0xFFFFFFFF then.
 ///		As input parameter this can be used to mask the intersection with a certain node or triangle
 ///		(e.g. that of the last hit if continuing a path). Use 0xFFFFFFFF if you do not want masking.

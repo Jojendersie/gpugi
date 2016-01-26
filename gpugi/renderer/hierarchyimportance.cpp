@@ -28,7 +28,7 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
 #endif
 
-	m_hierarchyImpAcquisitionShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/acquisition.comp", additionalDefines);
+	m_hierarchyImpAcquisitionShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/acquisition2.comp", additionalDefines);
 	m_hierarchyImpAcquisitionShader.CreateProgram();
 	m_hierarchyImpPropagationInitShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_init.comp");
 	m_hierarchyImpPropagationInitShader.CreateProgram();
@@ -47,13 +47,13 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 void HierarchyImportance::SetScene(shared_ptr<Scene> _scene)
 {
 	// Contains an importance value (float) for each node (first) and each triangle (after node values)
-	m_hierarchyImportance = make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::IMMUTABLE);
+	m_hierarchyImportance = make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumLeafTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::IMMUTABLE);
 	m_hierarchyImportance->ClearToZero();
 	m_hierarchyImportance->BindShaderStorageBuffer(s_hierarchyImportanceBinding);
 
 	gl::MappedUBOView mapView(m_hierarchyImportanceUBOInfo, m_hierarchyImportanceUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	mapView["NumInnerNodes"].Set(static_cast<int32_t>(_scene->GetNumInnerNodes()));
-	mapView["NumTriangles"].Set(static_cast<int32_t>(_scene->GetNumTriangles()));
+	mapView["NumTriangles"].Set(static_cast<int32_t>(_scene->GetNumLeafTriangles()));
 	m_hierarchyImportanceUBO->Unmap();
 
 	// Parent pointer for hierarchy propagation.

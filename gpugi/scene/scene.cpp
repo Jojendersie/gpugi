@@ -46,10 +46,6 @@ Scene::Scene( const std::string& _file ) :
 	for(uint i = 0; i < m_model.getNumMaterials(); ++i)
 		LoadMaterial(m_model.getMaterial(i));
 
-/*#if defined(_DEBUG) || !defined(NDEBUG)
-	SanityCheck(tmpTriangleBuffer.get());
-#endif*/
-
 	LoadLightSources();
 }
 
@@ -269,18 +265,4 @@ void Scene::ComputePointLightTable()
 	}
 	for(size_t i = 0; i < m_pointLightSummedFlux.size(); ++i)
 		m_pointLightSummedFlux[i] /= m_totalPointLightFlux;
-}
-
-void Scene::SanityCheck(Triangle* _triangles)
-{
-	for(uint32_t i = 0; i < GetNumTriangles(); ++i)
-	{
-		if( _triangles[i].material >= GetNumMaterials() )
-			LOG_ERROR("Triangle with index " + std::to_string(i) + " reference a non existing material: " +
-					  std::to_string(_triangles[i].material) + "/" + std::to_string(GetNumMaterials()));
-		for(uint32_t j = 0; j < 3; ++j)
-			if( _triangles[i].vertices[j] >= GetNumVertices() )
-				LOG_ERROR("Triangle with index " + std::to_string(i) + " reference an invalid vertex: " +
-						  std::to_string(_triangles[i].vertices[j]) + "/" + std::to_string(GetNumVertices()));
-	}
 }
