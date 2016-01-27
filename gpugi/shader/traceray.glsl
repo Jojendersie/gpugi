@@ -63,18 +63,18 @@
 					if(HierarchyImportance[currentNodeIndex] < 5.0)
 					//if((floatBitsToUint(currentNode0.w) & 0x80000000u) == 0x80000000u)
 					{
-						#ifdef ANY_HIT
-							if(exitDist <= rayLength) return true;
-							currentNodeIndex = floatBitsToInt(currentNode1.w);
-						#else
-							_hitIndex.x = currentNodeIndex;
-							// TODO modify newHit?
-							rayLength = (newHit + exitDist) * 0.5;
-							currentNodeIndex = floatBitsToInt(currentNode1.w);
-							_hitIndex.y = 0xFFFFFFFF;
-				//			rayLength = RAY_MAX;
-				//			continue;
-						#endif
+					#ifdef ANY_HIT
+						if(exitDist <= rayLength) return true;
+						currentNodeIndex = floatBitsToInt(currentNode1.w);
+					#else
+						_hitIndex.x = currentNodeIndex;
+						// TODO modify newHit?
+						rayLength = (newHit + exitDist) * 0.5;
+						currentNodeIndex = floatBitsToInt(currentNode1.w);
+						_hitIndex.y = 0xFFFFFFFF;
+			//			rayLength = RAY_MAX;
+			//			continue;
+					#endif
 					} else {
 				#endif
 				uint childCode = floatBitsToUint(currentNode0.w);

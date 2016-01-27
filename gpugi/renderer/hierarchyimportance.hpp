@@ -42,7 +42,8 @@ public:
 		PARENT_POINTER = 6,			///< Additional hierarchy information (parent pointers per node)
 		SGGX_NDF = 7,				///< An NDF for each node stored in SGGX basis
 	};
-	static const unsigned int s_hierarchyImportanceBinding = 10;
+	static const uint s_hierarchyImportanceBinding = 10;
+	static const uint s_subtreeImportanceBinding = 11;
 
 private:
 	gl::ShaderObject m_hierarchyImpAcquisitionShader;
@@ -57,6 +58,7 @@ private:
 	std::unique_ptr<gl::TextureBufferView> m_sceneParentPointer;
 	std::unique_ptr<gl::TextureBufferView> m_sggxBufferView;
 	std::shared_ptr<gl::Buffer> m_hierarchyImportance;
+	std::shared_ptr<gl::Buffer> m_subtreeImportance;
 	int m_numImportanceIterations;
 
 	// Extra buffer with average material information per node

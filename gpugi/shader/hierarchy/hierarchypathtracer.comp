@@ -72,6 +72,11 @@ void main()
 			hitNormal = sampleNormal(ray.Direction, sggx, randomSeed);
 			epsilon = length(texelFetch(HierachyBuffer, hitMask.x * 2).xyz -
 							 texelFetch(HierachyBuffer, hitMask.x * 2 + 1).xyz);
+			/*color = (sqrt(HierarchyImportance[hitMask.x]) / 5).xxx;
+			vec4 final = vec4(color, 1.0);
+			final += imageLoad(OutputTexture, gridPosition);
+			imageStore(OutputTexture, gridPosition, final);
+			return;*/
 		} else {
 			// Compute normal and texture coordinate from barycentric coordinates
 			vec2 hitTexcoord;

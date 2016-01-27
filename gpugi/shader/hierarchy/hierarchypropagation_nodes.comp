@@ -8,6 +8,10 @@ layout(binding = 10, std430) restrict buffer HierarchyImportanceBuffer
 {
 	float HierarchyImportance[];
 };
+layout(binding = 11, std430) restrict buffer SubtreeImportanceBuffer
+{
+	float SubtreeImportance[];
+};
 layout(binding = 1, std430) restrict buffer DoneFlagBuffer
 {
 	int ChangedAnything;
@@ -24,28 +28,26 @@ void main()
 		return;
 
 	// Already have an importance value?
-	if(HierarchyImportance[gl_GlobalInvocationID.x] != 0.0)
+	if(SubtreeImportance[gl_GlobalInvocationID.x] != 0.0)
 		return;
 
 	// Get node info (see also "../traceray.glsl")
 	uint childCodeRaw = floatBitsToUint(texelFetch(HierachyBuffer, int(gl_GlobalInvocationID.x) * 2).w); 	
 	int childNodeIndex = int(childCodeRaw & uint(0x7FFFFFFF));	// Most significant bit tells us is this is a leaf.
+	// childCodeRaw should be equal to childNodeIndex at this point.
+	// The condition of SubtreeImportance != 0 should have eliminated the already
+	// initialized leaf nodes.
 
-	float totalImportance = 0.0;
-
-
-
-	// Get first child's importance
-	float childImportance = HierarchyImportance[childNodeIndex];
-	// If the first child doesn't have an importance 
-	if(childImportance == 0.0)
-		return;
+	float childrenImportance = 0.0;
 
 	// Gather importance from all children
 	int parentPointer = int(gl_GlobalInvocationID.x);
 	do
 	{
-		totalImportance += childImportance;
+		float childImportance = SubtreeImportance[childNodeIndex];
+		// If any of the children has no importance yet wait till next iteration.
+		if(childImportance == 0.0) return;
+		childrenImportance += childImportance;
 
 		// Next child
 		childNodeIndex = floatBitsToInt(texelFetch(HierachyBuffer, childNodeIndex * 2 + 1).w); 	// w = Escape
@@ -53,11 +55,12 @@ void main()
 			break; 
 
 		parentPointer = floatBitsToInt(texelFetch(ParentPointerBuffer, childNodeIndex).r);
-		childImportance = HierarchyImportance[childNodeIndex];
-
 	} while(parentPointer == gl_GlobalInvocationID.x); // Continue until this is no longer the child's parent.
 
 	// Write importance and be done.
-	HierarchyImportance[gl_GlobalInvocationID.x] = totalImportance;
+	SubtreeImportance[gl_GlobalInvocationID.x] = childrenImportance;
+	// See .._init.comp for details on importance multiplication.
+	childrenImportance = HierarchyImportance[gl_GlobalInvocationID.x] / childrenImportance;
+	HierarchyImportance[gl_GlobalInvocationID.x] *= childrenImportance / NumImportanceIterations;
 	ChangedAnything = 1;
 }

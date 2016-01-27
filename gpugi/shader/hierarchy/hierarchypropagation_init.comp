@@ -8,6 +8,12 @@ layout(binding = 10, std430) restrict buffer HierarchyImportanceBuffer
 {
 	float HierarchyImportance[];
 };
+layout(binding = 11, std430) restrict buffer SubtreeImportanceBuffer
+{
+	float SubtreeImportance[];
+};
+
+layout(binding = 6) uniform samplerBuffer ParentPointerBuffer;
 
 // Value used to notify parent nodes that child is done with gathering importance.
 const float NotificationBias = 1.19e-07; // Float machine epsilon
@@ -25,21 +31,25 @@ void main()
 	int childNodeIndex = int(childCodeRaw & uint(0x7FFFFFFF));	// Most significant bit tells us is this is a leaf.
 	bool isChildLeaf = childNodeIndex != childCodeRaw;
 
-	float totalImportance = 0.0;
+	float totalImportance = HierarchyImportance[gl_GlobalInvocationID.x];
+	float childrenImportance = 0.0;
 
-	// If child is a leaf, gather all triangle importance values.
+	// Sum up importance values of the children (triangles or nodes).
 	if(isChildLeaf)
 	{	
 		int currentTriangleIndex = int(TRIANGLES_PER_LEAF * childNodeIndex);
 		for(int i=0; i<TRIANGLES_PER_LEAF; ++i, ++currentTriangleIndex)
 		{
-			totalImportance += HierarchyImportance[NumInnerNodes + currentTriangleIndex];
+			childrenImportance += HierarchyImportance[NumInnerNodes + currentTriangleIndex];
 		}
-		HierarchyImportance[gl_GlobalInvocationID.x] = totalImportance / NumImportanceIterations + NotificationBias;
-	}
-	else
-	{
-	 	// Set own importance to zero.	
-		HierarchyImportance[gl_GlobalInvocationID.x] = 0.0;
+		
+		// Amplify the importance by the ratio of children and own importance.
+		// This is the hit-probability-difference between the nodes. The higher the difference the
+		// more important is to check the children themselves.
+		totalImportance *= totalImportance / childrenImportance;
+		// Normalize (each individual importance value should have been divided by the number
+		// of iterations, which is equivalent to doing it once in the end).
+		HierarchyImportance[gl_GlobalInvocationID.x] = totalImportance / NumImportanceIterations;
+		SubtreeImportance[gl_GlobalInvocationID.x] = max(childrenImportance, NotificationBias);
 	}
 }
