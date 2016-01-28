@@ -63,7 +63,8 @@ layout(binding=5) uniform samplerBuffer InitialLightSampleBuffer;
 layout(std430, binding = 10) restrict readonly buffer HierarchyImportanceBuffer
 {
 	float HierarchyImportance[];
-}; 
+};
+//layout(binding=10) uniform samplerBuffer HierarchyImportanceBuffer;
 #endif
 
 struct Material

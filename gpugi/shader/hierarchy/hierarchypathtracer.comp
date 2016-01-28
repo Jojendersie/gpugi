@@ -2,11 +2,12 @@
 
 #define HIT_INDEX_OUTPUT
 #define TRACERAY_IMPORTANCE_BREAK
+#define SAMPLING_DECISION_OUTPUT
 #include "../stdheader.glsl"
-#include "sggx.glsl"
 
 layout(binding=7) uniform samplerBuffer SGGXBuffer;
 layout(binding=8) uniform samplerBuffer HierarchyMaterialBuffer;
+#include "sggx.glsl"
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
@@ -29,6 +30,7 @@ void main()
 
 	vec3 color = vec3(0.0);
 	vec3 pathThroughput = vec3(1.0);
+	float pathImportance = 1.0;
 	bool didNextEventEstimation = false;
 	ivec2 hitMask = ivec2(0xFFFFFFFF);
 
@@ -38,7 +40,7 @@ void main()
 		Triangle triangle;
 		vec3 barycentricCoord;
 		float rayHit = RAY_MAX;
-		TraceRay(ray, rayHit, hitMask, barycentricCoord, triangle);
+		TraceRay(ray, rayHit, pathImportance, hitMask, barycentricCoord, triangle);
 		if(rayHit == RAY_MAX)
 			break;
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon because of masking!)
@@ -59,16 +61,7 @@ void main()
 			materialData.RefractionIndexAvg = tmp.w;
 			materialData.Fresnel1 = texelFetch(HierarchyMaterialBuffer, hitMask.x * 6 + 5).xyz;
 			// Load and unpack the symmetric SGGX matrix
-			mat3x3 sggx;
-			tmp.xy = texelFetch(SGGXBuffer, hitMask.x * 3 + 1).xy;
-			vec3 sigma = vec3(texelFetch(SGGXBuffer, hitMask.x * 3).xy, tmp.x);
-			vec3 r = vec3(tmp.y, texelFetch(SGGXBuffer, hitMask.x * 3 + 2).xy) * 2.0 - 1.0;
-			sggx[0][0] = saturate(sigma.x * sigma.x);
-			sggx[1][1] = saturate(sigma.y * sigma.y);
-			sggx[2][2] = saturate(sigma.z * sigma.z);
-			sggx[0][1] = sggx[1][0] = clamp(r.x * sigma.x * sigma.y, -1.0, 1.0);
-			sggx[0][2] = sggx[2][0] = clamp(r.y * sigma.x * sigma.z, -1.0, 1.0);
-			sggx[1][2] = sggx[2][1] = clamp(r.z * sigma.y * sigma.z, -1.0, 1.0);
+			mat3x3 sggx = loadSGGX(hitMask.x * 3);
 			hitNormal = sampleNormal(ray.Direction, sggx, randomSeed);
 			epsilon = length(texelFetch(HierachyBuffer, hitMask.x * 2).xyz -
 							 texelFetch(HierachyBuffer, hitMask.x * 2 + 1).xyz);
@@ -121,7 +114,7 @@ void main()
 				{
 					lightRay.Origin = ray.Origin + lightRay.Direction * epsilon;
 
-					if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON - epsilon))
+					if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON - epsilon, pathImportance))
 					{
 						// Hemispherical lambert emitter. First we want intensity, not radiance
 						vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border
@@ -140,9 +133,14 @@ void main()
 
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
 		vec3 throughput = vec3(1.0);
-		ray.Direction = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput);
+		bool isReflectedDiffuse;
+		ray.Direction = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput, isReflectedDiffuse);
 		ray.Origin = ray.Origin + ray.Direction * epsilon;
 		pathThroughput *= throughput;
+		if(isReflectedDiffuse)
+			pathImportance *= 10.0;
+		else
+			pathImportance *= 10.0 / (1.0 + log2(materialData.Reflectiveness.w + 1.0));
 	#ifdef RUSSIAN_ROULETTE
 		float continuationPropability = saturate(GetLuminance(throughput));
 		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stoped -> >=

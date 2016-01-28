@@ -16,9 +16,16 @@
 ///
 ///		The AnyHit method does not change the mask.
 #ifdef ANY_HIT
-	bool TraceRayAnyHit(in Ray ray, in float rayLength)
+	bool TraceRayAnyHit(in Ray ray, in float rayLength
+		#ifdef TRACERAY_IMPORTANCE_BREAK
+			, in float _importanceThreshold
+		#endif
+	)
 #else
 	void TraceRay(in Ray ray, inout float rayLength
+		#ifdef TRACERAY_IMPORTANCE_BREAK
+			, in float _importanceThreshold
+		#endif
 		#ifdef HIT_INDEX_OUTPUT
 			, out ivec2 _hitIndex
 		#endif
@@ -60,7 +67,9 @@
 					lastNodeIndex = currentNodeIndex;
 				#endif
 				#ifdef TRACERAY_IMPORTANCE_BREAK
-					if(HierarchyImportance[currentNodeIndex] < 5.0)
+					//float importance = texelFetch(HierarchyImportanceBuffer, currentNodeIndex).x;
+					//if(importance < _importanceThreshold)
+					if(HierarchyImportance[currentNodeIndex] < _importanceThreshold)
 					//if((floatBitsToUint(currentNode0.w) & 0x80000000u) == 0x80000000u)
 					{
 					#ifdef ANY_HIT
@@ -68,12 +77,9 @@
 						currentNodeIndex = floatBitsToInt(currentNode1.w);
 					#else
 						_hitIndex.x = currentNodeIndex;
-						// TODO modify newHit?
 						rayLength = (newHit + exitDist) * 0.5;
 						currentNodeIndex = floatBitsToInt(currentNode1.w);
 						_hitIndex.y = 0xFFFFFFFF;
-			//			rayLength = RAY_MAX;
-			//			continue;
 					#endif
 					} else {
 				#endif

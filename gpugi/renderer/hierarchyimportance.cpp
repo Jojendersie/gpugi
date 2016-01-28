@@ -50,6 +50,8 @@ void HierarchyImportance::SetScene(shared_ptr<Scene> _scene)
 	m_hierarchyImportance = make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumLeafTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::IMMUTABLE);
 	m_hierarchyImportance->ClearToZero();
 	m_hierarchyImportance->BindShaderStorageBuffer(s_hierarchyImportanceBinding);
+	//m_hierachyImportanceView = make_unique<gl::TextureBufferView>(m_hierarchyImportance, gl::TextureBufferFormat::R8UI);
+	//m_hierachyImportanceView->BindBuffer(10);
 	m_subtreeImportance = make_shared<gl::Buffer>(sizeof(float) * _scene->GetNumInnerNodes(), gl::Buffer::IMMUTABLE);
 	m_subtreeImportance->ClearToZero();
 	m_subtreeImportance->BindShaderStorageBuffer(s_subtreeImportanceBinding);

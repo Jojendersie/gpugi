@@ -1,3 +1,17 @@
+mat3x3 loadSGGX(int _index)
+{
+	mat3x3 sggx;
+	vec2 tmp = texelFetch(SGGXBuffer, _index + 1).xy;
+	vec3 sigma = vec3(texelFetch(SGGXBuffer, _index).xy, tmp.x);
+	vec3 r = vec3(tmp.y, texelFetch(SGGXBuffer, _index + 2).xy) * 2.0 - 1.0;
+	sggx[0][0] = saturate(sigma.x * sigma.x);
+	sggx[1][1] = saturate(sigma.y * sigma.y);
+	sggx[2][2] = saturate(sigma.z * sigma.z);
+	sggx[0][1] = sggx[1][0] = clamp(r.x * sigma.x * sigma.y, -1.0, 1.0);
+	sggx[0][2] = sggx[2][0] = clamp(r.y * sigma.x * sigma.z, -1.0, 1.0);
+	sggx[1][2] = sggx[2][1] = clamp(r.z * sigma.y * sigma.z, -1.0, 1.0);
+	return sggx;
+}
 
 // Sample a random normal from an ellipsoid seen from a certain direction
 vec3 sampleNormal(vec3 _incident, mat3x3 _sggx, inout uint _seed)

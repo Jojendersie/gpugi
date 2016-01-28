@@ -57,6 +57,7 @@ private:
 
 	std::unique_ptr<gl::TextureBufferView> m_sceneParentPointer;
 	std::unique_ptr<gl::TextureBufferView> m_sggxBufferView;
+	std::unique_ptr<gl::TextureBufferView> m_hierachyImportanceView;
 	std::shared_ptr<gl::Buffer> m_hierarchyImportance;
 	std::shared_ptr<gl::Buffer> m_subtreeImportance;
 	int m_numImportanceIterations;
