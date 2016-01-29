@@ -3,6 +3,7 @@
 #include "debugrenderer/raytracemeshinfo.hpp"
 #include "debugrenderer/hierarchyvisualization.hpp"
 #include <glhelper/texture2d.hpp>
+#include <glhelper/texturecubemap.hpp>
 
 #include <fstream>
 
@@ -36,6 +37,11 @@ Pathtracer::Pathtracer(RendererSystem& _rendererSystem) :
 void Pathtracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 {
 	_newBackbuffer.BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
+}
+
+void Pathtracer::SetEnvironmentMap(std::shared_ptr<gl::TextureCubemap> _envMap)
+{
+	_envMap->Bind(12);
 }
 
 void Pathtracer::Draw()

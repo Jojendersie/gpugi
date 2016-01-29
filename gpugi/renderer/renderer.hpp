@@ -12,6 +12,7 @@
 namespace gl
 {
 	class Texture2D;
+	class TextureCubemap;
 }
 
 class Scene;
@@ -33,6 +34,8 @@ public:
 	virtual void SetCamera(const Camera& camera) {}
 	/// Sets back buffer size.
 	virtual void SetScreenSize(const gl::Texture2D& _newBackbuffer) = 0;
+	/// Bind the environment map if used
+	virtual void SetEnvironmentMap(std::shared_ptr<gl::TextureCubemap> _envMap) {}
 	/// Draw command, increments usually iteration count.
 	virtual void Draw() = 0;
 

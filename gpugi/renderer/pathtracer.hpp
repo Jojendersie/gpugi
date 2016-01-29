@@ -19,6 +19,7 @@ public:
 	std::string GetName() const override { return "PT"; }
 
 	void SetScreenSize(const gl::Texture2D& _newBackbuffer) override;
+	void SetEnvironmentMap(std::shared_ptr<gl::TextureCubemap> _envMap) override;
 
 	void Draw() override;
 

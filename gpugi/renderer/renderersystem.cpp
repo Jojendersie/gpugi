@@ -5,6 +5,7 @@
 #include <glhelper/buffer.hpp>
 #include <glhelper/shaderobject.hpp>
 #include <glhelper/texturebufferview.hpp>
+#include <glhelper/texturecubemap.hpp>
 
 #include "../camera/camera.hpp"
 #include "../scene/scene.hpp"
@@ -19,7 +20,12 @@
 
 
 
-RendererSystem::RendererSystem() : m_iterationCount(0), m_numInitialLightSamples(0), m_activeRenderer(nullptr), m_activeDebugRenderer(nullptr), m_showLightCachesShader("showLightCaches")
+RendererSystem::RendererSystem() :
+	m_iterationCount(0),
+	m_numInitialLightSamples(0),
+	m_activeRenderer(nullptr),
+	m_activeDebugRenderer(nullptr),
+	m_showLightCachesShader("showLightCaches")
 {
 	std::unique_ptr<gl::ShaderObject> dummyShader(new gl::ShaderObject("dummy"));
 	dummyShader->AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/dummy.comp");
@@ -153,6 +159,21 @@ void RendererSystem::SetScene(std::shared_ptr<Scene> _scene)
 		m_activeRenderer->SetScene(m_scene);
 	if (m_activeDebugRenderer)
 		m_activeDebugRenderer->SetScene(m_scene);
+}
+
+void RendererSystem::SetEnvironmentMap(int _size, const std::string& _xneg, const std::string& _xpos,
+	const std::string& _yneg, const std::string& _ypos,
+	const std::string& _zneg, const std::string& _zpos)
+{
+	m_envMap = std::make_shared<gl::TextureCubemap>(_size, gl::TextureFormat::SRGB8);
+	m_envMap->LoadFaceFromFile(0, gl::TextureCubemap::Face::NEGATIVE_X, _xneg);
+	m_envMap->LoadFaceFromFile(0, gl::TextureCubemap::Face::POSITIVE_X, _xpos);
+	m_envMap->LoadFaceFromFile(0, gl::TextureCubemap::Face::NEGATIVE_Y, _yneg);
+	m_envMap->LoadFaceFromFile(0, gl::TextureCubemap::Face::POSITIVE_Y, _ypos);
+	m_envMap->LoadFaceFromFile(0, gl::TextureCubemap::Face::NEGATIVE_Z, _zneg);
+	m_envMap->LoadFaceFromFile(0, gl::TextureCubemap::Face::POSITIVE_Z, _zpos);
+	if (m_activeRenderer)
+		m_activeRenderer->SetEnvironmentMap(m_envMap);
 }
 
 void RendererSystem::SetCamera(const Camera& _camera)

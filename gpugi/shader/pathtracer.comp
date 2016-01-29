@@ -2,6 +2,8 @@
 
 #include "stdheader.glsl"
 
+layout(binding=12) uniform samplerCubeArray EnvironmentMap;
+
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
@@ -33,8 +35,10 @@ void main()
 		vec3 barycentricCoord;
 		float rayHit = RAY_MAX;
 		TraceRay(ray, rayHit, barycentricCoord, triangle);
-		if(rayHit == RAY_MAX)
+		if(rayHit == RAY_MAX) {
+			color += pathThroughput * textureLod(EnvironmentMap, vec4(ray.Direction, 0.0), 0.0).xyz;
 			break;
+		}
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
 
 		// Compute hit normal and texture coordinate.

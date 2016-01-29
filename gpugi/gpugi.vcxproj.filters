@@ -231,6 +231,9 @@
     <ClCompile Include="..\dependencies\bim\src\sahspilt.cpp">
       <Filter>dependencies\bim</Filter>
     </ClCompile>
+    <ClCompile Include="..\dependencies\glhelper\glhelper\texturecubemap.cpp">
+      <Filter>dependencies\glhelper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -415,6 +418,9 @@
     </ClInclude>
     <ClInclude Include="..\dependencies\bim\include\chunk.hpp">
       <Filter>dependencies\bim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\glhelper\glhelper\texturecubemap.hpp">
+      <Filter>dependencies\glhelper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

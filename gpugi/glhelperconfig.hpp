@@ -3,8 +3,8 @@
 
 // General settings.
 
-// If activated, Texture2D has a FromFile method which uses stbi to load images and create mipmaps.
-#define TEXTURE2D_FROMFILE_STBI
+// If activated, Texture2D and TextureCubemap have a FromFile method which uses stbi to load images and create mipmaps.
+#define TEXTURE_FROMFILE_STBI
 
 // Activates output of shader compile logs to log.
 #define SHADER_COMPILE_LOGS

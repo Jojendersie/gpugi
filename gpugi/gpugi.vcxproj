@@ -169,6 +169,7 @@
     <ClCompile Include="..\dependencies\glhelper\glhelper\texture2d.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\texture3d.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\texturebufferview.cpp" />
+    <ClCompile Include="..\dependencies\glhelper\glhelper\texturecubemap.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\textureformats.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\textureview.cpp" />
     <ClCompile Include="..\dependencies\glhelper\glhelper\utils\pathutils.cpp" />
@@ -224,6 +225,7 @@
     <ClInclude Include="..\dependencies\glhelper\glhelper\texture2d.hpp" />
     <ClInclude Include="..\dependencies\glhelper\glhelper\texture3d.hpp" />
     <ClInclude Include="..\dependencies\glhelper\glhelper\texturebufferview.hpp" />
+    <ClInclude Include="..\dependencies\glhelper\glhelper\texturecubemap.hpp" />
     <ClInclude Include="..\dependencies\glhelper\glhelper\textureformats.hpp" />
     <ClInclude Include="..\dependencies\glhelper\glhelper\textureview.hpp" />
     <ClInclude Include="..\dependencies\glhelper\glhelper\utils\flagoperators.hpp" />

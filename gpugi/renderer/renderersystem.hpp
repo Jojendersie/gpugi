@@ -13,6 +13,7 @@ namespace gl
 {
 	class Texture2D;
 	class TextureBufferView;
+	class TextureCubemap;
 	class ShaderObject;
 }
 class Scene;
@@ -37,6 +38,11 @@ public:
 
 	/// Returns currently set scene.
 	const std::shared_ptr<Scene>& GetScene() const { return m_scene; }
+
+	/// Replaces the cubemap for the sky
+	void SetEnvironmentMap(int _size, const std::string& _xneg, const std::string& _xpos,
+		const std::string& _yneg, const std::string& _ypos,
+		const std::string& _zneg, const std::string& _zpos);
 
 
 	/// Sets camera.
@@ -76,6 +82,7 @@ public:
 		m_activeRenderer->SetScreenSize(*m_backbuffer);
 		m_activeRenderer->SetCamera(m_camera);
 		m_activeRenderer->SetScene(m_scene);
+		m_activeRenderer->SetEnvironmentMap(m_envMap);
 	}
 
 	/// Destroys old debug-renderer, creates new debug-renderer and makes it active.
@@ -172,6 +179,7 @@ private:
 
 	/// Scene data
 	std::shared_ptr<Scene> m_scene;
+	std::shared_ptr<gl::TextureCubemap> m_envMap;
 
 	/// List of all available debug renderer instantiation functions.
 	std::vector<std::pair<std::function<std::unique_ptr<DebugRenderer>()>, std::string>> m_debugRenderConstructors;

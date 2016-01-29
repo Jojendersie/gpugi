@@ -132,6 +132,13 @@ void Application::RegisterScriptCommands()
 			icam->SetMoveSpeed(max(m_scene->GetBoundingBox().max - m_scene->GetBoundingBox().min) / 15.0f);
 	});
 
+	// Environment map change function.
+	GlobalConfig::AddParameter("envMap", { 512, std::string(""), std::string(""), std::string(""), std::string(""), std::string(""), std::string("") }, "Replace the environment map. Enter the names of 6 texture faces in the order x-, x+, y-, y+, z-, z+. All textures must be size x size where size is the very first parameter.");
+	GlobalConfig::AddListener("envMap", "LoadEnvmap", [=](const GlobalConfig::ParameterType& p) {
+		m_rendererSystem->SetEnvironmentMap(p[0].As<int>(), p[1].As<std::string>(), p[2].As<std::string>(),
+			p[3].As<std::string>(), p[4].As<std::string>(), p[5].As<std::string>(), p[6].As<std::string>());
+	});
+
 	// Lighting
 	GlobalConfig::AddParameter("addPointLight", { 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f }, "Create a new point light source.");
 	GlobalConfig::AddListener("addPointLight", "addPointLight", [=](const GlobalConfig::ParameterType& p){

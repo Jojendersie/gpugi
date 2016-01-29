@@ -7,6 +7,7 @@
 
 layout(binding=7) uniform samplerBuffer SGGXBuffer;
 layout(binding=8) uniform samplerBuffer HierarchyMaterialBuffer;
+layout(binding=12) uniform samplerCubeArray EnvironmentMap;
 #include "sggx.glsl"
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
@@ -41,8 +42,10 @@ void main()
 		vec3 barycentricCoord;
 		float rayHit = RAY_MAX;
 		TraceRay(ray, rayHit, pathImportanceThreshold, hitMask, barycentricCoord, triangle);
-		if(rayHit == RAY_MAX)
+		if(rayHit == RAY_MAX) {
+			color += pathThroughput * textureLod(EnvironmentMap, vec4(ray.Direction, 0.0), 0.0).xyz;
 			break;
+		}
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon because of masking!)
 
 		// Get Material infos and normal either from node or from triangle hit point.

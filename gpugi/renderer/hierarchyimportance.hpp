@@ -22,6 +22,7 @@ public:
 
 	void SetScene(std::shared_ptr<Scene> _scene) override;
 	void SetScreenSize(const gl::Texture2D& _newBackbuffer) override;
+	void SetEnvironmentMap(std::shared_ptr<gl::TextureCubemap> _envMap) override;
 
 	/// Returns hierarchy importance for possible use in other systems.
 	///

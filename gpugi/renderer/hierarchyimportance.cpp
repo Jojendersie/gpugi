@@ -9,6 +9,7 @@
 #include <glhelper/buffer.hpp>
 #include <glhelper/texturebufferview.hpp>
 #include <glhelper/utils/flagoperators.hpp>
+#include <glhelper/texturecubemap.hpp>
 
 #include <fstream>
 
@@ -84,6 +85,11 @@ void HierarchyImportance::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 		m_hierarchyImportance->ClearToZero();
 
 	_newBackbuffer.BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
+}
+
+void HierarchyImportance::SetEnvironmentMap(std::shared_ptr<gl::TextureCubemap> _envMap)
+{
+	_envMap->Bind(12);
 }
 
 void HierarchyImportance::Draw()
