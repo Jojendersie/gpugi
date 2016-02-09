@@ -1,6 +1,5 @@
 #version 450
 
-#define TRIINDEX_OUTPUT
 #include "../stdheader.glsl"
 #include "importanceubo.glsl"
 

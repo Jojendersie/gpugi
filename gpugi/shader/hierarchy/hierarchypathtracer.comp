@@ -41,7 +41,8 @@ void main()
 		Triangle triangle;
 		vec3 barycentricCoord;
 		float rayHit = RAY_MAX;
-		TraceRay(ray, rayHit, pathImportanceThreshold, hitMask, barycentricCoord, triangle);
+		float importance, nodeSizeSq;
+		TraceRay(ray, rayHit, pathImportanceThreshold, importance, nodeSizeSq, hitMask, barycentricCoord, triangle);
 		if(rayHit == RAY_MAX) {
 			color += pathThroughput * textureLod(EnvironmentMap, vec4(ray.Direction, 0.0), 0.0).xyz;
 			break;
@@ -50,7 +51,6 @@ void main()
 
 		// Get Material infos and normal either from node or from triangle hit point.
 		vec3 hitNormal;
-		float epsilon = RAY_HIT_EPSILON;
 		MaterialData materialData;
 		if(hitMask.y == 0xFFFFFFFF)
 		{
@@ -66,8 +66,8 @@ void main()
 			// Load and unpack the symmetric SGGX matrix
 			mat3x3 sggx = loadSGGX(hitMask.x * 3);
 			hitNormal = sampleNormal(ray.Direction, sggx, randomSeed);
-			epsilon = length(texelFetch(HierachyBuffer, hitMask.x * 2).xyz -
-							 texelFetch(HierachyBuffer, hitMask.x * 2 + 1).xyz);
+		//	epsilon = length(texelFetch(HierachyBuffer, hitMask.x * 2).xyz -
+		//					 texelFetch(HierachyBuffer, hitMask.x * 2 + 1).xyz);
 			/*color = (sqrt(HierarchyImportance[hitMask.x]) / 5).xxx;
 			vec4 final = vec4(color, 1.0);
 			final += imageLoad(OutputTexture, gridPosition);
@@ -80,6 +80,17 @@ void main()
 			// Sample material
 			materialData = SampleMaterialData(triangle.w, hitTexcoord);
 		}
+		
+		float nextPathImportanceThreshold = pathImportanceThreshold * 8.0;
+		float epsilon = RAY_HIT_EPSILON;
+		// Skip out of the node if we would only get a self intersection
+		if(nextPathImportanceThreshold >= importance)
+		{
+			epsilon = sqrt(nodeSizeSq);
+		//	epsilon = length(texelFetch(HierachyBuffer, hitMask.x * 2).xyz -
+		//					 texelFetch(HierachyBuffer, hitMask.x * 2 + 1).xyz);
+		}
+
 
 		// Add self emissivity of hit material.
 		// To avoid double counting use either next event estimation or this sampling. In general,
@@ -140,7 +151,7 @@ void main()
 		ray.Direction = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput, isReflectedDiffuse);
 		ray.Origin = ray.Origin + ray.Direction * epsilon;
 		pathThroughput *= throughput;
-		pathImportanceThreshold *= 1.0;
+		pathImportanceThreshold = nextPathImportanceThreshold;
 		/*if(isReflectedDiffuse)
 			pathImportanceThreshold *= 10.0;
 		else

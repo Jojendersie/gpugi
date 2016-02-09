@@ -25,6 +25,8 @@
 	void TraceRay(in Ray ray, inout float rayLength
 		#ifdef TRACERAY_IMPORTANCE_BREAK
 			, in float _importanceThreshold
+			, out float _nodeImportance
+			, out float _nodeSizeSq
 		#endif
 		#ifdef HIT_INDEX_OUTPUT
 			, out ivec2 _hitIndex
@@ -42,6 +44,10 @@
 		_hitIndex.x = 0xFFFFFFFF;
 		_hitIndex.y = 0xFFFFFFFF;
 		int lastNodeIndex = 0;
+	#endif
+	#if defined(TRACERAY_IMPORTANCE_BREAK) && !defined(ANY_HIT) 
+		float lastNodeImportance = 0.0;
+		float lastNodeSizeSq = 0.0;
 	#endif
 
 	vec3 invRayDir = 1.0 / ray.Direction;
@@ -68,14 +74,21 @@
 				#endif
 				#ifdef TRACERAY_IMPORTANCE_BREAK
 					//float importance = texelFetch(HierarchyImportanceBuffer, currentNodeIndex).x;
+					float importance = HierarchyImportance[currentNodeIndex];
+					#ifndef ANY_HIT
+						lastNodeImportance = importance;
+						lastNodeSizeSq = dot(currentNode0.xyz - currentNode1.xyz, currentNode0.xyz - currentNode1.xyz);
+					#endif
 					//if(importance < _importanceThreshold)
-					if(HierarchyImportance[currentNodeIndex] < _importanceThreshold)
+					if(importance < _importanceThreshold)
 					//if((floatBitsToUint(currentNode0.w) & 0x80000000u) == 0x80000000u)
 					{
 					#ifdef ANY_HIT
 						if(exitDist <= rayLength) return true;
 						currentNodeIndex = floatBitsToInt(currentNode1.w);
 					#else
+						_nodeImportance = importance;
+						_nodeSizeSq = lastNodeSizeSq;
 						_hitIndex.x = currentNodeIndex;
 						rayLength = (newHit + exitDist) * 0.5;
 						currentNodeIndex = floatBitsToInt(currentNode1.w);
@@ -139,6 +152,10 @@
 						#ifdef HIT_INDEX_OUTPUT
 							_hitIndex.x = lastNodeIndex;
 							_hitIndex.y = currentLeafIndex;
+						#endif
+						#ifdef TRACERAY_IMPORTANCE_BREAK
+							_nodeImportance = lastNodeImportance;
+							_nodeSizeSq = lastNodeSizeSq;
 						#endif
 
 					#ifdef TRINORMAL_OUTPUT
