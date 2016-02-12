@@ -24,10 +24,6 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 	m_hierarchyImpPropagationNodeShader("hierarchyImpPropagation_Node"),
 	m_hierarchyPathTracer("hierarchyPathTracer")
 {
-	m_hierarchyImportanceUBOInfo = m_hierarchyImpAcquisitionShader.GetUniformBufferInfo()["HierarchyImportanceUBO"];
-	m_hierarchyImportanceUBO = make_unique<gl::Buffer>(m_hierarchyImportanceUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
-	m_hierarchyImportanceUBO->BindUniformBuffer(4);
-
 	m_rendererSystem.SetNumInitialLightSamples(128);
 }
 
@@ -146,10 +142,11 @@ void HierarchyImportance::UpdateHierarchyNodeImportance()
 
 void HierarchyImportance::ComputeHierarchyMaterials(shared_ptr<Scene> _scene)
 {
+	string additionalDefines = _scene->GetBvhTypeDefineString();
 	// To average the material per leaf node we need to sample the textures on
 	// all triangles uniformly. Best to do that in a shader...
 	unique_ptr<gl::ShaderObject> sampleLeaves = make_unique<gl::ShaderObject>("sampleLeafMaterials");
-	sampleLeaves->AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/sampleleafmaterials.comp");
+	sampleLeaves->AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/sampleleafmaterials.comp", additionalDefines);
 	sampleLeaves->CreateProgram();
 	sampleLeaves->Activate();
 	m_hierarchyMaterialBuffer->BindShaderStorageBuffer(0);
@@ -159,7 +156,7 @@ void HierarchyImportance::ComputeHierarchyMaterials(shared_ptr<Scene> _scene)
 
 	// Pull materials up in the hierarchy
 	unique_ptr<gl::ShaderObject> pullMaterials = make_unique<gl::ShaderObject>("pullMaterials");
-	pullMaterials->AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/pullmaterials.comp");
+	pullMaterials->AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/pullmaterials.comp", additionalDefines);
 	pullMaterials->CreateProgram();
 	pullMaterials->Activate();
 	for(uint i=0; i < _scene->GetNumTreeLevels(); ++i)
@@ -171,18 +168,21 @@ void HierarchyImportance::ComputeHierarchyMaterials(shared_ptr<Scene> _scene)
 
 void HierarchyImportance::RecompileShaders(const string& _additionalDefines)
 {
-	string additionalDefines;
+	string additionalDefines = _additionalDefines;
 #ifdef SHOW_SPECIFIC_PATHLENGTH
 	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
 #endif
-	additionalDefines += _additionalDefines;
 
 	m_hierarchyImpAcquisitionShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/acquisition2.comp", additionalDefines);
 	m_hierarchyImpAcquisitionShader.CreateProgram();
-	m_hierarchyImpPropagationInitShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_init.comp");
+	m_hierarchyImpPropagationInitShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_init.comp", additionalDefines);
 	m_hierarchyImpPropagationInitShader.CreateProgram();
-	m_hierarchyImpPropagationNodeShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_nodes.comp");
+	m_hierarchyImpPropagationNodeShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_nodes.comp", additionalDefines);
 	m_hierarchyImpPropagationNodeShader.CreateProgram();
 	m_hierarchyPathTracer.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypathtracer.comp", additionalDefines);
 	m_hierarchyPathTracer.CreateProgram();
+
+	m_hierarchyImportanceUBOInfo = m_hierarchyImpAcquisitionShader.GetUniformBufferInfo()["HierarchyImportanceUBO"];
+	m_hierarchyImportanceUBO = make_unique<gl::Buffer>(m_hierarchyImportanceUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
+	m_hierarchyImportanceUBO->BindUniformBuffer(4);
 }

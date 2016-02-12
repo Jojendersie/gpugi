@@ -60,13 +60,13 @@
 				++numBoxesVisited;
 			#endif
 
-			float newHit, exitDist;
+			float newHit, exitDist, nodeSizeSq;
 			uint childCode;
 			int escape;
 			#ifdef AABOX_BVH
-			if(FetchIntersectBoxNode(ray.Origin, invRayDir, currentNodeIndex, newHit, exitDist, childCode, escape) && newHit <= rayLength)
+			if(FetchIntersectBoxNode(ray.Origin, invRayDir, currentNodeIndex, newHit, exitDist, childCode, escape, nodeSizeSq) && newHit <= rayLength)
 			#elif defined(OBOX_BVH)
-			if(FetchIntersectOBoxNode(ray.Origin, ray.Direction, currentNodeIndex, newHit, exitDist, childCode, escape) && newHit <= rayLength)
+			if(FetchIntersectOBoxNode(ray.Origin, ray.Direction, currentNodeIndex, newHit, exitDist, childCode, escape, nodeSizeSq) && newHit <= rayLength)
 			#endif
 			{
 				#if defined(HIT_INDEX_OUTPUT) && !defined(ANY_HIT)
@@ -77,11 +77,7 @@
 					float importance = HierarchyImportance[currentNodeIndex];
 					#ifndef ANY_HIT
 						lastNodeImportance = importance;
-						#ifdef AABOX_BVH
-							lastNodeSizeSq = dot(bbMax-bbMin, bbMax-bbMin);
-						#elif defined(OBOX_BVH)
-							lastNodeSizeSq = dot(bbSides, bbSides);
-						#endif
+						lastNodeSizeSq = nodeSizeSq;
 					#endif
 					//if(importance < _importanceThreshold)
 					if(importance < _importanceThreshold)

@@ -97,7 +97,7 @@ vec3 rotate(vec3 x, vec4 q)
 // ************************************************************************* //
 
 // Fetch and intersect a box
-bool FetchIntersectBoxNode(vec3 rayOrigin, vec3 invRayDir, int nodeIdx, out float firstHit, out float lastHit, out uint childCode, out int escape)
+bool FetchIntersectBoxNode(vec3 rayOrigin, vec3 invRayDir, int nodeIdx, out float firstHit, out float lastHit, out uint childCode, out int escape, out float nodeSizeSq)
 {
 	vec3 bbMin, bbMax;
 	vec4 fetch = texelFetch(HierachyBuffer, nodeIdx * 2);
@@ -106,11 +106,12 @@ bool FetchIntersectBoxNode(vec3 rayOrigin, vec3 invRayDir, int nodeIdx, out floa
 	fetch = texelFetch(HierachyBuffer, nodeIdx * 2 + 1);
 	bbMax = fetch.xyz;
 	escape = floatBitsToInt(fetch.w);
+	nodeSizeSq = dot(bbMax-bbMin, bbMax-bbMin);
 	return IntersectBox(rayOrigin, invRayDir, bbMin, bbMax, firstHit, lastHit);
 }
 
 // Fetch and intersect an oriented box
-bool FetchIntersectOBoxNode(vec3 rayOrigin, vec3 rayDir, int nodeIdx, out float firstHit, out float lastHit, out uint childCode, out int escape)
+bool FetchIntersectOBoxNode(vec3 rayOrigin, vec3 rayDir, int nodeIdx, out float firstHit, out float lastHit, out uint childCode, out int escape, out float nodeSizeSq)
 {
 	vec3 bbCenter, bbSidesHalf;
 	vec4 fetch = texelFetch(HierachyBuffer, nodeIdx * 3);
@@ -122,5 +123,6 @@ bool FetchIntersectOBoxNode(vec3 rayOrigin, vec3 rayDir, int nodeIdx, out float 
 	vec4 bbOrientationInv = texelFetch(HierachyBuffer, nodeIdx * 3 + 2);
 	rayOrigin = rotate(rayOrigin - bbCenter, bbOrientationInv);
 	rayDir = rotate(rayDir, bbOrientationInv);
+	nodeSizeSq = dot(bbSidesHalf, bbSidesHalf) * 4.0;
 	return IntersectBox(rayOrigin, vec3(1.0)/rayDir, -bbSidesHalf, bbSidesHalf, firstHit, lastHit);
 }

@@ -8,18 +8,18 @@ void TraceRayCountHits(in Ray _ray, in float _rayLength, in float _pathImportanc
 	do {
 		if(!nextIsLeafNode)
 		{
-			// Load entire node.
-			vec4 currentNode0 = texelFetch(HierachyBuffer, currentNodeIndex * 2);
-			vec4 currentNode1 = texelFetch(HierachyBuffer, currentNodeIndex * 2 + 1);
-
-			float newHit, exitDist;
-			if(IntersectBox(_ray, invRayDir, currentNode0.xyz, currentNode1.xyz, newHit, exitDist)
-				&& newHit <= _rayLength)
+			float newHit, exitDist, nodeSizeSq;
+			uint childCode;
+			int escape;
+			#ifdef AABOX_BVH
+			if(FetchIntersectBoxNode(_ray.Origin, invRayDir, currentNodeIndex, newHit, exitDist, childCode, escape, nodeSizeSq) && newHit <= _rayLength)
+			#elif defined(OBOX_BVH)
+			if(FetchIntersectOBoxNode(_ray.Origin, _ray.Direction, currentNodeIndex, newHit, exitDist, childCode, escape, nodeSizeSq) && newHit <= _rayLength)
+			#endif
 			{
 				// Count up the rays passing this node
 				atomicAdd(HierarchyImportance[currentNodeIndex], _pathImportance);
 				
-				uint childCode = floatBitsToUint(currentNode0.w);
 				// Most significant bit tells us if this is a leaf.
 				currentNodeIndex = int(childCode & uint(0x7FFFFFFF));
 				nextIsLeafNode = currentNodeIndex != childCode;
@@ -27,13 +27,13 @@ void TraceRayCountHits(in Ray _ray, in float _rayLength, in float _pathImportanc
 				if(nextIsLeafNode)
 				{
 					currentLeafIndex = int(TRIANGLES_PER_LEAF * currentNodeIndex);
-					currentNodeIndex = floatBitsToInt(currentNode1.w);
+					currentNodeIndex = escape;
 				}
 			}
 			// No hit, go to escape pointer and repeat.
 			else
 			{
-				currentNodeIndex = floatBitsToInt(currentNode1.w);
+				currentNodeIndex = escape;
 			}
 		}	
 		
