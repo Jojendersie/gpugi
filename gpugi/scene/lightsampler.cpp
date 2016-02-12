@@ -89,12 +89,8 @@ void LightSampler::GenerateRandomSamples(LightSample* _destinationBuffer, unsign
 		// Compute light sample and write to buffer.
 		_destinationBuffer->position = m_scene->GetPointLights()[lightIdx].position;
 		// Random normal
-		_destinationBuffer->normalPhi = 2 * ei::PI * XorshiftF(m_randomSeed);
-		_destinationBuffer->normalThetaCos = XorshiftF(m_randomSeed) * 2.0f - 1.0f;
-		ei::Vec3 normal = ei::cartesianCoords(ei::Vec3(1.0f, _destinationBuffer->normalThetaCos, _destinationBuffer->normalPhi));
-		// Move a bit along the normal to avoid intersection precision issues.
-		_destinationBuffer->position += normal * (_positionBias);
-		// A light sample is always a hemispherical Lambert emitter -> factor 4 too dark
-		_destinationBuffer->intensity = m_scene->GetPointLights()[lightIdx].intensity * sampleWeight * 4.0f;
+		_destinationBuffer->normalPhi = 0.0f;
+		_destinationBuffer->normalThetaCos = 2.0f;
+		_destinationBuffer->intensity = m_scene->GetPointLights()[lightIdx].intensity * sampleWeight;
 	}
 }

@@ -25,3 +25,5 @@
 #define ANY_HIT
 #include "traceray.glsl"
 #undef ANY_HIT
+
+#include "lightsource.glsl"

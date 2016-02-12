@@ -67,36 +67,8 @@ void main()
 			#endif
 
 				int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
-				vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2);
-				vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1);
-				
-				// Direction to light & distance.
-				lightRay.Direction = lightSamplePos_Norm0.xyz - ray.Origin;
-				float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
-				float lightDist = sqrt(lightDistSq);
-				lightRay.Direction /= lightDist;
-
-				// Facing the light?
-				vec3 lightSampleDir = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
-				float lightSampleIntensityFactor = saturate(dot(lightSampleDir, -lightRay.Direction));
-				if(lightSampleIntensityFactor > 0.0)
-				{
-					lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + ray.Origin;
-
-					if(!TraceRayAnyHit(lightRay, lightDist))
-					{
-						// Hemispherical lambert emitter. First we want intensity, not radiance
-						vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border
-						vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, materialData, hitNormal);
-
-						// Add Sample (L): L(hitPoint, lightRay.Direction) * bsdf * dot(lightRay.Direction, hitNormal)
-						// L(hitPoint, lightRay.Direction) = lightSampleIntensity / lightDistSq
-
-						vec3 irradiance = (saturate(dot(lightRay.Direction, hitNormal)) / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in because of shading normals!
-						color += irradiance * (pathThroughput * lightSampleWeight) * bsdf;
-						//color += min(irradiance * pathThroughput * bsdf, 1); // <- surpress fire flies
-					}
-				}
+				vec3 radiance = EstimateDirectLight(ray.Origin, hitNormal, sampleIndex, ray.Direction, materialData);
+				color += radiance * pathThroughput * lightSampleWeight;
 			}
 		}
 

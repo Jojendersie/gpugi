@@ -1,29 +1,52 @@
-
-// Estimate direct illumination from a lambertian emitter (including shadows)
-vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, vec3 _lightPos, vec3 _lightNormal, vec3 _intensity, vec3 _viewDir, MaterialData _materialData)
+// Find out what type of light source is given and estimate the reflected radiance
+// for the given surface.
+vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _viewDir, MaterialData _materialData)
 {
+	vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, _lightSampleIndex * 2);
+	vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, _lightSampleIndex * 2 + 1);
+	
 	Ray lightRay;
 	// Direction to light & distance.
-	lightRay.Direction = _pos - _lightPos;
+	lightRay.Direction = _pos - lightSamplePos_Norm0.xyz;
 	float lightDistSq = dot(lightRay.Direction, lightRay.Direction) + DIVISOR_EPSILON;
 	float lightDist = sqrt(lightDistSq);
 	lightRay.Direction /= lightDist;
-
-	// Facing the light?
-	float lightSampleIntensityFactor = saturate(dot(_lightNormal, lightRay.Direction));
 	float surfaceCos = saturate(-dot(lightRay.Direction, _normal));
-	if(lightSampleIntensityFactor > 0.0 && surfaceCos > 0.0)
+	
+	if(lightIntensity_Norm1.w > 1.0) // Wrong normals encode omnidirectional point lights
 	{
-		lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + _lightPos;
-
-		if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON * 2))
+		// Omnidirectional (point) light
+		// Facing the light?
+		if(surfaceCos > 0.0)
 		{
-			// Hemispherical lambert emitter. First compensate the cosine factor
-			vec3 lightSampleIntensity = _intensity.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border
-			vec3 bsdf = BSDF(_viewDir, -lightRay.Direction, _materialData, _normal);
+			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + lightSamplePos_Norm0.xyz;
 
-			vec3 irradiance = (surfaceCos / lightDistSq) * lightSampleIntensity; // Use saturate, otherwise light from behind may come in because of shading normals!
-			return irradiance * bsdf;
+			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON * 2))
+			{
+				vec3 bsdf = BSDF(_viewDir, -lightRay.Direction, _materialData, _normal);
+				vec3 irradiance = (surfaceCos / lightDistSq) * lightIntensity_Norm1.xyz;
+				return irradiance * bsdf;
+			}
+		}
+	} else {
+		// Lambertian emitter (light emitting surface like area lights)
+		vec3 lightNormal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
+		
+		// Facing the light and light facing the surface?
+		float lightSampleIntensityFactor = saturate(dot(lightNormal, lightRay.Direction));
+		if(lightSampleIntensityFactor > 0.0 && surfaceCos > 0.0)
+		{
+			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + lightSamplePos_Norm0.xyz;
+
+			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON * 2))
+			{
+				// Hemispherical lambert emitter. First compensate the cosine factor
+				vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border
+				vec3 bsdf = BSDF(_viewDir, -lightRay.Direction, _materialData, _normal);
+
+				vec3 irradiance = (surfaceCos / lightDistSq) * lightSampleIntensity;
+				return irradiance * bsdf;
+			}
 		}
 	}
 	
