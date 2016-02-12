@@ -18,7 +18,7 @@ class Scene
 {
 public:
 	/// Load a scene.
-	Scene( const std::string& _file );
+	Scene( const std::string& _file, ε::Types3D _bvhType );
 
 	/// Unload all the scene data and GPU resources
 	~Scene();
@@ -35,6 +35,17 @@ public:
 
 		ei::Vec3 max;
 		uint32 escape;		///< Index of the next node when this completed. 0 is the invalid index.
+	};
+	template<>
+	struct TreeNode<ei::OBox>
+	{
+		ei::Vec3 center;
+		uint32 firstChild;
+
+		ei::Vec3 sidesHalf;
+		uint32 escape;
+
+		ei::Quaternion rotationInv;
 	};
 	/*template<>
 	struct TreeNode<ei::Sphere>
@@ -134,6 +145,8 @@ public:
 	bool SetPointLight(size_t _index, const PointLight& _light) { if(_index >= m_pointLights.size()) return false; m_pointLights[_index] = _light; return true; ComputePointLightTable(); }
 //	bool RemovePointLight(size_t _index) { if(_index >= m_pointLights.size()) return false; m_pointLights[_index] = m_pointLights.back(); m_pointLights.pop_back(); return true; }
 
+	ε::Types3D GetBvhType() const	{ return m_bvhType; }
+	const char* GetBvhTypeDefineString() const;
 private:
 	bim::BinaryModel m_model;
 	bim::Chunk* m_sceneChunk;
@@ -161,9 +174,10 @@ private:
 	const gl::SamplerObject& m_samplerLinearNoMipMap;
 
 	std::string m_sourceDirectory;
+	ε::Types3D m_bvhType;
 
 	void UploadGeometry();
-	void UploadHierarchy();
+	void UploadHierarchy(ε::Types3D _bvhType);
 	/*void LoadMatRef( std::ifstream& _file, const Jo::Files::MetaFileWrapper::Node& _materials, const FileDecl::NamedArray& _header );
 	void LoadBoundingVolumes( std::ifstream& _file, const FileDecl::NamedArray& _header );
 	void LoadHierarchyApproximation( std::ifstream& _file, const FileDecl::NamedArray& _header );*/

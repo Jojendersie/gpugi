@@ -28,16 +28,13 @@ RendererSystem::RendererSystem() :
 	m_showLightCachesShader("showLightCaches")
 {
 	std::unique_ptr<gl::ShaderObject> dummyShader(new gl::ShaderObject("dummy"));
-	dummyShader->AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/dummy.comp");
+	dummyShader->AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/dummy.comp", "#define AABOX_BVH");
 	dummyShader->CreateProgram();
 	InitStandardUBOs(*dummyShader);
 
 	PerIterationBufferUpdate();
 	m_iterationCount = 0;
 	m_renderTime = 0;
-
-	m_showLightCachesShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/showlightcaches.comp");
-	m_showLightCachesShader.CreateProgram();
 }
 
 RendererSystem::~RendererSystem()
@@ -123,6 +120,7 @@ void RendererSystem::SetNumInitialLightSamples(unsigned int _numInitialLightSamp
 
 void RendererSystem::SetScene(std::shared_ptr<Scene> _scene)
 {
+	RecompileShaders(_scene->GetBvhTypeDefineString());
 	m_scene = _scene;
 
 	// Bind buffer
@@ -255,6 +253,12 @@ void RendererSystem::UpdateGlobalConstUBO()
 	mappedData["BackbufferSize"].Set(ei::IVec2(m_backbuffer->GetWidth(), m_backbuffer->GetHeight()));
 	mappedData["NumInitialLightSamples"].Set(static_cast<std::int32_t>(m_numInitialLightSamples));
 	m_globalConstUBO->Unmap();
+}
+
+void RendererSystem::RecompileShaders(const std::string& _additionalDefines)
+{
+	m_showLightCachesShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/showlightcaches.comp", _additionalDefines);
+	m_showLightCachesShader.CreateProgram();
 }
 
 void RendererSystem::DispatchShowLightCacheShader()

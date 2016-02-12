@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <ctime>
 #include <limits>
 
@@ -120,11 +120,14 @@ void Application::RegisterScriptCommands()
 	});
 
 	// Scene change functions.
+	GlobalConfig::AddParameter("bvhType", { 0 }, "Use AABoxes (0) or OBoxes (1) for the BVH. This parameter must be set before the scene is loaded!");
 	GlobalConfig::AddParameter("sceneFilename", { std::string("") }, "Change this value to load a new scene.");
 	GlobalConfig::AddListener("sceneFilename", "LoadScene", [=](const GlobalConfig::ParameterType& p) {
 		std::string sceneFilename = p[0].As<std::string>();
 		std::cout << "Loading scene " << sceneFilename;
-		m_scene = std::make_shared<Scene>(sceneFilename);
+		const ε::Types3D BVH_IDX_TO_EITYPE[] = {ε::Types3D::BOX, ε::Types3D::OBOX};
+		ε::Types3D bvhType = BVH_IDX_TO_EITYPE[GlobalConfig::GetParameter("bvhType")[0].As<int>()];
+		m_scene = std::make_shared<Scene>(sceneFilename, bvhType);
 		m_rendererSystem->SetScene(m_scene);
 
 		InteractiveCamera* icam = dynamic_cast<InteractiveCamera*>(m_camera.get());

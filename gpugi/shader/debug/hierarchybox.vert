@@ -26,13 +26,26 @@ void main()
 	const vec3 maxs[2] = { vec3(1, 1, 1), vec3(3, 3, 3) };
 	const vec3 mins[2] = { vec3(0, 0, 0), vec3(2, 2, 2) };
 
-	vec4 node0 = texelFetch(HierachyBuffer, int(inBoxInstance * 2));
-	vec4 node1 = texelFetch(HierachyBuffer, int(inBoxInstance * 2 + 1));
-
 	vec3 worldPosition;
-	worldPosition.x = mix(node0.x, node1.x, inPosition.x);
-	worldPosition.y = mix(node0.y, node1.y, inPosition.y);
-	worldPosition.z = mix(node0.z, node1.z, inPosition.z);
+
+	#ifdef AABOX_BVH
+		vec4 node0 = texelFetch(HierachyBuffer, int(inBoxInstance * 2));
+		vec4 node1 = texelFetch(HierachyBuffer, int(inBoxInstance * 2 + 1));
+
+		worldPosition.x = mix(node0.x, node1.x, inPosition.x);
+		worldPosition.y = mix(node0.y, node1.y, inPosition.y);
+		worldPosition.z = mix(node0.z, node1.z, inPosition.z);
+	#elif defined(OBOX_BVH)
+		vec4 node0 = texelFetch(HierachyBuffer, int(inBoxInstance * 3));
+		vec4 node1 = texelFetch(HierachyBuffer, int(inBoxInstance * 3 + 1));
+		vec4 node2 = texelFetch(HierachyBuffer, int(inBoxInstance * 3 + 2));
+
+		worldPosition.x = mix(-node1.x, node1.x, inPosition.x);
+		worldPosition.y = mix(-node1.y, node1.y, inPosition.y);
+		worldPosition.z = mix(-node1.z, node1.z, inPosition.z);
+		worldPosition = rotate(worldPosition, vec4(-node2.xyz, node2.w));
+		worldPosition += node0.xyz;
+	#endif
 
 	gl_Position = vec4(worldPosition, 1.0) * ViewProjection;
 	BoxPosition = inPosition;

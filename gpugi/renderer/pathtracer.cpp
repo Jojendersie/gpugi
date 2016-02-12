@@ -2,6 +2,7 @@
 #include "renderersystem.hpp"
 #include "debugrenderer/raytracemeshinfo.hpp"
 #include "debugrenderer/hierarchyvisualization.hpp"
+#include "scene/scene.hpp"
 #include <glhelper/texture2d.hpp>
 #include <glhelper/texturecubemap.hpp>
 
@@ -13,14 +14,6 @@ Pathtracer::Pathtracer(RendererSystem& _rendererSystem) :
 	Renderer(_rendererSystem),
 	m_pathtracerShader("pathtracer")
 {
-	std::string additionalDefines;
-#ifdef SHOW_SPECIFIC_PATHLENGTH
-	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
-#endif
-
-	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer.comp", additionalDefines);
-	m_pathtracerShader.CreateProgram();
-
 	// Save shader binary.
 /*	{
 		GLenum binaryFormat;
@@ -32,6 +25,11 @@ Pathtracer::Pathtracer(RendererSystem& _rendererSystem) :
 	} */
 
 	m_rendererSystem.SetNumInitialLightSamples(128);
+}
+
+void Pathtracer::SetScene(std::shared_ptr<Scene> _scene)
+{
+	RecompileShaders(_scene->GetBvhTypeDefineString());
 }
 
 void Pathtracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
@@ -50,4 +48,15 @@ void Pathtracer::Draw()
 	GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localSizePathtracer.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localSizePathtracer.y, 1);
 
 	//m_rendererSystem.DispatchShowLightCacheShader();
+}
+
+void Pathtracer::RecompileShaders(const std::string& _additionalDefines)
+{
+	std::string additionalDefines = _additionalDefines;
+#ifdef SHOW_SPECIFIC_PATHLENGTH
+	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
+#endif
+
+	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer.comp", additionalDefines);
+	m_pathtracerShader.CreateProgram();
 }

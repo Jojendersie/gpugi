@@ -234,6 +234,27 @@
     <ClCompile Include="..\dependencies\glhelper\glhelper\texturecubemap.cpp">
       <Filter>dependencies\glhelper</Filter>
     </ClCompile>
+    <ClCompile Include="..\dependencies\epsilon\src\3dfunctions.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\epsilon\src\3dintersection.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\epsilon\src\3dtypes.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\epsilon\src\elementary.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\epsilon\src\2dfunctions.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\epsilon\src\2dintersection.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\epsilon\src\2dtypes.cpp">
+      <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">

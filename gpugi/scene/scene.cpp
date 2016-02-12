@@ -12,7 +12,7 @@
 
 using namespace bim;
 
-Scene::Scene( const std::string& _file ) :
+Scene::Scene( const std::string& _file, ε::Types3D _bvhType ) :
 	m_samplerLinearNoMipMap( gl::SamplerObject::GetSamplerObject(gl::SamplerObject::Desc(
 		gl::SamplerObject::Filter::NEAREST,
 		gl::SamplerObject::Filter::LINEAR,
@@ -24,14 +24,20 @@ Scene::Scene( const std::string& _file ) :
 	m_lightAreaSum( 0.0f )
 {
 	m_sourceDirectory = PathUtils::GetDirectory(_file);
+	m_bvhType = _bvhType;
 
 	// Load materials from dedicated material file
 	std::string matFileName = _file.substr(0, _file.find_last_of('.')) + ".json";
 	if( !Jo::Files::Utils::Exists(matFileName) )
 		LOG_ERROR("No material file '" + matFileName + "' found.");
 
+	Property::Val bvhProp;
+	switch(_bvhType) {
+		case ε::Types3D::BOX: bvhProp = Property::AABOX_BVH; break;
+		case ε::Types3D::OBOX: bvhProp = Property::OBOX_BVH; break;
+	}
 	if(!m_model.load(_file.c_str(), matFileName.c_str(),
-		Property::Val(Property::NORMAL | Property::TEXCOORD0 | Property::AABOX_BVH | Property::HIERARCHY | Property::TRIANGLE_MAT),
+		Property::Val(Property::NORMAL | Property::TEXCOORD0 | bvhProp | Property::HIERARCHY | Property::TRIANGLE_MAT),
 		Property::NDF_SGGX))
 	{
 		LOG_ERROR("Failed to load scene " + _file);
@@ -42,7 +48,7 @@ Scene::Scene( const std::string& _file ) :
 
 	// The scene is loaded now, but must be mapped to GPU
 	UploadGeometry();
-	UploadHierarchy();
+	UploadHierarchy(_bvhType);
 	for(uint i = 0; i < m_model.getNumMaterials(); ++i)
 		LoadMaterial(m_model.getMaterial(i));
 
@@ -56,6 +62,15 @@ Scene::~Scene()
 	{
 		uint64 handle = GL_RET_CALL(glGetTextureSamplerHandleARB, it.second->GetInternHandle(), m_samplerLinearNoMipMap.GetInternHandle());
 	}
+}
+
+const char* Scene::GetBvhTypeDefineString() const
+{
+	switch(m_bvhType) {
+		case ε::Types3D::BOX: return "#define AABOX_BVH\n";
+		case ε::Types3D::OBOX: return "#define OBOX_BVH\n";
+	}
+	return nullptr;
 }
 
 void Scene::UploadGeometry()
@@ -75,24 +90,45 @@ void Scene::UploadGeometry()
 	m_vertexInfoBuffer->Unmap();
 }
 
-void Scene::UploadHierarchy()
+void Scene::UploadHierarchy(ε::Types3D _bvhType)
 {
 	// Allocate
-	m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Box>) * m_sceneChunk->getNumNodes()), gl::Buffer::MAP_WRITE);
+	if(_bvhType == ε::Types3D::BOX)
+		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Box>) * m_sceneChunk->getNumNodes()), gl::Buffer::MAP_WRITE);
+	else if(_bvhType == ε::Types3D::OBOX)
+		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::OBox>) * m_sceneChunk->getNumNodes()), gl::Buffer::MAP_WRITE);
 	m_parentBuffer = std::make_shared<gl::Buffer>(uint32(4 * m_sceneChunk->getNumNodes()), gl::Buffer::MAP_WRITE);
 	// Map
-	TreeNode<ei::Box>* hierachy = reinterpret_cast<TreeNode<ei::Box>*>(m_hierarchyBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	uint32* parentBuffer = reinterpret_cast<uint32*>(m_parentBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	for(uint i = 0; i < m_sceneChunk->getNumNodes(); ++i)
 	{
-		hierachy[i].min = m_sceneChunk->getHierarchyAABoxes()[i].min;
-		hierachy[i].max = m_sceneChunk->getHierarchyAABoxes()[i].max;
-		hierachy[i].escape = m_sceneChunk->getHierarchy()[i].escape;
-		hierachy[i].firstChild = m_sceneChunk->getHierarchy()[i].firstChild;
 		parentBuffer[i] = m_sceneChunk->getHierarchy()[i].parent;
 	}
-	m_hierarchyBuffer->Unmap();
 	m_parentBuffer->Unmap();
+	if(_bvhType == ε::Types3D::BOX)
+	{
+		TreeNode<ei::Box>* hierachy = reinterpret_cast<TreeNode<ei::Box>*>(m_hierarchyBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+		for(uint i = 0; i < m_sceneChunk->getNumNodes(); ++i)
+		{
+			hierachy[i].min = m_sceneChunk->getHierarchyAABoxes()[i].min;
+			hierachy[i].max = m_sceneChunk->getHierarchyAABoxes()[i].max;
+			hierachy[i].escape = m_sceneChunk->getHierarchy()[i].escape;
+			hierachy[i].firstChild = m_sceneChunk->getHierarchy()[i].firstChild;
+		}
+		m_hierarchyBuffer->Unmap();
+	} else if(_bvhType == ε::Types3D::OBOX)
+	{
+		TreeNode<ei::OBox>* hierachy = reinterpret_cast<TreeNode<ei::OBox>*>(m_hierarchyBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+		for(uint i = 0; i < m_sceneChunk->getNumNodes(); ++i)
+		{
+			hierachy[i].center = m_sceneChunk->getHierarchyOBoxes()[i].center;
+			hierachy[i].sidesHalf = m_sceneChunk->getHierarchyOBoxes()[i].sides * 0.5f;
+			hierachy[i].rotationInv = conjugate(m_sceneChunk->getHierarchyOBoxes()[i].orientation);
+			hierachy[i].escape = m_sceneChunk->getHierarchy()[i].escape;
+			hierachy[i].firstChild = m_sceneChunk->getHierarchy()[i].firstChild;
+		}
+		m_hierarchyBuffer->Unmap();
+	}
 
 	// Upload SGGX NDFs only if available
 	if(m_sceneChunk->getNodeNDFs())

@@ -3,7 +3,7 @@
 #include "debugrenderer/raytracemeshinfo.hpp"
 #include "debugrenderer/hierarchyvisualization.hpp"
 
-#include "../scene/scene.hpp"
+#include "scene/scene.hpp"
 
 #include <glhelper/texture2d.hpp>
 #include <glhelper/buffer.hpp>
@@ -24,20 +24,6 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 	m_hierarchyImpPropagationNodeShader("hierarchyImpPropagation_Node"),
 	m_hierarchyPathTracer("hierarchyPathTracer")
 {
-	string additionalDefines;
-#ifdef SHOW_SPECIFIC_PATHLENGTH
-	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
-#endif
-
-	m_hierarchyImpAcquisitionShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/acquisition2.comp", additionalDefines);
-	m_hierarchyImpAcquisitionShader.CreateProgram();
-	m_hierarchyImpPropagationInitShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_init.comp");
-	m_hierarchyImpPropagationInitShader.CreateProgram();
-	m_hierarchyImpPropagationNodeShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_nodes.comp");
-	m_hierarchyImpPropagationNodeShader.CreateProgram();
-	m_hierarchyPathTracer.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypathtracer.comp", additionalDefines);
-	m_hierarchyPathTracer.CreateProgram();
-
 	m_hierarchyImportanceUBOInfo = m_hierarchyImpAcquisitionShader.GetUniformBufferInfo()["HierarchyImportanceUBO"];
 	m_hierarchyImportanceUBO = make_unique<gl::Buffer>(m_hierarchyImportanceUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
 	m_hierarchyImportanceUBO->BindUniformBuffer(4);
@@ -47,6 +33,7 @@ HierarchyImportance::HierarchyImportance(RendererSystem& _rendererSystem) :
 
 void HierarchyImportance::SetScene(shared_ptr<Scene> _scene)
 {
+	RecompileShaders(_scene->GetBvhTypeDefineString());
 	// Contains an importance value (float) for each node (first) and each triangle (after node values)
 	m_hierarchyImportance = make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumLeafTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::IMMUTABLE);
 	m_hierarchyImportance->ClearToZero();
@@ -180,4 +167,22 @@ void HierarchyImportance::ComputeHierarchyMaterials(shared_ptr<Scene> _scene)
 		GL_CALL(glDispatchCompute, numBlocks, 1, 1);
 		GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
 	}
+}
+
+void HierarchyImportance::RecompileShaders(const string& _additionalDefines)
+{
+	string additionalDefines;
+#ifdef SHOW_SPECIFIC_PATHLENGTH
+	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
+#endif
+	additionalDefines += _additionalDefines;
+
+	m_hierarchyImpAcquisitionShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/acquisition2.comp", additionalDefines);
+	m_hierarchyImpAcquisitionShader.CreateProgram();
+	m_hierarchyImpPropagationInitShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_init.comp");
+	m_hierarchyImpPropagationInitShader.CreateProgram();
+	m_hierarchyImpPropagationNodeShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypropagation_nodes.comp");
+	m_hierarchyImpPropagationNodeShader.CreateProgram();
+	m_hierarchyPathTracer.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/hierarchypathtracer.comp", additionalDefines);
+	m_hierarchyPathTracer.CreateProgram();
 }

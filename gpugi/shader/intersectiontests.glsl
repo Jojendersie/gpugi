@@ -1,4 +1,3 @@
-
 #define INTERSECT_EPSILON 0.0001
 
 struct Ray
@@ -7,10 +6,10 @@ struct Ray
 	vec3 Direction;
 };
 
-bool IntersectBox(Ray ray, vec3 invRayDir, vec3 aabbMin, vec3 aabbMax, out float firstHit, out float lastHit)
+bool IntersectBox(vec3 rayOrigin, vec3 invRayDir, vec3 aabbMin, vec3 aabbMax, out float firstHit, out float lastHit)
 {
-	vec3 tbot = invRayDir * (aabbMin - ray.Origin);
-	vec3 ttop = invRayDir * (aabbMax - ray.Origin);
+	vec3 tbot = invRayDir * (aabbMin - rayOrigin);
+	vec3 ttop = invRayDir * (aabbMax - rayOrigin);
 	vec3 tmin = min(ttop, tbot);
 	vec3 tmax = max(ttop, tbot);
 	vec2 t = max(tmin.xx, tmin.yz);
@@ -21,7 +20,7 @@ bool IntersectBox(Ray ray, vec3 invRayDir, vec3 aabbMin, vec3 aabbMax, out float
 }
 bool IntersectBox(Ray ray, vec3 aabbMin, vec3 aabbMax, out float firstHit, out float lastHit)
 {
-	return IntersectBox(ray, vec3(1.0) / ray.Direction, aabbMin, aabbMax, firstHit, lastHit);
+	return IntersectBox(ray.Origin, vec3(1.0) / ray.Direction, aabbMin, aabbMax, firstHit, lastHit);
 }
 
 bool IntersectVirtualEllipsoid(Ray ray, vec3 aabbMin, vec3 aabbMax, out float firstHit)
@@ -77,4 +76,51 @@ bool IntersectTriangle(Ray ray, vec3 p0, vec3 p1, vec3 p2,
 	hit   = dot( triangleNormal, e2 );
 
 	return  /*(hit < ray.tmax) && */ (hit > INTERSECT_EPSILON) && all(greaterThanEqual(barycentricCoord, vec3(0.0)));
+}
+
+// Rotate x with a quaternion q
+vec3 rotate(vec3 x, vec4 q)
+{
+	vec3 t = cross(q.xyz, x);
+	return x + 2.0 * vec3(q.w * t.x + q.y * t.z - q.z * t.y,
+						  q.w * t.y + q.z * t.x - q.x * t.z,
+						  q.w * t.z + q.x * t.y - q.y * t.x);
+}
+
+
+
+// ************************************************************************* //
+// The following functions use geometry IDs to fetch the data and test for the
+// intersection afterwards.
+// Since BVH nodes also contain the tree pointers they are fetched and
+// returned too.
+// ************************************************************************* //
+
+// Fetch and intersect a box
+bool FetchIntersectBoxNode(vec3 rayOrigin, vec3 invRayDir, int nodeIdx, out float firstHit, out float lastHit, out uint childCode, out int escape)
+{
+	vec3 bbMin, bbMax;
+	vec4 fetch = texelFetch(HierachyBuffer, nodeIdx * 2);
+	bbMin = fetch.xyz;
+	childCode = floatBitsToUint(fetch.w);
+	fetch = texelFetch(HierachyBuffer, nodeIdx * 2 + 1);
+	bbMax = fetch.xyz;
+	escape = floatBitsToInt(fetch.w);
+	return IntersectBox(rayOrigin, invRayDir, bbMin, bbMax, firstHit, lastHit);
+}
+
+// Fetch and intersect an oriented box
+bool FetchIntersectOBoxNode(vec3 rayOrigin, vec3 rayDir, int nodeIdx, out float firstHit, out float lastHit, out uint childCode, out int escape)
+{
+	vec3 bbCenter, bbSidesHalf;
+	vec4 fetch = texelFetch(HierachyBuffer, nodeIdx * 3);
+	bbCenter = fetch.xyz;
+	childCode = floatBitsToUint(fetch.w);
+	fetch = texelFetch(HierachyBuffer, nodeIdx * 3 + 1);
+	bbSidesHalf = fetch.xyz;
+	escape = floatBitsToInt(fetch.w);
+	vec4 bbOrientationInv = texelFetch(HierachyBuffer, nodeIdx * 3 + 2);
+	rayOrigin = rotate(rayOrigin - bbCenter, bbOrientationInv);
+	rayDir = rotate(rayDir, bbOrientationInv);
+	return IntersectBox(rayOrigin, vec3(1.0)/rayDir, -bbSidesHalf, bbSidesHalf, firstHit, lastHit);
 }

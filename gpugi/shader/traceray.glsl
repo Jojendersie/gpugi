@@ -56,18 +56,18 @@
 	do {
 		if(!nextIsLeafNode)
 		{
-			// Load entire node.
-			vec4 currentNode0 = texelFetch(HierachyBuffer, currentNodeIndex * 2);
-			vec4 currentNode1 = texelFetch(HierachyBuffer, currentNodeIndex * 2 + 1);
-
 			#ifdef TRACERAY_DEBUG_VARS
 				++numBoxesVisited;
 			#endif
 
 			float newHit, exitDist;
-			//if(IntersectVirtualEllipsoid(ray, currentNode0.xyz, currentNode1.xyz, newHit) && newHit <= rayLength)
-			if(IntersectBox(ray, invRayDir, currentNode0.xyz, currentNode1.xyz, newHit, exitDist)
-				&& newHit <= rayLength)
+			uint childCode;
+			int escape;
+			#ifdef AABOX_BVH
+			if(FetchIntersectBoxNode(ray.Origin, invRayDir, currentNodeIndex, newHit, exitDist, childCode, escape) && newHit <= rayLength)
+			#elif defined(OBOX_BVH)
+			if(FetchIntersectOBoxNode(ray.Origin, ray.Direction, currentNodeIndex, newHit, exitDist, childCode, escape) && newHit <= rayLength)
+			#endif
 			{
 				#if defined(HIT_INDEX_OUTPUT) && !defined(ANY_HIT)
 					lastNodeIndex = currentNodeIndex;
@@ -77,26 +77,29 @@
 					float importance = HierarchyImportance[currentNodeIndex];
 					#ifndef ANY_HIT
 						lastNodeImportance = importance;
-						lastNodeSizeSq = dot(currentNode0.xyz - currentNode1.xyz, currentNode0.xyz - currentNode1.xyz);
+						#ifdef AABOX_BVH
+							lastNodeSizeSq = dot(bbMax-bbMin, bbMax-bbMin);
+						#elif defined(OBOX_BVH)
+							lastNodeSizeSq = dot(bbSides, bbSides);
+						#endif
 					#endif
 					//if(importance < _importanceThreshold)
 					if(importance < _importanceThreshold)
-					//if((floatBitsToUint(currentNode0.w) & 0x80000000u) == 0x80000000u)
+					//if((childCode & 0x80000000u) == 0x80000000u)
 					{
 					#ifdef ANY_HIT
 						if(exitDist <= rayLength) return true;
-						currentNodeIndex = floatBitsToInt(currentNode1.w);
+						currentNodeIndex = escape;
 					#else
 						_nodeImportance = importance;
 						_nodeSizeSq = lastNodeSizeSq;
 						_hitIndex.x = currentNodeIndex;
 						rayLength = (newHit + exitDist) * 0.5;
-						currentNodeIndex = floatBitsToInt(currentNode1.w);
+						currentNodeIndex = escape;
 						_hitIndex.y = 0xFFFFFFFF;
 					#endif
 					} else {
 				#endif
-				uint childCode = floatBitsToUint(currentNode0.w);
 				// Most significant bit tells us if this is a leaf.
 				currentNodeIndex = int(childCode & uint(0x7FFFFFFF));
 				nextIsLeafNode = currentNodeIndex != childCode;
@@ -104,7 +107,7 @@
 				if(nextIsLeafNode)
 				{
 					currentLeafIndex = int(TRIANGLES_PER_LEAF * currentNodeIndex);
-					currentNodeIndex = floatBitsToInt(currentNode1.w);
+					currentNodeIndex = escape;
 				}
 				#ifdef TRACERAY_IMPORTANCE_BREAK
 					}
@@ -113,7 +116,7 @@
 			// No hit, go to escape pointer and repeat.
 			else
 			{
-				currentNodeIndex = floatBitsToInt(currentNode1.w);
+				currentNodeIndex = escape;
 			}
 		}	
 		

@@ -67,5 +67,7 @@ private:
 	std::shared_ptr<gl::Buffer> m_hierarchyMaterialBuffer;
 	std::unique_ptr<gl::TextureBufferView> m_hierarchyMaterialBufferView;
 	void ComputeHierarchyMaterials(std::shared_ptr<Scene> _scene);
+
+	void RecompileShaders(const std::string& _additionalDefines);
 };
 

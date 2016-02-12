@@ -28,6 +28,8 @@ public:
 	void Draw() override;
 
 private:
+	void RecompileShaders(const std::string& _additionalDefines);
+
 	struct Instance
 	{
 		std::uint32_t nodeIndex;
@@ -45,6 +47,7 @@ private:
 	std::unique_ptr<gl::Buffer> m_instanceBuffer;
 
 	gl::ShaderObject m_shader;
+	bool m_showImportance;
 
 	/// Number of instances that come before level i is given by m_hierachyLevelOffset[i].
 	/// The last element is the total number of inner nodes to make computing the number of elements per level easier.

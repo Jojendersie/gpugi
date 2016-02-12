@@ -6,7 +6,6 @@ layout(binding = 8, shared) uniform DebugSettings
 {
 	int MinDepth;
 	int MaxDepth; // excluding
-	int IterationCount;
 };
 
 

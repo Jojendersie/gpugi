@@ -149,6 +149,8 @@ private:
 
 	void UpdateGlobalConstUBO();
 
+	void RecompileShaders(const std::string& _additionalDefines);
+
 
 	/// Defines default texture buffer binding assignment.
 	enum class TextureBufferBindings

@@ -19,22 +19,9 @@ HierarchyVisualization::HierarchyVisualization(Renderer& _parentRenderer) :
 {
 	// For HierarchyImportance renderer use importance for coloring.
 	HierarchyImportance* hierarchyImportance = dynamic_cast<HierarchyImportance*>(&_parentRenderer);
-	if (hierarchyImportance)
-	{
+	m_showImportance = hierarchyImportance != nullptr;
+	if(hierarchyImportance)
 		hierarchyImportance->UpdateHierarchyNodeImportance();
-		m_shader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/debug/hierarchybox.vert", "#define SHOW_NODE_IMPORTANCE\n");
-		m_shader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/debug/hierarchybox_importance.frag");
-	}
-	else
-	{
-		m_shader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/debug/hierarchybox.vert");
-		m_shader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/debug/hierarchybox.frag");
-	}
-	m_shader.CreateProgram();
-
-	m_settingsUBO = std::make_unique<gl::Buffer>(m_shader.GetUniformBufferInfo()["DebugSettings"].bufferDataSizeByte, gl::Buffer::UsageFlag::MAP_WRITE);
-	m_settingsUBO->BindUniformBuffer(8);
-
 
 	ei::Vec3 boxVertices[] = {
 		ei::Vec3(0.0f, 1.0f, 0.0f),
@@ -100,6 +87,8 @@ HierarchyVisualization::~HierarchyVisualization()
 
 void HierarchyVisualization::SetScene(std::shared_ptr<Scene> _scene)
 {
+	RecompileShaders(_scene->GetBvhTypeDefineString());
+
 	// Create list of instances.
 	std::unique_ptr<Instance[]> instances(new Instance[_scene->GetNumInnerNodes()]);
 	for (unsigned int i = 0; i < _scene->GetNumInnerNodes(); ++i)
@@ -163,7 +152,7 @@ void HierarchyVisualization::Draw()
 		return;
 
 	gl::MappedUBOView memoryView(m_shader.GetUniformBufferInfo()["DebugSettings"], m_settingsUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::INVALIDATE_BUFFER));
-	memoryView["IterationCount"].Set(static_cast<std::int32_t>(m_parentRenderer.GetRendererSystem().GetIterationCount()));
+//	memoryView["IterationCount"].Set(static_cast<std::int32_t>(m_parentRenderer.GetRendererSystem().GetIterationCount()));
 	memoryView["MinDepth"].Set(static_cast<std::int32_t>(rangeStart));
 	memoryView["MaxDepth"].Set(static_cast<std::int32_t>(rangeEnd));
 	m_settingsUBO->Unmap();
@@ -190,4 +179,22 @@ void HierarchyVisualization::Draw()
 			m_hierachyLevelOffset[rangeEnd] - m_hierachyLevelOffset[rangeStart], m_hierachyLevelOffset[rangeStart]);
 	}
 		
+}
+
+void HierarchyVisualization::RecompileShaders(const std::string& _additionalDefines)
+{
+	if(m_showImportance)
+	{
+		m_shader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/debug/hierarchybox.vert", "#define SHOW_NODE_IMPORTANCE\n" + _additionalDefines);
+		m_shader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/debug/hierarchybox_importance.frag", _additionalDefines);
+	}
+	else
+	{
+		m_shader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/debug/hierarchybox.vert", _additionalDefines);
+		m_shader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/debug/hierarchybox.frag", _additionalDefines);
+	}
+	m_shader.CreateProgram();
+
+	m_settingsUBO = std::make_unique<gl::Buffer>(m_shader.GetUniformBufferInfo()["DebugSettings"].bufferDataSizeByte, gl::Buffer::UsageFlag::MAP_WRITE);
+	m_settingsUBO->BindUniformBuffer(8);
 }
