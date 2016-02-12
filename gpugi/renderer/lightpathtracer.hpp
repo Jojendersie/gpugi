@@ -18,11 +18,14 @@ public:
 	
 	std::string GetName() const override  { return "LPT"; }
 
+	void SetScene(std::shared_ptr<Scene> _scene) override;
 	void SetScreenSize(const gl::Texture2D& _newBackbuffer) override;
 
 	void Draw() override;
 
 private:
+	void RecompileShaders(const std::string& _additionalDefines);
+
 	gl::ShaderObject m_lighttraceShader;
 
 	std::unique_ptr<gl::Texture2D> m_lockTexture;

@@ -77,10 +77,17 @@ void main()
 	
 	Ray ray;
 	ray.Origin = lightSamplePos_Norm0.xyz;
-	vec3 normal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
-	vec3 U, V;
-	CreateONB(normal, U, V);
-	ray.Direction = SampleHemisphereCosine(Random2(randomSeed), U, V, normal);
+	// Omnidirectional light?
+	if(lightIntensity_Norm1.w > 1.0)
+	{
+		ray.Direction = SampleDirection(Random2(randomSeed));
+		pathThroughput *= 4.0; // The above integration is for Lambertian emitters, need to correct this
+	} else {
+		vec3 normal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
+		vec3 U, V;
+		CreateONB(normal, U, V);
+		ray.Direction = SampleHemisphereCosine(Random2(randomSeed), U, V, normal);
+	}
 
 	for(int i=0; i<MAX_PATHLENGTH; ++i)
 	{

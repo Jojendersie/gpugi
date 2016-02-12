@@ -45,6 +45,15 @@ vec2 Random2(inout uint seed)
 	return vec2(Random(seed), Random(seed));
 }
 
+// Sample a uniform direction
+vec3 SampleDirection(vec2 randomSample)
+{
+	float cosTheta = randomSample.x * 2.0f - 1.0f;
+	float sinTheta = sqrt((1.0f - cosTheta) * (1.0f + cosTheta));
+	float phi = randomSample.y * PI_2;
+	return vec3(sinTheta * sin(phi), sinTheta * cos(phi), cosTheta);
+}
+
 // Sample hemisphere with cosine density.
 //    randomSample is a random number between 0-1
 vec3 SampleHemisphereCosine(vec2 randomSample, vec3 U, vec3 V, vec3 W)
