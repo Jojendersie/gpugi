@@ -18,6 +18,7 @@ public:
 	
 	std::string GetName() const override  { return "BPT"; }
 
+	void SetScene(std::shared_ptr<Scene> _scene) override;
 	void SetScreenSize(const gl::Texture2D& _newBackbuffer) override;
 
 	void Draw() override;
@@ -26,6 +27,8 @@ public:
 private:
 	/// Estimates light cache capacity and creates a new cache.
 	void CreateLightCacheWithCapacityEstimate();
+
+	void RecompileShaders(const std::string& _additionalDefines);
 
 	gl::ShaderObject m_pathtraceShader;
 	gl::ShaderObject m_lighttraceShader;

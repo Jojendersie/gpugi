@@ -1,9 +1,10 @@
 #include "bidirectionalpathtracer.hpp"
 #include "renderersystem.hpp"
+#include "scene/scene.hpp"
 #include <glhelper/texture2d.hpp>
 #include <glhelper/buffer.hpp>
-#include "../utilities/flagoperators.hpp"
-#include "../utilities/logger.hpp"
+#include "utilities/flagoperators.hpp"
+#include "utilities/logger.hpp"
 
 #include <iostream>
 #include <algorithm>
@@ -19,48 +20,18 @@ BidirectionalPathtracer::BidirectionalPathtracer(RendererSystem& _rendererSystem
 	m_needToDetermineNeededLightCacheCapacity(false),
 	m_numRaysPerLightSample(0)
 {
-	std::string additionalDefines;
-#ifdef SHOW_SPECIFIC_PATHLENGTH
-	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
-#endif
-
-	m_pathtraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer_bidir.comp", additionalDefines);
-	m_pathtraceShader.CreateProgram();
-	additionalDefines += "#define SAVE_LIGHT_CACHE\n";
-	m_lighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp", additionalDefines);
-	m_lighttraceShader.CreateProgram();
-	m_warmupLighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp", additionalDefines + "#define SAVE_LIGHT_CACHE_WARMUP\n");
-	m_warmupLighttraceShader.CreateProgram();
-
-	// Assure that LightCacheCount/LightCache SSBOs are defined the same in all shaders
-#ifndef NDEBUG
-	auto pathtrace_LightCacheCount = m_lighttraceShader.GetShaderStorageBufferInfo().find("LightCacheCount")->second;
-	auto lighttrace_LightCacheCount = m_lighttraceShader.GetShaderStorageBufferInfo().find("LightCacheCount")->second;
-	auto warmupLighttrace_LightCacheCount = m_warmupLighttraceShader.GetShaderStorageBufferInfo().find("LightCacheCount")->second;
-
-	Assert(pathtrace_LightCacheCount.bufferBinding == lighttrace_LightCacheCount.bufferBinding &&
-		pathtrace_LightCacheCount.bufferBinding == warmupLighttrace_LightCacheCount.bufferBinding &&
-		pathtrace_LightCacheCount.bufferDataSizeByte == lighttrace_LightCacheCount.bufferDataSizeByte &&
-		pathtrace_LightCacheCount.bufferDataSizeByte == warmupLighttrace_LightCacheCount.bufferDataSizeByte, "Different definitions of LightCacheCount SSBO within shaders!");
-
-	auto pathtrace_LightCache = m_lighttraceShader.GetShaderStorageBufferInfo().find("LightCache")->second;
-	auto lighttrace_LightCache = m_lighttraceShader.GetShaderStorageBufferInfo().find("LightCache")->second;
-	auto warmupLighttrace_LightCache = m_warmupLighttraceShader.GetShaderStorageBufferInfo().find("LightCache")->second;
-
-	Assert(pathtrace_LightCache.bufferBinding == lighttrace_LightCache.bufferBinding &&
-		pathtrace_LightCache.bufferBinding == warmupLighttrace_LightCache.bufferBinding &&
-		pathtrace_LightCache.bufferDataSizeByte == lighttrace_LightCache.bufferDataSizeByte &&
-		pathtrace_LightCache.bufferDataSizeByte == warmupLighttrace_LightCache.bufferDataSizeByte, "Different definitions of LightCache SSBO within shaders!");
-#endif
-
-
-	m_lightpathtraceUBO = std::make_unique<gl::Buffer>(m_lighttraceShader.GetUniformBufferInfo()["LightPathTrace"].bufferDataSizeByte, gl::Buffer::UsageFlag::MAP_WRITE);
-	m_lightpathtraceUBO->BindUniformBuffer(4);
-
-	m_lightCacheFillCounter = std::make_unique<gl::Buffer>(4, gl::Buffer::MAP_READ);
-	m_warmupLighttraceShader.BindSSBO(*m_lightCacheFillCounter, "LightCacheCount");
-
 	m_rendererSystem.SetNumInitialLightSamples(128);
+}
+
+void BidirectionalPathtracer::SetScene(std::shared_ptr<Scene> _scene)
+{
+	RecompileShaders(_scene->GetBvhTypeDefineString());
+
+	gl::MappedUBOView mappedData(m_lighttraceShader.GetUniformBufferInfo()["LightPathTrace"], m_lightpathtraceUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+	mappedData["NumRaysPerLightSample"].Set(static_cast<std::int32_t>(m_numRaysPerLightSample));
+	mappedData["LightRayPixelWeight"].Set(ei::PI * 2.0f / m_numRaysPerLightSample);
+	mappedData["LightCacheCapacity"].Set(std::numeric_limits<std::int32_t>().max()); // Not known yet.
+	m_lightpathtraceUBO->Unmap();
 }
 
 void BidirectionalPathtracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
@@ -77,11 +48,14 @@ void BidirectionalPathtracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 	m_numRaysPerLightSample = std::max(m_localSizeLightPathtracer, (numPixels / m_rendererSystem.GetNumInitialLightSamples() / m_localSizeLightPathtracer) * m_localSizeLightPathtracer);
 
 	// Set constants ...
-	gl::MappedUBOView mappedData(m_lighttraceShader.GetUniformBufferInfo()["LightPathTrace"], m_lightpathtraceUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
-	mappedData["NumRaysPerLightSample"].Set(static_cast<std::int32_t>(m_numRaysPerLightSample));
-	mappedData["LightRayPixelWeight"].Set(ei::PI * 2.0f / m_numRaysPerLightSample);
-	mappedData["LightCacheCapacity"].Set(std::numeric_limits<std::int32_t>().max()); // Not known yet.
-	m_lightpathtraceUBO->Unmap();
+	if(m_lightpathtraceUBO)
+	{
+		gl::MappedUBOView mappedData(m_lighttraceShader.GetUniformBufferInfo()["LightPathTrace"], m_lightpathtraceUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+		mappedData["NumRaysPerLightSample"].Set(static_cast<std::int32_t>(m_numRaysPerLightSample));
+		mappedData["LightRayPixelWeight"].Set(ei::PI * 2.0f / m_numRaysPerLightSample);
+		mappedData["LightCacheCapacity"].Set(std::numeric_limits<std::int32_t>().max()); // Not known yet.
+		m_lightpathtraceUBO->Unmap();
+	}
 
 	m_needToDetermineNeededLightCacheCapacity = true;
 }
@@ -148,6 +122,49 @@ void BidirectionalPathtracer::CreateLightCacheWithCapacityEstimate()
 	m_lightpathtraceUBO->Unmap();
 	m_lightCache = std::make_unique<gl::Buffer>(lightCacheSizeInBytes, gl::Buffer::IMMUTABLE);
 	m_lighttraceShader.BindSSBO(*m_lightCache, "LightCache");
+}
+
+void BidirectionalPathtracer::RecompileShaders(const std::string& _additionalDefines)
+{
+	std::string additionalDefines = _additionalDefines;
+#ifdef SHOW_SPECIFIC_PATHLENGTH
+	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
+#endif
+
+	m_pathtraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer_bidir.comp", additionalDefines);
+	m_pathtraceShader.CreateProgram();
+	additionalDefines += "#define SAVE_LIGHT_CACHE\n";
+	m_lighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp", additionalDefines);
+	m_lighttraceShader.CreateProgram();
+	m_warmupLighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp", additionalDefines + "#define SAVE_LIGHT_CACHE_WARMUP\n");
+	m_warmupLighttraceShader.CreateProgram();
+
+	// Assure that LightCacheCount/LightCache SSBOs are defined the same in all shaders
+#ifndef NDEBUG
+	auto pathtrace_LightCacheCount = m_lighttraceShader.GetShaderStorageBufferInfo().find("LightCacheCount")->second;
+	auto lighttrace_LightCacheCount = m_lighttraceShader.GetShaderStorageBufferInfo().find("LightCacheCount")->second;
+	auto warmupLighttrace_LightCacheCount = m_warmupLighttraceShader.GetShaderStorageBufferInfo().find("LightCacheCount")->second;
+
+	Assert(pathtrace_LightCacheCount.bufferBinding == lighttrace_LightCacheCount.bufferBinding &&
+		pathtrace_LightCacheCount.bufferBinding == warmupLighttrace_LightCacheCount.bufferBinding &&
+		pathtrace_LightCacheCount.bufferDataSizeByte == lighttrace_LightCacheCount.bufferDataSizeByte &&
+		pathtrace_LightCacheCount.bufferDataSizeByte == warmupLighttrace_LightCacheCount.bufferDataSizeByte, "Different definitions of LightCacheCount SSBO within shaders!");
+
+	auto pathtrace_LightCache = m_lighttraceShader.GetShaderStorageBufferInfo().find("LightCache")->second;
+	auto lighttrace_LightCache = m_lighttraceShader.GetShaderStorageBufferInfo().find("LightCache")->second;
+	auto warmupLighttrace_LightCache = m_warmupLighttraceShader.GetShaderStorageBufferInfo().find("LightCache")->second;
+
+	Assert(pathtrace_LightCache.bufferBinding == lighttrace_LightCache.bufferBinding &&
+		pathtrace_LightCache.bufferBinding == warmupLighttrace_LightCache.bufferBinding &&
+		pathtrace_LightCache.bufferDataSizeByte == lighttrace_LightCache.bufferDataSizeByte &&
+		pathtrace_LightCache.bufferDataSizeByte == warmupLighttrace_LightCache.bufferDataSizeByte, "Different definitions of LightCache SSBO within shaders!");
+#endif
+
+	m_lightpathtraceUBO = std::make_unique<gl::Buffer>(m_lighttraceShader.GetUniformBufferInfo()["LightPathTrace"].bufferDataSizeByte, gl::Buffer::UsageFlag::MAP_WRITE);
+	m_lightpathtraceUBO->BindUniformBuffer(4);
+
+	m_lightCacheFillCounter = std::make_unique<gl::Buffer>(4, gl::Buffer::MAP_READ);
+	m_warmupLighttraceShader.BindSSBO(*m_lightCacheFillCounter, "LightCacheCount");
 }
 
 void BidirectionalPathtracer::Draw()

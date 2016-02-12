@@ -1,9 +1,5 @@
 #version 440
 
-#ifdef SAVE_LIGHT_CACHE
-	#define SAMPLEBSDF_OUTPUT_PDF
-#endif
-
 #define TRINORMAL_OUTPUT
 #include "stdheader.glsl"
 
@@ -183,12 +179,8 @@ void main()
 					float fluxToIrradiance = AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal) /
 											(cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
 
-				#ifdef SAMPLEBSDF_OUTPUT_PDF
 					float pdf;
 					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal, pdf);
-				#else
-					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal);
-				#endif
 
 				#ifdef SAVE_LIGHT_CACHE
 					float connectionLightPathToEyePath = MISHeuristic(1.0); // Next event estimate!
@@ -217,12 +209,8 @@ void main()
 
 		// Continue ray.
 		vec3 throughput = vec3(1.0);
-	#ifdef SAMPLEBSDF_OUTPUT_PDF
 		float samplePDF;
 		vec3 newDirection = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, shadingNormal, throughput, samplePDF);
-	#else
-		vec3 newDirection = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, shadingNormal, throughput);
-	#endif
 		throughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
 		pathThroughput *= throughput;
 

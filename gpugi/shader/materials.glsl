@@ -197,11 +197,7 @@ vec3 SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint se
 #ifdef SAMPLING_DECISION_OUTPUT
 		, out bool isReflectedDiffuse
 #endif
-#ifdef SAMPLEBSDF_OUTPUT_PDF
 		, out float pdf) {
-#else 
-	) { float pdf; // Hopefully removed by optimizer if not needed
-#endif
 #ifdef SAMPLING_DECISION_OUTPUT
 	return __SampleBSDF(incidentDirection, materialData, seed, N, pathThroughput, false, pdf, isReflectedDiffuse);
 #else
@@ -213,11 +209,7 @@ vec3 SampleAdjointBSDF(vec3 incidentDirection, MaterialData materialData, inout 
 #ifdef SAMPLING_DECISION_OUTPUT
 		, out bool isReflectedDiffuse
 #endif
-#ifdef SAMPLEBSDF_OUTPUT_PDF
 		, out float pdf) {
-#else 
-	) { float pdf; // Hopefully removed by optimizer if not needed
-#endif
 #ifdef SAMPLING_DECISION_OUTPUT
 	return __SampleBSDF(incidentDirection, materialData, seed, N, pathThroughput, true, pdf, isReflectedDiffuse);
 #else
@@ -289,23 +281,15 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materia
 	return bsdf;
 }
 
-vec3 BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materialData, vec3 N
-#ifdef SAMPLEBSDF_OUTPUT_PDF
-		, out float pdf) {
-#else 
-	) { float pdf; // Hopefully removed by optimizer if not needed
-#endif
+vec3 BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materialData, vec3 N, out float pdf)
+{
 	return __BSDF(incidentDirection, excidentDirection, materialData, N, pdf, false);
 }
 
 // Adjoint in the sense of Veach PhD Thesis 3.7.6
 // Use this for tracing light particles, use BSDF for tracing camera paths.
-vec3 AdjointBSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materialData, vec3 N
-#ifdef SAMPLEBSDF_OUTPUT_PDF
-		, out float pdf) {
-#else 
-	) { float pdf; // Hopefully removed by optimizer if not needed
-#endif
+vec3 AdjointBSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materialData, vec3 N, out float pdf)
+{
 	return __BSDF(-excidentDirection, -incidentDirection, materialData, N, pdf, true);
 }
 

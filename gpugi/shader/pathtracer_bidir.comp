@@ -1,7 +1,5 @@
 #version 440
 
-#define SAMPLEBSDF_OUTPUT_PDF
-
 #include "stdheader.glsl"
 #include "lightcache.glsl"
 
@@ -83,12 +81,16 @@ void main()
 
 					int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
 					vec3 lightSampleFlux = LightCacheEntries[lightCacheSampleIndex].Flux;
-					vec3 lightSampleHitNormal = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1);
-					
+					vec3 lightSampleHitNormal = vec3(0.0);
 					float connectionLightPathToEyePath;
+					float cosLight = 0.0;
 					vec3 lightSampleIntensity;
 
-					const float cosLight = saturate(-dot(lightRay.Direction, lightSampleHitNormal));
+					if(LightCacheEntries[lightCacheSampleIndex].Normal1 <= 1.0)
+					{
+						lightSampleHitNormal = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1);
+						cosLight = saturate(-dot(lightRay.Direction, lightSampleHitNormal));
+					}
 
 					// Triangle material
 					if(lightSampleMaterialIndex != -1)
@@ -113,7 +115,10 @@ void main()
 					else
 					{
 						connectionLightPathToEyePath = MISHeuristic(1.0); // Only possible via THIS next event estimation -> Fixed propability of 1.
-						lightSampleIntensity = lightSampleFlux * (cosLight * PI_2);// hemispherical light source
+						if(LightCacheEntries[lightCacheSampleIndex].Normal1 <= 1.0)
+							lightSampleIntensity = lightSampleFlux * (cosLight * PI_2);// hemispherical light source
+						else
+							lightSampleIntensity = lightSampleFlux * (PI_2);// omnidirectional light source
 					}
 
 					float cosCamera = saturate(dot(lightRay.Direction, hitNormal));

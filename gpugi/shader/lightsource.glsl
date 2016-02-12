@@ -31,7 +31,8 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON * 2))
 			#endif
 			{
-				vec3 bsdf = BSDF(_viewDir, -lightRay.Direction, _materialData, _normal);
+				float pdf;
+				vec3 bsdf = BSDF(_viewDir, -lightRay.Direction, _materialData, _normal, pdf);
 				vec3 irradiance = (surfaceCos / lightDistSq) * lightIntensity_Norm1.xyz;
 				return irradiance * bsdf;
 			}
@@ -52,9 +53,10 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON * 2))
 			#endif
 			{
+				float pdf;
 				// Hemispherical lambert emitter. First compensate the cosine factor
 				vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border
-				vec3 bsdf = BSDF(_viewDir, -lightRay.Direction, _materialData, _normal);
+				vec3 bsdf = BSDF(_viewDir, -lightRay.Direction, _materialData, _normal, pdf);
 
 				vec3 irradiance = (surfaceCos / lightDistSq) * lightSampleIntensity;
 				return irradiance * bsdf;

@@ -100,7 +100,8 @@ void main()
 	#endif
 
 		vec3 throughput = vec3(1.0);
-		ray.Direction = SampleBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput);
+		float pdf;
+		ray.Direction = SampleBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput, pdf);
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 	/*#ifdef RUSSIAN_ROULETTE
 		float continuationPropability = saturate(GetLuminance(throughput));
