@@ -1,7 +1,6 @@
 #version 440
 
 #include "stdheader.glsl"
-#include "lightsource.glsl"
 
 #ifdef SAVE_PIXEL_CACHE
 	#include "pixelcache.glsl"
@@ -86,12 +85,7 @@ void main()
 			#endif
 
 				int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
-				vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2);
-				vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, sampleIndex * 2 + 1);
-				vec3 lightNormal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
-				
-				vec3 radiance = EstimateDirectLight(ray.Origin, hitNormal, lightSamplePos_Norm0.xyz, lightNormal,
-									lightIntensity_Norm1.xyz, ray.Direction, materialData);
+				vec3 radiance = EstimateDirectLight(ray.Origin, hitNormal, sampleIndex, ray.Direction, materialData);
 				color += radiance * pathThroughput * (lightSampleWeight / (pdiffuseAvg + DIVISOR_EPSILON));
 			}
 		#endif
