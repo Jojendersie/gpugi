@@ -53,7 +53,7 @@ void main()
 		// is more probable to find the correct light.
 		if( !didNextEventEstimation )
 			color += pathThroughput * materialData.Emissivity;
-		
+
 		// Connect to random light samples ("Next Event Estimation")
 		didNextEventEstimation = materialData.Reflectiveness.w < 500.0;
 		if( didNextEventEstimation )

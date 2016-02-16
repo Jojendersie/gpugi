@@ -1,5 +1,6 @@
 #version 450 core
 
+#define HIT_INDEX_OUTPUT
 #include "../stdheader.glsl"
 
 layout(binding = 8, shared) uniform DebugSettings
@@ -25,8 +26,9 @@ void main()
 	// Trace ray.
 	Triangle triangle;
 	vec3 barycentricCoord;
+	ivec2 hitIndex;
 	float rayHit = RAY_MAX;
-	TraceRay(ray, rayHit, barycentricCoord, triangle);
+	TraceRay(ray, rayHit, hitIndex, barycentricCoord, triangle);
 	if(rayHit == RAY_MAX)
 	{
 		FragColor = vec4(0.0, 0.0, 0.0, 1.0);
@@ -49,8 +51,10 @@ void main()
 			FragColor.rgb = materialData.Opacity;
 		else if(DebugType == 3)
 			FragColor.rgb = materialData.Reflectiveness.xyz;
+		else if(DebugType == 4)
+			FragColor.rgb = vec3((float(hitIndex.y & 0xff) / 255.0).xx, float((hitIndex.y / 256) & 0xff) / 255.0);
 
 
-		FragColor.a = 1.0;	
+		FragColor.a = 1.0;
 	}
 }

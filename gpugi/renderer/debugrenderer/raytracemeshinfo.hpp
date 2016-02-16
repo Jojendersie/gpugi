@@ -18,11 +18,13 @@ public:
 	RaytraceMeshInfo(Renderer& _parentRenderer);
 	~RaytraceMeshInfo();
 
+	void SetScene(std::shared_ptr<Scene> _scene) override;
 	static const std::string Name;
 	std::string GetName() const override { return Name; }
 	void Draw() override;
 
 private:
+	void RecompileShaders(const std::string& _additionalDefines);
 	std::unique_ptr<gl::Buffer> m_settingsUBO;
 	std::unique_ptr<gl::ScreenAlignedTriangle> m_screenTri;
 	gl::ShaderObject m_infoShader;
