@@ -40,11 +40,11 @@ public:
 	/// Internal ssbo binding points
 	enum class Binding {
 		HIERARCHY_IMPORTANCE = 0,	///< The hierarchy importance buffer
+		SUBTREE_IMPORTANCE = 10,	///< Second importance buffer to propagate different values during importance update
 		PARENT_POINTER = 6,			///< Additional hierarchy information (parent pointers per node)
 		SGGX_NDF = 7,				///< An NDF for each node stored in SGGX basis
+		HIERARCHY_MATERIAL = 8,		///< Averaged material parameters from scene
 	};
-	static const uint s_hierarchyImportanceBinding = 10;
-	static const uint s_subtreeImportanceBinding = 11;
 
 private:
 	gl::ShaderObject m_hierarchyImpAcquisitionShader;

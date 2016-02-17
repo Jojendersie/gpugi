@@ -80,8 +80,8 @@ void main()
 			// Sample material
 			materialData = SampleMaterialData(triangle.w, hitTexcoord);
 		}
-		
-		float nextPathImportanceThreshold = pathImportanceThreshold * 8.0;
+
+		float nextPathImportanceThreshold = pathImportanceThreshold * 1.0;
 		float epsilon = RAY_HIT_EPSILON;
 		// Skip out of the node if we would only get a self intersection
 		if(nextPathImportanceThreshold >= importance)
@@ -98,7 +98,7 @@ void main()
 		// is more probable to find the correct light.
 		if( !didNextEventEstimation )
 			color += pathThroughput * materialData.Emissivity;
-		
+
 		// Connect to random light samples ("Next Event Estimation")
 		didNextEventEstimation = materialData.Reflectiveness.w < 500.0;
 		if( didNextEventEstimation )

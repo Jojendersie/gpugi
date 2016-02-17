@@ -45,7 +45,7 @@
 		_hitIndex.y = 0xFFFFFFFF;
 		int lastNodeIndex = 0;
 	#endif
-	#if defined(TRACERAY_IMPORTANCE_BREAK) && !defined(ANY_HIT) 
+	#if defined(TRACERAY_IMPORTANCE_BREAK) && !defined(ANY_HIT)
 		float lastNodeImportance = 0.0;
 		float lastNodeSizeSq = 0.0;
 	#endif
@@ -75,6 +75,7 @@
 				#ifdef TRACERAY_IMPORTANCE_BREAK
 					//float importance = texelFetch(HierarchyImportanceBuffer, currentNodeIndex).x;
 					float importance = HierarchyImportance[currentNodeIndex];
+					//float importance = nodeSizeSq * 1000000.0;
 					#ifndef ANY_HIT
 						lastNodeImportance = importance;
 						lastNodeSizeSq = nodeSizeSq;
@@ -114,8 +115,8 @@
 			{
 				currentNodeIndex = escape;
 			}
-		}	
-		
+		}
+
 		// If it is a leaf ...
 		// The nextIsLeafNode can be changed since 'if(!nextIsLeafNode)', so do no 'else' here
 		if(nextIsLeafNode)
@@ -125,7 +126,7 @@
 			if(triangle.x == triangle.y) // Last check if this is condition helps perf: 05.11 (testscene.txt), GK104
 			{
 				nextIsLeafNode = false;
-			} else {		
+			} else {
 				#ifdef TRACERAY_DEBUG_VARS
 					++numTrianglesVisited;
 				#endif
@@ -169,7 +170,7 @@
 				nextIsLeafNode = (currentLeafIndex % TRIANGLES_PER_LEAF) != 0;
 			}
 		}
-		
+
 	} while(currentNodeIndex != 0 || nextIsLeafNode);
 
 #ifdef ANY_HIT

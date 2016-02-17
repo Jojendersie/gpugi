@@ -60,7 +60,7 @@ layout(binding=5) uniform samplerBuffer InitialLightSampleBuffer;
 #ifdef TRACERAY_IMPORTANCE_BREAK
 // Importance buffer must be bound in normal scene setup for traceray.
 // Including it in traceray causes the buffer to appear twice.
-layout(std430, binding = 10) restrict readonly buffer HierarchyImportanceBuffer
+layout(std430, binding = 0) restrict readonly buffer HierarchyImportanceBuffer
 {
 	float HierarchyImportance[];
 };
@@ -85,10 +85,10 @@ void GetTriangleHitInfo(Triangle triangle, vec3 barycentricCoord, out vec3 norma
 	vec4 vdata0 = texelFetch(VertexInfoBuffer, triangle.x);
 	vec4 vdata1 = texelFetch(VertexInfoBuffer, triangle.y);
 	vec4 vdata2 = texelFetch(VertexInfoBuffer, triangle.z);
-	normal = normalize(UnpackNormal(vdata0.xy) * barycentricCoord.x + 
+	normal = normalize(UnpackNormal(vdata0.xy) * barycentricCoord.x +
 					   UnpackNormal(vdata1.xy) * barycentricCoord.y +
 					   UnpackNormal(vdata2.xy) * barycentricCoord.z);
-	texcoord = vdata0.zw * barycentricCoord.x + 
+	texcoord = vdata0.zw * barycentricCoord.x +
 				vdata1.zw * barycentricCoord.y +
 				vdata2.zw * barycentricCoord.z;
 }

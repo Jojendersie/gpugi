@@ -9,7 +9,7 @@ struct HierarchyMaterial
 	uvec2 Fresnel1;
 };
 
-layout(std430, binding = 0) restrict buffer HierarchyMaterialBuffer
+layout(std430, binding = 1) restrict buffer HierarchyMaterialBuffer
 {
 	HierarchyMaterial hierarchyMaterial[];
 };

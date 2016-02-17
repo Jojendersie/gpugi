@@ -33,12 +33,12 @@ void HierarchyImportance::SetScene(shared_ptr<Scene> _scene)
 	// Contains an importance value (float) for each node (first) and each triangle (after node values)
 	m_hierarchyImportance = make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumLeafTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::IMMUTABLE);
 	m_hierarchyImportance->ClearToZero();
-	m_hierarchyImportance->BindShaderStorageBuffer(s_hierarchyImportanceBinding);
+	m_hierarchyImportance->BindShaderStorageBuffer((uint)Binding::HIERARCHY_IMPORTANCE);
 	//m_hierachyImportanceView = make_unique<gl::TextureBufferView>(m_hierarchyImportance, gl::TextureBufferFormat::R8UI);
 	//m_hierachyImportanceView->BindBuffer(10);
 	m_subtreeImportance = make_shared<gl::Buffer>(sizeof(float) * _scene->GetNumInnerNodes(), gl::Buffer::IMMUTABLE);
 	m_subtreeImportance->ClearToZero();
-	m_subtreeImportance->BindShaderStorageBuffer(s_subtreeImportanceBinding);
+	m_subtreeImportance->BindShaderStorageBuffer((uint)Binding::SUBTREE_IMPORTANCE);
 
 	gl::MappedUBOView mapView(m_hierarchyImportanceUBOInfo, m_hierarchyImportanceUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	mapView["NumInnerNodes"].Set(static_cast<int32_t>(_scene->GetNumInnerNodes()));
@@ -47,18 +47,18 @@ void HierarchyImportance::SetScene(shared_ptr<Scene> _scene)
 
 	// Parent pointer for hierarchy propagation.
 	m_sceneParentPointer = make_unique<gl::TextureBufferView>(_scene->GetParentBuffer(), gl::TextureBufferFormat::R32I);
-	m_sceneParentPointer->BindBuffer(6);
+	m_sceneParentPointer->BindBuffer((uint)Binding::PARENT_POINTER);
 
 	if(!_scene->GetSGGXBuffer())
 		LOG_ERROR("Requires SGGX NDFs for hierarchy to apply importance based rendering!");
 	else {
 		m_sggxBufferView = make_unique<gl::TextureBufferView>(_scene->GetSGGXBuffer(), gl::TextureBufferFormat::RG16);
-		m_sggxBufferView->BindBuffer(7);
+		m_sggxBufferView->BindBuffer((uint)Binding::SGGX_NDF);
 	}
 
 	m_hierarchyMaterialBuffer = make_shared<gl::Buffer>(2 * 4 * 6 * _scene->GetNumInnerNodes(), gl::Buffer::IMMUTABLE);
 	m_hierarchyMaterialBufferView = make_unique<gl::TextureBufferView>(m_hierarchyMaterialBuffer, gl::TextureBufferFormat::RGBA16F);
-	m_hierarchyMaterialBufferView->BindBuffer(8);
+	m_hierarchyMaterialBufferView->BindBuffer((uint)Binding::HIERARCHY_MATERIAL);
 	ComputeHierarchyMaterials(_scene);
 }
 
@@ -149,7 +149,7 @@ void HierarchyImportance::ComputeHierarchyMaterials(shared_ptr<Scene> _scene)
 	sampleLeaves->AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/hierarchy/sampleleafmaterials.comp", additionalDefines);
 	sampleLeaves->CreateProgram();
 	sampleLeaves->Activate();
-	m_hierarchyMaterialBuffer->BindShaderStorageBuffer(0);
+	m_hierarchyMaterialBuffer->BindShaderStorageBuffer(1);
 	GLuint numBlocks = (_scene->GetNumInnerNodes() + 63) / 64;
 	GL_CALL(glDispatchCompute, numBlocks, 1, 1);
 	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);

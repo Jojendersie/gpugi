@@ -4,11 +4,11 @@
 #include "../stdheader.glsl"
 #include "importanceubo.glsl"
 
-layout(binding = 10, std430) restrict buffer HierarchyImportanceBuffer
+layout(binding = 0, std430) restrict buffer HierarchyImportanceBuffer
 {
 	float HierarchyImportance[];
 };
-layout(binding = 11, std430) restrict buffer SubtreeImportanceBuffer
+layout(binding = 10, std430) restrict buffer SubtreeImportanceBuffer
 {
 	float SubtreeImportance[];
 };
@@ -32,7 +32,7 @@ void main()
 		return;
 
 	// Get node info (see also "../traceray.glsl")
-	uint childCodeRaw = floatBitsToUint(texelFetch(HierachyBuffer, int(gl_GlobalInvocationID.x) * 2).w); 	
+	uint childCodeRaw = floatBitsToUint(texelFetch(HierachyBuffer, int(gl_GlobalInvocationID.x) * 2).w);
 	int childNodeIndex = int(childCodeRaw & uint(0x7FFFFFFF));	// Most significant bit tells us is this is a leaf.
 	// childCodeRaw should be equal to childNodeIndex at this point.
 	// The condition of SubtreeImportance != 0 should have eliminated the already
@@ -52,7 +52,7 @@ void main()
 		// Next child
 		childNodeIndex = floatBitsToInt(texelFetch(HierachyBuffer, childNodeIndex * 2 + 1).w); 	// w = Escape
 		if(childNodeIndex == 0) // No escape pointer, done!
-			break; 
+			break;
 
 		parentPointer = floatBitsToInt(texelFetch(ParentPointerBuffer, childNodeIndex).r);
 	} while(parentPointer == gl_GlobalInvocationID.x); // Continue until this is no longer the child's parent.
