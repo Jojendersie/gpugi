@@ -60,11 +60,11 @@ layout(binding=5) uniform samplerBuffer InitialLightSampleBuffer;
 #ifdef TRACERAY_IMPORTANCE_BREAK
 // Importance buffer must be bound in normal scene setup for traceray.
 // Including it in traceray causes the buffer to appear twice.
-layout(std430, binding = 0) restrict readonly buffer HierarchyImportanceBuffer
+/*layout(std430, binding = 0) restrict readonly buffer HierarchyImportanceBuffer
 {
 	float HierarchyImportance[];
-};
-//layout(binding=10) uniform samplerBuffer HierarchyImportanceBuffer;
+};*/
+layout(binding=6) uniform samplerBuffer HierarchyImportanceBuffer;
 #endif
 
 struct Material

@@ -32,10 +32,10 @@ void HierarchyImportance::SetScene(shared_ptr<Scene> _scene)
 	RecompileShaders(_scene->GetBvhTypeDefineString());
 	// Contains an importance value (float) for each node (first) and each triangle (after node values)
 	m_hierarchyImportance = make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumLeafTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::IMMUTABLE);
-	m_hierarchyImportance->ClearToZero();
-	m_hierarchyImportance->BindShaderStorageBuffer((uint)Binding::HIERARCHY_IMPORTANCE);
-	//m_hierachyImportanceView = make_unique<gl::TextureBufferView>(m_hierarchyImportance, gl::TextureBufferFormat::R8UI);
-	//m_hierachyImportanceView->BindBuffer(10);
+//	m_hierarchyImportance->ClearToZero();
+	//m_hierarchyImportance->BindShaderStorageBuffer((uint)Binding::HIERARCHY_IMPORTANCE);
+	m_hierachyImportanceView = make_unique<gl::TextureBufferView>(m_hierarchyImportance, gl::TextureBufferFormat::R32F);
+	m_hierachyImportanceView->BindBuffer((uint)Binding::HIERARCHY_IMPORTANCE);
 	m_subtreeImportance = make_shared<gl::Buffer>(sizeof(float) * _scene->GetNumInnerNodes(), gl::Buffer::IMMUTABLE);
 	m_subtreeImportance->ClearToZero();
 	m_subtreeImportance->BindShaderStorageBuffer((uint)Binding::SUBTREE_IMPORTANCE);
@@ -64,8 +64,8 @@ void HierarchyImportance::SetScene(shared_ptr<Scene> _scene)
 
 void HierarchyImportance::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 {
-	if (m_hierarchyImportance)
-		m_hierarchyImportance->ClearToZero();
+//	if (m_hierarchyImportance)
+//		m_hierarchyImportance->ClearToZero();
 
 	_newBackbuffer.BindImage(0, gl::Texture::ImageAccess::READ_WRITE);
 }
@@ -80,6 +80,7 @@ void HierarchyImportance::Draw()
 	// Reset importance on camera movement...
 	if(m_rendererSystem.GetIterationCount() == 0)
 	{
+		m_hierarchyImportance->BindShaderStorageBuffer((uint)Binding::HIERARCHY_IMPORTANCE);
 		m_hierarchyImportance->ClearToZero();
 		m_subtreeImportance->ClearToZero();
 
@@ -97,9 +98,11 @@ void HierarchyImportance::Draw()
 		}
 		// Propagate importance through hierarchy
 		UpdateHierarchyNodeImportance();
+		gl::Buffer::BindShaderStorageBuffer(0, (uint)Binding::HIERARCHY_IMPORTANCE, 0, 0);
 	}
 
 	// Render
+	m_hierachyImportanceView->BindBuffer((uint)Binding::HIERARCHY_IMPORTANCE);
 	//GL_CALL(glMemoryBarrier, GL_ALL_BARRIER_BITS);
 	//GL_CALL(glFinish);
 	m_hierarchyPathTracer.Activate();

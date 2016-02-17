@@ -18,7 +18,7 @@ layout(location = 0, index = 0) out vec4 FragColor;
 void main()
 {
 	float relativeDepth = float(Depth - MinDepth) / (MaxDepth - MinDepth);
-	
+
 	// Use a simplistic offset heatmap scala
 	relativeDepth *= 3.0; // Range should now roughly 0-3
 	relativeDepth += 0.4; // Offset as "minimum color"

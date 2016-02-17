@@ -10,19 +10,20 @@ layout(location = 2) in int inDepth;
 
 
 layout(location = 0) out vec3 BoxPosition;
-layout(location = 1) out int Depth;
+layout(location = 1) out flat int Depth;
 
 #ifdef SHOW_NODE_IMPORTANCE
-	layout(binding = 0, std430) restrict readonly buffer HierarchyImportanceBuffer
+	/*layout(binding = 0, std430) restrict readonly buffer HierarchyImportanceBuffer
 	{
 		float HierarchyImportance[];
-	};
+	};*/
+	layout(binding = 6) uniform samplerBuffer HierarchyImportanceBuffer;
 
-	layout(location = 2) out float Importance;
+	layout(location = 2) out flat float Importance;
 #endif
 
 void main()
-{	
+{
 	const vec3 maxs[2] = { vec3(1, 1, 1), vec3(3, 3, 3) };
 	const vec3 mins[2] = { vec3(0, 0, 0), vec3(2, 2, 2) };
 
@@ -52,6 +53,6 @@ void main()
 	Depth = inDepth;
 
 	#ifdef SHOW_NODE_IMPORTANCE
-		Importance = HierarchyImportance[inBoxInstance];
+		Importance =  texelFetch(HierarchyImportanceBuffer, inBoxInstance).x;//HierarchyImportance[inBoxInstance];
 	#endif
 }

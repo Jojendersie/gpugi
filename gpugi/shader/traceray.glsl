@@ -73,8 +73,8 @@
 					lastNodeIndex = currentNodeIndex;
 				#endif
 				#ifdef TRACERAY_IMPORTANCE_BREAK
-					//float importance = texelFetch(HierarchyImportanceBuffer, currentNodeIndex).x;
-					float importance = HierarchyImportance[currentNodeIndex];
+					float importance = texelFetch(HierarchyImportanceBuffer, currentNodeIndex).x;
+					//float importance = HierarchyImportance[currentNodeIndex];
 					//float importance = nodeSizeSq * 1000000.0;
 					#ifndef ANY_HIT
 						lastNodeImportance = importance;

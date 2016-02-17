@@ -4,7 +4,7 @@
 #include "../stdheader.glsl"
 #include "importanceubo.glsl"
 
-layout(binding = 0, std430) restrict buffer HierarchyImportanceBuffer
+layout(binding = 6, std430) restrict buffer HierarchyImportanceBuffer
 {
 	float HierarchyImportance[];
 };
@@ -17,7 +17,7 @@ layout(binding = 1, std430) restrict buffer DoneFlagBuffer
 	int ChangedAnything;
 };
 
-layout(binding = 6) uniform samplerBuffer ParentPointerBuffer;
+layout(binding = 11) uniform samplerBuffer ParentPointerBuffer;
 
 // Should be called once per inner node.
 layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;

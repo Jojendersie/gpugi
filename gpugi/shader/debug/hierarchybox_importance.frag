@@ -6,16 +6,19 @@ layout(binding = 8, shared) uniform DebugSettings
 {
 	int MinDepth;
 	int MaxDepth; // excluding
-	int IterationCount;
 };
 
-layout(location = 2) flat in float Importance;
+layout(location = 0) in vec3 BoxPosition;
+layout(location = 1) in flat int Depth;
+layout(location = 2) in flat float Importance;
 
 layout(location = 0, index = 0) out vec4 FragColor;
 
 void main()
 {
-	float visValue = Importance / IterationCount + 0.1f;
+	float visValue = pow(Importance, 0.17) * 0.2;//Importance / float(IterationCount);
+	// The next line fixes a driver bug in 361.75
+	visValue -= (BoxPosition.x + float(Depth)) * 1e-30;
 
 	vec3 color = vec3(saturate(visValue),
 					  saturate(visValue - 1.0),

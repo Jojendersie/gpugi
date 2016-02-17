@@ -8,10 +8,11 @@
 layout(location = 0) in vec2 Texcoord;
 //layout(location = 101) uniform int NumImportanceIterations;
 
-layout(binding = 10, std430) restrict readonly buffer HierarchyImportanceBuffer
+/*layout(binding = 0, std430) restrict readonly buffer HierarchyImportanceBuffer
 {
 	float HierarchyImportance[];
-};
+};*/
+layout(binding = 6) uniform samplerBuffer HierarchyImportanceBuffer;
 
 layout(location = 0, index = 0) out vec4 FragColor;
 
@@ -34,7 +35,8 @@ void main()
 	TraceRay(ray, rayHit, triangleIndex, barycentricCoord, triangle);
 	if(rayHit != RAY_MAX)
 	{
-		outputImportance = HierarchyImportance[NumInnerNodes + triangleIndex.y] / NumImportanceIterations;
+		//outputImportance = HierarchyImportance[NumInnerNodes + triangleIndex.y] / NumImportanceIterations;
+		outputImportance = texelFetch(HierarchyImportanceBuffer, NumInnerNodes + triangleIndex.y).x;
 	}
 	outputImportance = pow(outputImportance, 0.17) * 0.2;
 	//outputImportance *= 0.1;
