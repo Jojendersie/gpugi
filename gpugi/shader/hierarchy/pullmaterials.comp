@@ -12,12 +12,16 @@ void main()
 	// It is possible that more threads than nodes are scheduled
 	if(gl_GlobalInvocationID.x >= NumInnerNodes)
 		return;
-			
+
+#ifdef AABOX_BVH
 	uint childCode = floatBitsToUint(texelFetch(HierachyBuffer, int(gl_GlobalInvocationID.x * 2)).w);
+#elif defined(OBOX_BVH)
+	uint childCode = floatBitsToUint(texelFetch(HierachyBuffer, int(gl_GlobalInvocationID.x * 3)).w);
+#endif
 	// Most significant bit tells us if this is a leaf.
 	int childNodeIndex = int(childCode & uint(0x7FFFFFFF));
 	if(childNodeIndex != childCode) return; // It is a leaf
-	
+
 	// Accumulate from all children
 	MaterialData mat;
 	mat.Reflectiveness = vec4(0.0);
@@ -46,14 +50,14 @@ void main()
 		mat.RefractionIndexAvg += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Fresnel0_RefrIndex.y).y * childArea;
 		mat.Fresnel1.xy += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Fresnel1.x) * childArea;
 		mat.Fresnel1.z += unpackHalf2x16(hierarchyMaterial[childNodeIndex].Fresnel1.y).x * childArea;
-		
+
 		// Next child
 		childNodeIndex = floatBitsToInt(texelFetch(HierachyBuffer, childNodeIndex * 2 + 1).w); 	// w = Escape
 		if(childNodeIndex == 0) // No escape pointer, done!
-			break; 
+			break;
 		parentPointer = floatBitsToInt(texelFetch(ParentPointerBuffer, childNodeIndex).r);
 	} while(parentPointer == gl_GlobalInvocationID.x);
-	
+
 	// Average by area
 	mat.Reflectiveness /= area;
 	mat.Opacity /= area;
@@ -62,7 +66,7 @@ void main()
 	mat.Fresnel0 /= area;//TODO: store
 	mat.Fresnel1 /= area;
 	mat.RefractionIndexAvg /= area;
-		
+
 	// Compress and store
 	hierarchyMaterial[gl_GlobalInvocationID.x].Reflectiveness = uvec2(
 		packHalf2x16(mat.Reflectiveness.xy),

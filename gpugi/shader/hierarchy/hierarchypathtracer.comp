@@ -68,11 +68,11 @@ void main()
 			hitNormal = sampleNormal(ray.Direction, sggx, randomSeed);
 		//	epsilon = length(texelFetch(HierachyBuffer, hitMask.x * 2).xyz -
 		//					 texelFetch(HierachyBuffer, hitMask.x * 2 + 1).xyz);
-			/*color = (sqrt(HierarchyImportance[hitMask.x]) / 5).xxx;
+			/*color = materialData.Emissivity;
 			vec4 final = vec4(color, 1.0);
 			final += imageLoad(OutputTexture, gridPosition);
 			imageStore(OutputTexture, gridPosition, final);
-			return;*/
+			return;//*/
 		} else {
 			// Compute normal and texture coordinate from barycentric coordinates
 			vec2 hitTexcoord;
@@ -124,6 +124,7 @@ void main()
 		ray.Direction = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput, isReflectedDiffuse, pdf);
 		ray.Origin = ray.Origin + ray.Direction * epsilon;
 		pathThroughput *= throughput;
+	//	if(pathThroughput != pathThroughput) break; // NaN filter
 		pathImportanceThreshold = nextPathImportanceThreshold;
 		/*if(isReflectedDiffuse)
 			pathImportanceThreshold *= 10.0;

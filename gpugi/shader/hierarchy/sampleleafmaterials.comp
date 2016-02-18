@@ -10,13 +10,17 @@ void main()
 	// It is possible that more threads than nodes are scheduled
 	if(gl_GlobalInvocationID.x >= NumInnerNodes)
 		return;
-			
+
+#ifdef AABOX_BVH
 	uint childCode = floatBitsToUint(texelFetch(HierachyBuffer, int(gl_GlobalInvocationID.x * 2)).w);
+#elif defined(OBOX_BVH)
+	uint childCode = floatBitsToUint(texelFetch(HierachyBuffer, int(gl_GlobalInvocationID.x * 3)).w);
+#endif
 	// Most significant bit tells us if this is a leaf.
 	int leafBaseIndex = int(childCode & uint(0x7FFFFFFF));
 	if(leafBaseIndex == childCode) return; // It is not
 	leafBaseIndex *= TRIANGLES_PER_LEAF;
-	
+
 	// Accumulate from all linked triangles
 	MaterialData mat;
 	mat.Reflectiveness = vec4(0.0);
@@ -32,22 +36,22 @@ void main()
 		Triangle triangle = texelFetch(TriangleBuffer, leafBaseIndex+i);
 		// There are invalid triangles for padding reasons
 		if(triangle.x == triangle.y) break;
-		
+
 		// Load vertex positions
 		vec3 positions[3];
 		positions[0] = texelFetch(VertexPositionBuffer, triangle.x).xyz;
 		positions[1] = texelFetch(VertexPositionBuffer, triangle.y).xyz;
 		positions[2] = texelFetch(VertexPositionBuffer, triangle.z).xyz;
-		
+
 		float triangleArea = length(cross(positions[1] - positions[0], positions[2] - positions[0])) / 2.0;
 		area += triangleArea;
-		
+
 		// TODO: take more than one central sample
 		vec3 barycentricCoord = vec3(1.0/3.0);
 		vec2 texCoord = texelFetch(VertexInfoBuffer, triangle.x).zw * barycentricCoord.x +
 						texelFetch(VertexInfoBuffer, triangle.y).zw * barycentricCoord.y +
 						texelFetch(VertexInfoBuffer, triangle.z).zw * barycentricCoord.z;
-		
+
 		MaterialData materialData = SampleMaterialData(triangle.w, texCoord);
 		mat.Reflectiveness += materialData.Reflectiveness * triangleArea; // TODO: linear interpolation of exponent .w bad
 		mat.Opacity += materialData.Opacity * triangleArea;
@@ -57,7 +61,7 @@ void main()
 		mat.Fresnel1 += materialData.Fresnel1 * triangleArea;
 		mat.RefractionIndexAvg += materialData.RefractionIndexAvg * triangleArea;
 	}
-	
+
 	// Average by area
 	mat.Reflectiveness /= area;
 	mat.Opacity /= area;
@@ -66,7 +70,7 @@ void main()
 	mat.Fresnel0 /= area;
 	mat.Fresnel1 /= area;
 	mat.RefractionIndexAvg /= area;
-		
+
 	// Compress and store
 	hierarchyMaterial[gl_GlobalInvocationID.x].Reflectiveness = uvec2(
 		packHalf2x16(mat.Reflectiveness.xy),
