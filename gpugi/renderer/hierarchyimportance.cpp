@@ -37,6 +37,8 @@ void HierarchyImportance::SetScene(shared_ptr<Scene> _scene)
 	m_subtreeImportance = make_shared<gl::Buffer>(sizeof(float) * _scene->GetNumInnerNodes(), gl::Buffer::IMMUTABLE);
 	m_subtreeImportance->BindShaderStorageBuffer((uint)Binding::SUBTREE_IMPORTANCE);
 
+	m_cachedDiffuseIllumination = make_shared<gl::Buffer>(sizeof(float) * 4 * _scene->GetNumInnerNodes(), gl::Buffer::IMMUTABLE);
+
 	gl::MappedUBOView mapView(m_hierarchyImportanceUBOInfo, m_hierarchyImportanceUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	mapView["NumInnerNodes"].Set(static_cast<int32_t>(_scene->GetNumInnerNodes()));
 	mapView["NumTriangles"].Set(static_cast<int32_t>(_scene->GetNumLeafTriangles()));
@@ -77,6 +79,7 @@ void HierarchyImportance::Draw()
 		m_hierarchyImportance->BindShaderStorageBuffer((uint)Binding::HIERARCHY_IMPORTANCE);
 		m_hierarchyImportance->ClearToZero();
 		m_subtreeImportance->ClearToZero();
+		m_cachedDiffuseIllumination->ClearToZero();
 
 		m_numImportanceIterations = 10;
 		for(int i = 1; i <= m_numImportanceIterations; ++i) // Until convergence (TODO measure that)
@@ -97,6 +100,7 @@ void HierarchyImportance::Draw()
 
 	// Render
 	m_hierachyImportanceView->BindBuffer((uint)Binding::HIERARCHY_IMPORTANCE);
+	m_cachedDiffuseIllumination->BindShaderStorageBuffer((uint)Binding::DIFFUSE_ILLUM_CACHE);
 	//GL_CALL(glMemoryBarrier, GL_ALL_BARRIER_BITS);
 	//GL_CALL(glFinish);
 	m_hierarchyPathTracer.Activate();

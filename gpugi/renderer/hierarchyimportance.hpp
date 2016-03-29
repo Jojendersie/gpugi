@@ -44,6 +44,7 @@ public:
 		PARENT_POINTER = 11,		///< Additional hierarchy information (parent pointers per node)
 		SGGX_NDF = 7,				///< An NDF for each node stored in SGGX basis
 		HIERARCHY_MATERIAL = 8,		///< Averaged material parameters from scene
+		DIFFUSE_ILLUM_CACHE = 9,	///< RGB+Count for each node in the hierarchy to reuse previous samples.
 	};
 
 private:
@@ -61,6 +62,7 @@ private:
 	std::unique_ptr<gl::TextureBufferView> m_hierachyImportanceView;
 	std::shared_ptr<gl::Buffer> m_hierarchyImportance;
 	std::shared_ptr<gl::Buffer> m_subtreeImportance;
+	std::shared_ptr<gl::Buffer> m_cachedDiffuseIllumination;
 	int m_numImportanceIterations;
 
 	// Extra buffer with average material information per node

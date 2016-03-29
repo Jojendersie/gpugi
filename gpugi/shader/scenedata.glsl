@@ -67,6 +67,13 @@ layout(binding=5) uniform samplerBuffer InitialLightSampleBuffer;
 layout(binding=6) uniform samplerBuffer HierarchyImportanceBuffer;
 #endif
 
+#ifdef CACHE_DIRECT_DIFFUSE
+layout(std430, binding = 9) restrict volatile buffer DiffuseLightCacheBuffer
+{
+	vec4 DiffuseLightCache[];
+};
+#endif
+
 struct Material
 {
 	uvec2 diffuseTexHandle;

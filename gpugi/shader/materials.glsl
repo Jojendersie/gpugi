@@ -68,7 +68,7 @@ vec3 GetDiffuseProbability(MaterialData materialData, float cosThetaAbs)
 
 // Note: Our BSDF formulation avoids any use of dirac distributions.
 // Thus there are no special cases for perfect mirrors or perfect refraction.
-// Dirac distributions can only be sampled, evaluating their 
+// Dirac distributions can only be sampled, evaluating their
 
 // Sample a direction from the custom surface BSDF
 // pathThroughput *= brdf * cos(Out, N) / pdf
@@ -79,7 +79,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 	)
 {
 	// Probability model:
-	//        
+	//
 	// 0                             1
 	// |---------|---------|---------|
 	//    Diff   |  Refr   | Reflect
@@ -113,7 +113,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 	float pathDecisionVar = Random(seed);
 
 	// Diffuse:
-	if(avgPDiffuse > pathDecisionVar)	
+	if(avgPDiffuse > pathDecisionVar)
 	{
 #ifdef SAMPLING_DECISION_OUTPUT
 		isReflectedDiffuse = true;
@@ -144,17 +144,17 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 		pphong = prefract;
 		avgPPhong = avgPRefract;
 
-		// Compute refraction direction.		
+		// Compute refraction direction.
 		float eta = cosTheta < 0.0 ? 1.0/materialData.RefractionIndexAvg : materialData.RefractionIndexAvg;
 		float etaSq = eta * eta;
 		float sinTheta2Sq = etaSq * (1.0f - cosTheta * cosTheta);
-		
+
 		// No total reflection
 		if( sinTheta2Sq < 1.0f )
 		{
 			// N * sign(cosTheta) = "faceForwardNormal"; -cosThetaAbs = -dot(faceForwardNormal, incidentDirection)
 			reflectRefractDir = eta * incidentDirection + (sign(cosTheta) * (sqrt(saturate(1.0 - sinTheta2Sq)) - eta * cosThetaAbs)) * N;
-			
+
 			// Need to scale radiance since angle got "widened" or "squeezed"
 			// See Veach PhD Thesis 5.2 (Non-symmetry due to refraction) or "Physically Based Rendering" chapter 8.2.3 (page 442)
 			// This is part of the BSDF!
@@ -177,7 +177,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 
 	pdf = (materialData.Reflectiveness.w + 1.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialData.Reflectiveness.w);
 	// vec3 bsdf = (materialData.Reflectiveness.w + 1.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialData.Reflectiveness.w) * pphong / avgPPhong / dot(N, outDir)
-	
+
 	// The 1/dot(N, outDir) factor is rather magical: If we would only sample a dirac delta,
 	// we would expect that the scattering (rendering) equation would yield the radiance from the (via dirac delta) sampled direction.
 	// To achieve this the BRDF must be "dirac/cos(thetai)". Here we want to "smooth out" the dirac delta to a phong lobe, but keep the cos(thetai)=dot(N,outDir) ...
@@ -220,7 +220,7 @@ vec3 SampleAdjointBSDF(vec3 incidentDirection, MaterialData materialData, inout 
 // Sample the custom surface BSDF for two known direction
 // incidentDirection points to the surface
 // excidentDirection points away from the surface
-vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materialData, vec3 N, out float pdf, bool adjoint)
+vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materialData, vec3 N, out float pdf, bool adjoint, bool specularOnly)
 {
 	vec3 bsdf;
 	float cosTheta = dot(N, incidentDirection);
@@ -245,8 +245,11 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materia
 	pdf = AvgProbability(preflect) * reflrefrPDFFactor;
 
 	// Diffuse
-	bsdf += pdiffuse * materialData.Diffuse / PI;
-	pdf += Avg(pdiffuse) * saturate(cosThetaOut) / PI;
+	if(!specularOnly)
+	{
+		bsdf += pdiffuse * materialData.Diffuse / PI;
+		pdf += Avg(pdiffuse) * saturate(cosThetaOut) / PI;// TODO: Why is material.Diffuse not used here? What if material black?
+	}
 
 #ifdef STOP_ON_DIFFUSE_BOUNCE
 	// No refractive next event estimation
@@ -266,14 +269,14 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materia
 		reflectRefractDir = normalize(eta * incidentDirection + (sign(cosTheta) * (sqrt(saturate(1.0 - sinTheta2Sq)) - eta * cosThetaAbs)) * N);
 
 		float refractionDotExcident_powN = pow(saturate(dot(reflectRefractDir, excidentDirection)), materialData.Reflectiveness.w);
-		
+
 		reflrefrBRDFFactor = phongFactor_brdf * refractionDotExcident_powN;
 		reflrefrPDFFactor = phongNormalization_pdf * refractionDotExcident_powN;
 
 		if(!adjoint)
 			reflrefrBRDFFactor /= etaSq;
-	}	
-	
+	}
+
 	// else the sampleDir is again the reflection vector
 	bsdf += prefract * reflrefrBRDFFactor;
 	pdf += AvgProbability(prefract) * reflrefrPDFFactor;
@@ -283,14 +286,19 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materia
 
 vec3 BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materialData, vec3 N, out float pdf)
 {
-	return __BSDF(incidentDirection, excidentDirection, materialData, N, pdf, false);
+	return __BSDF(incidentDirection, excidentDirection, materialData, N, pdf, false, false);
+}
+
+vec3 BSDFSpecular(vec3 incidentDirection, vec3 excidentDirection, MaterialData materialData, vec3 N, out float pdf)
+{
+	return __BSDF(incidentDirection, excidentDirection, materialData, N, pdf, false, true);
 }
 
 // Adjoint in the sense of Veach PhD Thesis 3.7.6
 // Use this for tracing light particles, use BSDF for tracing camera paths.
 vec3 AdjointBSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materialData, vec3 N, out float pdf)
 {
-	return __BSDF(-excidentDirection, -incidentDirection, materialData, N, pdf, true);
+	return __BSDF(-excidentDirection, -incidentDirection, materialData, N, pdf, true, false);
 }
 
 

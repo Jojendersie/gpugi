@@ -1,5 +1,7 @@
 #version 450
 
+//#define CACHE_DIRECT_DIFFUSE
+
 #define HIT_INDEX_OUTPUT
 #define TRACERAY_IMPORTANCE_BREAK
 #define SAMPLING_DECISION_OUTPUT
@@ -81,7 +83,7 @@ void main()
 			materialData = SampleMaterialData(triangle.w, hitTexcoord);
 		}
 
-		float nextPathImportanceThreshold = pathImportanceThreshold * 1.0;
+		float nextPathImportanceThreshold = pathImportanceThreshold * 2.0;
 		float epsilon = RAY_HIT_EPSILON;
 		// Skip out of the node if we would only get a self intersection
 		if(nextPathImportanceThreshold >= importance)
@@ -112,7 +114,12 @@ void main()
 			#endif
 
 				int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
-				vec3 radiance = EstimateDirectLight(ray.Origin, hitNormal, sampleIndex, ray.Direction, materialData, pathImportanceThreshold);
+				vec3 radiance = EstimateDirectLight(ray.Origin, hitNormal, sampleIndex,
+						ray.Direction, materialData, pathImportanceThreshold
+					#ifdef CACHE_DIRECT_DIFFUSE
+						, (hitMask.y == 0xFFFFFFFF) ? hitMask.x : 0xFFFFFFFF
+					#endif
+						);
 				color += radiance * pathThroughput * lightSampleWeight;
 			}
 		}
