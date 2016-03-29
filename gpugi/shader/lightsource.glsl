@@ -1,6 +1,6 @@
 // Find out what type of light source is given and estimate the reflected radiance
 // for the given surface.
-vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _viewDir, MaterialData _materialData
+vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _viewDir, MaterialData _materialData, bool _sampleAreaLights
 #ifdef TRACERAY_IMPORTANCE_BREAK
 	, in float _importanceThreshold
 #endif
@@ -59,7 +59,7 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 			return specRadiance + diffuse_count.xyz / (diffuse_count.w + 1e-10);
 		#endif
 		}
-	} else {
+	} else if(_sampleAreaLights) {
 		// Lambertian emitter (light emitting surface like area lights)
 		vec3 lightNormal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
 

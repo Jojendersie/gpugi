@@ -56,20 +56,17 @@ void main()
 
 		// Connect to random light samples ("Next Event Estimation")
 		didNextEventEstimation = materialData.Reflectiveness.w < 500.0;
-		if( didNextEventEstimation )
+		Ray lightRay;
+		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
 		{
-			Ray lightRay;
-			for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
-			{
-			#ifdef SHOW_SPECIFIC_PATHLENGTH
-				if(i+1 != SHOW_SPECIFIC_PATHLENGTH)
-					break;
-			#endif
+		#ifdef SHOW_SPECIFIC_PATHLENGTH
+			if(i+1 != SHOW_SPECIFIC_PATHLENGTH)
+				break;
+		#endif
 
-				int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
-				vec3 radiance = EstimateDirectLight(ray.Origin, hitNormal, sampleIndex, ray.Direction, materialData);
-				color += radiance * pathThroughput * lightSampleWeight;
-			}
+			int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
+			vec3 radiance = EstimateDirectLight(ray.Origin, hitNormal, sampleIndex, ray.Direction, materialData, didNextEventEstimation);
+			color += radiance * pathThroughput * lightSampleWeight;
 		}
 
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
