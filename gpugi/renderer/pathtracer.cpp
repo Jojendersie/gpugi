@@ -39,7 +39,8 @@ void Pathtracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 
 void Pathtracer::SetEnvironmentMap(std::shared_ptr<gl::TextureCubemap> _envMap)
 {
-	_envMap->Bind(12);
+	if(_envMap)
+		_envMap->Bind(12);
 }
 
 void Pathtracer::Draw()
