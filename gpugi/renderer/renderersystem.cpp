@@ -116,6 +116,7 @@ void RendererSystem::SetNumInitialLightSamples(unsigned int _numInitialLightSamp
 
 	// NumInitialLightSamples is part of the globalconst UBO
 	UpdateGlobalConstUBO();
+	PerIterationBufferUpdate(false);
 }
 
 void RendererSystem::SetScene(std::shared_ptr<Scene> _scene)
@@ -145,7 +146,7 @@ void RendererSystem::SetScene(std::shared_ptr<Scene> _scene)
 
 
 	// Perform a single per iteration update to ensure a valid state.
-	PerIterationBufferUpdate();
+	PerIterationBufferUpdate(false);
 
 
 	m_iterationCount = 0;

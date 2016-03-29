@@ -56,7 +56,7 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 				diffuse_count += DiffuseLightCache[_diffuseCacheIndex];
 				DiffuseLightCache[_diffuseCacheIndex] = diffuse_count;
 			}
-			return specRadiance + diffuse_count.xyz / (diffuse_count.w + 0.0001);
+			return specRadiance + diffuse_count.xyz / (diffuse_count.w + 1e-10);
 		#endif
 		}
 	} else {
