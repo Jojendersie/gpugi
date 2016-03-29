@@ -296,7 +296,7 @@ void Scene::ComputePointLightTable()
 	for(auto& light : m_pointLights)
 	{
 		float flux = dot(ε::Vec3(0.2126f, 0.7152f, 0.0722f), light.intensity) * 4 * ε::π;
-		m_totalPointLightFlux += flux;
+		m_totalPointLightFlux += log(1.0f + flux);
 		m_pointLightSummedFlux.push_back( m_totalPointLightFlux );
 	}
 	for(size_t i = 0; i < m_pointLightSummedFlux.size(); ++i)
