@@ -23,15 +23,15 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 	if(lightIntensity_Norm1.w > 1.0) // Wrong normals encode omnidirectional point lights
 	{
 		// Omnidirectional (point) light
+	#ifdef CACHE_DIRECT_DIFFUSE
+		vec3 specRadiance = vec3(0.0);
+		vec4 diffuse_count = vec4(0.0, 0.0, 0.0, 1.0);
+	#endif
 		// Facing the light?
 		if(surfaceCos > 0.0)
 		{
 			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + lightSamplePos_Norm0.xyz;
 
-		#ifdef CACHE_DIRECT_DIFFUSE
-			vec3 specRadiance = vec3(0.0);
-			vec4 diffuse_count = vec4(0.0);
-		#endif
 		#ifdef TRACERAY_IMPORTANCE_BREAK
 			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON * 2, _importanceThreshold))
 		#else
@@ -42,7 +42,7 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 			#ifdef CACHE_DIRECT_DIFFUSE
 				float pdf;
 				vec3 bsdfSpec = BSDFSpecular(_viewDir, -lightRay.Direction, _materialData, _normal, pdf);
-				diffuse_count = vec4(irradiance * GetDiffuseReflectance(_materialData, surfaceCos) / PI, 1.0);
+				diffuse_count += vec4(irradiance * GetDiffuseReflectance(_materialData, surfaceCos) / PI, 0.0);
 				specRadiance = irradiance * bsdfSpec;
 			#else
 				float pdf;
@@ -50,15 +50,15 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 				return irradiance * bsdf;
 			#endif
 			}
-		#ifdef CACHE_DIRECT_DIFFUSE
-			if(_diffuseCacheIndex != 0xFFFFFFFF)
-			{
-				diffuse_count += DiffuseLightCache[_diffuseCacheIndex];
-				DiffuseLightCache[_diffuseCacheIndex] = diffuse_count;
-			}
-			return specRadiance + diffuse_count.xyz / (diffuse_count.w + 1e-10);
-		#endif
 		}
+	#ifdef CACHE_DIRECT_DIFFUSE
+		if(_diffuseCacheIndex != 0xFFFFFFFF)
+		{
+			diffuse_count += DiffuseLightCache[_diffuseCacheIndex];
+			DiffuseLightCache[_diffuseCacheIndex] = diffuse_count;
+		}
+		return specRadiance + diffuse_count.xyz / diffuse_count.w;
+	#endif
 	} else if(_sampleAreaLights) {
 		// Lambertian emitter (light emitting surface like area lights)
 		vec3 lightNormal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));

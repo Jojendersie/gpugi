@@ -84,13 +84,12 @@ void LightSampler::GenerateRandomSamples(LightSample* _destinationBuffer, unsign
 		Assert(lightIdx < m_scene->GetPointLights().size(), "Impossible light index. Error in random number generator or light summed flux table.");
 		sampleWeight = *lightSummedFlux;
 		if(lightIdx > 0) sampleWeight -= m_scene->GetPointLightSummedFluxTable()[lightIdx-1];
-		sampleWeight = 1.0f / (numPointSamples * sampleWeight);
+		//sampleWeight = 1.0f / (numPointSamples * sampleWeight);
 
 		// Compute light sample and write to buffer.
 		_destinationBuffer->position = m_scene->GetPointLights()[lightIdx].position;
-		// Random normal
-		_destinationBuffer->normalPhi = 0.0f;
+		_destinationBuffer->normalPhi = 0.0;
 		_destinationBuffer->normalThetaCos = 2.0f;
-		_destinationBuffer->intensity = m_scene->GetPointLights()[lightIdx].intensity * sampleWeight;
+		_destinationBuffer->intensity = m_scene->GetPointLights()[lightIdx].intensity / (numPointSamples * sampleWeight);
 	}
 }
