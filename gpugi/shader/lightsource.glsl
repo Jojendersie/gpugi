@@ -3,6 +3,7 @@
 vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _viewDir, MaterialData _materialData, bool _sampleAreaLights
 #ifdef TRACERAY_IMPORTANCE_BREAK
 	, in float _importanceThreshold
+	, in float _distEpsilon
 #endif
 #ifdef CACHE_DIRECT_DIFFUSE
 	, in int _diffuseCacheIndex
@@ -14,11 +15,11 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 
 	Ray lightRay;
 	// Direction to light & distance.
-	lightRay.Direction = _pos - lightSamplePos_Norm0.xyz;
+	lightRay.Direction = lightSamplePos_Norm0.xyz - _pos;
 	float lightDistSq = dot(lightRay.Direction, lightRay.Direction) + DIVISOR_EPSILON;
 	float lightDist = sqrt(lightDistSq);
 	lightRay.Direction /= lightDist;
-	float surfaceCos = saturate(-dot(lightRay.Direction, _normal));
+	float surfaceCos = saturate(dot(lightRay.Direction, _normal));
 
 	if(lightIntensity_Norm1.w > 1.0) // Wrong normals encode omnidirectional point lights
 	{
@@ -30,23 +31,23 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 		// Facing the light?
 		if(surfaceCos > 0.0)
 		{
-			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + lightSamplePos_Norm0.xyz;
-
 		#ifdef TRACERAY_IMPORTANCE_BREAK
-			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON * 2, _importanceThreshold))
+			lightRay.Origin = _distEpsilon * lightRay.Direction + _pos;
+			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON - _distEpsilon, _importanceThreshold))
 		#else
+			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + _pos;
 			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON * 2))
 		#endif
 			{
 				vec3 irradiance = (surfaceCos / lightDistSq) * lightIntensity_Norm1.xyz;
 			#ifdef CACHE_DIRECT_DIFFUSE
 				float pdf;
-				vec3 bsdfSpec = BSDFSpecular(_viewDir, -lightRay.Direction, _materialData, _normal, pdf);
+				vec3 bsdfSpec = BSDFSpecular(_viewDir, lightRay.Direction, _materialData, _normal, pdf);
 				diffuse_count += vec4(irradiance * GetDiffuseReflectance(_materialData, surfaceCos) / PI, 0.0);
 				specRadiance = irradiance * bsdfSpec;
 			#else
 				float pdf;
-				vec3 bsdf = BSDF(_viewDir, -lightRay.Direction, _materialData, _normal, pdf);
+				vec3 bsdf = BSDF(_viewDir, lightRay.Direction, _materialData, _normal, pdf);
 				return irradiance * bsdf;
 			#endif
 			}
@@ -64,10 +65,10 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 		vec3 lightNormal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
 
 		// Facing the light and light facing the surface?
-		float lightSampleIntensityFactor = saturate(dot(lightNormal, lightRay.Direction));
+		float lightSampleIntensityFactor = saturate(dot(lightNormal, -lightRay.Direction));
 		if(lightSampleIntensityFactor > 0.0 && surfaceCos > 0.0)
 		{
-			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + lightSamplePos_Norm0.xyz;
+			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + _pos;
 
 			#ifdef TRACERAY_IMPORTANCE_BREAK
 			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON * 2, _importanceThreshold))
@@ -79,7 +80,7 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 				float pdf;
 				// Hemispherical lambert emitter. First compensate the cosine factor
 				vec3 lightSampleIntensity = lightIntensity_Norm1.xyz * lightSampleIntensityFactor; // lightIntensity = lightIntensity in normal direction (often called I0) -> seen area is smaller to the border
-				vec3 bsdf = BSDF(_viewDir, -lightRay.Direction, _materialData, _normal, pdf);
+				vec3 bsdf = BSDF(_viewDir, lightRay.Direction, _materialData, _normal, pdf);
 
 				vec3 irradiance = (surfaceCos / lightDistSq) * lightSampleIntensity;
 				return irradiance * bsdf;

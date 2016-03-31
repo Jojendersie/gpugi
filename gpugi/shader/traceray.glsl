@@ -82,7 +82,7 @@
 						lastNodeSizeSq = nodeSizeSq;
 					#endif
 					//if(importance < _importanceThreshold)
-					if(((importance.x < IMPORTANCE_THRESHOLD) && (newHit > 0.0)) || (importance.y <= _importanceThreshold * newHit))
+					if(((importance.x < IMPORTANCE_THRESHOLD) && (newHit > 0.0)) || (importance.y <= _importanceThreshold * newHit * newHit))
 					//if((childCode & 0x80000000u) == 0x80000000u)
 					{
 					#ifdef ANY_HIT
@@ -92,7 +92,8 @@
 						_nodeImportance = importance.x;
 						_nodeSizeSq = lastNodeSizeSq;
 						_hitIndex.x = currentNodeIndex;
-						rayLength = (newHit + exitDist) * 0.5;
+						//rayLength = (newHit + exitDist) * 0.5;
+						rayLength = newHit + (exitDist - newHit) * float(wanghash(floatBitsToUint(exitDist)) % 8388593) / 8388593.0;
 						currentNodeIndex = escape;
 						_hitIndex.y = 0xFFFFFFFF;
 					#endif

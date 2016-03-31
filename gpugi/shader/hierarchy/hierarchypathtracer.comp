@@ -34,7 +34,7 @@ void main()
 
 	vec3 color = vec3(0.0);
 	vec3 pathThroughput = vec3(1.0);
-	float pathImportanceThreshold = 0.0005;
+	float pathImportanceThreshold = 0.00002;
 	bool didNextEventEstimation = false;
 	ivec2 hitMask = ivec2(0xFFFFFFFF);
 
@@ -84,15 +84,16 @@ void main()
 			materialData = SampleMaterialData(triangle.w, hitTexcoord);
 		}
 
-		float nextPathImportanceThreshold = pathImportanceThreshold * 3.0;
+		float nextPathImportanceThreshold = pathImportanceThreshold * 40.0;
 		float epsilon = RAY_HIT_EPSILON;
 		// Skip out of the node if we would only get a self intersection
-		/*if(nextPathImportanceThreshold >= importance)
+		//if(nextPathImportanceThreshold >= importance)
+		if(hitMask.y == 0xFFFFFFFF)
 		{
-			epsilon = sqrt(nodeSizeSq);
+			epsilon = sqrt(nodeSizeSq) * 0.1;
 		//	epsilon = length(texelFetch(HierachyBuffer, hitMask.x * HierarchyBufferStride).xyz -
 		//					 texelFetch(HierachyBuffer, hitMask.x * HierarchyBufferStride + 1).xyz);
-		}*/
+		}
 
 
 		// Add self emissivity of hit material.
@@ -114,7 +115,7 @@ void main()
 
 			int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
 			vec3 radiance = EstimateDirectLight(ray.Origin, hitNormal, sampleIndex,
-					ray.Direction, materialData, didNextEventEstimation, pathImportanceThreshold
+					ray.Direction, materialData, didNextEventEstimation, pathImportanceThreshold, epsilon
 				#ifdef CACHE_DIRECT_DIFFUSE
 					, (hitMask.y == 0xFFFFFFFF) ? hitMask.x : 0xFFFFFFFF
 				#endif

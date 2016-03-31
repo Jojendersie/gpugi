@@ -49,8 +49,8 @@ void main()
 		// If any of the children has no importance yet wait till next iteration.
 		if(childImportance == 0.0) return;
 		childrenImportance += childImportance;
-		childApproximationMax = max(childApproximationMax, HierarchyImportance[childNodeIndex].y);
-		//childApproximationMax += HierarchyImportance[childNodeIndex].y;
+		//childApproximationMax = max(childApproximationMax, HierarchyImportance[childNodeIndex].y);
+		childApproximationMax += HierarchyImportance[childNodeIndex].y;
 
 		// Next child
 		childNodeIndex = floatBitsToInt(texelFetch(HierachyBuffer, childNodeIndex * HierarchyBufferStride + 1).w); 	// w = Escape
