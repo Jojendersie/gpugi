@@ -31,7 +31,7 @@ void main()
 	// If we could have decided for the diffuse case in the last step, then the direct
 	// illumination specular part is already contained. This needs to be masked.
 	bool lastVertexDiffusePossible = false;
-	
+
 #ifdef SAVE_PIXEL_CACHE
 	// Not sure if the loop will ever write something to the buffer
 	// -> make sure that it has no influence later
@@ -54,7 +54,7 @@ void main()
 		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
 		// Get Material infos.
 		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
-		
+
 		// Add self emissivity of hit material.
 		//if(!lastVertexDiffusePossible)
 		//{
@@ -86,11 +86,11 @@ void main()
 			#endif
 
 				int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
-				vec3 radiance = EstimateDirectLight(ray.Origin, hitNormal, sampleIndex, ray.Direction, materialData);
+				vec3 radiance = EstimateDirectLight(ray.Origin, hitNormal, sampleIndex, ray.Direction, materialData, true);
 				color += radiance * pathThroughput * (lightSampleWeight / (pdiffuseAvg + DIVISOR_EPSILON));
 			}
 		#endif
-			
+
 		#ifdef SAVE_PIXEL_CACHE
 			// Save from where we came and the information for the current hit point
 			PixelCacheEntries[gridIndex].PathThroughput = pathThroughput / (pdiffuseAvg + DIVISOR_EPSILON);
@@ -108,7 +108,7 @@ void main()
 		// Color shift only
 		pathThroughput *= throughput / (GetLuminance(throughput) + DIVISOR_EPSILON);
 	}
-	
+
 	vec4 final = vec4(color, 1.0);
 	final += imageLoad(OutputTexture, gridPosition);
 	imageStore(OutputTexture, gridPosition, final);
