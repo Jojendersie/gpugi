@@ -4,7 +4,7 @@ void TraceRayCountHits(in Ray _ray, in float _rayLength, in float _pathImportanc
 	int currentLeafIndex = 0;
 	vec3 invRayDir = 1.0 / _ray.Direction;
 	bool nextIsLeafNode = false;
-	
+
 	do {
 		if(!nextIsLeafNode)
 		{
@@ -18,8 +18,8 @@ void TraceRayCountHits(in Ray _ray, in float _rayLength, in float _pathImportanc
 			#endif
 			{
 				// Count up the rays passing this node
-				atomicAdd(HierarchyImportance[currentNodeIndex], _pathImportance);
-				
+				atomicAdd(HierarchyImportance[currentNodeIndex].x, _pathImportance);
+
 				// Most significant bit tells us if this is a leaf.
 				currentNodeIndex = int(childCode & uint(0x7FFFFFFF));
 				nextIsLeafNode = currentNodeIndex != childCode;
@@ -35,8 +35,8 @@ void TraceRayCountHits(in Ray _ray, in float _rayLength, in float _pathImportanc
 			{
 				currentNodeIndex = escape;
 			}
-		}	
-		
+		}
+
 		// If it is a leaf ...
 		// The nextIsLeafNode can be changed since 'if(!nextIsLeafNode)', so do no 'else' here
 		if(nextIsLeafNode)
@@ -59,13 +59,13 @@ void TraceRayCountHits(in Ray _ray, in float _rayLength, in float _pathImportanc
 				if(IntersectTriangle(_ray, positions[0], positions[1], positions[2], newHit, newBarycentricCoord, newTriangleNormal)
 					&& newHit <= _rayLength)
 				{
-					atomicAdd(HierarchyImportance[NumInnerNodes + currentLeafIndex], _pathImportance);
+					atomicAdd(HierarchyImportance[NumInnerNodes + currentLeafIndex].x, _pathImportance);
 				}
 
 				++currentLeafIndex;
 				nextIsLeafNode = (currentLeafIndex % TRIANGLES_PER_LEAF) != 0;
 			}
 		}
-		
+
 	} while(currentNodeIndex != 0 || nextIsLeafNode);
 }

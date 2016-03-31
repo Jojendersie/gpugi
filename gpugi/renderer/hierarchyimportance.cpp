@@ -31,8 +31,8 @@ void HierarchyImportance::SetScene(shared_ptr<Scene> _scene)
 {
 	RecompileShaders(_scene->GetBvhTypeDefineString());
 	// Contains an importance value (float) for each node (first) and each triangle (after node values)
-	m_hierarchyImportance = make_shared<gl::Buffer>(sizeof(float) * (_scene->GetNumLeafTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::IMMUTABLE);
-	m_hierachyImportanceView = make_unique<gl::TextureBufferView>(m_hierarchyImportance, gl::TextureBufferFormat::R32F);
+	m_hierarchyImportance = make_shared<gl::Buffer>(sizeof(ei::Vec2) * (_scene->GetNumLeafTriangles() + _scene->GetNumInnerNodes()), gl::Buffer::IMMUTABLE);
+	m_hierachyImportanceView = make_unique<gl::TextureBufferView>(m_hierarchyImportance, gl::TextureBufferFormat::RG32F);
 	m_hierachyImportanceView->BindBuffer((uint)Binding::HIERARCHY_IMPORTANCE);
 	m_subtreeImportance = make_shared<gl::Buffer>(sizeof(float) * _scene->GetNumInnerNodes(), gl::Buffer::IMMUTABLE);
 	m_subtreeImportance->BindShaderStorageBuffer((uint)Binding::SUBTREE_IMPORTANCE);
@@ -42,6 +42,15 @@ void HierarchyImportance::SetScene(shared_ptr<Scene> _scene)
 	gl::MappedUBOView mapView(m_hierarchyImportanceUBOInfo, m_hierarchyImportanceUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	mapView["NumInnerNodes"].Set(static_cast<int32_t>(_scene->GetNumInnerNodes()));
 	mapView["NumTriangles"].Set(static_cast<int32_t>(_scene->GetNumLeafTriangles()));
+	switch(_scene->GetBvhType())
+	{
+	case ei::Types3D::BOX:
+		mapView["HierarchyBufferStride"].Set(static_cast<int32_t>(sizeof(Scene::TreeNode<ei::Box>) / sizeof(ei::Vec4)));
+		break;
+	case ei::Types3D::OBOX:
+		mapView["HierarchyBufferStride"].Set(static_cast<int32_t>(sizeof(Scene::TreeNode<ei::OBox>) / sizeof(ei::Vec4)));
+		break;
+	}
 	m_hierarchyImportanceUBO->Unmap();
 
 	// Parent pointer for hierarchy propagation.
@@ -92,7 +101,7 @@ void HierarchyImportance::Draw()
 			// Compute triangle importance
 			m_hierarchyImpAcquisitionShader.Activate();
 			GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localSizePathtracer.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localSizePathtracer.y, 1);
-			GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
+			GL_CALL(glMemoryBarrier, GL_ALL_BARRIER_BITS);// GL_SHADER_STORAGE_BARRIER_BIT);
 		}
 		// Propagate importance through hierarchy
 		UpdateHierarchyNodeImportance();

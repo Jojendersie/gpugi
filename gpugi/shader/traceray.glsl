@@ -73,22 +73,23 @@
 					lastNodeIndex = currentNodeIndex;
 				#endif
 				#ifdef TRACERAY_IMPORTANCE_BREAK
-					float importance = texelFetch(HierarchyImportanceBuffer, currentNodeIndex).x;
+					vec2 importance = texelFetch(HierarchyImportanceBuffer, currentNodeIndex).xy;
+					//float approximation = Approximation[currentNodeIndex];
 					//float importance = HierarchyImportance[currentNodeIndex];
 					//float importance = nodeSizeSq * 1000000.0;
 					#ifndef ANY_HIT
-						lastNodeImportance = importance;
+						lastNodeImportance = importance.x;
 						lastNodeSizeSq = nodeSizeSq;
 					#endif
 					//if(importance < _importanceThreshold)
-					if(importance < _importanceThreshold)
+					if(((importance.x < IMPORTANCE_THRESHOLD) && (newHit > 0.0)) || (importance.y <= _importanceThreshold * newHit))
 					//if((childCode & 0x80000000u) == 0x80000000u)
 					{
 					#ifdef ANY_HIT
 						if(exitDist <= rayLength) return true;
 						currentNodeIndex = escape;
 					#else
-						_nodeImportance = importance;
+						_nodeImportance = importance.x;
 						_nodeSizeSq = lastNodeSizeSq;
 						_hitIndex.x = currentNodeIndex;
 						rayLength = (newHit + exitDist) * 0.5;

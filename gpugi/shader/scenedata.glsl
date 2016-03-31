@@ -64,7 +64,11 @@ layout(binding=5) uniform samplerBuffer InitialLightSampleBuffer;
 {
 	float HierarchyImportance[];
 };*/
-layout(binding=6) uniform samplerBuffer HierarchyImportanceBuffer;
+layout(binding = 6) uniform samplerBuffer HierarchyImportanceBuffer;
+layout(binding = 10, std430) restrict readonly buffer ApproximationBuffer
+{
+	float Approximation[];
+};
 #endif
 
 #ifdef CACHE_DIRECT_DIFFUSE

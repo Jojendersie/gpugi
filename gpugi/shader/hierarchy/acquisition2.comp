@@ -16,7 +16,7 @@
 //layout(binding = 1, r32f) coherent uniform image2D HierarchyImportanceBuffer;
 layout(std430, binding = 6) restrict coherent buffer HierarchyImportanceBuffer
 {
-	float HierarchyImportance[];
+	vec2 HierarchyImportance[];
 };
 
 #include "counthits.glsl"
@@ -48,7 +48,7 @@ void main()
 		float rayHit = RAY_MAX;
 		ivec2 hitIndex = ivec2(0xFFFFFFFF);
 		TraceRay(ray, rayHit, hitIndex, barycentricCoord, triangle);
-		TraceRayCountHits(ray, rayHit, pathImportance);
+		TraceRayCountHits(ray, rayHit * 1.000001, pathImportance);
 		if(rayHit == RAY_MAX)
 			break;
 
@@ -90,7 +90,7 @@ void main()
 				TraceRay(lightRay, rayHit, hitIndex, barycentricCoord, triangle);
 				if(rayHit < lightDist)
 				{
-					TraceRayCountHits(lightRay, rayHit, pathImportance);
+					TraceRayCountHits(lightRay, rayHit * 1.000001, pathImportance);
 					//GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
 					//silhouetteWeight = 1.0 / abs(dot(hitNormal, lightRay.Direction));
 					//atomicAdd(HierarchyImportance[NumInnerNodes + hitIndex.y], pathImportance * silhouetteWeight);
