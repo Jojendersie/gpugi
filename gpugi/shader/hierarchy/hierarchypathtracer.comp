@@ -1,7 +1,7 @@
 #version 450
 
 //#define CACHE_DIRECT_DIFFUSE
-#define IMPORTANCE_THRESHOLD 1.0
+#define IMPORTANCE_THRESHOLD 0.0
 
 #define HIT_INDEX_OUTPUT
 #define TRACERAY_IMPORTANCE_BREAK
@@ -34,7 +34,7 @@ void main()
 
 	vec3 color = vec3(0.0);
 	vec3 pathThroughput = vec3(1.0);
-	float pathImportanceThreshold = 0.00002;
+	float pathImportanceThreshold = 0.000430915; // tan(yFOV/2) / height / 4
 	bool didNextEventEstimation = false;
 	ivec2 hitMask = ivec2(0xFFFFFFFF);
 
@@ -84,7 +84,7 @@ void main()
 			materialData = SampleMaterialData(triangle.w, hitTexcoord);
 		}
 
-		float nextPathImportanceThreshold = pathImportanceThreshold * 40.0;
+		float nextPathImportanceThreshold = pathImportanceThreshold * 20.0;
 		float epsilon = RAY_HIT_EPSILON;
 		// Skip out of the node if we would only get a self intersection
 		//if(nextPathImportanceThreshold >= importance)

@@ -35,7 +35,7 @@ void main()
 	HierarchyImportance[gl_GlobalInvocationID.x].y = 0.0;
 	float childrenImportance = 0.0;
 
-	// Sum up importance values of the children (triangles or nodes).
+	// Sum up importance values of the children (triangles).
 	if(isChildLeaf)
 	{
 		int currentTriangleIndex = int(TRIANGLES_PER_LEAF * childNodeIndex);
@@ -47,13 +47,24 @@ void main()
 		// Amplify the importance by the ratio of children and own importance.
 		// This is the hit-probability-difference between the nodes. The higher the difference the
 		// more important is to check the children themselves.
-	//	totalImportance *= totalImportance / childrenImportance;
 		// Normalize (each individual importance value should have been divided by the number
 		// of iterations, which is equivalent to doing it once in the end).
 		childrenImportance /= NumImportanceIterations;
-	//	HierarchyImportance[gl_GlobalInvocationID.x] = totalImportance / NumImportanceIterations;
 		SubtreeImportance[gl_GlobalInvocationID.x] = max(childrenImportance, NotificationBias);
-		HierarchyImportance[gl_GlobalInvocationID.x].y = 1.0;//HierarchyImportance[gl_GlobalInvocationID.x].x / childrenImportance;
-		// TODO: assert that imp.y is >= 1
+		//HierarchyImportance[gl_GlobalInvocationID.x].y = 1.0;
+		float approximation = HierarchyImportance[gl_GlobalInvocationID.x].x / childrenImportance;
+#ifdef AABOX_BVH
+		vec4 hierarchy1 = texelFetch(HierachyBuffer, int(gl_GlobalInvocationID.x) * HierarchyBufferStride + 1);
+		// hierarchy0.xyz and hierarchy1.xyz are bbmin and bbmax
+		vec3 sides = hierarchy1.xyz - hierarchy0.xyz;
+		float avgArea = (sides.x * sides.y + sides.x * sides.z + sides.y * sides.z) * 2.0 / 6.0;
+#elif defined(OBOX_BVH)
+		vec4 hierarchy1 = texelFetch(HierachyBuffer, int(gl_GlobalInvocationID.x) * HierarchyBufferStride + 1);
+		// hierarchy1.xyz are the side length halfed -> x*y*4 = one side in xy
+		// -> *8 for the two opposite sides.
+		float avgArea = (hierarchy1.x * hierarchy1.y + hierarchy1.x * hierarchy1.z + hierarchy1.y * hierarchy1.z) * 8.0 / 6.0;
+#endif
+		HierarchyImportance[gl_GlobalInvocationID.x].y = approximation * approximation * avgArea;
+		// TODO: assert that approximation is >= 1
 	}
 }

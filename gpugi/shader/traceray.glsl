@@ -81,8 +81,7 @@
 						lastNodeImportance = importance.x;
 						lastNodeSizeSq = nodeSizeSq;
 					#endif
-					//if(importance < _importanceThreshold)
-					if(((importance.x < IMPORTANCE_THRESHOLD) && (newHit > 0.0)) || (importance.y <= _importanceThreshold * newHit * newHit))
+					if(((importance.x < IMPORTANCE_THRESHOLD) && (newHit > 0.0)) || (importance.y <= _importanceThreshold * newHit))
 					//if((childCode & 0x80000000u) == 0x80000000u)
 					{
 					#ifdef ANY_HIT
