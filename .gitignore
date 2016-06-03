@@ -32,12 +32,18 @@
 *.sdf
 *.user
 *.suo
+*.db
 
 # Latex
 *.aux
 *.log
 *.pdf
 *.gz
+
+# Images
+*.png
+*.jpg
+*.bmp
 
 # Build directories
 /x64
@@ -50,6 +56,9 @@ log.txt
 *.rawscene
 *.pfm
 *.mtl
+*.patch
+*.bim
 /scenes/cryteksponza/textures
 /scenes/sanmiguel/Maps
 /documentation/docs
+/envmaps
