@@ -75,60 +75,61 @@ const char* Scene::GetBvhTypeDefineString() const
 
 void Scene::UploadGeometry()
 {
-	// Allocate and partially upload directly (where matching)
-	m_vertexPositionBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(ei::Vec3) * m_sceneChunk->getNumVertices()), gl::Buffer::IMMUTABLE, m_sceneChunk->getPositions());
-	m_vertexInfoBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(VertexInfo) * m_sceneChunk->getNumVertices()), gl::Buffer::MAP_WRITE);
-	m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_sceneChunk->getNumTrianglesPerLeaf() * sizeof(ei::UVec4) * m_sceneChunk->getNumLeafNodes()), gl::Buffer::IMMUTABLE, m_sceneChunk->getLeafNodes() );
-
-	VertexInfo* infoData = static_cast<VertexInfo*>(m_vertexInfoBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+	std::vector<VertexInfo> infoData;
+	infoData.resize(m_sceneChunk->getNumVertices());
 	for(uint v = 0; v < m_sceneChunk->getNumVertices(); ++v)
 	{
 		infoData[v].normalAngles.x = atan2(m_sceneChunk->getNormals()[v].y, m_sceneChunk->getNormals()[v].x);
 		infoData[v].normalAngles.y = m_sceneChunk->getNormals()[v].z;
 		infoData[v].texcoord = m_sceneChunk->getTexCoords0()[v];
 	}
-	m_vertexInfoBuffer->Unmap();
+
+	// Allocate and upload directly (immutable resources are faster, but need the data on setup)
+	m_vertexPositionBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(ei::Vec3) * m_sceneChunk->getNumVertices()), gl::Buffer::IMMUTABLE, m_sceneChunk->getPositions());
+	m_vertexInfoBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(VertexInfo) * m_sceneChunk->getNumVertices()), gl::Buffer::IMMUTABLE, infoData.data());
+	m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_sceneChunk->getNumTrianglesPerLeaf() * sizeof(ei::UVec4) * m_sceneChunk->getNumLeafNodes()), gl::Buffer::IMMUTABLE, m_sceneChunk->getLeafNodes() );
 }
 
 void Scene::UploadHierarchy(ε::Types3D _bvhType)
 {
-	// Allocate
-	if(_bvhType == ε::Types3D::BOX)
-		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Box>) * m_sceneChunk->getNumNodes()), gl::Buffer::MAP_WRITE);
-	else if(_bvhType == ε::Types3D::OBOX)
-		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::OBox>) * m_sceneChunk->getNumNodes()), gl::Buffer::MAP_WRITE);
-	m_parentBuffer = std::make_shared<gl::Buffer>(uint32(4 * m_sceneChunk->getNumNodes()), gl::Buffer::MAP_WRITE);
-	// Map
-	uint32* parentBuffer = reinterpret_cast<uint32*>(m_parentBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+	// Prepare data for upload
+	std::vector<uint32> parentBuffer;
+	parentBuffer.resize(m_sceneChunk->getNumNodes());
 	for(uint i = 0; i < m_sceneChunk->getNumNodes(); ++i)
 	{
 		parentBuffer[i] = m_sceneChunk->getHierarchy()[i].parent;
 	}
-	m_parentBuffer->Unmap();
+	std::vector<char> hierarchy;
 	if(_bvhType == ε::Types3D::BOX)
 	{
-		TreeNode<ei::Box>* hierachy = reinterpret_cast<TreeNode<ei::Box>*>(m_hierarchyBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+		hierarchy.reserve(sizeof(TreeNode<ε::Box>) * m_sceneChunk->getNumNodes());
+		TreeNode<ε::Box>* hierarchyData = reinterpret_cast<TreeNode<ε::Box>*>(hierarchy.data());
 		for(uint i = 0; i < m_sceneChunk->getNumNodes(); ++i)
 		{
-			hierachy[i].min = m_sceneChunk->getHierarchyAABoxes()[i].min;
-			hierachy[i].max = m_sceneChunk->getHierarchyAABoxes()[i].max;
-			hierachy[i].escape = m_sceneChunk->getHierarchy()[i].escape;
-			hierachy[i].firstChild = m_sceneChunk->getHierarchy()[i].firstChild;
+			hierarchyData[i].min = m_sceneChunk->getHierarchyAABoxes()[i].min;
+			hierarchyData[i].max = m_sceneChunk->getHierarchyAABoxes()[i].max;
+			hierarchyData[i].escape = m_sceneChunk->getHierarchy()[i].escape;
+			hierarchyData[i].firstChild = m_sceneChunk->getHierarchy()[i].firstChild;
 		}
-		m_hierarchyBuffer->Unmap();
 	} else if(_bvhType == ε::Types3D::OBOX)
 	{
-		TreeNode<ei::OBox>* hierachy = reinterpret_cast<TreeNode<ei::OBox>*>(m_hierarchyBuffer->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+		hierarchy.reserve(sizeof(TreeNode<ε::OBox>) * m_sceneChunk->getNumNodes());
+		TreeNode<ε::OBox>* hierarchyData = reinterpret_cast<TreeNode<ε::OBox>*>(hierarchy.data());
 		for(uint i = 0; i < m_sceneChunk->getNumNodes(); ++i)
 		{
-			hierachy[i].center = m_sceneChunk->getHierarchyOBoxes()[i].center;
-			hierachy[i].sidesHalf = m_sceneChunk->getHierarchyOBoxes()[i].sides * 0.5f;
-			hierachy[i].rotationInv = conjugate(m_sceneChunk->getHierarchyOBoxes()[i].orientation);
-			hierachy[i].escape = m_sceneChunk->getHierarchy()[i].escape;
-			hierachy[i].firstChild = m_sceneChunk->getHierarchy()[i].firstChild;
+			hierarchyData[i].center = m_sceneChunk->getHierarchyOBoxes()[i].center;
+			hierarchyData[i].sidesHalf = m_sceneChunk->getHierarchyOBoxes()[i].sides * 0.5f;
+			hierarchyData[i].rotationInv = conjugate(m_sceneChunk->getHierarchyOBoxes()[i].orientation);
+			hierarchyData[i].escape = m_sceneChunk->getHierarchy()[i].escape;
+			hierarchyData[i].firstChild = m_sceneChunk->getHierarchy()[i].firstChild;
 		}
-		m_hierarchyBuffer->Unmap();
 	}
+	// Allocate and upload
+	if(_bvhType == ε::Types3D::BOX)
+		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Box>) * m_sceneChunk->getNumNodes()), gl::Buffer::IMMUTABLE, hierarchy.data());
+	else if(_bvhType == ε::Types3D::OBOX)
+		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::OBox>) * m_sceneChunk->getNumNodes()), gl::Buffer::IMMUTABLE, hierarchy.data());
+	m_parentBuffer = std::make_shared<gl::Buffer>(uint32(4 * m_sceneChunk->getNumNodes()), gl::Buffer::IMMUTABLE, parentBuffer.data());
 
 	// Upload SGGX NDFs only if available
 	if(m_sceneChunk->getNodeNDFs())

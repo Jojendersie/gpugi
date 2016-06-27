@@ -2,7 +2,7 @@
 //#define NODE_TYPE_SPHERE 1
 #define NODE_TYPE NODE_TYPE_BOX
 
-#define TRIANGLES_PER_LEAF 8
+#define TRIANGLES_PER_LEAF 2
 
 // Theoretically GL_ARB_enhanced_layouts allows explicit memory layout.
 // Reality: Such qualifiers are not allowed for structs which means that it is not possible to align arrays properly without these helper constructs.
