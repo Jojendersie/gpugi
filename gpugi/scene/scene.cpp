@@ -93,12 +93,6 @@ void Scene::UploadGeometry()
 void Scene::UploadHierarchy(ε::Types3D _bvhType)
 {
 	// Prepare data for upload
-	std::vector<uint32> parentBuffer;
-	parentBuffer.resize(m_sceneChunk->getNumNodes());
-	for(uint i = 0; i < m_sceneChunk->getNumNodes(); ++i)
-	{
-		parentBuffer[i] = m_sceneChunk->getHierarchy()[i].parent;
-	}
 	std::vector<char> hierarchy;
 	if(_bvhType == ε::Types3D::BOX)
 	{
@@ -129,7 +123,7 @@ void Scene::UploadHierarchy(ε::Types3D _bvhType)
 		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::Box>) * m_sceneChunk->getNumNodes()), gl::Buffer::IMMUTABLE, hierarchy.data());
 	else if(_bvhType == ε::Types3D::OBOX)
 		m_hierarchyBuffer = std::make_shared<gl::Buffer>(uint32(sizeof(TreeNode<ε::OBox>) * m_sceneChunk->getNumNodes()), gl::Buffer::IMMUTABLE, hierarchy.data());
-	m_parentBuffer = std::make_shared<gl::Buffer>(uint32(4 * m_sceneChunk->getNumNodes()), gl::Buffer::IMMUTABLE, parentBuffer.data());
+	m_parentBuffer = std::make_shared<gl::Buffer>(uint32(4 * m_sceneChunk->getNumNodes()), gl::Buffer::IMMUTABLE, m_sceneChunk->getHierarchyParents());
 
 	// Upload SGGX NDFs only if available
 	if(m_sceneChunk->getNodeNDFs())

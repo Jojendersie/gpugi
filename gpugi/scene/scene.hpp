@@ -115,6 +115,7 @@ public:
 	std::shared_ptr<gl::Buffer> GetParentBuffer() const			{ return m_parentBuffer; }
 	/// A CPU sided version of the parent buffer.
 	const bim::Node* GetHierarchyRAM() const					{ return m_sceneChunk->getHierarchy(); }
+	const uint32* GetHierarchyParentsRAM() const				{ return m_sceneChunk->getHierarchyParents(); }
 
 	const std::vector<Material>& GetMaterials() const			{ return m_materials; }
 	const std::vector<PointLight>& GetPointLights() const		{ return m_pointLights; }
