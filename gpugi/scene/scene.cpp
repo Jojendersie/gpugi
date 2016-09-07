@@ -87,7 +87,7 @@ void Scene::UploadGeometry()
 	// Allocate and upload directly (immutable resources are faster, but need the data on setup)
 	m_vertexPositionBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(ei::Vec3) * m_sceneChunk->getNumVertices()), gl::Buffer::IMMUTABLE, m_sceneChunk->getPositions());
 	m_vertexInfoBuffer = std::make_shared<gl::Buffer>(static_cast<std::uint32_t>(sizeof(VertexInfo) * m_sceneChunk->getNumVertices()), gl::Buffer::IMMUTABLE, infoData.data());
-	m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_sceneChunk->getNumTrianglesPerLeaf() * sizeof(ei::UVec4) * m_sceneChunk->getNumLeafNodes()), gl::Buffer::IMMUTABLE, m_sceneChunk->getLeafNodes() );
+	m_triangleBuffer = std::make_shared<gl::Buffer>( uint32(m_model.getNumTrianglesPerLeaf() * sizeof(ei::UVec4) * m_sceneChunk->getNumLeafNodes()), gl::Buffer::IMMUTABLE, m_sceneChunk->getLeafNodes() );
 }
 
 void Scene::UploadHierarchy(ε::Types3D _bvhType)

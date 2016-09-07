@@ -39,7 +39,7 @@ void GetBSDFDecisionPropabilities(MaterialData materialData, float cosThetaAbs,
 									out vec3 preflect, out vec3 prefract, out vec3 pdiffuse)
 {
 	// Compute reflection probabilities with rescaled fresnel approximation from:
-	// Fresnel Term Approximations for Metals
+	// "Fresnel Term Approximations for Metals" 2005
 	// ((n-1)²+k²) / ((n+1)²+k²) + 4n / ((n+1)²+k²) * (1-cos theta)^5
 	// = Fresnel0 + Fresnel1 * (1-cos theta)^5
 	preflect = materialData.Reflectiveness.xyz * (materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0);

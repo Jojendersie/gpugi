@@ -1,8 +1,0 @@
-sceneFilename = ../scenes/rungholt/rungholt.rawscene
-cameraPos= 200.069214, 200.171387, -200.871895
-cameraLookAt = -784.925598, -525.603210, 124.154999
-cameraFOV = 70
-resolution = 1024, 768
-
-renderer=0
-debugrenderer=1

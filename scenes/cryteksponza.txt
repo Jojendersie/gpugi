@@ -1,3 +1,4 @@
+envMap = 1024, ../envmaps/sky0/xneg.png, ../envmaps/sky0/xpos.png, ../envmaps/sky0/yneg.png, ../envmaps/sky0/ypos.png, ../envmaps/sky0/zneg.png, ../envmaps/sky0/zpos.png
 sceneFilename = ../scenes/cryteksponza/sponza.bim
 cameraPos= 784.069214, 525.171387, -123.871895
 cameraLookAt = -784.925598, -525.603210, 124.154999

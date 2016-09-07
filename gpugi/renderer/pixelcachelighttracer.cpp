@@ -21,10 +21,11 @@ PixelCacheLighttracer::PixelCacheLighttracer(RendererSystem& _rendererSystem) :
 {
 	std::string additionalDefines = "#define STOP_ON_DIFFUSE_BOUNCE\n";
 	additionalDefines += "#define SAVE_PIXEL_CACHE\n";
+	additionalDefines += "#define AABOX_BVH\n";
 
 	m_eyetraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/whittedraytracer.comp", additionalDefines);
 	m_eyetraceShader.CreateProgram();
-	m_lighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer_pixca.comp", "");
+	m_lighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer_pixca.comp", "#define AABOX_BVH\n");
 	m_lighttraceShader.CreateProgram();
 
 	m_lightpathtraceUBOInfo = m_lighttraceShader.GetUniformBufferInfo().find("LightPathTrace")->second	;

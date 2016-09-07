@@ -1,0 +1,11 @@
+envMap = 1024, ../envmaps/sky0/xneg.png, ../envmaps/sky0/xpos.png, ../envmaps/sky0/yneg.png, ../envmaps/sky0/ypos.png, ../envmaps/sky0/zneg.png, ../envmaps/sky0/zpos.png
+bvhType = 1
+sceneFilename = ../scenes/treasure/KingsTreasure.bim
+cameraPos = -2.45, 1.62, 2.03
+cameraLookAt = 0.0, 0.0, 0.0
+cameraFOV = 67
+resolution = 1024, 768
+
+addPointLight = 1000.0, 500.0, -575.0, 5000000.0, 4970000.0, 4880000.0
+
+renderer=0

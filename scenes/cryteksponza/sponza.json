@@ -1,218 +1,220 @@
 {
-  "leaf": {
-    "diffuseTex": "textures\sponza_thorn_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "vase_round": {
-    "diffuseTex": "textures\vase_round.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "Material__57": {
-    "diffuseTex": "textures\vase_plant.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "Material__298": {
-    "diffuseTex": "textures\background.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "bricks": {
-    "diffuseTex": "textures\spnza_bricks_a_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "arch": {
-    "diffuseTex": "textures\sponza_arch_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "ceiling": {
-    "diffuseTex": "textures\sponza_ceiling_a_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "column_a": {
-    "diffuseTex": "textures\sponza_column_a_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "floor": {
-    "diffuseTex": "textures\sponza_floor_a_diff.tga",
-    "reflectiveness": [0.500000, 0.500000, 0.500000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [1.000000, 1.000000, 1.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "column_c": {
-    "diffuseTex": "textures\sponza_column_c_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "details": {
-    "diffuseTex": "textures\sponza_details_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "column_b": {
-    "diffuseTex": "textures\sponza_column_b_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "Material__47": {
-    "diffuse": [0.588000, 0.588000, 0.588000],
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "flagpole": {
-    "diffuseTex": "textures\sponza_flagpole_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "fabric_e": {
-    "diffuseTex": "textures\sponza_fabric_green_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "fabric_d": {
-    "diffuseTex": "textures\sponza_fabric_blue_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "fabric_a": {
-    "diffuseTex": "textures\sponza_fabric_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "fabric_g": {
-    "diffuseTex": "textures\sponza_curtain_blue_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "fabric_c": {
-    "diffuseTex": "textures\sponza_curtain_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "fabric_f": {
-    "diffuseTex": "textures\sponza_curtain_green_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "chain": {
-    "diffuseTex": "textures\chain_texture.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "vase_hanging": {
-    "diffuseTex": "textures\vase_hanging.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "vase": {
-    "diffuseTex": "textures\vase_dif.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "Material__25": {
-    "diffuseTex": "textures\lion.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "roof": {
-    "diffuseTex": "textures\sponza_roof_diff.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "DefaultMaterial": {
-    "diffuse": [0.600000, 0.600000, 0.600000],
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 0.000000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "16___Default": {
-    "diffuseTex": "textures\gi_flag.tga",
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 40.000000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  }
+	"materials": {
+		"DefaultMaterial": {
+			"diffuse": [0.6, 0.6, 0.6, 0],
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 0.000000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"leaf": {
+			"diffuse": "textures\sponza_thorn_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"vase_round": {
+			"diffuse": "textures\vase_round.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"Material__57": {
+			"diffuse": "textures\vase_plant.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"Material__298": {
+			"diffuse": "textures\background.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"16___Default": {
+			"diffuse": "textures\gi_flag.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 40.000000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"bricks": {
+			"diffuse": "textures\sponza_bricks_a_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"arch": {
+			"diffuse": "textures\sponza_arch_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"ceiling": {
+			"diffuse": "textures\sponza_ceiling_a_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"column_a": {
+			"diffuse": "textures\sponza_column_a_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"floor": {
+			"diffuse": "textures\sponza_floor_a_diff.tga",
+			"reflectiveness": [0.500000, 0.500000, 0.500000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [1.000000, 1.000000, 1.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"column_c": {
+			"diffuse": "textures\sponza_column_c_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"details": {
+			"diffuse": "textures\sponza_details_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"column_b": {
+			"diffuse": "textures\sponza_column_b_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"Material__47": {
+			"diffuse": [0.588, 0.588, 0.588, 0],
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"flagpole": {
+			"diffuse": "textures\sponza_flagpole_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"fabric_e": {
+			"diffuse": "textures\sponza_fabric_green_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"fabric_d": {
+			"diffuse": "textures\sponza_fabric_blue_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"fabric_a": {
+			"diffuse": "textures\sponza_fabric_red_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"fabric_g": {
+			"diffuse": "textures\sponza_curtain_blue_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"fabric_c": {
+			"diffuse": "textures\sponza_curtain_red_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"fabric_f": {
+			"diffuse": "textures\sponza_curtain_green_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"chain": {
+			"diffuse": "textures\chain_texture.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"vase_hanging": {
+			"diffuse": "textures\vase_hanging.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"vase": {
+			"diffuse": "textures\vase_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"Material__25": {
+			"diffuse": "textures\lion_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"roof": {
+			"diffuse": "textures\sponza_roof_diff.tga",
+			"reflectiveness": [0.000000, 0.000000, 0.000000, 10.100000],
+			"refractionIndexN": [1.450000, 1.450000, 1.450000],
+			"refractionIndexK": [0.000000, 0.000000, 0.000000],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		}
+	}
 }

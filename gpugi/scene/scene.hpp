@@ -123,8 +123,8 @@ public:
 	/// The bvh uses ε:: geometries. Which one can change with the files (well currently not).
 	ε::Types3D GetBoundingVolumeType() const	{ return ei::Types3D::BOX; }
 
-	uint32 GetNumTrianglesPerLeaf() const		{ return m_sceneChunk->getNumTrianglesPerLeaf(); }
-	uint32 GetNumLeafTriangles() const			{ return m_sceneChunk->getNumLeafNodes() * m_sceneChunk->getNumTrianglesPerLeaf(); }
+	uint32 GetNumTrianglesPerLeaf() const		{ return m_model.getNumTrianglesPerLeaf(); }
+	uint32 GetNumLeafTriangles() const			{ return m_sceneChunk->getNumLeafNodes() * m_model.getNumTrianglesPerLeaf(); }
 	uint32 GetNumInnerNodes() const				{ return m_sceneChunk->getNumNodes(); }
 	uint32 GetNumMaterials() const				{ return m_model.getNumMaterials(); }
 	uint32 GetNumVertices() const				{ return m_sceneChunk->getNumVertices(); }

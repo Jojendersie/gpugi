@@ -1,0 +1,7 @@
+sceneFilename = ../scenes/box1/box1.bim
+cameraPos = 0.0, 1.5, 2.27
+cameraLookAt = 0.0, 1.5, 2.0
+cameraFOV = 67
+resolution = 1024, 768
+
+renderer=1

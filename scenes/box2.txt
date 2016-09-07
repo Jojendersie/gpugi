@@ -1,10 +1,11 @@
-sceneFilename = ../scenes/box2/box2.rawscene
+bvhType = 1
+sceneFilename = ../scenes/box2/box2.bim
 cameraPos = 0.0, 1.5, 2.27
 cameraLookAt = 0.0, 1.5, 2.0
 cameraFOV = 67
 resolution = 1024, 768
 
-addPointLight = -0.668, 2.115, -2.699, 40.0, 40.0, 40.0
-addPointLight = 0.186, 0.6, -2.563, 25.0, 25.0, 25.0
+addPointLight = -0.668, 2.115, -2.699, 4.0, 4.0, 4.0
+addPointLight = 0.186, 0.6, -2.563, 2.5, 2.5, 2.5
 
-renderer=5
+renderer=0

@@ -1,74 +1,76 @@
 {
-  "Floor": {
-    "diffuse": [0.588200, 0.588200, 0.588200],
-    "reflectiveness": [1.000000, 1.000000, 1.000000, 256.000000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [1.600000, 1.600000, 1.600000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "LeftWall": {
-    "diffuse": [0.010000, 0.010000, 0.337300],
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 40.000000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "RightWall": {
-    "diffuse": [0.010000, 0.286300, 0.010000],
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 40.000000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "Wall": {
-    "diffuse": [0.588200, 0.588200, 0.588200],
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 40.000000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "Glass": {
-    "diffuse": [0.000000, 0.000000, 0.000000],
-    "reflectiveness": [1.000000, 1.000000, 1.000000, 320000.000000],
-    "refractionIndexN": [1.500000, 1.500000, 1.500000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [0.000000, 0.000000, 0.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "White": {
-    "diffuse": [1.000000, 1.000000, 1.000000],
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 40.000000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  },
-  "LightR": {
-    "diffuse": [1.000000, 1.000000, 1.000000],
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 40.000000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [800.000000, 200.000000, 20.000000]
-  },
-  "LightL": {
-    "diffuse": [1.000000, 1.000000, 1.000000],
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 40.000000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [100.000000, 400.000000, 800.000000]
-  },
-  "DefaultMaterial": {
-    "diffuse": [0.600000, 0.600000, 0.600000],
-    "reflectiveness": [0.000000, 0.000000, 0.000000, 0.000000],
-    "refractionIndexN": [1.450000, 1.450000, 1.450000],
-    "refractionIndexK": [0.000000, 0.000000, 0.000000],
-    "opacity": [1.000000, 1.000000, 1.000000],
-    "emissivity": [0.000000, 0.000000, 0.000000]
-  }
+	"materials": {
+		"DefaultMaterial": {
+			"diffuse": [0.6, 0.6, 0.6, 0],
+			"reflectiveness": [0.0, 0.00000, 0.00000, 10.000000],
+			"refractionIndexN": [1.45, 1.45, 1.45],
+			"refractionIndexK": [0.0, 0.0, 0.0],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"Floor": {
+			"diffuse": [0.5882, 0.5882, 0.5882, 0],
+			"reflectiveness": [0.0, 0.00000, 0.00000, 10.000000],
+			"refractionIndexN": [1.45, 1.45, 1.45],
+			"refractionIndexK": [0.0, 0.0, 0.0],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"LeftWall": {
+			"diffuse": [0, 0, 0.3373, 0],
+			"reflectiveness": [0.0, 0.00000, 0.00000, 10.000000],
+			"refractionIndexN": [1.45, 1.45, 1.45],
+			"refractionIndexK": [0.0, 0.0, 0.0],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"RightWall": {
+			"diffuse": [0, 0.2863, 0, 0],
+			"reflectiveness": [0.0, 0.00000, 0.00000, 10.000000],
+			"refractionIndexN": [1.45, 1.45, 1.45],
+			"refractionIndexK": [0.0, 0.0, 0.0],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"Wall": {
+			"diffuse": [0.5882, 0.5882, 0.5882, 0],
+			"reflectiveness": [0.0, 0.00000, 0.00000, 10.000000],
+			"refractionIndexN": [1.45, 1.45, 1.45],
+			"refractionIndexK": [0.0, 0.0, 0.0],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"Glass": {
+			"diffuse": [0.5882, 0.5882, 0.5882, 0],
+			"reflectiveness": [0.05, 0.05, 0.05, 100000.0],
+			"refractionIndexN": [1.45, 1.45, 1.45],
+			"refractionIndexK": [0.0, 0.0, 0.0],
+			"opacity": [0.1, 0, 0, 0],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"White": {
+			"diffuse": [1, 1, 1, 0],
+			"reflectiveness": [0.0, 0.00000, 0.00000, 10.000000],
+			"refractionIndexN": [1.45, 1.45, 1.45],
+			"refractionIndexK": [0.0, 0.0, 0.0],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [0, 0, 0, 0]
+		},
+		"LightR": {
+			"diffuse": [0.5882, 0.5882, 0.5882, 0],
+			"reflectiveness": [0.0, 0.00000, 0.00000, 10.000000],
+			"refractionIndexN": [1.45, 1.45, 1.45],
+			"refractionIndexK": [0.0, 0.0, 0.0],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [803.9, 192.2, 19.6, 0]
+		},
+		"LightL": {
+			"diffuse": [0.5882, 0.5882, 0.5882, 0],
+			"reflectiveness": [0.0, 0.00000, 0.00000, 10.000000],
+			"refractionIndexN": [1.45, 1.45, 1.45],
+			"refractionIndexK": [0.0, 0.0, 0.0],
+			"opacity": [1, 1, 1, 1],
+			"emissivity": [98.0, 392.2, 788.2, 0]
+		}
+	}
 }

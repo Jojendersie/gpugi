@@ -60,7 +60,7 @@ bool IntersectVirtualEllipsoid(Ray ray, vec3 aabbMin, vec3 aabbMax, out float fi
 //
 // Optix comes with two variantes: A branchless and a early exit.
 // This is an adaption the branchless variant. It is basically "Möller and Trumbore" but with some clever reordering.
-bool IntersectTriangle(Ray ray, vec3 p0, vec3 p1, vec3 p2, 
+bool IntersectTriangle(Ray ray, vec3 p0, vec3 p1, vec3 p2,
 						out float hit, out vec3 barycentricCoord, out vec3 triangleNormal)
 {
 	const vec3 e0 = p1 - p0;
