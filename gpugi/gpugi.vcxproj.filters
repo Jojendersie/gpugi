@@ -195,30 +195,6 @@
     <ClCompile Include="renderer\debugrenderer\importancevisualization.cpp">
       <Filter>code\renderer\debugrenderer</Filter>
     </ClCompile>
-    <ClCompile Include="..\dependencies\bim\src\io.cpp">
-      <Filter>dependencies\bim</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dependencies\bim\src\kdtree.cpp">
-      <Filter>dependencies\bim</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dependencies\bim\src\material.cpp">
-      <Filter>dependencies\bim</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dependencies\bim\src\tangentspace.cpp">
-      <Filter>dependencies\bim</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dependencies\bim\src\bim.cpp">
-      <Filter>dependencies\bim</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dependencies\bim\src\chunk.cpp">
-      <Filter>dependencies\bim</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dependencies\bim\src\exportObj.cpp">
-      <Filter>dependencies\bim</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dependencies\bim\src\hierarchy.cpp">
-      <Filter>dependencies\bim</Filter>
-    </ClCompile>
     <ClCompile Include="..\dependencies\chinoise\src\fieldnoise.cpp">
       <Filter>dependencies\chinoise</Filter>
     </ClCompile>
@@ -227,9 +203,6 @@
     </ClCompile>
     <ClCompile Include="..\dependencies\chinoise\src\chinoise.cpp">
       <Filter>dependencies\chinoise</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dependencies\bim\src\sahspilt.cpp">
-      <Filter>dependencies\bim</Filter>
     </ClCompile>
     <ClCompile Include="..\dependencies\glhelper\glhelper\texturecubemap.cpp">
       <Filter>dependencies\glhelper</Filter>
@@ -254,6 +227,39 @@
     </ClCompile>
     <ClCompile Include="..\dependencies\epsilon\src\2dtypes.cpp">
       <Filter>dependencies\epsilon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\bim_exportobj.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\bim_hierarchy.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\bim_io.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\bim_kdtree.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\bim_log.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\bim_material.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\bim_sahspilt.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\bim_tangentspace.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\bim.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\bim_chunk.cpp">
+      <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\bim\src\bim_enumconversions.cpp">
+      <Filter>dependencies\bim</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -425,23 +431,35 @@
     <ClInclude Include="renderer\debugrenderer\importancevisualization.hpp">
       <Filter>code\renderer\debugrenderer</Filter>
     </ClInclude>
-    <ClInclude Include="..\dependencies\bim\include\exporter.hpp">
-      <Filter>dependencies\bim</Filter>
-    </ClInclude>
-    <ClInclude Include="..\dependencies\bim\include\json.hpp">
-      <Filter>dependencies\bim</Filter>
-    </ClInclude>
-    <ClInclude Include="..\dependencies\bim\include\material.hpp">
-      <Filter>dependencies\bim</Filter>
-    </ClInclude>
-    <ClInclude Include="..\dependencies\bim\include\bim.hpp">
-      <Filter>dependencies\bim</Filter>
-    </ClInclude>
-    <ClInclude Include="..\dependencies\bim\include\chunk.hpp">
-      <Filter>dependencies\bim</Filter>
-    </ClInclude>
     <ClInclude Include="..\dependencies\glhelper\glhelper\texturecubemap.hpp">
       <Filter>dependencies\glhelper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\bim\exporter.hpp">
+      <Filter>dependencies\bim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\bim\hashgrid.hpp">
+      <Filter>dependencies\bim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\bim\light.hpp">
+      <Filter>dependencies\bim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\bim\log.hpp">
+      <Filter>dependencies\bim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\bim\material.hpp">
+      <Filter>dependencies\bim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\bim\scenario.hpp">
+      <Filter>dependencies\bim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\bim\bim.hpp">
+      <Filter>dependencies\bim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\bim\camera.hpp">
+      <Filter>dependencies\bim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\bim\include\bim\chunk.hpp">
+      <Filter>dependencies\bim</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

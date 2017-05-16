@@ -83,14 +83,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\dependencies\bim\src\bim.cpp" />
-    <ClCompile Include="..\dependencies\bim\src\chunk.cpp" />
-    <ClCompile Include="..\dependencies\bim\src\exportObj.cpp" />
-    <ClCompile Include="..\dependencies\bim\src\hierarchy.cpp" />
-    <ClCompile Include="..\dependencies\bim\src\io.cpp" />
-    <ClCompile Include="..\dependencies\bim\src\kdtree.cpp" />
-    <ClCompile Include="..\dependencies\bim\src\material.cpp" />
-    <ClCompile Include="..\dependencies\bim\src\sahspilt.cpp" />
-    <ClCompile Include="..\dependencies\bim\src\tangentspace.cpp" />
+    <ClCompile Include="..\dependencies\bim\src\bim_chunk.cpp" />
+    <ClCompile Include="..\dependencies\bim\src\bim_enumconversions.cpp" />
+    <ClCompile Include="..\dependencies\bim\src\bim_exportobj.cpp" />
+    <ClCompile Include="..\dependencies\bim\src\bim_hierarchy.cpp" />
+    <ClCompile Include="..\dependencies\bim\src\bim_io.cpp" />
+    <ClCompile Include="..\dependencies\bim\src\bim_kdtree.cpp" />
+    <ClCompile Include="..\dependencies\bim\src\bim_log.cpp" />
+    <ClCompile Include="..\dependencies\bim\src\bim_material.cpp" />
+    <ClCompile Include="..\dependencies\bim\src\bim_sahspilt.cpp" />
+    <ClCompile Include="..\dependencies\bim\src\bim_tangentspace.cpp" />
     <ClCompile Include="..\dependencies\chinoise\src\chinoise.cpp" />
     <ClCompile Include="..\dependencies\chinoise\src\fieldnoise.cpp" />
     <ClCompile Include="..\dependencies\chinoise\src\rnd.cpp" />
@@ -148,11 +150,15 @@
     <ClCompile Include="utilities\policy.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\dependencies\bim\include\bim.hpp" />
-    <ClInclude Include="..\dependencies\bim\include\chunk.hpp" />
-    <ClInclude Include="..\dependencies\bim\include\exporter.hpp" />
-    <ClInclude Include="..\dependencies\bim\include\json.hpp" />
-    <ClInclude Include="..\dependencies\bim\include\material.hpp" />
+    <ClInclude Include="..\dependencies\bim\include\bim\bim.hpp" />
+    <ClInclude Include="..\dependencies\bim\include\bim\camera.hpp" />
+    <ClInclude Include="..\dependencies\bim\include\bim\chunk.hpp" />
+    <ClInclude Include="..\dependencies\bim\include\bim\exporter.hpp" />
+    <ClInclude Include="..\dependencies\bim\include\bim\hashgrid.hpp" />
+    <ClInclude Include="..\dependencies\bim\include\bim\light.hpp" />
+    <ClInclude Include="..\dependencies\bim\include\bim\log.hpp" />
+    <ClInclude Include="..\dependencies\bim\include\bim\material.hpp" />
+    <ClInclude Include="..\dependencies\bim\include\bim\scenario.hpp" />
     <ClInclude Include="..\dependencies\epsilon\include\ei\details\inttemplate.hpp" />
     <ClInclude Include="..\dependencies\epsilon\include\ei\details\matrixcomponents.hpp" />
     <ClInclude Include="..\dependencies\epsilon\include\ei\details\matrixutililities.hpp" />

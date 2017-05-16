@@ -5,7 +5,7 @@
 #include <glhelper/texture2D.hpp>
 #include <glhelper/samplerobject.hpp>
 #include <jofilelib.hpp>
-#include <bim.hpp>
+#include <bim/bim.hpp>
 
 #include "../../bvhmake/filedef.hpp"
 
@@ -126,7 +126,7 @@ public:
 	uint32 GetNumTrianglesPerLeaf() const		{ return m_model.getNumTrianglesPerLeaf(); }
 	uint32 GetNumLeafTriangles() const			{ return m_sceneChunk->getNumLeafNodes() * m_model.getNumTrianglesPerLeaf(); }
 	uint32 GetNumInnerNodes() const				{ return m_sceneChunk->getNumNodes(); }
-	uint32 GetNumMaterials() const				{ return m_model.getNumMaterials(); }
+	uint32 GetNumMaterials() const				{ return m_model.getNumUsedMaterials(); }
 	uint32 GetNumVertices() const				{ return m_sceneChunk->getNumVertices(); }
 	uint32 GetNumLightTriangles() const			{ return static_cast<uint32>(m_lightTriangles.size()); }
 	uint32 GetNumTreeLevels() const				{ return m_sceneChunk->getNumTreeLevels(); }

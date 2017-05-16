@@ -27,16 +27,15 @@ Scene::Scene( const std::string& _file, ε::Types3D _bvhType ) :
 	m_bvhType = _bvhType;
 
 	// Load materials from dedicated material file
-	std::string matFileName = _file.substr(0, _file.find_last_of('.')) + ".json";
-	if( !Jo::Files::Utils::Exists(matFileName) )
-		LOG_ERROR("No material file '" + matFileName + "' found.");
+	if( !Jo::Files::Utils::Exists(_file) )
+		LOG_ERROR("No scene description file '" + _file + "' found.");
 
 	Property::Val bvhProp;
 	switch(_bvhType) {
 		case ε::Types3D::BOX: bvhProp = Property::AABOX_BVH; break;
 		case ε::Types3D::OBOX: bvhProp = Property::OBOX_BVH; break;
 	}
-	if(!m_model.load(_file.c_str(), matFileName.c_str(),
+	if(!m_model.load(_file.c_str(),
 		Property::Val(Property::NORMAL | Property::TEXCOORD0 | bvhProp | Property::HIERARCHY | Property::TRIANGLE_MAT),
 		Property::NDF_SGGX))
 	{
@@ -49,8 +48,8 @@ Scene::Scene( const std::string& _file, ε::Types3D _bvhType ) :
 	// The scene is loaded now, but must be mapped to GPU
 	UploadGeometry();
 	UploadHierarchy(_bvhType);
-	for(uint i = 0; i < m_model.getNumMaterials(); ++i)
-		LoadMaterial(m_model.getMaterial(i));
+	for(uint i = 0; i < m_model.getNumUsedMaterials(); ++i)
+		LoadMaterial(*m_model.getMaterial(i));
 
 	LoadLightSources();
 }
@@ -112,7 +111,7 @@ void Scene::UploadHierarchy(ε::Types3D _bvhType)
 		for(uint i = 0; i < m_sceneChunk->getNumNodes(); ++i)
 		{
 			hierarchyData[i].center = m_sceneChunk->getHierarchyOBoxes()[i].center;
-			hierarchyData[i].sidesHalf = m_sceneChunk->getHierarchyOBoxes()[i].sides * 0.5f;
+			hierarchyData[i].sidesHalf = m_sceneChunk->getHierarchyOBoxes()[i].halfSides;
 			hierarchyData[i].rotationInv = conjugate(m_sceneChunk->getHierarchyOBoxes()[i].orientation);
 			hierarchyData[i].escape = m_sceneChunk->getHierarchy()[i].escape;
 			hierarchyData[i].firstChild = m_sceneChunk->getHierarchy()[i].firstChild;
@@ -139,17 +138,25 @@ void Scene::LoadMaterial( const bim::Material& _material )
 	static const std::string s_emissivity("emissivity");
 	static const std::string s_refrN("refractionIndexN");
 	static const std::string s_refrK("refractionIndexK");
-	static const std::string s_diffuse("diffuse");
+	static const std::string s_fresnel0("specularColor");
+	static const std::string s_diffuse("albedo");
 	static const std::string s_opacity("opacity");
 	static const std::string s_specular("reflectiveness");
+	static const std::string s_roughness("roughness");
 	try {
 		// Refraction parameters for Fresnel
-		ε::Vec3 n = _material.get(s_refrN, ε::Vec4(1.0f)).subcol<0,3>();
-		ε::Vec3 k = _material.get(s_refrK).subcol<0,3>();
+	/*	ε::Vec3 n = _material.get(s_refrN, ε::Vec3(1.0f));
+		ε::Vec3 k = _material.get(s_refrK, ε::Vec3(0.0f));
 		ε::Vec3 den = 1.0f / (sq(n+1.0f) + sq(k));
 		mat.refractionIndexAvg = avg(n);
 		mat.fresnel0 = (sq(n-1.0f) + sq(k)) * den;
-		mat.fresnel1 = 4.0f * n * den;
+		mat.fresnel1 = 4.0f * n * den;*/
+		mat.refractionIndexAvg = 1.3f;
+		mat.fresnel0 = _material.get(s_fresnel0, ei::Vec3(0.03f));
+		mat.fresnel1 = 1.0f - mat.fresnel0;
+		// Specular exponent parameter
+		float roughness = _material.get(s_roughness, 1.0f);
+		float exponent = 1.0f / (roughness * roughness + 1e-20f);
 		// Load or create diffuse texture
 		if(_material.getTexture(s_diffuse))
 			mat.diffuseTexHandle = GetBindlessHandle(*_material.getTexture(s_diffuse));
@@ -161,12 +168,12 @@ void Scene::LoadMaterial( const bim::Material& _material )
 		// Load or create specular texture
 		if(_material.getTexture(s_specular))
 			mat.reflectivenessTexHandle = GetBindlessHandle(*_material.getTexture(s_specular));
-		else mat.reflectivenessTexHandle = GetBindlessHandle(_material.get(s_specular, ε::Vec4(1.0f)), true);
+		else mat.reflectivenessTexHandle = GetBindlessHandle(_material.get(s_specular, ε::Vec4(1.0f, 1.0f, 1.0, exponent)), true);
 		// Load or create emissive texture
 		if(_material.getTexture(s_emissivity))
 			mat.emissivityTexHandle = GetBindlessHandle(*_material.getTexture(s_emissivity));
 		else{
-			emissivity = _material.get(s_emissivity).subcol<0,3>();
+			emissivity = _material.get(s_emissivity, ε::Vec3(0.0f));
 			mat.emissivityTexHandle = GetBindlessHandle(emissivity, true);
 		}
 	} catch(const std::string& _msg ) {
@@ -243,7 +250,7 @@ void Scene::LoadLightSources()
 		const ε::UVec3& tri = m_sceneChunk->getTriangles()[i];
 		// Is this a valid light source triangle?
 		if( tri[0] != tri[1]
-			&& any(m_emissivity[m_sceneChunk->getTriangleMaterials()[i]] != ε::Vec3(0.0f)) )
+			&& (m_emissivity[m_sceneChunk->getTriangleMaterials()[i]] != ε::Vec3(0.0f)) )
 		{
 			LightTriangle lightSource;
 			lightSource.luminance = m_emissivity[m_sceneChunk->getTriangleMaterials()[i]];
