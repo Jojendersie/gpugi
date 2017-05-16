@@ -6,7 +6,6 @@
 
 #include "pixelcache.glsl"
 #include "screenreproject.glsl"
-#include "lightsource.glsl"
 
 #define MAX_PATHLENGTH 10
 #define CONNECTION_EPSILON 0.0
@@ -24,14 +23,14 @@ void main()
 	// Keep in mind that we are tracing flux = photons!
 	// TotalFlux = Integral(I0 * cos Angle) dangle = I0 * PI
 	vec3 pathThroughput = lightIntensity_Norm1.xyz * (PI / NumRaysPerLightSample);
-	
+
 	Ray ray;
 	ray.Origin = lightSamplePos_Norm0.xyz;
 	vec3 normal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
 	vec3 U, V;
 	CreateONB(normal, U, V);
 	ray.Direction = SampleHemisphereCosine(Random2(randomSeed), U, V, normal);
-	
+
 	// Choose a single pixel-cache for the entire light-path
 	ivec2 cachePixelCoord = ivec2(RandomUInt(randomSeed) % BackbufferSize.x, RandomUInt(randomSeed) % BackbufferSize.y);
 	int cacheIdx = cachePixelCoord.y * BackbufferSize.x + cachePixelCoord.x;
@@ -45,15 +44,14 @@ void main()
 	GetTriangleHitInfo(PixelCacheEntries[cacheIdx].triangle, barycentricCoordCache, cacheNormal, texcoord);
 	MaterialData cacheMaterial = SampleMaterialData(PixelCacheEntries[cacheIdx].triangle.w, texcoord);
 	vec3 viewDir = UnpackNormal(PixelCacheEntries[cacheIdx].Incident01);
-	
+
 	// Compute direct lighting for the chosen cache
-	vec3 cacheColor = EstimateDirectLight(cachePosition, cacheNormal, lightSamplePos_Norm0.xyz, normal,
-									lightIntensity_Norm1.xyz, viewDir, cacheMaterial);
+	vec3 cacheColor = EstimateDirectLight(cachePosition, cacheNormal, lightSampleIndex, viewDir, cacheMaterial);
 	cacheColor *= LightRayPixelWeight / NumRaysPerLightSample;//*/
 	//vec3 cacheColor = vec3(0.0);
 	//cacheColor *= PixelCacheEntries[cacheIdx].PathThroughput;
 	//WriteAtomic(cacheColor, cachePixelCoord);return;
-	
+
 	bool lastBounceDiffuse = true;
 	bool pureSpecular = true;
 
@@ -119,7 +117,8 @@ void main()
 						float fluxToIrradiance = AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal) /
 												(cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
 
-						vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal);
+						float pdf;
+						vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal, pdf);
 						//* cosInToShading * saturate(dot(cameraRay.Direction, shadingNormal))
 						//vec3 color = pathThroughput * (fluxToIrradiance / PI) * diffuse;
 						vec3 color = pathThroughput * (fluxToIrradiance) * bsdf;
@@ -132,7 +131,7 @@ void main()
 				}
 			}
 		}//*/
-		
+
 		// "Next event estimation" connect to a random pixel via cache
 		// Connect the two path vertices and make a visibility test
 		//if(!PixelCacheEntries[cacheIdx].DirectlyVisible && PixelCacheEntries[cacheIdx].PathThroughput != vec3(0.0) && avgDiffuse > 0.0)// && lastBounceDiffuse)
@@ -165,7 +164,7 @@ void main()
 		ray.Direction = newDirection;
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 	}
-	
+
 	cacheColor *= PixelCacheEntries[cacheIdx].PathThroughput;
 	WriteAtomic(cacheColor, cachePixelCoord);
 }

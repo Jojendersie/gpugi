@@ -12,7 +12,7 @@ uint wanghash(uint x)
 // It introduces structured noise and leads to artifacts in all light-tracing paths.
 uint InitCoherentRandomSeed(uint frameSeed, uint invocationID)
 {
-	uint seed = frameSeed + wanghash(invocationID) % 5;
+	uint seed = frameSeed;// + wanghash(invocationID) % 5;
 
 	return wanghash(seed);
 }
@@ -30,7 +30,7 @@ uint RandomUInt(inout uint seed)
 	seed ^= (seed << 13);
 	seed ^= (seed >> 17);
 	seed ^= (seed << 5);
-	
+
 	return seed;
 }
 

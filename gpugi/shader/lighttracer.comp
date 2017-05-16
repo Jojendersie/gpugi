@@ -70,7 +70,7 @@ void main()
 	// Keep in mind that we are tracing flux = photons!
 	// TotalFlux = Integral(I0 * cos Angle) dangle = I0 * PI
 	vec3 pathThroughput = lightIntensity_Norm1.xyz * (PI / NumRaysPerLightSample);
-	
+
 	Ray ray;
 	ray.Origin = lightSamplePos_Norm0.xyz;
 	// Omnidirectional light?
@@ -106,7 +106,7 @@ void main()
 		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 
 		// Save light cache entry.
-#ifdef SAVE_LIGHT_CACHE 
+#ifdef SAVE_LIGHT_CACHE
 		uint lightCacheEntryIndex = atomicAdd(NumLightCacheEntries, 1);
 	#ifdef SAVE_LIGHT_CACHE_WARMUP
 		atomicAdd(LightPathLengthSum, 1);
@@ -116,7 +116,7 @@ void main()
 			LightCacheEntries[lightCacheEntryIndex].Flux = pathThroughput;
 			LightCacheEntries[lightCacheEntryIndex].MaterialIndex = triangle.w;
 			// Use "true" position - necessary epsilon can be easily applied in pathtracer_bidir.comp
-			LightCacheEntries[lightCacheEntryIndex].Position = ray.Origin; 
+			LightCacheEntries[lightCacheEntryIndex].Position = ray.Origin;
 			vec2 packedNormal = PackNormal(shadingNormal);
 			LightCacheEntries[lightCacheEntryIndex].Normal0 = packedNormal.x;
 			LightCacheEntries[lightCacheEntryIndex].Normal1 = packedNormal.y;
@@ -166,7 +166,7 @@ void main()
 					// -> We need the solid angle and the projected area of the pixel in this point!
 					// Formulas explained in (6.2) http://www.maw.dk/3d_graphics_projects/downloads/Bidirectional%20Path%20Tracing%202009.pdf
 					// Also a look into SmallVCM is a good idea!
-					
+
 					// The distance to the image plane  is length(CameraW) == 1.
 					// imagePointToCameraDist = length(pixelPos) = length(CameraU * screenCoord.x + CameraV * screenCoord.y + CameraW) =
 					//					      = 1.0 / dot(-cameraRay.Direction, CameraW)
@@ -196,7 +196,7 @@ void main()
 
 					// Add Sample.
 					ivec2 pixelCoord = ivec2((screenCoord*0.5 + vec2(0.5)) * BackbufferSize);
-					
+
 					WriteAtomic(color, pixelCoord);
 				}
 			}
@@ -219,7 +219,7 @@ void main()
 		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stoped -> >=
 			break;
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.
-		
+
 		#ifdef SAVE_LIGHT_CACHE
 		samplePDF *= continuationPropability;
 		#endif
