@@ -1,11 +1,12 @@
 envMap = 1024, ../envmaps/sky0/xneg.png, ../envmaps/sky0/xpos.png, ../envmaps/sky0/yneg.png, ../envmaps/sky0/ypos.png, ../envmaps/sky0/zneg.png, ../envmaps/sky0/zpos.png
 bvhType = 0
 sceneFilename = C:/Data/Models/KingsTreasure/KingsTreasure.json
-cameraPos = -2.45, 1.0, 2.03
-cameraLookAt = 0, 0.35, -0.4
+cameraPos = -0.74, 0.27, 1.1
+cameraLookAt = -0.21, 0.16, 0.25
 cameraFOV = 35
 resolution = 1024, 768
 
 addPointLight = 80.0, 20.0, -50.0, 100000.0, 100000.0, 100000.0
+addPointLight = 0.88, 2.7, 1.08, 80.0, 80.0, 80.0
 
 renderer=0

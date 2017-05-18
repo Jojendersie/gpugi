@@ -1,4 +1,4 @@
-sceneFilename = ../scenes/box1/box1.bim
+sceneFilename = ../scenes/box1/box1.json
 cameraPos = 0.0, 1.5, 2.27
 cameraLookAt = 0.0, 1.5, 2.0
 cameraFOV = 67

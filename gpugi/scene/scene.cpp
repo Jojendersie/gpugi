@@ -160,11 +160,11 @@ void Scene::LoadMaterial( const bim::Material& _material )
 		// Load or create diffuse texture
 		if(_material.getTexture(s_diffuse))
 			mat.diffuseTexHandle = GetBindlessHandle(*_material.getTexture(s_diffuse));
-		else mat.diffuseTexHandle = GetBindlessHandle(_material.get(s_diffuse, ε::Vec4(0.5f)).subcol<0,3>(), false);
+		else mat.diffuseTexHandle = GetBindlessHandle(_material.get(s_diffuse, ε::Vec3(0.5f)), false);
 		// Load or create opacity texture
 		if(_material.getTexture(s_opacity))
 			mat.opacityTexHandle = GetBindlessHandle(*_material.getTexture(s_opacity));
-		else mat.opacityTexHandle = GetBindlessHandle(_material.get(s_opacity, ε::Vec4(1.0f)).subcol<0,3>(), false);
+		else mat.opacityTexHandle = GetBindlessHandle(ε::Vec3(_material.get(s_opacity, 1.0f)), false);
 		// Load or create specular texture
 		if(_material.getTexture(s_specular))
 			mat.reflectivenessTexHandle = GetBindlessHandle(*_material.getTexture(s_specular));
