@@ -5,6 +5,8 @@
 // Further, HASH_MAP_BINDIDX and HASH_MAP_DATA_BINDIDX must be defined before
 // including this header.
 
+#define QUADRATIC_PROBING
+
 layout (std430, binding = HASH_MAP_BINDIDX) buffer HashMapBuffer
 {
 	restrict uvec2 HashMap[];
@@ -29,9 +31,10 @@ ivec3 worldPosToGrid(vec3 pos)
 
 uint gridCellHash(ivec3 cell)
 {
-	return (uint(cell.x) & 0x7ff)
-		| ((uint(cell.y) & 0x3ff) << 11)
-		| ((uint(cell.z) & 0x7ff) << 21);
+	uint hash = (uint(cell.x) & 0x7ff)
+			 | ((uint(cell.y) & 0x3ff) << 11)
+			 | ((uint(cell.z) & 0x7ff) << 21);
+	return RandomUInt(hash);
 }
 
 // Insert a filled data struct from HashMapData[] to the hash-grid.
@@ -58,11 +61,15 @@ void insertToHashGrid(vec3 pos, int hmDataIndex)
 			break;
 		} // Else: collision with some other cell
 		
-		// Linear probing
-		//idx ++;
+	#ifdef QUADRATIC_PROBING
 		// Quadratic probing (h+1^2, h+2^2, h+3^2, ...)
 		idx += probeStep * 2 + 1;
 		probeStep ++;
+	#else
+		// Linear probing
+		idx ++;
+	#endif
+		idx = idx % HashMapSize;
 	}
 }
 
@@ -83,11 +90,15 @@ int findFirst(ivec3 cell)
 			return int(HashMap[idx].y);
 		} // Else: collision with some other cell
 		
-		// Linear probing
-		//idx ++;
+	#ifdef QUADRATIC_PROBING
 		// Quadratic probing (h+1^2, h+2^2, h+3^2, ...)
 		idx += probeStep * 2 + 1;
 		probeStep ++;
+	#else
+		// Linear probing
+		idx ++;
+	#endif
+		idx = idx % HashMapSize;
 		
 		key = HashMap[idx].x;
 	}

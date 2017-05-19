@@ -15,7 +15,7 @@ PhotonMapper::PhotonMapper(RendererSystem& _rendererSystem) :
 	Renderer(_rendererSystem),
 	m_photonDistributionShader("photonDistribution"),
 	m_gatherShader("gatherPhoton"),
-	m_numPhotonsPerLightSample(1 << 10),
+	m_numPhotonsPerLightSample(1 << 11),
 	m_queryRadius(0.01f)
 {
 	// Save shader binary.
@@ -138,6 +138,9 @@ uint nextPrimeGreaterOrEqual(uint number)
 
 void PhotonMapper::CreateBuffers()
 {
+	// Determine a prime hash map size with at least 1.5x as much space as there
+	// are photons. Although, the real size depends on the number of filled cells this
+	// is a conservative heuristic.
 	uint minPhotonMapSize = (m_numPhotonsPerLightSample * m_rendererSystem.GetNumInitialLightSamples() * 3 / 2);
 	uint photonMapSize = nextPrimeGreaterOrEqual(minPhotonMapSize);
 	m_photonMap = std::make_unique<gl::Buffer>(photonMapSize * 2 * 4, gl::Buffer::IMMUTABLE);
