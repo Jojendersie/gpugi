@@ -136,6 +136,7 @@
     <ClCompile Include="renderer\debugrenderer\raytracemeshinfo.cpp" />
     <ClCompile Include="renderer\lightpathtracer.cpp" />
     <ClCompile Include="renderer\pathtracer.cpp" />
+    <ClCompile Include="renderer\photonmapper.cpp" />
     <ClCompile Include="renderer\pixelcachelighttracer.cpp" />
     <ClCompile Include="renderer\renderersystem.cpp" />
     <ClCompile Include="renderer\whittedraytracer.cpp" />
@@ -198,6 +199,7 @@
     <ClInclude Include="renderer\debugrenderer\raytracemeshinfo.hpp" />
     <ClInclude Include="renderer\lightpathtracer.hpp" />
     <ClInclude Include="renderer\pathtracer.hpp" />
+    <ClInclude Include="renderer\photonmapper.hpp" />
     <ClInclude Include="renderer\pixelcachelighttracer.hpp" />
     <ClInclude Include="renderer\renderer.hpp" />
     <ClInclude Include="renderer\renderersystem.hpp" />
@@ -248,9 +250,12 @@
     <None Include="shader\intersectiontests.glsl" />
     <None Include="shader\lightcache.glsl" />
     <None Include="shader\lighttracer.comp" />
+    <None Include="shader\maps\hashmap.glsl" />
+    <None Include="shader\maps\stochastic_hashmap.glsl" />
     <None Include="shader\materials.glsl" />
     <None Include="shader\pathtracer.comp" />
     <None Include="shader\pathtracer_bidir.comp" />
+    <None Include="shader\photonmapper\photondistribution.comp" />
     <None Include="shader\pixelcache.glsl" />
     <None Include="shader\random.glsl" />
     <None Include="shader\scenedata.glsl" />

@@ -25,6 +25,7 @@
 #include "renderer/pixelcachelighttracer.hpp"
 #include "renderer/bidirectionalpathtracer.hpp"
 #include "renderer/hierarchyimportance.hpp"
+#include "renderer/photonmapper.hpp"
 #include "renderer/debugrenderer/hierarchyvisualization.hpp"
 #include "renderer/debugrenderer/raytracemeshinfo.hpp"
 #include "renderer/debugrenderer/importancevisualization.hpp"
@@ -104,7 +105,8 @@ void Application::RegisterScriptCommands()
 													"2: BidirectionalPathtracer\n"
 													"3: HierarchyImportance\n"
 													"4: Whitted Pathtracer\n"
-													"5: Pixel Cachc Lighttracer");
+													"5: Pixel Cachc Lighttracer\n"
+													"6: Photon Mapper");
 	GlobalConfig::AddListener("renderer", "ChangeRenderer", std::bind(&Application::SwitchRenderer, this, std::placeholders::_1));
 
 	GlobalConfig::AddParameter("debugrenderer", { -1 }, "Set active debug renderer (will not change the current renderer).\n"
@@ -232,6 +234,11 @@ void Application::SwitchRenderer(const GlobalConfig::ParameterType& p)
 	case 5:
 		LOG_LVL2("Switching to Pixelcache Lighttracing...");
 		m_rendererSystem->SetRenderer<PixelCacheLighttracer>();
+		break;
+
+	case 6:
+		LOG_LVL2("Switching to Photon Mapper...");
+		m_rendererSystem->SetRenderer<PhotonMapper>();
 		break;
 
 	default:

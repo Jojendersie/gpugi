@@ -61,6 +61,12 @@
     <Filter Include="dependencies\chinoise">
       <UniqueIdentifier>{effc9632-bd60-43a8-a877-7a294d32daa6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shader\maps">
+      <UniqueIdentifier>{b16a7d75-ebbe-4112-b489-a6be46c0907e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shader\photonmapper">
+      <UniqueIdentifier>{d604ae79-f581-4d2e-813d-5175b1c0b0c7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="outputwindow.cpp">
@@ -260,6 +266,9 @@
     </ClCompile>
     <ClCompile Include="..\dependencies\bim\src\bim_enumconversions.cpp">
       <Filter>dependencies\bim</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\photonmapper.cpp">
+      <Filter>code\renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -461,6 +470,9 @@
     <ClInclude Include="..\dependencies\bim\include\bim\chunk.hpp">
       <Filter>dependencies\bim</Filter>
     </ClInclude>
+    <ClInclude Include="renderer\photonmapper.hpp">
+      <Filter>code\renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\globaluniforms.glsl">
@@ -588,6 +600,15 @@
     </None>
     <None Include="..\dependencies\glhelper\glhelper\shaderdatametainfo.inl">
       <Filter>dependencies\glhelper</Filter>
+    </None>
+    <None Include="shader\maps\stochastic_hashmap.glsl">
+      <Filter>shader\maps</Filter>
+    </None>
+    <None Include="shader\maps\hashmap.glsl">
+      <Filter>shader\maps</Filter>
+    </None>
+    <None Include="shader\photonmapper\photondistribution.comp">
+      <Filter>shader\photonmapper</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -1,0 +1,114 @@
+#version 450
+
+#define SAMPLING_DECISION_OUTPUT
+#include "../stdheader.glsl"
+#include "photonmap.glsl"
+
+layout(binding=12) uniform samplerCubeArray EnvironmentMap;
+
+
+layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
+
+#define MAX_PATHLENGTH 4
+
+#define LOCAL_SIZE 8
+layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
+void main()
+{
+	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
+	uint randomSeed = InitRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
+	vec2 screenCoord = (Random2(randomSeed) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
+
+	Ray ray;
+	ray.Origin = CameraPosition;
+	ray.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
+
+	vec3 color = vec3(0.0);
+	vec3 pathThroughput = vec3(1.0);
+	bool didNextEventEstimation = false;
+
+	for(int i=0; i<MAX_PATHLENGTH; ++i)
+	{
+		// Trace ray.
+		Triangle triangle;
+		vec3 barycentricCoord;
+		float rayHit = RAY_MAX;
+		TraceRay(ray, rayHit, barycentricCoord, triangle);
+		if(rayHit == RAY_MAX) {
+			//color += pathThroughput * textureLod(EnvironmentMap, vec4(ray.Direction, 0.0), 0.0).xyz;
+			break;
+		}
+		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
+
+		// Compute hit normal and texture coordinate.
+		vec3 hitNormal; vec2 hitTexcoord;
+		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
+		// Get Material infos.
+		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
+
+		// Add self emissivity of hit material.
+		color += pathThroughput * materialData.Emissivity;
+
+		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
+		vec3 throughput = vec3(1.0);
+		float pdf;
+		bool isReflectedDiffuse;
+		vec3 newDirection = SampleBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput, isReflectedDiffuse, pdf);
+		
+		if(isReflectedDiffuse)
+		{
+			// Gather photons and terminate.
+			vec3 irradianceEstimate = vec3(0.0);
+			
+			// Need to iterate over eight cells to get all photons
+			//ivec3 cellBase = worldPosToGrid(ray.Origin);
+			ivec3 cellBase = ivec3(round(ray.Origin / HashGridSpacing));
+			for(int i = 0; i < 8; ++i)
+			{
+				ivec3 cell = cellBase + ivec3(i&1, (i>>1)&1, (i>>2)&1);
+				int hmDataIdx = findFirst(cell);
+				while(hmDataIdx != -1)
+				{
+					vec3 photonPos = intBitsToFloat(HashMapData[hmDataIdx+1].xyz);
+					// Compare squared distance, if we are close enough to count this photon.
+					// Also, if the photon is behind the current surface ignore it.
+					vec3 toPhoton = photonPos - ray.Origin;
+					if((dot(toPhoton, toPhoton) <= PhotonQueryRadiusSq)
+						&& (abs(dot(toPhoton, hitNormal)) < 0.01))
+					{
+						vec3 flux = intBitsToFloat(HashMapData[hmDataIdx].yzw);
+						vec2 photonDirPacked = unpackSnorm2x16(HashMapData[hmDataIdx+1].w);
+						photonDirPacked.x *= PI;
+						vec3 photonDir = UnpackNormal(photonDirPacked);
+						//vec3 photonDir = intBitsToFloat(HashMapData[hmDataIdx+1].xyz);
+						
+						float pdf;
+						vec3 fr = BSDF(ray.Direction, -photonDir, materialData, hitNormal, pdf);
+						irradianceEstimate += fr * flux;
+					}
+					
+					hmDataIdx = getNext(hmDataIdx);
+				}
+			}
+			// Normalize by query area and add to output
+			irradianceEstimate /= PI * PhotonQueryRadiusSq;
+			color += irradianceEstimate * pathThroughput;
+			break;
+		}
+		
+		// Continue path
+		ray.Direction = newDirection;
+		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
+		pathThroughput *= throughput;
+	#ifdef RUSSIAN_ROULETTE
+		float continuationPropability = saturate(GetLuminance(throughput));
+		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stoped -> >=
+			break;
+		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.
+	#endif
+	}
+
+	vec4 final = vec4(color, 1.0);
+	final += imageLoad(OutputTexture, gridPosition);
+	imageStore(OutputTexture, gridPosition, final);
+}
