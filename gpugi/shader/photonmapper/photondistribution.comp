@@ -72,32 +72,31 @@ void main()
 		#endif
 		
 			// Store flux, position and incident direction per photon.
-			HashMapData[gl_GlobalInvocationID.x * 2].yzw = floatBitsToInt(pathThroughput);
-			//HashMapData[gl_GlobalInvocationID.x * 2 + 1].xyz = floatBitsToInt(ray.Direction);
-			HashMapData[gl_GlobalInvocationID.x * 2 + 1].xyz = floatBitsToInt(ray.Origin);
+			uint hmDataIndex = atomicAdd(HashMapCounter, 1) * 2;
+			HashMapData[hmDataIndex].yzw = floatBitsToInt(pathThroughput);
+			//HashMapData[hmDataIndex + 1].xyz = floatBitsToInt(ray.Direction);
+			HashMapData[hmDataIndex + 1].xyz = floatBitsToInt(ray.Origin);
 			vec2 packedDir = PackNormal(ray.Direction);
 			packedDir.x /= PI;
-			HashMapData[gl_GlobalInvocationID.x * 2 + 1].w = int(packSnorm2x16(packedDir));
-			insertToHashGrid(ray.Origin, int(gl_GlobalInvocationID.x * 2));
+			HashMapData[hmDataIndex + 1].w = int(packSnorm2x16(packedDir));
+			insertToHashGrid(ray.Origin, int(hmDataIndex));
 
 		#ifdef SHOW_SPECIFIC_PATHLENGTH
 			}
 		#endif
-			break;
-		} else {
-			// Continue ray.
-			throughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
-			pathThroughput *= throughput;
-			
-		#ifdef RUSSIAN_ROULETTE
-			float continuationPropability = saturate(GetLuminance(throughput));
-			if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stoped -> >=
-				break;
-			pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.
-		#endif
-		
-			ray.Direction = newDirection;
-			ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 		}
+		// Continue ray.
+		throughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
+		pathThroughput *= throughput;
+		
+	#ifdef RUSSIAN_ROULETTE
+		float continuationPropability = saturate(GetLuminance(throughput));
+		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stoped -> >=
+			break;
+		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.
+	#endif
+	
+		ray.Direction = newDirection;
+		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 	}
 }

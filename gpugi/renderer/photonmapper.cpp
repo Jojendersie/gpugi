@@ -58,6 +58,7 @@ void PhotonMapper::Draw()
 	m_photonMapperUBO->BindUniformBuffer(4);
 	ei::UVec4 mask(0xffffffff);
 	GL_CALL(glClearNamedBufferData, m_photonMap->GetInternHandle(), GL_RG8UI, GL_RG, GL_UNSIGNED_INT, &mask);
+	m_photonMapData->ClearToZero();
 	m_photonMap->BindShaderStorageBuffer(6);
 	m_photonMapData->BindShaderStorageBuffer(7);
 	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
@@ -140,7 +141,7 @@ void PhotonMapper::CreateBuffers()
 	uint minPhotonMapSize = (m_numPhotonsPerLightSample * m_rendererSystem.GetNumInitialLightSamples() * 3 / 2);
 	uint photonMapSize = nextPrimeGreaterOrEqual(minPhotonMapSize);
 	m_photonMap = std::make_unique<gl::Buffer>(photonMapSize * 2 * 4, gl::Buffer::IMMUTABLE);
-	m_photonMapData = std::make_unique<gl::Buffer>(m_numPhotonsPerLightSample * m_rendererSystem.GetNumInitialLightSamples() * 8 * 4, gl::Buffer::IMMUTABLE);
+	m_photonMapData = std::make_unique<gl::Buffer>(5 * m_numPhotonsPerLightSample * m_rendererSystem.GetNumInitialLightSamples() * 8 * 4 + 4 * 4, gl::Buffer::IMMUTABLE);
 
 	m_photonMapperUBOInfo = m_photonDistributionShader.GetUniformBufferInfo().find("PhotonMapperUBO")->second;
 	m_photonMapperUBO = std::make_unique<gl::Buffer>(m_photonMapperUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);

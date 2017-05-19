@@ -12,6 +12,9 @@ layout (std430, binding = HASH_MAP_BINDIDX) buffer HashMapBuffer
 
 layout (std430, binding = HASH_MAP_DATA_BINDIDX) buffer HashMapDataBuffer
 {
+	// A counter to use this as an append-buffer.
+	uint HashMapCounter;
+	uvec3 _unused;
 	// The hashmap data my be used differently by different renderers.
 	// The usage can include multiple ivec4. However, the first .x value
 	// of the first ivec4 is reserved for next pointers (pointing to other
