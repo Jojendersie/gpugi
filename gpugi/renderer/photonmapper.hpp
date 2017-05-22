@@ -32,6 +32,7 @@ private:
 
 	int m_numPhotonsPerLightSample;
 	float m_queryRadius;
+	float m_currentQueryRadius;
 	bool m_progressiveRadius;
 	uint m_photonMapSize;
 

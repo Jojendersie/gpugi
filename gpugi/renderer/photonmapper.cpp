@@ -22,6 +22,7 @@ PhotonMapper::PhotonMapper(RendererSystem& _rendererSystem) :
 	m_gatherShader("gatherPhoton"),
 	m_numPhotonsPerLightSample(1 << 11),
 	m_queryRadius(0.01f),
+	m_currentQueryRadius(0.01f),
 	m_progressiveRadius(false)
 {
 	// Save shader binary.
@@ -37,9 +38,9 @@ PhotonMapper::PhotonMapper(RendererSystem& _rendererSystem) :
 	m_rendererSystem.SetNumInitialLightSamples(128);
 
 	GlobalConfig::AddParameter("pm_r", { m_queryRadius }, "Initial query radius for photon mapper.");
-	GlobalConfig::AddListener("pm_r", "photon mapper", [=](const GlobalConfig::ParameterType& p){ this->m_queryRadius = p[0].As<float>(); });
+	GlobalConfig::AddListener("pm_r", "photon mapper", [=](const GlobalConfig::ParameterType& p){ this->m_currentQueryRadius = this->m_queryRadius = p[0].As<float>(); });
 	GlobalConfig::AddParameter("pm_nphotons", { m_numPhotonsPerLightSample }, "Photons per light sample in photon mapper.");
-	GlobalConfig::AddListener("pm_nphotons", "photon mapper", [=](const GlobalConfig::ParameterType& p){ m_numPhotonsPerLightSample = p[0].As<int>(); });
+	GlobalConfig::AddListener("pm_nphotons", "photon mapper", [=](const GlobalConfig::ParameterType& p){ m_numPhotonsPerLightSample = p[0].As<int>(); this->CreateBuffers(); });
 	GlobalConfig::AddParameter("pm_progressive", { m_progressiveRadius }, "Progressive radius shrinking in photon mapper.");
 	GlobalConfig::AddListener("pm_progressive", "photon mapper", [=](const GlobalConfig::ParameterType& p){ m_progressiveRadius = p[0].As<bool>(); });
 }
@@ -75,10 +76,17 @@ void PhotonMapper::Draw()
 		CreateBuffers();
 	}
 
+	// Knaus-Zwicker progressive radius
+	if(m_rendererSystem.GetIterationCount() == 0)
+	{
+		m_currentQueryRadius = m_queryRadius;
+	} else if(m_progressiveRadius)
+		m_currentQueryRadius *= sqrt((m_rendererSystem.GetIterationCount() + 0.7f) / (m_rendererSystem.GetIterationCount() + 1.0f));
+
 	gl::MappedUBOView mapView(m_photonMapperUBOInfo, m_photonMapperUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	mapView["HashMapSize"].Set(m_photonMapSize);
-	mapView["PhotonQueryRadiusSq"].Set(m_queryRadius * m_queryRadius);
-	mapView["HashGridSpacing"].Set(m_queryRadius * 2.01f);
+	mapView["PhotonQueryRadiusSq"].Set(m_currentQueryRadius * m_currentQueryRadius);
+	mapView["HashGridSpacing"].Set(m_currentQueryRadius * 2.01f);
 	mapView["NumPhotonsPerLightSample"].Set(static_cast<std::int32_t>(m_numPhotonsPerLightSample));
 	m_photonMapperUBO->Unmap();
 
@@ -124,7 +132,10 @@ void PhotonMapper::CreateBuffers()
 	m_photonMapData = std::make_unique<gl::Buffer>(5 * m_numPhotonsPerLightSample * m_rendererSystem.GetNumInitialLightSamples() * 8 * 4 + 4 * 4, gl::Buffer::IMMUTABLE);
 	LOG_LVL2("Allocated " << (m_photonMap->GetSize() + m_photonMapData->GetSize()) / (1024*1024) << " MB for photon map.");
 
-	m_photonMapperUBOInfo = m_photonDistributionShader.GetUniformBufferInfo().find("PhotonMapperUBO")->second;
-	m_photonMapperUBO = std::make_unique<gl::Buffer>(m_photonMapperUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
-	m_photonMapperUBO->BindUniformBuffer(4);
+	if(!m_photonMapperUBO)
+	{
+		m_photonMapperUBOInfo = m_photonDistributionShader.GetUniformBufferInfo().find("PhotonMapperUBO")->second;
+		m_photonMapperUBO = std::make_unique<gl::Buffer>(m_photonMapperUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
+		m_photonMapperUBO->BindUniformBuffer(4);
+	}
 }
