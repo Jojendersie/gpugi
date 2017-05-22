@@ -138,6 +138,7 @@
     <ClCompile Include="renderer\pathtracer.cpp" />
     <ClCompile Include="renderer\photonmapper.cpp" />
     <ClCompile Include="renderer\pixelcachelighttracer.cpp" />
+    <ClCompile Include="renderer\pixelmaplighttracer.cpp" />
     <ClCompile Include="renderer\renderersystem.cpp" />
     <ClCompile Include="renderer\whittedraytracer.cpp" />
     <ClCompile Include="scene\lightsampler.cpp" />
@@ -201,6 +202,7 @@
     <ClInclude Include="renderer\pathtracer.hpp" />
     <ClInclude Include="renderer\photonmapper.hpp" />
     <ClInclude Include="renderer\pixelcachelighttracer.hpp" />
+    <ClInclude Include="renderer\pixelmaplighttracer.hpp" />
     <ClInclude Include="renderer\renderer.hpp" />
     <ClInclude Include="renderer\renderersystem.hpp" />
     <ClInclude Include="renderer\whittedraytracer.hpp" />

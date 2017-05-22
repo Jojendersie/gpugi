@@ -28,6 +28,6 @@ void WriteAtomic(vec3 value, ivec2 pixelCoord)
 		}
 	} while(!hasWritten);
 	
-	vec4 imageVal = imageLoad(OutputTexture, pixelCoord);
-	imageStore(OutputTexture, pixelCoord, vec4(imageVal.xyz + value, imageVal.w));
+	//vec4 imageVal = imageLoad(OutputTexture, pixelCoord);
+	//imageStore(OutputTexture, pixelCoord, vec4(imageVal.xyz + value, imageVal.w));
 }

@@ -3,6 +3,7 @@
 #include "debugrenderer/raytracemeshinfo.hpp"
 #include "debugrenderer/hierarchyvisualization.hpp"
 #include "scene/scene.hpp"
+#include "ei/prime.hpp"
 #include <glhelper/texture2d.hpp>
 #include <glhelper/texturecubemap.hpp>
 
@@ -86,63 +87,13 @@ void PhotonMapper::RecompileShaders(const std::string& _additionalDefines)
 	m_gatherShader.CreateProgram();
 }
 
-// Based on: http://stackoverflow.com/questions/30052316/find-next-prime-number-algorithm
-// Main contribution: all primes are in the form of 6k+-1 -> only test those numbers.
-// https://www.quora.com/Is-every-prime-number-other-than-2-and-3-of-the-form-6k%C2%B11
-// Other interesting possibility: https://de.wikipedia.org/wiki/Miller-Rabin-Test
-// TODO put somewhere usefull (Epsilon?)
-bool __isPrime(uint number) // Only correct for numbers >= 4
-{
-	if(number % 2 == 0 || number % 3 == 0) return false;
-	uint divisor = 6;
-	while (divisor * divisor - 2 * divisor + 1 <= number)
-	{
-		if (number % (divisor - 1) == 0)
-			return false;
-
-		if (number % (divisor + 1) == 0)
-			return false;
-
-		divisor += 6;
-	}
-
-	return true;
-}
-bool isPrime(uint number)
-{
-	if(number < 2) return false;
-	if(number == 2 || number == 3) return true;
-	return __isPrime(number);
-}
-
-uint nextPrimeGreaterOrEqual(uint number)
-{
-	if(number <= 2) return 2;
-	if(number == 3) return number;
-	// Find the first number 6k > number, but if there is a 6k(+1)==number
-	// test 6k+1 separately.
-	uint r = number % 6;
-	if(r <= 1)
-	{
-		number += 1-r;
-		if(__isPrime(number)) return number;
-		number += 5;
-	} else number += 6-r;
-	while(true)
-	{
-		if(__isPrime(number - 1)) return number - 1;
-		if(__isPrime(number + 1)) return number + 1;
-		number += 6;
-	}
-}
-
 void PhotonMapper::CreateBuffers()
 {
 	// Determine a prime hash map size with at least 1.5x as much space as there
 	// are photons. Although, the real size depends on the number of filled cells this
 	// is a conservative heuristic.
 	uint minPhotonMapSize = (m_numPhotonsPerLightSample * m_rendererSystem.GetNumInitialLightSamples() * 3 / 2);
-	uint photonMapSize = nextPrimeGreaterOrEqual(minPhotonMapSize);
+	uint photonMapSize = ei::nextPrimeGreaterOrEqual(minPhotonMapSize);
 	m_photonMap = std::make_unique<gl::Buffer>(photonMapSize * 2 * 4, gl::Buffer::IMMUTABLE);
 	m_photonMapData = std::make_unique<gl::Buffer>(5 * m_numPhotonsPerLightSample * m_rendererSystem.GetNumInitialLightSamples() * 8 * 4 + 4 * 4, gl::Buffer::IMMUTABLE);
 
@@ -153,7 +104,7 @@ void PhotonMapper::CreateBuffers()
 	gl::MappedUBOView mapView(m_photonMapperUBOInfo, m_photonMapperUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	mapView["HashMapSize"].Set(photonMapSize);
 	mapView["PhotonQueryRadiusSq"].Set(m_queryRadius * m_queryRadius);
-	mapView["HashGridSpacing"].Set(m_queryRadius * 2.0f);
+	mapView["HashGridSpacing"].Set(m_queryRadius * 2.01f);
 	mapView["NumPhotonsPerLightSample"].Set(static_cast<std::int32_t>(m_numPhotonsPerLightSample));
 	m_photonMapperUBO->Unmap();
 }

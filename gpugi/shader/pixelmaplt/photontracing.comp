@@ -1,0 +1,109 @@
+#version 440
+
+// TODO: is this required?
+#define TRINORMAL_OUTPUT
+
+#define SAMPLING_DECISION_OUTPUT
+#include "../stdheader.glsl"
+#include "../screenreproject.glsl"
+
+#include "importonmap.glsl"
+
+#define MAX_PATHLENGTH 8
+
+
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+	uint randomSeed = InitRandomSeed(FrameSeed, gl_GlobalInvocationID.x);
+	int lightSampleIndex = int(gl_GlobalInvocationID.x / NumPhotonsPerLightSample);
+	vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2);
+	vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2 + 1);
+
+	// Keep in mind that we are tracing flux = photons!
+	// TotalFlux = Integral(I0 * cos Angle) dangle = I0 * PI
+	vec3 pathThroughput = lightIntensity_Norm1.xyz * (PI / NumPhotonsPerLightSample);
+
+	Ray ray;
+	ray.Origin = lightSamplePos_Norm0.xyz;
+	// Omnidirectional light?
+	if(lightIntensity_Norm1.w > 1.0)
+	{
+		ray.Direction = SampleDirection(Random2(randomSeed));
+		pathThroughput *= 4.0; // The above integration is for Lambertian emitters, need to correct this
+	} else {
+		vec3 normal = UnpackNormal(vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w));
+		vec3 U, V;
+		CreateONB(normal, U, V);
+		ray.Direction = SampleHemisphereCosine(Random2(randomSeed), U, V, normal);
+	}
+
+	for(int i=0; i<MAX_PATHLENGTH; ++i)
+	{
+		// Trace ray.
+		Triangle triangle;
+		vec3 barycentricCoord;
+		float rayHit = RAY_MAX;
+		vec3 geometryNormal;
+		TraceRay(ray, rayHit, barycentricCoord, triangle, geometryNormal);
+		if(rayHit == RAY_MAX)
+			break;
+		//geometryNormal = normalize(geometryNormal); geometryNormal is not normalize, but it actually does not need to be! See AdjointBSDFShadingNormalX functions
+		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
+
+		// Compute hit normal and texture coordinate.
+		vec3 shadingNormal; vec2 hitTexcoord;
+		GetTriangleHitInfo(triangle, barycentricCoord, shadingNormal, hitTexcoord);
+
+		// Get Material infos.
+		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
+		
+		// Find importon map entries and contribute.
+		ivec3 cellBase = ivec3(round(ray.Origin / HashGridSpacing));
+		for(int i = 0; i < 8; ++i)
+		{
+			ivec3 cell = cellBase + ivec3(i&1, (i>>1)&1, (i>>2)&1);
+			int hmDataIdx = findFirst(cell);
+			while(hmDataIdx != -1)
+			{
+				vec3 importonPos = intBitsToFloat(HashMapData[hmDataIdx+1].xyz);
+				// Compare squared distance, if we are close enough to count this photon.
+				// Also, if the photon is behind the current surface ignore it.
+				vec3 toImporton = importonPos - ray.Origin;
+				if((dot(toImporton, toImporton) <= PhotonQueryRadiusSq)
+					&& (abs(dot(toImporton, shadingNormal)) < 0.01))
+				{
+					vec3 viewPathThroughput = intBitsToFloat(HashMapData[hmDataIdx].yzw);
+					vec3 importonDir = intBitsToFloat(HashMapData[hmDataIdx+2].xyz);
+					float pdf;
+					vec3 fr = BSDF(ray.Direction, -importonDir, materialData, shadingNormal, pdf);
+					vec3 irradianceEstimate = (fr * viewPathThroughput * pathThroughput) / (PI * PhotonQueryRadiusSq);
+					ivec2 pixelCoord = ivec2(HashMapData[hmDataIdx+1].w, HashMapData[hmDataIdx+2].w);
+					WriteAtomic(irradianceEstimate, pixelCoord);
+				}
+				
+				hmDataIdx = getNext(hmDataIdx);
+			}
+		}
+
+		// Sample next ray. Store the photon if hit is diffuse and continue otherwise.
+		vec3 throughput = vec3(1.0);
+		float samplePDF;
+		bool isReflectedDiffuse;
+		vec3 newDirection = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, shadingNormal, throughput, isReflectedDiffuse, samplePDF);
+
+		// Continue ray.
+		throughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
+		pathThroughput *= throughput;
+		
+	#ifdef RUSSIAN_ROULETTE
+		float continuationPropability = saturate(GetLuminance(throughput));
+		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stoped -> >=
+			break;
+		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.
+	#endif
+	
+		ray.Direction = newDirection;
+		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
+	}
+}

@@ -270,6 +270,9 @@
     <ClCompile Include="renderer\photonmapper.cpp">
       <Filter>code\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\pixelmaplighttracer.cpp">
+      <Filter>code\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities\loggerinit.hpp">
@@ -471,6 +474,9 @@
       <Filter>dependencies\bim</Filter>
     </ClInclude>
     <ClInclude Include="renderer\photonmapper.hpp">
+      <Filter>code\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\pixelmaplighttracer.hpp">
       <Filter>code\renderer</Filter>
     </ClInclude>
   </ItemGroup>
