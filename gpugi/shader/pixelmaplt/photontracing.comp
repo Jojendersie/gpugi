@@ -23,6 +23,7 @@ void main()
 	// Keep in mind that we are tracing flux = photons!
 	// TotalFlux = Integral(I0 * cos Angle) dangle = I0 * PI
 	vec3 pathThroughput = lightIntensity_Norm1.xyz * (PI / NumPhotonsPerLightSample);
+	bool specularPath = true;
 
 	Ray ray;
 	ray.Origin = lightSamplePos_Norm0.xyz;
@@ -57,7 +58,9 @@ void main()
 
 		// Get Material infos.
 		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
-		
+		float cosThetaAbs = saturate(abs(dot(shadingNormal, ray.Direction)));
+		vec3 bsdf = GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
+
 		// Find importon map entries and contribute.
 		ivec3 cellBase = ivec3(round(ray.Origin / HashGridSpacing));
 		for(int i = 0; i < 8; ++i)
@@ -80,7 +83,7 @@ void main()
 					//vec3 fr = BSDF(ray.Direction, -importonDir, materialData, shadingNormal, pdf);
 					//vec3 fr = BSDF(importonDir, -ray.Direction, materialData, shadingNormal, pdf);
 					//vec3 fr = materialData.Diffuse / PI;
-					vec3 irradianceEstimate = (viewPathThroughput * pathThroughput) / (PI * PhotonQueryRadiusSq);
+					vec3 irradianceEstimate = viewPathThroughput * (bsdf * pathThroughput) / (PI * PhotonQueryRadiusSq);
 					WriteAtomic(irradianceEstimate, pixelCoord);
 				}
 				
@@ -119,9 +122,9 @@ void main()
 											(cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
 
 					float pdf;
-					//vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal, pdf);
-					float cosThetaAbs = saturate(abs(dot(shadingNormal, ray.Direction)));
-					vec3 bsdf = GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
+					if(specularPath)
+						bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal, pdf);
+					//vec3 bsdf = GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
 					vec3 color = pathThroughput * fluxToIrradiance * bsdf;
 
 					// Add Sample.
@@ -140,6 +143,7 @@ void main()
 		vec3 newDirection = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, shadingNormal, throughput, isReflectedDiffuse, samplePDF);
 		throughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
 		pathThroughput *= throughput;
+		specularPath = specularPath && !isReflectedDiffuse;
 		
 	#ifdef RUSSIAN_ROULETTE
 		float continuationPropability = saturate(GetLuminance(throughput));

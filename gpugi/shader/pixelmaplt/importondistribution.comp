@@ -47,10 +47,10 @@ void main()
 		// Get Material infos.
 		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 
-		// TODO: this is always wrong!
 	//#ifndef EXCLUDE_DIRECT_VISIBLE
 		// Add self emissivity of hit material.
-		color += pathThroughput * materialData.Emissivity;
+		if(i==0)
+			color += pathThroughput * materialData.Emissivity;
 	//#endif
 
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
@@ -65,7 +65,7 @@ void main()
 		#ifdef EXCLUDE_DIRECT_VISIBLE
 			if(i>0) {
 		#endif
-			pathThroughput *= GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
+//			pathThroughput *= GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
 			// Write importon map entry and terminate.
 			uint hmDataIndex = globalPixelAddress * 2;
 			HashMapData[hmDataIndex].yzw = floatBitsToInt(pathThroughput);

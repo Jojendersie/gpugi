@@ -83,7 +83,7 @@ void main()
 	#endif
 	}
 
-	vec4 final = vec4(color, 1.0);
+	vec4 final = vec4(color, 0.0);
 	final += imageLoad(OutputTexture, gridPosition);
 	imageStore(OutputTexture, gridPosition, final);
 }
