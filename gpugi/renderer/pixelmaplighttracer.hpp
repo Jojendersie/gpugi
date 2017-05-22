@@ -14,6 +14,7 @@ class PixelMapLighttracer : public Renderer
 {
 public:
 	PixelMapLighttracer(RendererSystem& _rendererSystem);
+	~PixelMapLighttracer();
 
 	std::string GetName() const override { return "IM"; }
 
@@ -31,6 +32,8 @@ private:
 
 	int m_numPhotonsPerLightSample;
 	float m_queryRadius;
+	bool m_progressiveRadius;
+	uint m_importonMapSize;
 
 	gl::UniformBufferMetaInfo m_pixelMapLTUBOInfo;
 	std::unique_ptr<gl::Buffer> m_pixelMapLTUBO;

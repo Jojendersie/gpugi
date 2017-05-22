@@ -4,6 +4,10 @@
 #include "debugrenderer/hierarchyvisualization.hpp"
 #include "scene/scene.hpp"
 #include "utilities/logger.hpp"
+
+#include "control/scriptprocessing.hpp"
+#include "control/globalconfig.hpp"
+
 #include <ei/prime.hpp>
 #include <glhelper/texture2d.hpp>
 #include <glhelper/texturecubemap.hpp>
@@ -18,9 +22,24 @@ PixelMapLighttracer::PixelMapLighttracer(RendererSystem& _rendererSystem) :
 	m_photonTracingShader("photonTracing"),
 	m_importonDistributionShader("importonDistribution"),
 	m_numPhotonsPerLightSample(1 << 11),
-	m_queryRadius(0.005f)
+	m_queryRadius(0.005f),
+	m_progressiveRadius(false)
 {
 	m_rendererSystem.SetNumInitialLightSamples(128);
+
+	GlobalConfig::AddParameter("im_r", { m_queryRadius }, "Initial query radius for importon mapper.");
+	GlobalConfig::AddListener("im_r", "importon mapper", [=](const GlobalConfig::ParameterType& p){ this->m_queryRadius = p[0].As<float>(); });
+	GlobalConfig::AddParameter("im_nphotons", { m_numPhotonsPerLightSample }, "Photons per light sample in importon mapper.");
+	GlobalConfig::AddListener("im_nphotons", "importon mapper", [=](const GlobalConfig::ParameterType& p){ m_numPhotonsPerLightSample = p[0].As<int>(); });
+	GlobalConfig::AddParameter("im_progressive", { m_progressiveRadius }, "Progressive radius shrinking in importon mapper.");
+	GlobalConfig::AddListener("im_progressive", "importon mapper", [=](const GlobalConfig::ParameterType& p){ m_progressiveRadius = p[0].As<bool>(); });
+}
+
+PixelMapLighttracer::~PixelMapLighttracer()
+{
+	GlobalConfig::RemoveParameter("im_r");
+	GlobalConfig::RemoveParameter("im_nphotons");
+	GlobalConfig::RemoveParameter("im_progressive");
 }
 
 void PixelMapLighttracer::SetScene(std::shared_ptr<Scene> _scene)
@@ -50,6 +69,13 @@ void PixelMapLighttracer::Draw()
 	{
 		CreateBuffers();
 	}
+
+	gl::MappedUBOView mapView(m_pixelMapLTUBOInfo, m_pixelMapLTUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
+	mapView["HashMapSize"].Set(m_importonMapSize);
+	mapView["PhotonQueryRadiusSq"].Set(m_queryRadius * m_queryRadius);
+	mapView["HashGridSpacing"].Set(m_queryRadius * 2.01f);
+	mapView["NumPhotonsPerLightSample"].Set(static_cast<std::int32_t>(m_numPhotonsPerLightSample));
+	m_pixelMapLTUBO->Unmap();
 
 	m_pixelMapLTUBO->BindUniformBuffer(4);
 	ei::UVec4 mask(0xffffffff);
@@ -87,19 +113,12 @@ void PixelMapLighttracer::CreateBuffers()
 	// are photons. Although, the real size depends on the number of filled cells this
 	// is a conservative heuristic.
 	uint minPixelMapSize = (numPixels * 3 / 2);
-	uint photonMapSize = ei::nextPrimeGreaterOrEqual(minPixelMapSize);
-	m_pixelMap = std::make_unique<gl::Buffer>(photonMapSize * 2 * 4, gl::Buffer::IMMUTABLE);
+	m_importonMapSize = ei::nextPrimeGreaterOrEqual(minPixelMapSize);
+	m_pixelMap = std::make_unique<gl::Buffer>(m_importonMapSize * 2 * 4, gl::Buffer::IMMUTABLE);
 	m_pixelMapData = std::make_unique<gl::Buffer>(numPixels * 8 * 4 + 4 * 4, gl::Buffer::IMMUTABLE);
 	LOG_LVL2("Allocated " << (m_pixelMap->GetSize() + m_pixelMapData->GetSize()) / (1024*1024) << " MB for importon map.");
 
 	m_pixelMapLTUBOInfo = m_importonDistributionShader.GetUniformBufferInfo().find("ImportonMapperUBO")->second;
 	m_pixelMapLTUBO = std::make_unique<gl::Buffer>(m_pixelMapLTUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);
 	m_pixelMapLTUBO->BindUniformBuffer(4);
-
-	gl::MappedUBOView mapView(m_pixelMapLTUBOInfo, m_pixelMapLTUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
-	mapView["HashMapSize"].Set(photonMapSize);
-	mapView["PhotonQueryRadiusSq"].Set(m_queryRadius * m_queryRadius);
-	mapView["HashGridSpacing"].Set(m_queryRadius * 2.01f);
-	mapView["NumPhotonsPerLightSample"].Set(static_cast<std::int32_t>(m_numPhotonsPerLightSample));
-	m_pixelMapLTUBO->Unmap();
 }

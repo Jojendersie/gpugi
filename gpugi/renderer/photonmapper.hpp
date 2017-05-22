@@ -14,6 +14,7 @@ class PhotonMapper : public Renderer
 {
 public:
 	PhotonMapper(RendererSystem& _rendererSystem);
+	~PhotonMapper();
 
 	std::string GetName() const override { return "PM"; }
 
@@ -31,6 +32,8 @@ private:
 
 	int m_numPhotonsPerLightSample;
 	float m_queryRadius;
+	bool m_progressiveRadius;
+	uint m_photonMapSize;
 
 	gl::UniformBufferMetaInfo m_photonMapperUBOInfo;
 	std::unique_ptr<gl::Buffer> m_photonMapperUBO;
