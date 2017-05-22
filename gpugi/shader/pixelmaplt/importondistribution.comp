@@ -10,6 +10,7 @@ layout(binding=12) uniform samplerCubeArray EnvironmentMap;
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
 #define MAX_PATHLENGTH 6
+#define EXCLUDE_DIRECT_VISIBLE
 
 #define LOCAL_SIZE 8
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
@@ -46,8 +47,11 @@ void main()
 		// Get Material infos.
 		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 
+		// TODO: this is always wrong!
+	//#ifndef EXCLUDE_DIRECT_VISIBLE
 		// Add self emissivity of hit material.
 		color += pathThroughput * materialData.Emissivity;
+	//#endif
 
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
 		vec3 throughput = vec3(1.0);
@@ -58,6 +62,9 @@ void main()
 		float cosThetaAbs = saturate(abs(dot(hitNormal, ray.Direction)));
 		if(isReflectedDiffuse)
 		{
+		#ifdef EXCLUDE_DIRECT_VISIBLE
+			if(i>0) {
+		#endif
 			pathThroughput *= GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
 			// Write importon map entry and terminate.
 			uint hmDataIndex = globalPixelAddress * 2;
@@ -66,6 +73,9 @@ void main()
 			//HashMapData[hmDataIndex + 2].w = int(PackNormal32(ray.Direction));
 			HashMapData[hmDataIndex + 1].w = gridPosition.x + (gridPosition.y << 16);
 			insertToHashGrid(ray.Origin, int(hmDataIndex));
+		#ifdef EXCLUDE_DIRECT_VISIBLE
+			}
+		#endif
 	
 			break;
 		}
