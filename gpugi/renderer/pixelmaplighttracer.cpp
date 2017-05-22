@@ -3,7 +3,8 @@
 #include "debugrenderer/raytracemeshinfo.hpp"
 #include "debugrenderer/hierarchyvisualization.hpp"
 #include "scene/scene.hpp"
-#include "ei/prime.hpp"
+#include "utilities/logger.hpp"
+#include <ei/prime.hpp>
 #include <glhelper/texture2d.hpp>
 #include <glhelper/texturecubemap.hpp>
 
@@ -64,8 +65,6 @@ void PixelMapLighttracer::Draw()
 
 	m_photonTracingShader.Activate();
 	GL_CALL(glDispatchCompute, m_rendererSystem.GetNumInitialLightSamples() * m_numPhotonsPerLightSample / m_localWGSizePhotonShader.x, 1, 1);
-
-	//m_rendererSystem.DispatchShowLightCacheShader();
 }
 
 void PixelMapLighttracer::RecompileShaders(const std::string& _additionalDefines)
@@ -90,7 +89,8 @@ void PixelMapLighttracer::CreateBuffers()
 	uint minPixelMapSize = (numPixels * 3 / 2);
 	uint photonMapSize = ei::nextPrimeGreaterOrEqual(minPixelMapSize);
 	m_pixelMap = std::make_unique<gl::Buffer>(photonMapSize * 2 * 4, gl::Buffer::IMMUTABLE);
-	m_pixelMapData = std::make_unique<gl::Buffer>(numPixels * 12 * 4 + 4 * 4, gl::Buffer::IMMUTABLE);
+	m_pixelMapData = std::make_unique<gl::Buffer>(numPixels * 8 * 4 + 4 * 4, gl::Buffer::IMMUTABLE);
+	LOG_LVL2("Allocated " << (m_pixelMap->GetSize() + m_pixelMapData->GetSize()) / (1024*1024) << " MB for importon map.");
 
 	m_pixelMapLTUBOInfo = m_importonDistributionShader.GetUniformBufferInfo().find("ImportonMapperUBO")->second;
 	m_pixelMapLTUBO = std::make_unique<gl::Buffer>(m_pixelMapLTUBOInfo.bufferDataSizeByte, gl::Buffer::MAP_WRITE);

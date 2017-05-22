@@ -74,11 +74,13 @@ void main()
 					&& (abs(dot(toImporton, shadingNormal)) < 0.01))
 				{
 					vec3 viewPathThroughput = intBitsToFloat(HashMapData[hmDataIdx].yzw);
-					vec3 importonDir = intBitsToFloat(HashMapData[hmDataIdx+2].xyz);
+					//vec3 importonDir = UnpackNormal(uint(HashMapData[hmDataIdx+2].w));
+					ivec2 pixelCoord = ivec2(HashMapData[hmDataIdx+1].w & 0xffff, HashMapData[hmDataIdx+1].w >> 16);
 					float pdf;
-					vec3 fr = BSDF(ray.Direction, -importonDir, materialData, shadingNormal, pdf);
-					vec3 irradianceEstimate = (fr * viewPathThroughput * pathThroughput) / (PI * PhotonQueryRadiusSq);
-					ivec2 pixelCoord = ivec2(HashMapData[hmDataIdx+1].w, HashMapData[hmDataIdx+2].w);
+					//vec3 fr = BSDF(ray.Direction, -importonDir, materialData, shadingNormal, pdf);
+					//vec3 fr = BSDF(importonDir, -ray.Direction, materialData, shadingNormal, pdf);
+					//vec3 fr = materialData.Diffuse / PI;
+					vec3 irradianceEstimate = (viewPathThroughput * pathThroughput) / (PI * PhotonQueryRadiusSq);
 					WriteAtomic(irradianceEstimate, pixelCoord);
 				}
 				

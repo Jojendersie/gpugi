@@ -76,9 +76,7 @@ void main()
 						&& (abs(dot(toPhoton, hitNormal)) < 0.01))
 					{
 						vec3 flux = intBitsToFloat(HashMapData[hmDataIdx].yzw);
-						vec2 photonDirPacked = unpackSnorm2x16(HashMapData[hmDataIdx+1].w);
-						photonDirPacked.x *= PI;
-						vec3 photonDir = UnpackNormal(photonDirPacked);
+						vec3 photonDir = UnpackNormal(HashMapData[hmDataIdx+1].w);
 						//vec3 photonDir = intBitsToFloat(HashMapData[hmDataIdx+1].xyz);
 						
 						float pdf;

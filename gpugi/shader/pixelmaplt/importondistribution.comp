@@ -55,19 +55,25 @@ void main()
 		bool isReflectedDiffuse;
 		vec3 newDirection = SampleBSDF(ray.Direction, materialData, randomSeed, hitNormal, throughput, isReflectedDiffuse, pdf);
 		
+		float cosThetaAbs = saturate(abs(dot(hitNormal, ray.Direction)));
 		if(isReflectedDiffuse)
 		{
+			pathThroughput *= GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
 			// Write importon map entry and terminate.
-			uint hmDataIndex = globalPixelAddress * 3;
+			uint hmDataIndex = globalPixelAddress * 2;
 			HashMapData[hmDataIndex].yzw = floatBitsToInt(pathThroughput);
 			HashMapData[hmDataIndex + 1].xyz = floatBitsToInt(ray.Origin);
-			HashMapData[hmDataIndex + 2].xyz = floatBitsToInt(ray.Direction);
-			HashMapData[hmDataIndex + 1].w = gridPosition.x;
-			HashMapData[hmDataIndex + 2].w = gridPosition.y;
+			//HashMapData[hmDataIndex + 2].w = int(PackNormal32(ray.Direction));
+			HashMapData[hmDataIndex + 1].w = gridPosition.x + (gridPosition.y << 16);
 			insertToHashGrid(ray.Origin, int(hmDataIndex));
 	
 			break;
 		}
+		
+		//color = GetDiffuseProbability(materialData, cosThetaAbs);
+		//color  =materialData.Reflectiveness.xyz;
+	//	throughput /= 1.0 - Avg(GetDiffuseProbability(materialData, cosThetaAbs));
+		//throughput /= AvgProbability(GetDiffuseProbability(materialData, cosThetaAbs));
 		
 		// Continue path
 		ray.Direction = newDirection;
@@ -81,7 +87,7 @@ void main()
 	#endif
 	}
 
-	vec4 final = vec4(color, 0.0);
+	vec4 final = vec4(color, 1.0);
 	final += imageLoad(OutputTexture, gridPosition);
 	imageStore(OutputTexture, gridPosition, final);
 }

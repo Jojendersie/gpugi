@@ -76,9 +76,7 @@ void main()
 			HashMapData[hmDataIndex].yzw = floatBitsToInt(pathThroughput);
 			//HashMapData[hmDataIndex + 1].xyz = floatBitsToInt(ray.Direction);
 			HashMapData[hmDataIndex + 1].xyz = floatBitsToInt(ray.Origin);
-			vec2 packedDir = PackNormal(ray.Direction);
-			packedDir.x /= PI;
-			HashMapData[hmDataIndex + 1].w = int(packSnorm2x16(packedDir));
+			HashMapData[hmDataIndex + 1].w = int(PackNormal32(ray.Direction));
 			insertToHashGrid(ray.Origin, int(hmDataIndex));
 
 		#ifdef SHOW_SPECIFIC_PATHLENGTH

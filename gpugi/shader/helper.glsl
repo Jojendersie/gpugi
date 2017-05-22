@@ -62,6 +62,19 @@ vec2 PackNormal(in vec3 normal)
 	return vec2(normal.x == 0.0 ? sign(normal.y)*PI/2 : atan(normal.y, normal.x), normal.z);
 }
 
+// Pack a direction into 32 bit.
+// Returns packSnorm2x16(atan(normal.y, normal.x) / PI, normal.z)
+uint PackNormal32(in vec3 normal)
+{
+	return packSnorm2x16(vec2(normal.x == 0.0 ? sign(normal.y)/2 : atan(normal.y, normal.x)/PI, normal.z));
+}
+vec3 UnpackNormal(uint packedNormal)
+{
+	vec2 packedVec = unpackSnorm2x16(packedNormal);
+	packedVec.x *= PI;
+	return UnpackNormal(packedVec);
+}
+
 
 /*
 // Source http://www.malteclasen.de/zib/index4837.html?p=37
