@@ -175,9 +175,8 @@ void main()
 					// fluxToIrradiance =(photometric distance law)= fluxToIntensity * dot(cameraRay.Direction, Normal) / cameraDistSq
 
 					float cosAtCamera = saturate(camViewDotRay / cameraDist); // = dot(-cameraRay.Direction, CameraW);
-					cosAtCamera *= cosAtCamera;
 					float fluxToIrradiance = AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal) /
-											(cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
+											(cosAtCamera * cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
 
 					float pdf;
 					vec3 bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal, pdf);

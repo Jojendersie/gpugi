@@ -20,8 +20,9 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 	float lightDist = sqrt(lightDistSq);
 	lightRay.Direction /= lightDist;
 	float surfaceCos = saturate(dot(lightRay.Direction, _normal));
+	if(surfaceCos <= 0.0) return vec3(0.0);
 
-	if(lightIntensity_Norm1.w > 1.0) // Wrong normals encode omnidirectional point lights
+	if(lightIntensity_Norm1.w > 1.5) // Wrong normals encode omnidirectional point lights
 	{
 		// Omnidirectional (point) light
 	#ifdef CACHE_DIRECT_DIFFUSE
@@ -29,7 +30,7 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 		vec4 diffuse_count = vec4(0.0, 0.0, 0.0, 1.0);
 	#endif
 		// Facing the light?
-		if(surfaceCos > 0.0)
+	//	if(surfaceCos > 0.0)
 		{
 		#ifdef TRACERAY_IMPORTANCE_BREAK
 			lightRay.Origin = _distEpsilon * lightRay.Direction + _pos;
@@ -66,7 +67,7 @@ vec3 EstimateDirectLight(vec3 _pos, vec3 _normal, int _lightSampleIndex, vec3 _v
 
 		// Facing the light and light facing the surface?
 		float lightSampleIntensityFactor = saturate(dot(lightNormal, -lightRay.Direction));
-		if(lightSampleIntensityFactor > 0.0 && surfaceCos > 0.0)
+		if(lightSampleIntensityFactor > 0.0)// && surfaceCos > 0.0)
 		{
 			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + _pos;
 

@@ -28,7 +28,7 @@ void main()
 	Ray ray;
 	ray.Origin = lightSamplePos_Norm0.xyz;
 	// Omnidirectional light?
-	if(lightIntensity_Norm1.w > 1.0)
+	if(lightIntensity_Norm1.w > 1.5)
 	{
 		ray.Direction = SampleDirection(Random2(randomSeed));
 		pathThroughput *= 4.0; // The above integration is for Lambertian emitters, need to correct this
@@ -117,9 +117,8 @@ void main()
 				{
 					// See lighttracer for details!
 					float cosAtCamera = saturate(camViewDotRay / cameraDist); // = dot(-cameraRay.Direction, CameraW);
-					cosAtCamera *= cosAtCamera;
 					float fluxToIrradiance = AdjointBSDFShadingNormalCorrectedOutDotN(ray.Direction, cameraRay.Direction, geometryNormal, shadingNormal) /
-											(cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
+						(cosAtCamera * cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
 
 					float pdf;
 					if(specularPath)
