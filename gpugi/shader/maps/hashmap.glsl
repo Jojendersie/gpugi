@@ -5,6 +5,8 @@
 // Further, HASH_MAP_BINDIDX and HASH_MAP_DATA_BINDIDX must be defined before
 // including this header.
 
+#include "grid.glsl"
+
 #define QUADRATIC_PROBING
 
 layout (std430, binding = HASH_MAP_BINDIDX) buffer HashMapBuffer
@@ -23,19 +25,6 @@ layout (std430, binding = HASH_MAP_DATA_BINDIDX) buffer HashMapDataBuffer
 	// entries in the very same buffer).
 	restrict ivec4 HashMapData[];
 };
-
-ivec3 worldPosToGrid(vec3 pos)
-{
-	return ivec3(ceil(pos / HashGridSpacing));
-}
-
-uint gridCellHash(ivec3 cell)
-{
-	uint hash = (uint(cell.x) & 0x7ff)
-			 | ((uint(cell.y) & 0x3ff) << 11)
-			 | ((uint(cell.z) & 0x7ff) << 21);
-	return RandomUInt(hash);
-}
 
 // Insert a filled data struct from HashMapData[] to the hash-grid.
 // The insertion procedure is as follows:

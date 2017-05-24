@@ -5,6 +5,8 @@
 // Further, HASH_MAP_BINDIDX and HASH_MAP_DATA_BINDIDX must be defined before
 // including this header.
 
+#include "grid.glsl"
+
 layout (std430, binding = HASH_MAP_BINDIDX) buffer HashMapBuffer
 {
 	// A collision counter and data index.
@@ -20,19 +22,6 @@ layout (std430, binding = HASH_MAP_DATA_BINDIDX) buffer HashMapDataBuffer
 	// The usage can use all values at will.
 	restrict ivec4 HashMapData[];
 };
-
-ivec3 worldPosToGrid(vec3 pos)
-{
-	return ivec3(ceil(pos / HashGridSpacing));
-}
-
-uint gridCellHash(ivec3 cell)
-{
-	uint hash = (uint(cell.x) & 0x7ff)
-			 | ((uint(cell.y) & 0x3ff) << 11)
-			 | ((uint(cell.z) & 0x7ff) << 21);
-	return RandomUInt(hash);
-}
 
 void insertToHashGrid(vec3 pos, int hmDataIndex, inout uint seed)
 {

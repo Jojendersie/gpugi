@@ -1,7 +1,5 @@
 #include "photonmapper.hpp"
 #include "renderersystem.hpp"
-#include "debugrenderer/raytracemeshinfo.hpp"
-#include "debugrenderer/hierarchyvisualization.hpp"
 #include "scene/scene.hpp"
 
 #include "control/scriptprocessing.hpp"
