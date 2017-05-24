@@ -11,6 +11,26 @@ layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attentio
 
 #define MAX_PATHLENGTH 6
 
+vec3 irradianceEstimate(int hmDataIdx, int multiplier, Ray ray, MaterialData materialData, vec3 shadingNormal)
+{
+	vec3 photonPos = intBitsToFloat(HashMapData[hmDataIdx+1].xyz);
+	// Compare squared distance, if we are close enough to count this photon.
+	// Also, if the photon is behind the current surface ignore it.
+	vec3 toPhoton = photonPos - ray.Origin;
+	if((dot(toPhoton, toPhoton) <= PhotonQueryRadiusSq)
+		&& (abs(dot(toPhoton, shadingNormal)) < 0.01))
+	{
+		vec3 flux = intBitsToFloat(HashMapData[hmDataIdx].yzw);
+		vec3 photonDir = UnpackNormal(HashMapData[hmDataIdx+1].w);
+		//vec3 photonDir = intBitsToFloat(HashMapData[hmDataIdx+1].xyz);
+		
+		float pdf;
+		vec3 fr = BSDF(ray.Direction, -photonDir, materialData, shadingNormal, pdf);
+		return fr * flux * float(multiplier);
+	}
+	return vec3(0.0);
+}
+
 #define LOCAL_SIZE 8
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
 void main()
@@ -57,7 +77,7 @@ void main()
 		if(isReflectedDiffuse)
 		{
 			// Gather photons and terminate.
-			vec3 irradianceEstimate = vec3(0.0);
+			vec3 irradiance = vec3(0.0);
 			
 			// Need to iterate over eight cells to get all photons
 			//ivec3 cellBase = worldPosToGrid(ray.Origin);
@@ -65,31 +85,23 @@ void main()
 			for(int i = 0; i < 8; ++i)
 			{
 				ivec3 cell = cellBase + ivec3(i&1, (i>>1)&1, (i>>2)&1);
+			#ifdef USE_STOCHASTIC_HASHMAP
+				ivec2 count_data = find(cell);
+				if(count_data.x > 0)
+					irradiance += irradianceEstimate(count_data.y, count_data.x, ray, materialData, hitNormal);
+			#else
 				int hmDataIdx = findFirst(cell);
 				while(hmDataIdx != -1)
 				{
-					vec3 photonPos = intBitsToFloat(HashMapData[hmDataIdx+1].xyz);
-					// Compare squared distance, if we are close enough to count this photon.
-					// Also, if the photon is behind the current surface ignore it.
-					vec3 toPhoton = photonPos - ray.Origin;
-					if((dot(toPhoton, toPhoton) <= PhotonQueryRadiusSq)
-						&& (abs(dot(toPhoton, hitNormal)) < 0.01))
-					{
-						vec3 flux = intBitsToFloat(HashMapData[hmDataIdx].yzw);
-						vec3 photonDir = UnpackNormal(HashMapData[hmDataIdx+1].w);
-						//vec3 photonDir = intBitsToFloat(HashMapData[hmDataIdx+1].xyz);
-						
-						float pdf;
-						vec3 fr = BSDF(ray.Direction, -photonDir, materialData, hitNormal, pdf);
-						irradianceEstimate += fr * flux;
-					}
+					irradiance += irradianceEstimate(hmDataIdx, 1, ray, materialData, hitNormal);
 					
 					hmDataIdx = getNext(hmDataIdx);
 				}
+			#endif
 			}
 			// Normalize by query area and add to output
-			irradianceEstimate /= PI * PhotonQueryRadiusSq;
-			color += irradianceEstimate * pathThroughput;
+			irradiance /= PI * PhotonQueryRadiusSq;
+			color += irradiance * pathThroughput;
 			break;
 		}
 		

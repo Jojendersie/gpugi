@@ -8,4 +8,8 @@ layout(binding = 4, shared) uniform PhotonMapperUBO
 
 #define HASH_MAP_BINDIDX 6
 #define HASH_MAP_DATA_BINDIDX 7
-#include "../maps/hashmap.glsl"
+#ifdef USE_STOCHASTIC_HASHMAP
+	#include "../maps/stochastic_hashmap.glsl"
+#else
+	#include "../maps/hashmap.glsl"
+#endif

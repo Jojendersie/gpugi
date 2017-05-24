@@ -23,7 +23,8 @@ PhotonMapper::PhotonMapper(RendererSystem& _rendererSystem) :
 	m_numPhotonsPerLightSample(1 << 11),
 	m_queryRadius(0.01f),
 	m_currentQueryRadius(0.01f),
-	m_progressiveRadius(false)
+	m_progressiveRadius(false),
+	m_useStochasticHM(true)
 {
 	// Save shader binary.
 /*	{
@@ -83,6 +84,7 @@ void PhotonMapper::Draw()
 	} else if(m_progressiveRadius)
 		m_currentQueryRadius *= sqrt((m_rendererSystem.GetIterationCount() + 0.7f) / (m_rendererSystem.GetIterationCount() + 1.0f));
 
+	m_photonMapperUBO->BindUniformBuffer(4);
 	gl::MappedUBOView mapView(m_photonMapperUBOInfo, m_photonMapperUBO->Map(gl::Buffer::MapType::WRITE, gl::Buffer::MapWriteFlag::NONE));
 	mapView["HashMapSize"].Set(m_photonMapSize);
 	mapView["PhotonQueryRadiusSq"].Set(m_currentQueryRadius * m_currentQueryRadius);
@@ -90,12 +92,16 @@ void PhotonMapper::Draw()
 	mapView["NumPhotonsPerLightSample"].Set(static_cast<std::int32_t>(m_numPhotonsPerLightSample));
 	m_photonMapperUBO->Unmap();
 
-	m_photonMapperUBO->BindUniformBuffer(4);
-	ei::UVec4 mask(0xffffffff);
-	GL_CALL(glClearNamedBufferData, m_photonMap->GetInternHandle(), GL_RG8UI, GL_RG, GL_UNSIGNED_INT, &mask);
-	m_photonMapData->ClearToZero();
 	m_photonMap->BindShaderStorageBuffer(6);
 	m_photonMapData->BindShaderStorageBuffer(7);
+	if(m_useStochasticHM)
+		m_photonMap->ClearToZero();
+	else {
+		ei::UVec4 mask(0xffffffff);
+		// Using GL_RG32UI or GL_RGBA32UI fills the buffer invalid for an unknown reason
+		GL_CALL(glClearNamedBufferData, m_photonMap->GetInternHandle(), GL_RGBA16UI, GL_RGBA, GL_UNSIGNED_INT, &mask);
+	}
+	m_photonMapData->ClearToZero();
 	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
 
 	m_photonDistributionShader.Activate();
@@ -114,6 +120,8 @@ void PhotonMapper::RecompileShaders(const std::string& _additionalDefines)
 #ifdef SHOW_SPECIFIC_PATHLENGTH
 	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
 #endif
+	if(m_useStochasticHM)
+		additionalDefines += "#define USE_STOCHASTIC_HASHMAP\n";
 
 	m_photonDistributionShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/photonmapper/photondistribution.comp", additionalDefines);
 	m_photonDistributionShader.CreateProgram();

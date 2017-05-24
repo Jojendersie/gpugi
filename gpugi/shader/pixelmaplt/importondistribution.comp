@@ -73,7 +73,11 @@ void main()
 			HashMapData[hmDataIndex + 1].xyz = floatBitsToInt(ray.Origin);
 			//HashMapData[hmDataIndex + 2].w = int(PackNormal32(ray.Direction));
 			HashMapData[hmDataIndex + 1].w = gridPosition.x + (gridPosition.y << 16);
+		#ifdef USE_STOCHASTIC_HASHMAP
+			insertToHashGrid(ray.Origin, int(hmDataIndex), randomSeed);
+		#else
 			insertToHashGrid(ray.Origin, int(hmDataIndex));
+		#endif
 		#ifdef EXCLUDE_DIRECT_VISIBLE
 			}
 		#endif

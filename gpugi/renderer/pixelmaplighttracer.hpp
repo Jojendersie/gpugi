@@ -34,6 +34,7 @@ private:
 	float m_queryRadius;
 	float m_currentQueryRadius;
 	bool m_progressiveRadius;
+	bool m_useStochasticHM;
 	uint m_importonMapSize;
 
 	gl::UniformBufferMetaInfo m_pixelMapLTUBOInfo;

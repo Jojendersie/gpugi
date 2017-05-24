@@ -12,6 +12,27 @@
 #define MAX_PATHLENGTH 8
 #define REPROJECT
 
+void radianceEstimate(int hmDataIdx, vec3 pathThroughput, Ray ray, vec3 shadingNormal)
+{
+	vec3 importonPos = intBitsToFloat(HashMapData[hmDataIdx+1].xyz);
+	// Compare squared distance, if we are close enough to count this photon.
+	// Also, if the photon is behind the current surface ignore it.
+	vec3 toImporton = importonPos - ray.Origin;
+	if((dot(toImporton, toImporton) <= PhotonQueryRadiusSq)
+		&& (abs(dot(toImporton, shadingNormal)) < 0.01))
+	{
+		vec3 viewPathThroughput = intBitsToFloat(HashMapData[hmDataIdx].yzw);
+		//vec3 importonDir = UnpackNormal(uint(HashMapData[hmDataIdx+2].w));
+		ivec2 pixelCoord = ivec2(HashMapData[hmDataIdx+1].w & 0xffff, HashMapData[hmDataIdx+1].w >> 16);
+		float pdf;
+		//vec3 fr = BSDF(ray.Direction, -importonDir, materialData, shadingNormal, pdf);
+		//vec3 fr = BSDF(importonDir, -ray.Direction, materialData, shadingNormal, pdf);
+		//vec3 fr = materialData.Diffuse / PI;
+		vec3 irradianceEstimate = viewPathThroughput * (pathThroughput) / (PI * PhotonQueryRadiusSq);
+		WriteAtomic(irradianceEstimate, pixelCoord);
+	}
+}
+
 layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
@@ -66,29 +87,18 @@ void main()
 		for(int i = 0; i < 8; ++i)
 		{
 			ivec3 cell = cellBase + ivec3(i&1, (i>>1)&1, (i>>2)&1);
+		#ifdef USE_STOCHASTIC_HASHMAP
+			ivec2 count_data = find(cell);
+			if(count_data.x > 0)
+				radianceEstimate(count_data.y, bsdf * pathThroughput * count_data.x, ray, shadingNormal);
+		#else
 			int hmDataIdx = findFirst(cell);
 			while(hmDataIdx != -1)
 			{
-				vec3 importonPos = intBitsToFloat(HashMapData[hmDataIdx+1].xyz);
-				// Compare squared distance, if we are close enough to count this photon.
-				// Also, if the photon is behind the current surface ignore it.
-				vec3 toImporton = importonPos - ray.Origin;
-				if((dot(toImporton, toImporton) <= PhotonQueryRadiusSq)
-					&& (abs(dot(toImporton, shadingNormal)) < 0.01))
-				{
-					vec3 viewPathThroughput = intBitsToFloat(HashMapData[hmDataIdx].yzw);
-					//vec3 importonDir = UnpackNormal(uint(HashMapData[hmDataIdx+2].w));
-					ivec2 pixelCoord = ivec2(HashMapData[hmDataIdx+1].w & 0xffff, HashMapData[hmDataIdx+1].w >> 16);
-					float pdf;
-					//vec3 fr = BSDF(ray.Direction, -importonDir, materialData, shadingNormal, pdf);
-					//vec3 fr = BSDF(importonDir, -ray.Direction, materialData, shadingNormal, pdf);
-					//vec3 fr = materialData.Diffuse / PI;
-					vec3 irradianceEstimate = viewPathThroughput * (bsdf * pathThroughput) / (PI * PhotonQueryRadiusSq);
-					WriteAtomic(irradianceEstimate, pixelCoord);
-				}
-				
+				radianceEstimate(hmDataIdx, bsdf * pathThroughput, ray, shadingNormal);
 				hmDataIdx = getNext(hmDataIdx);
 			}
+		#endif
 		}
 		
 		// Contribute using reprojection
