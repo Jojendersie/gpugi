@@ -6,5 +6,5 @@ resolution = 1024, 768
 //resolution = 512, 384
 
 renderer = 7
-//pm_r = 0.1
-//pm_progressive = true
+//im_r = 0.1
+im_progressive = true

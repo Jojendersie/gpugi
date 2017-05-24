@@ -9,7 +9,7 @@ layout(binding=12) uniform samplerCubeArray EnvironmentMap;
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
-#define MAX_PATHLENGTH 6
+#define MAX_PATHLENGTH 10
 #define EXCLUDE_DIRECT_VISIBLE
 
 #define LOCAL_SIZE 8
@@ -65,6 +65,7 @@ void main()
 		#ifdef EXCLUDE_DIRECT_VISIBLE
 			if(i>0) {
 		#endif
+			pathThroughput /= AvgProbability(GetDiffuseProbability(materialData, cosThetaAbs));
 //			pathThroughput *= GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
 			// Write importon map entry and terminate.
 			uint hmDataIndex = globalPixelAddress * 2;
