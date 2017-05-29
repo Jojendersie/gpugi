@@ -7,4 +7,8 @@ resolution = 1024, 768
 
 renderer = 7
 //im_r = 0.1
-im_progressive = true
+//im_progressive = true
+
+//waitIterations = 1
+//screenshot
+//exit

@@ -151,7 +151,7 @@ void Scene::LoadMaterial( const bim::Material& _material )
 		mat.refractionIndexAvg = avg(n);
 		mat.fresnel0 = (sq(n-1.0f) + sq(k)) * den;
 		mat.fresnel1 = 4.0f * n * den;*/
-		mat.refractionIndexAvg = 1.3f;
+		mat.refractionIndexAvg = 1.5f;
 		mat.fresnel0 = _material.get(s_fresnel0, ei::Vec3(0.03f));
 		mat.fresnel1 = 1.0f - mat.fresnel0;
 		// Specular exponent parameter
