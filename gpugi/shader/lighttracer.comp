@@ -1,6 +1,7 @@
 #version 440
 
 #define TRINORMAL_OUTPUT
+#define SAMPLING_DECISION_OUTPUT
 #include "stdheader.glsl"
 
 #ifdef SAVE_LIGHT_CACHE
@@ -159,13 +160,22 @@ void main()
 		// Continue ray.
 		vec3 throughput = vec3(1.0);
 		float samplePDF;
-		vec3 newDirection = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, shadingNormal, throughput, samplePDF);
+		bool isReflectedDiffuse;
+		vec3 newDirection = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, shadingNormal, throughput, isReflectedDiffuse, samplePDF);
 		throughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
+		
+		// THIS IS JUST FOR A TEST COMMIT - MAYBE CORRECTED AT THE WRONG PLACE
+		// this deals with the same problem as the Adjoint cases in refractive paths: the ray density is changing
+		// when we have a non-perfect reflection, i.e., the "width" of a ray bundle changes during reflection
+		// so in case of non diffuse reflection we need to compensate the rate of change
+		if(!isReflectedDiffuse)
+			throughput *= dot(shadingNormal, newDirection) / dot(shadingNormal, -ray.Direction);
+		
 		pathThroughput *= throughput;
 
 	#ifdef RUSSIAN_ROULETTE
 		float continuationPropability = saturate(GetLuminance(throughput));
-		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stoped -> >=
+		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stopped -> >=
 			break;
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.
 
@@ -177,7 +187,7 @@ void main()
 		ray.Direction = newDirection;
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 
-		// Update MIS quantitites.
+		// Update MIS quantities.
 	#if defined(SAVE_LIGHT_CACHE) && !defined(SAVE_LIGHT_CACHE_WARMUP)
 		samplePDF = MISHeuristic(samplePDF);
 		anyPathProbabilitySum = anyPathProbabilitySum * samplePDF + pathProbability;

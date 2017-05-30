@@ -1,0 +1,82 @@
+{
+	"scene": "box1.bim",
+	"accelerator": "aabox",
+	"materials": {
+		"DefaultMaterial": {
+			"type": "legacy",
+			"albedo": [0.5, 0.5, 0.5],
+			"specularColor": [0.1, 0.1, 0.1],
+			"roughness": [1],
+			"opacity": [1],
+			"emissivity": [0, 0, 0]
+		},
+		"Glass": {
+			"type": "legacy",
+			"albedo": [0.5, 0.5, 0.5],
+			"specularColor": [0.1, 0.1, 0.1],
+			"roughness": [1],
+			"opacity": [1],
+			"emissivity": [0, 0, 0]
+		},
+		"Floor": {
+			"type": "legacy",
+			"albedo": [0.5, 0.5, 0.5],
+			"specularColor": [0.1, 0.1, 0.1],
+			"roughness": [1],
+			"opacity": [1],
+			"emissivity": [0, 0, 0]
+		},
+		"RightWall": {
+			"type": "legacy",
+			"albedo": [0.5, 0.5, 0.5],
+			"specularColor": [0.1, 0.1, 0.1],
+			"roughness": [1],
+			"opacity": [1],
+			"emissivity": [0, 0, 0]
+		},
+		"Wall": {
+			"type": "legacy",
+			"albedo": [0.5, 0.5, 0.5],
+			"specularColor": [0.1, 0.1, 0.1],
+			"roughness": [1],
+			"opacity": [1],
+			"emissivity": [0, 0, 0]
+		},
+		"LeftWall": {
+			"type": "legacy",
+			"albedo": [0.5, 0.5, 0.5],
+			"specularColor": [0.1, 0.1, 0.1],
+			"roughness": [1],
+			"opacity": [1],
+			"emissivity": [0, 0, 0]
+		},
+		"White": {
+			"type": "legacy",
+			"albedo": [0.5, 0.5, 0.5],
+			"specularColor": [0.1, 0.1, 0.1],
+			"roughness": [1],
+			"opacity": [1],
+			"emissivity": [0, 0, 0]
+		},
+		"LightR": {
+			"type": "legacy",
+			"albedo": [0.5, 0.5, 0.5],
+			"specularColor": [0, 0, 0],
+			"roughness": [0.000625],
+			"opacity": [1],
+			"emissivity": [400.0, 400.0, 400.0]
+		},
+		"LightL": {
+			"type": "legacy",
+			"albedo": [0.5, 0.5, 0.5],
+			"specularColor": [0, 0, 0],
+			"roughness": [0.000625],
+			"opacity": [1],
+			"emissivity": [0.0, 0.0, 0.0]
+		}
+	},
+	"lights": {
+	},
+	"cameras": {
+	}
+}

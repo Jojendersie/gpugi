@@ -1,7 +1,9 @@
 #define DIVISOR_EPSILON 1e-5
 
-#define USE_FRESNEL
-#define APPLY_FRESNEL_CORRECTION
+//default is no reflection
+#define USE_CONSTANT_REFLECTION
+//#define USE_FRESNEL
+//#define APPLY_FRESNEL_CORRECTION
 
 // Data from material textures.
 struct MaterialData
@@ -47,10 +49,12 @@ void GetBSDFDecisionPropabilities(MaterialData materialData, float cosThetaAbs,
 		// ((n-1)²+k²) / ((n+1)²+k²) + 4n / ((n+1)²+k²) * (1-cos theta)^5
 		// = Fresnel0 + Fresnel1 * (1-cos theta)^5
 		preflect = materialData.Reflectiveness.xyz * (materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0);
-#	else
+#	elif defined(USE_CONSTANT_REFLECTION)
 		// use constant reflection defined by the parameter specified in the material
 		// this is uses to disable Fresnel reflection for debugging..
 		preflect = materialData.Fresnel0;
+#	else
+		preflect = vec3(0.0);
 #	endif
 
 	prefract = vec3(1.0) - saturate(preflect);
@@ -129,7 +133,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 	// Probabilities - colors
 	vec3 preflect, prefract, pdiffuse;
 	GetBSDFDecisionPropabilities(materialData, cosThetaAbs, preflect, prefract, pdiffuse);
-	// Probabilites - average
+	// Probabilities - average
 	float avgPReflect = AvgProbability(preflect);
 	float avgPRefract = AvgProbability(prefract);
 	float avgPDiffuse = Avg(pdiffuse);
@@ -166,6 +170,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 
 		// if USE_FRESNEL and APPLY_FRESNEL_CORRECTION is enabled, this will correct the probability for selecting diffuse and specular paths
 		pathThroughput *= GetBSDFDecisionPropabilityCorrectionDiffuse(materialData, cosThetaAbs, abs(cosThetaOut));
+		//pathThroughput *= abs(cosThetaOut); // do not do this!
 		return outDir;
 	}
 	// Refract:
@@ -227,6 +232,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 	
 	// if USE_FRESNEL and APPLY_FRESNEL_CORRECTION is enabled, this will correct the probability for selecting diffuse and specular paths
 	pathThroughput *= GetBSDFDecisionPropabilityCorrectionSpecular(materialData, cosThetaAbs, cosThetaOutAbs);
+	// pathThroughput *= cosThetaOutAbs; // do not do this!
 	return outDir;
 }
 
@@ -356,7 +362,7 @@ float AdjointBSDFShadingNormalCorrectedOutDotN(vec3 incomingLight, vec3 toCamera
 		dot(toCamera, geometryNormal) * dot(toCamera, shadingNormal) < 0)
 		return 0.0;
 
-	return saturate(abs(dot(incomingLight, shadingNormal) * dot(toCamera, geometryNormal)) / (abs(dot(incomingLight, geometryNormal)) + DIVISOR_EPSILON));
+	return saturate(abs(dot(incomingLight, shadingNormal) * dot(toCamera, geometryNormal)) / max(abs(dot(incomingLight, geometryNormal)) , DIVISOR_EPSILON));
 
 	// Alternative without correction:
 	// return saturate(dot(toCamera, shadingNormal));
@@ -369,5 +375,5 @@ float AdjointBSDFShadingNormalCorrection(vec3 inDir, vec3 outDir, vec3 geometryN
 		dot(outDir, geometryNormal) * dot(outDir, shadingNormal) < 0)
 		return 0.0;
 
-	return saturate(abs(dot(inDir, shadingNormal) * dot(outDir, geometryNormal)) / (abs(dot(inDir, geometryNormal) * dot(outDir, shadingNormal)) + DIVISOR_EPSILON));
+	return saturate(abs(dot(inDir, shadingNormal) * dot(outDir, geometryNormal)) / max(abs(dot(inDir, geometryNormal) * dot(outDir, shadingNormal)), DIVISOR_EPSILON));
 }
