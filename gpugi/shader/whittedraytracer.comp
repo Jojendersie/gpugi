@@ -9,7 +9,7 @@
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
 #define NUM_LIGHT_SAMPLES 2
-#define MAX_PATHLENGTH 8
+#define MAX_PATHLENGTH 16
 
 #define LOCAL_SIZE 8
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
@@ -20,6 +20,7 @@ void main()
 	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
 	int gridIndex = gridPosition.x + gridPosition.y * BackbufferSize.x;
 	uint randomSeed = InitCoherentRandomSeed(FrameSeed, gridIndex);
+	//uint randomSeed = InitRandomSeed(FrameSeed, gridIndex);
 	vec2 screenCoord = (Random2(randomSeed) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
 
 	Ray ray;
@@ -62,7 +63,7 @@ void main()
 			//vec3 emissivity = textureLod(sampler2D(Materials[triangle.w].emissivityTexHandle), hitTexcoord, 0.0).xyz;
 		//	color += pathThroughput * emissivity;
 		//}
-//		color += pathThroughput * materialData.Emissivity;
+		color += pathThroughput * materialData.Emissivity;
 
 		// Make a decision
 		vec3 pdiffuse = GetDiffuseProbability(materialData, abs(dot(hitNormal, ray.Direction)));
