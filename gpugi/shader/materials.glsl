@@ -1,5 +1,8 @@
 #define DIVISOR_EPSILON 1e-5
 
+#define USE_FRESNEL
+#define APPLY_FRESNEL_CORRECTION
+
 // Data from material textures.
 struct MaterialData
 {
@@ -38,14 +41,41 @@ float Avg(vec3 colorProbability)
 void GetBSDFDecisionPropabilities(MaterialData materialData, float cosThetaAbs,
 									out vec3 preflect, out vec3 prefract, out vec3 pdiffuse)
 {
-	// Compute reflection probabilities with rescaled fresnel approximation from:
-	// "Fresnel Term Approximations for Metals" 2005
-	// ((n-1)²+k²) / ((n+1)²+k²) + 4n / ((n+1)²+k²) * (1-cos theta)^5
-	// = Fresnel0 + Fresnel1 * (1-cos theta)^5
-	preflect = materialData.Reflectiveness.xyz * (materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0);
+#	if defined(USE_FRESNEL)
+		// Compute reflection probabilities with rescaled fresnel approximation from:
+		// "Fresnel Term Approximations for Metals" 2005
+		// ((n-1)²+k²) / ((n+1)²+k²) + 4n / ((n+1)²+k²) * (1-cos theta)^5
+		// = Fresnel0 + Fresnel1 * (1-cos theta)^5
+		preflect = materialData.Reflectiveness.xyz * (materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0);
+#	else
+		// use constant reflection defined by the parameter specified in the material
+		// this is uses to disable Fresnel reflection for debugging..
+		preflect = materialData.Fresnel0;
+#	endif
+
 	prefract = vec3(1.0) - saturate(preflect);
 	pdiffuse = prefract * materialData.Opacity;
 	prefract = prefract - pdiffuse;
+}
+
+vec3 GetBSDFDecisionPropabilityCorrectionSpecular(MaterialData materialData, float cosThetaAbs, float cosThetaOut)
+{
+#	if defined(USE_FRESNEL) && defined(APPLY_FRESNEL_CORRECTION)
+		return (materialData.Fresnel1 * pow(1.0 - max(cosThetaAbs, cosThetaOut), 5.0) + materialData.Fresnel0) /
+		(materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0);
+#	else
+		return vec3(1.0);
+#	endif
+}
+
+vec3 GetBSDFDecisionPropabilityCorrectionDiffuse(MaterialData materialData, float cosThetaAbs, float cosThetaOut)
+{
+#	if defined(USE_FRESNEL) && defined(APPLY_FRESNEL_CORRECTION)
+		return (1.0 - (materialData.Fresnel1 * pow(1.0 - max(cosThetaAbs, cosThetaOut), 5.0) + materialData.Fresnel0)) /
+		(1.0 - (materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0));
+#	else
+		return vec3(1.0);
+#	endif
 }
 
 vec3 GetDiffuseReflectance(MaterialData materialData, float cosThetaAbs)
@@ -64,7 +94,7 @@ vec3 GetDiffuseProbability(MaterialData materialData, float cosThetaAbs)
 
 // Note: While BRDFs need to be symmetric to be physical, BSDFs have no such restriction!
 // The restriction is actually f(i->o) / (refrIndex_o²) = f(o->i) / (refrIndex_i²)
-// (See Veach PhD Thesis formular 5.14)
+// (See Veach PhD Thesis formula 5.14)
 
 // Note: Our BSDF formulation avoids any use of dirac distributions.
 // Thus there are no special cases for perfect mirrors or perfect refraction.
@@ -96,10 +126,10 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 	// Random values later needed for sampling direction
 	vec2 randomSamples = Random2(seed);
 
-	// Propabilities - colors
+	// Probabilities - colors
 	vec3 preflect, prefract, pdiffuse;
 	GetBSDFDecisionPropabilities(materialData, cosThetaAbs, preflect, prefract, pdiffuse);
-	// Propabilites - average
+	// Probabilites - average
 	float avgPReflect = AvgProbability(preflect);
 	float avgPRefract = AvgProbability(prefract);
 	float avgPDiffuse = Avg(pdiffuse);
@@ -131,8 +161,11 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 		CreateONB(N, U, V);
 		vec3 outDir = SampleHemisphereCosine(randomSamples, U, V, N);
 
-		pdf = saturate(dot(N, outDir)) / PI;
+		float cosThetaOut = dot(N, outDir);
+		pdf = saturate(cosThetaOut) / PI;
 
+		// if USE_FRESNEL and APPLY_FRESNEL_CORRECTION is enabled, this will correct the probability for selecting diffuse and specular paths
+		pathThroughput *= GetBSDFDecisionPropabilityCorrectionDiffuse(materialData, cosThetaAbs, abs(cosThetaOut));
 		return outDir;
 	}
 	// Refract:
@@ -175,7 +208,8 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 	// Normalize the probability
 	//float phongNormalization = (materialData.Reflectiveness.w + 2.0) / (materialData.Reflectiveness.w + 1.0);
 
-	pdf = (materialData.Reflectiveness.w + 1.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialData.Reflectiveness.w);
+	float cosThetaOutAbs = abs(dot(outDir, reflectRefractDir));
+	pdf = (materialData.Reflectiveness.w + 1.0) / PI_2 * pow(cosThetaOutAbs, materialData.Reflectiveness.w);
 	// vec3 bsdf = (materialData.Reflectiveness.w + 1.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialData.Reflectiveness.w) * pphong / avgPPhong / dot(N, outDir)
 
 	// The 1/dot(N, outDir) factor is rather magical: If we would only sample a dirac delta,
@@ -190,6 +224,9 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 	isReflectedDiffuse = false;
 #endif
 
+	
+	// if USE_FRESNEL and APPLY_FRESNEL_CORRECTION is enabled, this will correct the probability for selecting diffuse and specular paths
+	pathThroughput *= GetBSDFDecisionPropabilityCorrectionSpecular(materialData, cosThetaAbs, cosThetaOutAbs);
 	return outDir;
 }
 
@@ -227,9 +264,15 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materia
 	float cosThetaAbs = saturate(abs(cosTheta));
 	float cosThetaOut = dot(N, excidentDirection);
 
-	// Propabilities.
+	// Probabilities.
 	vec3 preflect, prefract, pdiffuse;
-	GetBSDFDecisionPropabilities(materialData, cosThetaAbs, preflect, prefract, pdiffuse);
+	
+#	if defined(USE_FRESNEL) && defined(APPLY_FRESNEL_CORRECTION)
+		// inspired PRT Book p. 551
+		GetBSDFDecisionPropabilities(materialData, max(saturate(abs(dot(N, excidentDirection))), cosThetaAbs), preflect, prefract, pdiffuse);
+#	else
+		GetBSDFDecisionPropabilities(materialData, cosThetaAbs, preflect, prefract, pdiffuse);
+#	endif
 
 	// Constants for phong sampling.
 	float phongFactor_brdf = (materialData.Reflectiveness.w + 1.0) / (2 * PI_2 * abs(cosThetaOut)+DIVISOR_EPSILON); // normalization / abs(cosThetatOut)
