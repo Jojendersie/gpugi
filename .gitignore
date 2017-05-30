@@ -33,6 +33,7 @@
 *.user
 *.suo
 *.db
+*.VC.opendb
 
 # Latex
 *.aux

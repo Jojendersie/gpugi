@@ -91,7 +91,11 @@ void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, 
 				if(computeBSDF)
 				{
 					float pdf;
-					bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal, pdf);
+
+					// here we have an eye-tracing segment, so we don't use the adjoint methods
+					// but since we are coming from the other direction, we swap in and out direction.
+					bsdf = BSDF(-cameraRay.Direction, -ray.Direction, materialData, shadingNormal, pdf);
+					//bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal, pdf);
 				}
 				//vec3 bsdf = GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
 				vec3 color = pathThroughput * fluxToIrradiance * bsdf;

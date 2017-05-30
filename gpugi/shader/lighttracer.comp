@@ -19,7 +19,7 @@
 #ifdef SAVE_LIGHT_CACHE
 	#define MAX_PATHLENGTH 6
 #else
-	#define MAX_PATHLENGTH 2
+	#define MAX_PATHLENGTH 16
 #endif
 
 
@@ -163,14 +163,6 @@ void main()
 		bool isReflectedDiffuse;
 		vec3 newDirection = SampleAdjointBSDF(ray.Direction, materialData, randomSeed, shadingNormal, throughput, isReflectedDiffuse, samplePDF);
 		throughput *= AdjointBSDFShadingNormalCorrection(ray.Direction, newDirection, geometryNormal, shadingNormal);
-		
-		// THIS IS JUST FOR A TEST COMMIT - MAYBE CORRECTED AT THE WRONG PLACE
-		// this deals with the same problem as the Adjoint cases in refractive paths: the ray density is changing
-		// when we have a non-perfect reflection, i.e., the "width" of a ray bundle changes during reflection
-		// so in case of non diffuse reflection we need to compensate the rate of change
-		if(!isReflectedDiffuse)
-			throughput *= dot(shadingNormal, newDirection) / dot(shadingNormal, -ray.Direction);
-		
 		pathThroughput *= throughput;
 
 	#ifdef RUSSIAN_ROULETTE

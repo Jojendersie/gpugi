@@ -176,8 +176,6 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 	// Refract:
 	else if(avgPDiffuse + avgPRefract > pathDecisionVar)
 	{
-		refractEvent = true;
-
 		// Phong (sampled at end of function) is now sampling refraction.
 		pphong = prefract;
 		avgPPhong = avgPRefract;
@@ -199,6 +197,8 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 			// See also Physically Based Rendering page 442, 8.2.3 "Specular Transmission"
 			if(!adjoint)
 				pathThroughput /= etaSq;
+
+			refractEvent = true;
 		}
 	}
 
@@ -223,12 +223,18 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 	// See also "Physically Based Rendering" page 440.
 
 	// pathThroughput = bsdf * dot(N, outDir) / pdf;
-	pathThroughput *= pphong / avgPPhong; // Divide with decision probability (avgPPhong) for russian roulette.
+	pathThroughput *= pphong / avgPPhong; // Divide with decision probability (avgPPhong) for Russian roulette.
+
+	// this deals with the same problem as the Adjoint cases in refractive paths: the ray density is changing
+	// when we have a non-perfect reflection, i.e., the "width" of a ray bundle changes during reflection
+	// so in case of non diffuse reflection we need to compensate the rate of change
+	// the refract case is already corrected
+	if (!refractEvent && !adjoint)
+		pathThroughput *= abs(dot(N, outDir)) / cosThetaAbs;
 
 #ifdef SAMPLING_DECISION_OUTPUT
 	isReflectedDiffuse = false;
 #endif
-
 	
 	// if USE_FRESNEL and APPLY_FRESNEL_CORRECTION is enabled, this will correct the probability for selecting diffuse and specular paths
 	pathThroughput *= GetBSDFDecisionPropabilityCorrectionSpecular(materialData, cosThetaAbs, cosThetaOutAbs);
@@ -291,6 +297,14 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materia
 	float reflrefrBRDFFactor = phongFactor_brdf * reflectionDotExcident_powN;
 	float reflrefrPDFFactor = phongNormalization_pdf * reflectionDotExcident_powN;
 	bsdf = preflect * reflrefrBRDFFactor;
+
+	// this deals with the same problem as the Adjoint cases in refractive paths: the ray density is changing
+	// when we have a non-perfect reflection, i.e., the "width" of a ray bundle changes during reflection
+	// so in case of non diffuse reflection we need to compensate the rate of change
+	// the refract case is already corrected
+	if (!adjoint)
+		bsdf *= abs(cosThetaOut) / cosThetaAbs;
+
 	pdf = AvgProbability(preflect) * reflrefrPDFFactor;
 
 	// Diffuse
