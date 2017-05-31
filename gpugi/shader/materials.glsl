@@ -205,16 +205,40 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 	// Reflect/Refract ray generation
 
 	// Create phong sample in reflection/refraction direction
+
 	reflectRefractDir = normalize(reflectRefractDir);
 	vec3 RU, RV;
 	CreateONB(reflectRefractDir, RU, RV);
-	vec3 outDir = SamplePhongLobe(randomSamples, materialData.Reflectiveness.w, RU, RV, reflectRefractDir);
+
+	// check for plausibility
+	// rejection sampling
+	bool plausible = false;
+	vec3 outDir;
+	int counter = 0;
+	while (!plausible)
+	{
+		counter++;
+		outDir = SamplePhongLobe(randomSamples, materialData.Reflectiveness.w, RU, RV, reflectRefractDir);
+		plausible = dot(reflectRefractDir, N) * dot(outDir, N) >= 0.0;
+		plausible = true; // disables rejection sampling
+		if(!plausible)
+			randomSamples = Random2(seed);
+		if(counter > 100)
+		{
+			plausible = true;
+			pathThroughput = vec3(0.0);
+		}
+	}
+	
+	if(!adjoint)
+		pathThroughput *= abs(dot(N, outDir)) / abs(dot(N, reflectRefractDir));
 
 	// Normalize the probability
 	//float phongNormalization = (materialData.Reflectiveness.w + 2.0) / (materialData.Reflectiveness.w + 1.0);
 
 	float cosThetaOutAbs = abs(dot(outDir, reflectRefractDir));
 	pdf = (materialData.Reflectiveness.w + 1.0) / PI_2 * pow(cosThetaOutAbs, materialData.Reflectiveness.w);
+	pdf *= float(counter);
 	// vec3 bsdf = (materialData.Reflectiveness.w + 1.0) / PI_2 * pow(abs(dot(outDir, reflectRefractDir)), materialData.Reflectiveness.w) * pphong / avgPPhong / dot(N, outDir)
 
 	// The 1/dot(N, outDir) factor is rather magical: If we would only sample a dirac delta,
@@ -229,12 +253,13 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 	// when we have a non-perfect reflection, i.e., the "width" of a ray bundle changes during reflection
 	// so in case of non diffuse reflection we need to compensate the rate of change
 	// the refract case is already corrected
-	if (!refractEvent && !adjoint)
-		pathThroughput *= abs(dot(N, outDir)) / cosThetaAbs;
+	//if (!refractEvent && !adjoint)
+	//	pathThroughput *= abs(dot(N, outDir)) / cosThetaAbs;
 
 #ifdef SAMPLING_DECISION_OUTPUT
 	isReflectedDiffuse = false;
 #endif
+
 	
 	// if USE_FRESNEL and APPLY_FRESNEL_CORRECTION is enabled, this will correct the probability for selecting diffuse and specular paths
 	pathThroughput *= GetBSDFDecisionPropabilityCorrectionSpecular(materialData, cosThetaAbs, cosThetaOutAbs);
@@ -271,7 +296,7 @@ vec3 SampleAdjointBSDF(vec3 incidentDirection, MaterialData materialData, inout 
 // excidentDirection points away from the surface
 vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materialData, vec3 N, out float pdf, bool adjoint, bool specularOnly)
 {
-	vec3 bsdf;
+	vec3 bsdf = vec3(0.0);
 	float cosTheta = dot(N, incidentDirection);
 	float cosThetaAbs = saturate(abs(cosTheta));
 	float cosThetaOut = dot(N, excidentDirection);
@@ -288,7 +313,7 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materia
 
 	// Constants for phong sampling.
 	float phongFactor_brdf = (materialData.Reflectiveness.w + 1.0) / (2 * PI_2 * abs(cosThetaOut)+DIVISOR_EPSILON); // normalization / abs(cosThetatOut)
-	//float phongFactor_brdf = (materialData.Reflectiveness.w + 1.0) / (2 * PI_2); // normalization / abs(cosThetatOut)
+	//float phongFactor_brdf = (materialData.Reflectiveness.w + 1.0) / (PI_2); // normalization
 	float phongNormalization_pdf = (materialData.Reflectiveness.w + 1.0) / PI_2;
 
 	// Reflection
@@ -296,13 +321,16 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materia
 	float reflectionDotExcident_powN = pow(saturate(dot(reflectRefractDir, excidentDirection)), materialData.Reflectiveness.w);
 	float reflrefrBRDFFactor = phongFactor_brdf * reflectionDotExcident_powN;
 	float reflrefrPDFFactor = phongNormalization_pdf * reflectionDotExcident_powN;
-	bsdf = preflect * reflrefrBRDFFactor;
+
+	// plausibility
+	//if(dot(reflectRefractDir, N) * dot(excidentDirection, N) >= 0.0)
+		bsdf = preflect * reflrefrBRDFFactor;
 
 	// this deals with the same problem as the Adjoint cases in refractive paths: the ray density is changing
 	// when we have a non-perfect reflection, i.e., the "width" of a ray bundle changes during reflection
 	// so in case of non diffuse reflection we need to compensate the rate of change
 	// the refract case is already corrected
-	if (!adjoint)
+	//if (!adjoint)
 		bsdf *= abs(cosThetaOut) / cosThetaAbs;
 
 	pdf = AvgProbability(preflect) * reflrefrPDFFactor;
@@ -338,10 +366,15 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materia
 
 		if(!adjoint)
 			reflrefrBRDFFactor /= etaSq;
-	}
 
+		reflrefrBRDFFactor *= abs(dot(N, excidentDirection)) / abs(dot(N, reflectRefractDir));
+	}
 	// else the sampleDir is again the reflection vector
-	bsdf += prefract * reflrefrBRDFFactor;
+
+	// plausibility
+	//if (dot(reflectRefractDir, N) * dot(excidentDirection, N) >= 0.0)
+		bsdf += prefract * reflrefrBRDFFactor;
+
 	pdf += AvgProbability(prefract) * reflrefrPDFFactor;
 
 	return bsdf;

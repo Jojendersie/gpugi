@@ -1,14 +1,15 @@
-sceneFilename = ../scenes/box1/box1.json
+sceneFilename = ../scenes/box1/box1diffuseOneGlas.json
 cameraPos = 0.0, 1.5, 2.27
 cameraLookAt = 0.0, 1.5, 2.0
 cameraFOV = 67
 resolution = 1024, 768
 //resolution = 512, 384
 
-renderer = 7
+// renderer 0:PathTracer	1:LightTracer	2:Bi-directionPT	4:Whitted	6:PhotonMapping		7:PixelCacheLightTracer
+renderer = 0
 //im_r = 0.1
 //im_progressive = true
 
-//waitIterations = 1
-//screenshot
-//exit
+waitIterations = 100000
+screenshot
+exit

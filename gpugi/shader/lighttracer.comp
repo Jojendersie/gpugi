@@ -19,7 +19,7 @@
 #ifdef SAVE_LIGHT_CACHE
 	#define MAX_PATHLENGTH 6
 #else
-	#define MAX_PATHLENGTH 16
+	#define MAX_PATHLENGTH 4
 #endif
 
 
