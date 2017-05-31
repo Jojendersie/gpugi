@@ -82,7 +82,7 @@ OutputWindow::OutputWindow() :
 
 	GetGLFWKeystates();
 
-
+	GL_CALL(glEnable, GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
 	displayHDR.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "shader/utils/screenTri.vert");
 	displayHDR.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "shader/displayHDR.frag");

@@ -9,6 +9,6 @@ renderer = 7
 //im_r = 0.1
 //im_progressive = true
 
-waitIterations = 50000
-screenshot
-exit
+//waitIterations = 50000
+//screenshot
+//exit
