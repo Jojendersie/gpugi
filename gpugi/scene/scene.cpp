@@ -143,6 +143,7 @@ void Scene::LoadMaterial( const bim::Material& _material )
 	static const std::string s_opacity("opacity");
 	static const std::string s_specular("reflectiveness");
 	static const std::string s_roughness("roughness");
+	static const std::string s_refr("refractionIndex");
 	try {
 		// Refraction parameters for Fresnel
 	/*	ε::Vec3 n = _material.get(s_refrN, ε::Vec3(1.0f));
@@ -151,7 +152,7 @@ void Scene::LoadMaterial( const bim::Material& _material )
 		mat.refractionIndexAvg = avg(n);
 		mat.fresnel0 = (sq(n-1.0f) + sq(k)) * den;
 		mat.fresnel1 = 4.0f * n * den;*/
-		mat.refractionIndexAvg = 1.5f;
+		mat.refractionIndexAvg = _material.get(s_refr, 1.5f);
 		mat.fresnel0 = _material.get(s_fresnel0, ei::Vec3(0.03f));
 		mat.fresnel1 = 1.0f - mat.fresnel0;
 		// Specular exponent parameter
