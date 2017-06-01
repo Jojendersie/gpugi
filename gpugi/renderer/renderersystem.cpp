@@ -35,6 +35,16 @@ RendererSystem::RendererSystem() :
 	PerIterationBufferUpdate();
 	m_iterationCount = 0;
 	m_renderTime = 0;
+
+	// Create a black fall back env-map if no map is set
+	uint zero = 0;
+	m_envMap = std::make_shared<gl::TextureCubemap>(1, gl::TextureFormat::SRGB8);
+	m_envMap->SetData(0, gl::TextureCubemap::Face::NEGATIVE_X, 0, gl::TextureSetDataFormat::RGBA, gl::TextureSetDataType::BYTE, &zero);
+	m_envMap->SetData(0, gl::TextureCubemap::Face::POSITIVE_X, 0, gl::TextureSetDataFormat::RGBA, gl::TextureSetDataType::BYTE, &zero);
+	m_envMap->SetData(0, gl::TextureCubemap::Face::NEGATIVE_Y, 0, gl::TextureSetDataFormat::RGBA, gl::TextureSetDataType::BYTE, &zero);
+	m_envMap->SetData(0, gl::TextureCubemap::Face::POSITIVE_Y, 0, gl::TextureSetDataFormat::RGBA, gl::TextureSetDataType::BYTE, &zero);
+	m_envMap->SetData(0, gl::TextureCubemap::Face::NEGATIVE_Z, 0, gl::TextureSetDataFormat::RGBA, gl::TextureSetDataType::BYTE, &zero);
+	m_envMap->SetData(0, gl::TextureCubemap::Face::POSITIVE_Z, 0, gl::TextureSetDataFormat::RGBA, gl::TextureSetDataType::BYTE, &zero);
 }
 
 RendererSystem::~RendererSystem()
