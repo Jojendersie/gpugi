@@ -82,18 +82,23 @@ vec3 GetBSDFDecisionPropabilityCorrectionDiffuse(MaterialData materialData, floa
 #	endif
 }
 
-vec3 GetDiffuseReflectance(MaterialData materialData, float cosThetaAbs)
-{
-	vec3 preflect = materialData.Reflectiveness.xyz * (materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0);
-	vec3 pdiffuse = (vec3(1.0) - saturate(preflect)) * materialData.Opacity;
-	return pdiffuse * materialData.Diffuse;
-}
-
 vec3 GetDiffuseProbability(MaterialData materialData, float cosThetaAbs)
 {
-	vec3 preflect = materialData.Reflectiveness.xyz * (materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0);
+	vec3 preflect;
+#	if defined(USE_FRESNEL)
+		preflect = materialData.Reflectiveness.xyz * (materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0);
+#	elif defined(USE_CONSTANT_REFLECTION)
+		preflect = materialData.Fresnel0;
+#	else
+		preflect = vec3(0.0);
+#	endif
 	vec3 pdiffuse = (vec3(1.0) - saturate(preflect)) * materialData.Opacity;
 	return pdiffuse;
+}
+
+vec3 GetDiffuseReflectance(MaterialData materialData, float cosThetaAbs)
+{
+	return GetDiffuseProbability(materialData, cosThetaAbs) * materialData.Diffuse;
 }
 
 // Note: While BRDFs need to be symmetric to be physical, BSDFs have no such restriction!
@@ -210,8 +215,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 	vec3 RU, RV;
 	CreateONB(reflectRefractDir, RU, RV);
 
-	// check for plausibility
-	// rejection sampling
+	// Rejection sampling to avoid paths which go into the wrong half space of the surface.
 	bool plausible = false;
 	vec3 outDir;
 	int counter = 0;
