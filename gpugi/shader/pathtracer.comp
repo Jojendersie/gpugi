@@ -76,7 +76,7 @@ void main()
 		pathThroughput *= throughput;
 	#ifdef RUSSIAN_ROULETTE
 		float continuationPropability = saturate(GetLuminance(throughput));
-		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stoped -> >=
+		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stopped -> >=
 			break;
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.
 	#endif

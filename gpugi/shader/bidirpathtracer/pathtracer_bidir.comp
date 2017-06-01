@@ -52,7 +52,7 @@ void main()
 			color += pathThroughput * materialData.Emissivity;
 
 		// Connect to random light samples ("Next Event Estimation")
-		didNextEventEstimation = materialData.Reflectiveness.w < 500.0;
+		didNextEventEstimation = true; //materialData.Reflectiveness.w < 500.0;
 		if( didNextEventEstimation )
 		{
 			Ray lightRay;
@@ -113,8 +113,8 @@ void main()
 					// Connect to a light source.
 					else
 					{
-						connectionLightPathToEyePath = MISHeuristic(1.0); // Only possible via THIS next event estimation -> Fixed propability of 1.
-						if(LightCacheEntries[lightCacheSampleIndex].Normal1 <= 1.0)
+						connectionLightPathToEyePath = MISHeuristic(1.0); // Only possible via THIS next event estimation -> Fixed probability of 1.
+						if(LightCacheEntries[lightCacheSampleIndex].Normal1 < 1.5)
 							lightSampleIntensity = lightSampleFlux * (cosLight * PI_2);// hemispherical light source
 						else
 							lightSampleIntensity = lightSampleFlux * (PI_2);// omnidirectional light source
@@ -139,7 +139,9 @@ void main()
 					float connectedPathPropability = light_pathProbability * pathProbability;
 					float mis = connectedPathPropability / 
 								(light_pathProbability * connectionEyePathToLightPath * anyPathProbabilitySum + 
-								 pathProbability * connectionLightPathToEyePath * light_anyPathProbabilitySum + connectedPathPropability + DIVISOR_EPSILON);
+								 pathProbability * connectionLightPathToEyePath * light_anyPathProbabilitySum +
+								 connectedPathPropability + DIVISOR_EPSILON);
+					//mis = connectedPathPropability;
 
 					vec3 irradiance = (mis * cosCamera / lightDistSq) * lightSampleIntensity;
 					color += irradiance * pathThroughput * bsdf; 
@@ -157,13 +159,16 @@ void main()
 		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stoped -> >=
 			break;
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.
-		samplePDF *= continuationPropability;
+		samplePDF *= continuationPropability; // WHY MULTIPLY -> DIVIDE???
 	#endif
 
 		// The probability to sample a vertex is the pdf times 1-terminationProbability
 		samplePDF = MISHeuristic(samplePDF);
 		anyPathProbabilitySum = anyPathProbabilitySum * samplePDF + pathProbability;
 		pathProbability *= samplePDF;
+		// Avoid too large numbers because of running into NaN problems
+		anyPathProbabilitySum = min(1e15, anyPathProbabilitySum);
+		pathProbability = min(1e15, pathProbability);
 	}
 
 	float lightSampleWeight = float(actualNumLightCacheEntries) / (AverageLightPathLength + 1);
