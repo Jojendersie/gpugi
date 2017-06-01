@@ -5,7 +5,7 @@
 #include "stdheader.glsl"
 
 #ifdef SAVE_LIGHT_CACHE
-	#include "lightcache.glsl"
+	#include "bidirpathtracer/lightcache.glsl"
 #else
     layout(binding = 4, std140) uniform LightPathTrace
     {
@@ -19,21 +19,6 @@
 layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
-#ifdef SAVE_LIGHT_CACHE
-	// Not entirely sure if this is 100% reliable!
-	// Idea is to keep the counter on GPU without any CPU interaction.
-	// Problems could arise if a thread uses "NumLightCacheEntries" before Thread0 wrote this number.
-	// This may happen if the GPU does not schedule block 0 as first.
-	if(gl_GlobalInvocationID.x == 0)
-	{
-		NumLightCacheEntries = NumRaysPerLightSample * NumInitialLightSamples;
-		#ifdef SAVE_LIGHT_CACHE_WARMUP
-			LightPathLengthSum = 0;
-		#endif
-	}
-	memoryBarrierBuffer();
-#endif
-
 	uint randomSeed = InitRandomSeed(FrameSeed, gl_GlobalInvocationID.x);
 	int lightSampleIndex = int(gl_GlobalInvocationID.x / NumRaysPerLightSample);
 	vec4 lightSamplePos_Norm0 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2);

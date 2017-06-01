@@ -67,6 +67,9 @@
     <Filter Include="shader\photonmapper">
       <UniqueIdentifier>{d604ae79-f581-4d2e-813d-5175b1c0b0c7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shader\bidirpathtracer">
+      <UniqueIdentifier>{55a23f28-6def-475d-b1e5-0f22b789d204}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="outputwindow.cpp">
@@ -514,12 +517,6 @@
     <None Include="shader\stdheader.glsl">
       <Filter>shader</Filter>
     </None>
-    <None Include="shader\lightcache.glsl">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\pathtracer_bidir.comp">
-      <Filter>shader</Filter>
-    </None>
     <None Include="shader\debug\screenTri.vert">
       <Filter>shader\debug</Filter>
     </None>
@@ -615,6 +612,15 @@
     </None>
     <None Include="shader\photonmapper\photondistribution.comp">
       <Filter>shader\photonmapper</Filter>
+    </None>
+    <None Include="shader\bidirpathtracer\pathtracer_bidir.comp">
+      <Filter>shader\bidirpathtracer</Filter>
+    </None>
+    <None Include="shader\bidirpathtracer\resetcounter.comp">
+      <Filter>shader\bidirpathtracer</Filter>
+    </None>
+    <None Include="shader\bidirpathtracer\lightcache.glsl">
+      <Filter>shader\bidirpathtracer</Filter>
     </None>
   </ItemGroup>
 </Project>

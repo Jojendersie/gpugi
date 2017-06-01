@@ -1,11 +1,10 @@
 #version 440
 
-#include "stdheader.glsl"
+#include "../stdheader.glsl"
 #include "lightcache.glsl"
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
-#define MAX_PATHLENGTH 8
 #define MIN_CONNECTION_DISTSQ 0.0001
 
 #define LOCAL_SIZE 8

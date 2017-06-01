@@ -29,12 +29,12 @@ layout (std430, binding=1) buffer LightCacheCount
 	coherent int NumLightCacheEntries;
 };
 
-#ifdef SAVE_LIGHT_CACHE_WARMUP
+//#ifdef SAVE_LIGHT_CACHE_WARMUP
 layout(std430, binding = 2) buffer LightPathLength
 {
 	coherent int LightPathLengthSum;
 };
-#endif
+//#endif
 
 
 // READ VERSION

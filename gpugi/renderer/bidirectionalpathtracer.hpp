@@ -33,6 +33,7 @@ private:
 	gl::ShaderObject m_pathtraceShader;
 	gl::ShaderObject m_lighttraceShader;
 	gl::ShaderObject m_warmupLighttraceShader;
+	gl::ShaderObject m_resetCounterShader;
 
 	std::unique_ptr<gl::Texture2D> m_lockTexture;
 

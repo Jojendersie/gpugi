@@ -235,6 +235,9 @@
     <None Include="..\dependencies\glhelper\glhelper\glhelper.vcxproj.filters" />
     <None Include="..\dependencies\glhelper\glhelper\shaderdatametainfo.inl" />
     <None Include="..\dependencies\glhelper\glhelper\statemanagement.inl" />
+    <None Include="shader\bidirpathtracer\lightcache.glsl" />
+    <None Include="shader\bidirpathtracer\pathtracer_bidir.comp" />
+    <None Include="shader\bidirpathtracer\resetcounter.comp" />
     <None Include="shader\debug\hierarchybox.frag" />
     <None Include="shader\debug\hierarchybox.vert" />
     <None Include="shader\debug\hierarchybox_importance.frag" />
@@ -250,13 +253,11 @@
     <None Include="shader\hierarchy\trianglevis.comp" />
     <None Include="shader\hierarchy\acquisition.comp" />
     <None Include="shader\intersectiontests.glsl" />
-    <None Include="shader\lightcache.glsl" />
     <None Include="shader\lighttracer.comp" />
     <None Include="shader\maps\hashmap.glsl" />
     <None Include="shader\maps\stochastic_hashmap.glsl" />
     <None Include="shader\materials.glsl" />
     <None Include="shader\pathtracer.comp" />
-    <None Include="shader\pathtracer_bidir.comp" />
     <None Include="shader\photonmapper\photondistribution.comp" />
     <None Include="shader\pixelcache.glsl" />
     <None Include="shader\random.glsl" />

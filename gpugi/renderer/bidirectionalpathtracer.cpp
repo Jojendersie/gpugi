@@ -5,6 +5,7 @@
 #include <glhelper/buffer.hpp>
 #include "utilities/flagoperators.hpp"
 #include "utilities/logger.hpp"
+#include "application.hpp"
 
 #include <iostream>
 #include <algorithm>
@@ -17,6 +18,7 @@ BidirectionalPathtracer::BidirectionalPathtracer(RendererSystem& _rendererSystem
 	m_lighttraceShader("lighttracer_bidir"),
 	m_pathtraceShader("pathtracer_bidir"),
 	m_warmupLighttraceShader("lighttracer_warmup_bidir"),
+	m_resetCounterShader("reset_counter"),
 	m_needToDetermineNeededLightCacheCapacity(false),
 	m_numRaysPerLightSample(0)
 {
@@ -65,6 +67,7 @@ void BidirectionalPathtracer::CreateLightCacheWithCapacityEstimate()
 	// Create SSBO for light path length sum.
 	auto lightPathLengthBuffer = std::make_unique<gl::Buffer>(4, gl::Buffer::MAP_READ);
 	m_warmupLighttraceShader.BindSSBO(*lightPathLengthBuffer, "LightPathLength");
+	m_resetCounterShader.BindSSBO(*lightPathLengthBuffer, "LightPathLength");
 
 	// Perform Warmup to find out how large the lightcache should be.
 	LOG_LVL2("Starting bpt warmup to estimate needed light cache capacity...");
@@ -75,7 +78,10 @@ void BidirectionalPathtracer::CreateLightCacheWithCapacityEstimate()
 	std::uint64_t summedPathLength = 0;
 	for (unsigned int run = 0; run < numWarmupRuns; ++run)
 	{
-		GL_CALL(glDispatchCompute, blockCountPerRun, 1, 1);
+		m_resetCounterShader.Dispatch(1,1,1);
+		GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
+
+		m_warmupLighttraceShader.Dispatch(blockCountPerRun, 1, 1);
 		GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
 
 		numCacheEntries += *reinterpret_cast<const std::uint32_t*>(m_lightCacheFillCounter->Map(gl::Buffer::MapType::READ, gl::Buffer::MapWriteFlag::NONE));
@@ -91,6 +97,7 @@ void BidirectionalPathtracer::CreateLightCacheWithCapacityEstimate()
 
 		lightPathLengthBuffer = std::make_unique<gl::Buffer>(4, gl::Buffer::MAP_READ);
 		m_warmupLighttraceShader.BindSSBO(*lightPathLengthBuffer, "LightPathLength");
+		m_resetCounterShader.BindSSBO(*lightPathLengthBuffer, "LightPathLength");
 
 		// Important to change random seed
 		m_rendererSystem.PerIterationBufferUpdate();
@@ -130,14 +137,17 @@ void BidirectionalPathtracer::RecompileShaders(const std::string& _additionalDef
 #ifdef SHOW_SPECIFIC_PATHLENGTH
 	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
 #endif
+	additionalDefines += "#define MAX_PATHLENGTH " + std::to_string(GlobalConfig::GetParameter("pathLength")[0].As<int>()) + "\n";
 
-	m_pathtraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer_bidir.comp", additionalDefines);
+	m_pathtraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/bidirpathtracer/pathtracer_bidir.comp", additionalDefines);
 	m_pathtraceShader.CreateProgram();
 	additionalDefines += "#define SAVE_LIGHT_CACHE\n";
 	m_lighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp", additionalDefines);
 	m_lighttraceShader.CreateProgram();
 	m_warmupLighttraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/lighttracer.comp", additionalDefines + "#define SAVE_LIGHT_CACHE_WARMUP\n");
 	m_warmupLighttraceShader.CreateProgram();
+	m_resetCounterShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/bidirpathtracer/resetcounter.comp", _additionalDefines);
+	m_resetCounterShader.CreateProgram();
 
 	// Assure that LightCacheCount/LightCache SSBOs are defined the same in all shaders
 #ifndef NDEBUG
@@ -174,6 +184,9 @@ void BidirectionalPathtracer::Draw()
 		CreateLightCacheWithCapacityEstimate();
 		m_needToDetermineNeededLightCacheCapacity = false;
 	}
+
+	m_resetCounterShader.Dispatch(1, 1, 1);
+	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
 
 	m_lighttraceShader.Activate();
 	GL_CALL(glDispatchCompute, m_rendererSystem.GetNumInitialLightSamples() * m_numRaysPerLightSample / m_localSizeLightPathtracer, 1, 1);
