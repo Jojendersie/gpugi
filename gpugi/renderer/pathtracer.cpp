@@ -3,6 +3,7 @@
 #include "debugrenderer/raytracemeshinfo.hpp"
 #include "debugrenderer/hierarchyvisualization.hpp"
 #include "scene/scene.hpp"
+#include "application.hpp"
 #include <glhelper/texture2d.hpp>
 #include <glhelper/texturecubemap.hpp>
 
@@ -57,6 +58,7 @@ void Pathtracer::RecompileShaders(const std::string& _additionalDefines)
 #ifdef SHOW_SPECIFIC_PATHLENGTH
 	additionalDefines += "#define SHOW_SPECIFIC_PATHLENGTH " + std::to_string(SHOW_SPECIFIC_PATHLENGTH) + "\n";
 #endif
+	additionalDefines += "#define MAX_PATHLENGTH " + std::to_string(GlobalConfig::GetParameter("pathLength")[0].As<int>()) + "\n";
 
 	m_pathtracerShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pathtracer.comp", additionalDefines);
 	m_pathtracerShader.CreateProgram();

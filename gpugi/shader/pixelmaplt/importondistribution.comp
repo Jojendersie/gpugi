@@ -9,7 +9,6 @@ layout(binding=12) uniform samplerCubeArray EnvironmentMap;
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
-#define MAX_PATHLENGTH 10
 #define EXCLUDE_DIRECT_VISIBLE
 
 #define LOCAL_SIZE 8

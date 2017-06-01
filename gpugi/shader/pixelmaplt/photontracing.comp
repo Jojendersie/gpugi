@@ -9,7 +9,6 @@
 
 #include "importonmap.glsl"
 
-#define MAX_PATHLENGTH 16
 #define REPROJECT
 #define USE_PIXEL_CACHE
 

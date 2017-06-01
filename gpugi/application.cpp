@@ -118,6 +118,9 @@ void Application::RegisterScriptCommands()
 														"2: Hierarchy Importance Visualization");
 	GlobalConfig::AddListener("debugrenderer", "Renderer", std::bind(&Application::SwitchDebugRenderer, this, std::placeholders::_1));
 
+	GlobalConfig::AddParameter("pathLength", { 16 }, "Change the maximum path length of almost any renderer.");
+	//GlobalConfig::AddListener("pathLength", "change path length", [=](const GlobalConfig::ParameterType& p){ if(m_rendererSystem->GetActiveRenderer()) m_rendererSystem->GetActiveRenderer()->Recompile(); });
+
 
 	// Resolution change
 	GlobalConfig::AddListener("resolution", "global camera aspect", [=](const GlobalConfig::ParameterType& p) {

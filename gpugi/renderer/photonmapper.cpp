@@ -120,6 +120,7 @@ void PhotonMapper::RecompileShaders(const std::string& _additionalDefines)
 #endif
 	if(m_useStochasticHM)
 		additionalDefines += "#define USE_STOCHASTIC_HASHMAP\n";
+	additionalDefines += "#define MAX_PATHLENGTH " + std::to_string(GlobalConfig::GetParameter("pathLength")[0].As<int>()) + "\n";
 
 	m_photonDistributionShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/photonmapper/photondistribution.comp", additionalDefines);
 	m_photonDistributionShader.CreateProgram();
