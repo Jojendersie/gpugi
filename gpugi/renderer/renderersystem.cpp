@@ -246,10 +246,11 @@ void RendererSystem::Draw()
 		}
 		else
 		{
+			GL_CALL(glFinish);
 			clock_t begin = clock();
 			m_activeRenderer->Draw();
 			PerIterationBufferUpdate();
-		//	GL_CALL(glFinish);
+			GL_CALL(glFinish);
 			clock_t end = clock();
 			m_renderTime += (end - begin) * 1000 / CLOCKS_PER_SEC;
 		}

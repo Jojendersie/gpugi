@@ -42,7 +42,9 @@
 
 
 Application::Application(int argc, char** argv) : m_shutdown(false),
-		m_iterationSinceLastMSECheck(0), m_scriptWaitsForMSE(false)
+	m_iterationSinceLastMSECheck(0),
+	m_scriptWaitsForMSE(false),
+	m_lastRenderTimeStamp(0)
 {
 	// Logger init.
 	Logger::g_logger.Initialize(new Logger::FilePolicy("log.txt"));
@@ -302,8 +304,13 @@ void Application::Update(ezTime timeSinceLastUpdate)
 {
 	m_window->PollWindowEvents();
 
-	if (!m_scriptWaitsForMSE)
-		m_scriptProcessing.ProcessCommandQueue(timeSinceLastUpdate.GetSeconds());
+	if(!m_scriptWaitsForMSE)
+	{
+		double newRenderTimeStamp = m_rendererSystem->GetRenderTime() / 1000.0;
+		double delta = ei::max(0.0, newRenderTimeStamp - m_lastRenderTimeStamp);
+		m_scriptProcessing.ProcessCommandQueue(delta);
+		m_lastRenderTimeStamp = newRenderTimeStamp;
+	}
 
 	Input();
 

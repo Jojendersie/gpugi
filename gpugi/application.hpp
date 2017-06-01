@@ -61,6 +61,7 @@ private:
 	
 
 	ezStopwatch m_stopwatch;
+	double m_lastRenderTimeStamp; // In seconds
 	bool m_shutdown;
 
 	bool m_scriptWaitsForMSE;
