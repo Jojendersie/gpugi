@@ -8,14 +8,10 @@ struct LightCacheEntry // aka photon
 
 	vec2 Texcoord;
 	float Normal1;
-	float PathProbability; // "p": Probability of the underlying path.
+	int PathLength;
 
 	vec3 IncidentDirection;
-	float AnyPathProbabilitySum; // "d": Propability for sampling the underlying path using any bidirectional sampling method. (if first light vertex is given)
-
-#ifdef SHOW_SPECIFIC_PATHLENGTH
-	int PathLength;
-#endif
+	int _unused;
 };
 
 // WRITE VERSION
@@ -59,14 +55,27 @@ layout(binding = 4, shared) uniform LightPathTrace
 	int AverageLightPathLength;
 };
 
+// Weighting function for single probabilities in MIS computations.
+// Algorithms may assume that MISHeuristic(a*b) == MISHeuristic(a) * MISHeuristic(b)
 float MISHeuristic(float p)
 {
 	// No MIS - all techniques equal weighted. Should be the same as commenting out all MIS computations.
 	//return 1.0;
 
 	// Balance heuristic
-	return min(1000, p);
+	//return min(1000, p);
+	return p;
 
 	// Power heuristic beta=2
 	//return min(1000, p*p);
+}
+
+float InitialMIS()
+{
+	return 0.5;
+}
+
+float DistanceMISHeuristic(float d)
+{
+	return MISHeuristic(d*d);
 }

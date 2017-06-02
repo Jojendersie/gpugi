@@ -23,8 +23,6 @@ void saveLightCache(uint lightCacheEntryIndex,
 	vec2 packedShadingNormal,
 	vec2 hitTexcoord,
 	vec3 incidentDirection,
-	float pathProbability,
-	float anyPathProbabilitySum,
 	int pathLength)
 {
 	if(lightCacheEntryIndex < LightCacheCapacity)
@@ -38,11 +36,7 @@ void saveLightCache(uint lightCacheEntryIndex,
 		LightCacheEntries[lightCacheEntryIndex].Normal1 = packedShadingNormal.y;
 		LightCacheEntries[lightCacheEntryIndex].Texcoord = hitTexcoord;
 		LightCacheEntries[lightCacheEntryIndex].IncidentDirection = incidentDirection;
-		LightCacheEntries[lightCacheEntryIndex].PathProbability = pathProbability;
-		LightCacheEntries[lightCacheEntryIndex].AnyPathProbabilitySum = anyPathProbabilitySum;
-	#ifdef SHOW_SPECIFIC_PATHLENGTH
-		LightCacheEntries[lightCacheEntryIndex].PathLength = pathLength; // For debugging only
-	#endif
+		LightCacheEntries[lightCacheEntryIndex].PathLength = pathLength;
 	}
 }
 #endif
@@ -56,15 +50,11 @@ void main()
 	vec4 lightIntensity_Norm1 = texelFetch(InitialLightSampleBuffer, lightSampleIndex * 2 + 1);
 
 #if defined(SAVE_LIGHT_CACHE) && !defined(SAVE_LIGHT_CACHE_WARMUP)
-	// recursive MIS construction.
-	float pathProbability = 1.0;
-	float anyPathProbabilitySum = 0.0;
-	
 	// Each thread writes its own initial light sample into the LightCache
 	saveLightCache(gl_GlobalInvocationID.x,
 		lightIntensity_Norm1.xyz / PI_2 / NumRaysPerLightSample, // Equal distributed flux in all directions, NumRaysPerLightSample times
 		-1, lightSamplePos_Norm0.xyz, vec2(lightSamplePos_Norm0.w, lightIntensity_Norm1.w),
-		vec2(0.0), vec3(0.0), pathProbability, anyPathProbabilitySum, 0);
+		vec2(0.0), vec3(0.0), 0);
 #endif
 
 
@@ -113,8 +103,7 @@ void main()
 		atomicAdd(LightPathLengthSum, 1);
 	#else
 		saveLightCache(lightCacheEntryIndex, pathThroughput, triangle.w,
-			ray.Origin, PackNormal(shadingNormal), hitTexcoord, ray.Direction,
-			pathProbability, anyPathProbabilitySum, i+1);
+			ray.Origin, PackNormal(shadingNormal), hitTexcoord, ray.Direction, i+1);
 	#endif
 #endif
 
@@ -127,15 +116,9 @@ void main()
 		// Try to connect to camera.
 	#ifndef SAVE_LIGHT_CACHE_WARMUP
 		#ifdef SAVE_LIGHT_CACHE
-			float connectionLightPathToEyePath = MISHeuristic(1.0); // Next event estimate!
-
-			float connectedPathPropability = pathProbability + DIVISOR_EPSILON;
-			float mis = connectedPathPropability / (connectionLightPathToEyePath * anyPathProbabilitySum + connectedPathPropability);
-			mis /= AverageLightPathLength + 1; // Equals number of techniques per BPT iteration. (Not exactly a part of the mis!)
-
-			ProjectToScreen(ray, geometryNormal, shadingNormal, materialData, pathThroughput * mis, true);
+			ProjectToScreen(ray, geometryNormal, shadingNormal, materialData, pathThroughput, true, true);
 		#else
-			ProjectToScreen(ray, geometryNormal, shadingNormal, materialData, pathThroughput, true);
+			ProjectToScreen(ray, geometryNormal, shadingNormal, materialData, pathThroughput, true, false);
 		#endif
 	#endif
 
@@ -156,23 +139,9 @@ void main()
 		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stopped -> >=
 			break;
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.
-
-		#ifdef SAVE_LIGHT_CACHE
-		samplePDF *= continuationPropability;
-		#endif
 	#endif
 
 		ray.Direction = newDirection;
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
-
-		// Update MIS quantities.
-	#if defined(SAVE_LIGHT_CACHE) && !defined(SAVE_LIGHT_CACHE_WARMUP)
-		samplePDF = MISHeuristic(samplePDF);
-		anyPathProbabilitySum = anyPathProbabilitySum * samplePDF + pathProbability;
-		pathProbability *= samplePDF;
-		// Avoid too large numbers because of running into NaN problems
-		anyPathProbabilitySum = min(1e15, anyPathProbabilitySum);
-		pathProbability = min(1e15, pathProbability);
-	#endif
 	}
 }

@@ -1,5 +1,6 @@
 #version 450
 
+#define TRINORMAL_OUTPUT
 #include "stdheader.glsl"
 
 layout(binding=12) uniform samplerCubeArray EnvironmentMap;
@@ -33,16 +34,19 @@ void main()
 		Triangle triangle;
 		vec3 barycentricCoord;
 		float rayHit = RAY_MAX;
-		TraceRay(ray, rayHit, barycentricCoord, triangle);
+		vec3 geometryNormal;
+		TraceRay(ray, rayHit, barycentricCoord, triangle, geometryNormal);
 		if(rayHit == RAY_MAX) {
 			color += pathThroughput * textureLod(EnvironmentMap, vec4(ray.Direction, 0.0), 0.0).xyz;
 			break;
 		}
+		geometryNormal = normalize(geometryNormal);
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
 
 		// Compute hit normal and texture coordinate.
 		vec3 hitNormal; vec2 hitTexcoord;
 		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
+		hitNormal = geometryNormal;
 		// Get Material infos.
 		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 
@@ -50,19 +54,20 @@ void main()
 		// To avoid double counting use either next event estimation or this sampling. In general,
 		// next event estimation performs better, but for specular bounces or direct view sampling
 		// is more probable to find the correct light.
+	#ifdef SHOW_SPECIFIC_PATHLENGTH
+		if(i == SHOW_SPECIFIC_PATHLENGTH)
+	#endif
 		if( !didNextEventEstimation )
 			color += pathThroughput * materialData.Emissivity;
 
 		// Connect to random light samples ("Next Event Estimation")
 		didNextEventEstimation = materialData.Reflectiveness.w < 500.0;
 		Ray lightRay;
+	#ifdef SHOW_SPECIFIC_PATHLENGTH
+		if(i+1 == SHOW_SPECIFIC_PATHLENGTH)
+	#endif
 		for(int lightSample=0; lightSample<NUM_LIGHT_SAMPLES; ++lightSample)
 		{
-		#ifdef SHOW_SPECIFIC_PATHLENGTH
-			if(i+1 != SHOW_SPECIFIC_PATHLENGTH)
-				break;
-		#endif
-
 			int sampleIndex = int(RandomUInt(randomSeed) % NumInitialLightSamples);
 			vec3 radiance = EstimateDirectLight(ray.Origin, hitNormal, sampleIndex, ray.Direction, materialData, didNextEventEstimation);
 			color += radiance * pathThroughput * lightSampleWeight;

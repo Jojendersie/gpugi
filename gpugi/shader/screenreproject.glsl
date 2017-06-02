@@ -37,7 +37,7 @@ void WriteAtomic(vec3 value, ivec2 pixelCoord)
 // Compute a screen contribution of some point and add it to the output image.
 // 'ray' defines the position for back projection and the incident direction for shading
 // purposes.
-void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, in MaterialData materialData, in vec3 pathThroughput, in bool computeBSDF)
+void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, in MaterialData materialData, in vec3 pathThroughput, in bool computeBSDF, in bool computeMIS)
 {
 	Ray cameraRay;
 	cameraRay.Direction = CameraPosition - ray.Origin;
@@ -96,6 +96,16 @@ void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, 
 					// but since we are coming from the other direction, we swap in and out direction.
 					//bsdf = BSDF(-cameraRay.Direction, -ray.Direction, materialData, shadingNormal, pdf);
 					bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal, pdf);
+					
+				#ifdef SAVE_LIGHT_CACHE
+					if(computeMIS)
+					{
+						float connectionEyeToLightPath = InitialMIS(); // See lightcache.glsl initial value
+						float connectionLightPathToEye = MISHeuristic(pdf);
+						float mis = connectionLightPathToEye / max(connectionLightPathToEye + connectionEyeToLightPath, DIVISOR_EPSILON);
+						bsdf *= mis;
+					}
+				#endif
 				}
 				//vec3 bsdf = GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
 				vec3 color = pathThroughput * fluxToIrradiance * bsdf;

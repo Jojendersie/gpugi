@@ -1,11 +1,12 @@
 #version 440
 
+#define TRINORMAL_OUTPUT
 #include "../stdheader.glsl"
 #include "lightcache.glsl"
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
-#define MIN_CONNECTION_DISTSQ 0.0001
+#define MIN_CONNECTION_DISTSQ 0.001
 
 #define LOCAL_SIZE 8
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
@@ -24,10 +25,23 @@ void main()
 	bool didNextEventEstimation = false;
 
 	uint actualNumLightCacheEntries = min(NumLightCacheEntries, LightCacheCapacity);
+	float lightSampleWeight = float(actualNumLightCacheEntries);
 
-	// recursive MIS construction.
-	float pathProbability = 1.0;
-	float anyPathProbabilitySum = 0.0;
+	// Recursive MIS construction.
+	// Whenever we want to compute the MIS weight for a path segment we need the probabilities
+	// on both vertices. Therefore we need to remember the last probability from our path.
+	// The following heuristic weights between projection and path tracing.
+	// There are 3 different techniques: (weights)
+	//    - LPT-projection:        (1-a)
+	//    - PT-random hit:         (a) * Product(!nee,0,i)
+	//    - Next-event estimation: (a) * Product(!nee,0,i-1) * nee
+	// Where Product(!nee,0,i) is the combined weight of of all previous vertices where
+	// we did not made a next event estimation (i.e. all samplings on the current path).
+	// Additional to PDF based importance weights p0 / (p0+p1+...) we use some distance
+	// based measure to decide between NEE and Sampling. If another surface is very close
+	// Sampling is preferred, because direct illumination creates very bright spots in that case.
+	float lastConnectionProbability = InitialMIS();
+	float mis = 0.0;
 
 	for(int i=0; i<MAX_PATHLENGTH; ++i)
 	{
@@ -35,117 +49,117 @@ void main()
 		Triangle triangle;
 		vec3 barycentricCoord;
 		float rayHit = RAY_MAX;
-		TraceRay(ray, rayHit, barycentricCoord, triangle);
+		vec3 geometryNormal;
+		TraceRay(ray, rayHit, barycentricCoord, triangle, geometryNormal);
 		if(rayHit == RAY_MAX)
 			break;
+		geometryNormal = normalize(geometryNormal);
 
 		ray.Origin = ray.Origin + rayHit * ray.Direction;	// Go to surface with recursive ray (no epsilon yet!)
 
 		// Compute hit normal and texture coordinate.
 		vec3 hitNormal; vec2 hitTexcoord;
 		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
+		hitNormal = geometryNormal;
 		// Get Material infos.
 		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 		
-		// See pathtracer.comp
-		if( !didNextEventEstimation )
-			color += pathThroughput * materialData.Emissivity;
-
-		// Connect to random light samples ("Next Event Estimation")
-		didNextEventEstimation = true; //materialData.Reflectiveness.w < 500.0;
-		if( didNextEventEstimation )
+	#ifdef SHOW_SPECIFIC_PATHLENGTH
+		if(i == SHOW_SPECIFIC_PATHLENGTH)
 		{
-			Ray lightRay;
-			for(int lightSample=0; lightSample<AverageLightPathLength; ++lightSample)
+	#endif
+			// If we hit an emissive material we have a full path-tracer sample.
+			// Need to compute the previous path segment weight based on the hit information.
+			// If i==0 we have a path which is never projected (special case) -> mis=1.
+			float incidentSurfaceCosSat = saturate(-dot(hitNormal, ray.Direction));
+			float connectionLightToEyePath = DistanceMISHeuristic(rayHit) * MISHeuristic(incidentSurfaceCosSat / PI);
+			mis = (i == 0) ? 1.0 : (lastConnectionProbability / max(lastConnectionProbability + connectionLightToEyePath, DIVISOR_EPSILON));
+			color += mis * pathThroughput * materialData.Emissivity;
+	#ifdef SHOW_SPECIFIC_PATHLENGTH
+		}
+	#endif
+	
+		// Connect to random light samples ("Next Event Estimation")
+		Ray lightRay;
+		for(int lightSample=0; lightSample<1; ++lightSample)//AverageLightPathLength
+		{
+			uint lightCacheSampleIndex = RandomUInt(randomSeed) % actualNumLightCacheEntries;
+		#ifdef SHOW_SPECIFIC_PATHLENGTH
+			int pathLength = LightCacheEntries[lightCacheSampleIndex].PathLength + i + 1;
+			if(pathLength != SHOW_SPECIFIC_PATHLENGTH)
+				continue;
+		#endif
+		
+			lightRay.Direction = LightCacheEntries[lightCacheSampleIndex].Position - ray.Origin;
+			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
+			float lightDist = sqrt(lightDistSq);
+			lightRay.Direction /= lightDist + DIVISOR_EPSILON;
+			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + ray.Origin;
+
+			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON)) // Important to subtract epsilon, since light sample may be slightly behind the surface
 			{
-				uint lightCacheSampleIndex = RandomUInt(randomSeed) % actualNumLightCacheEntries;
-			
-				lightRay.Direction = LightCacheEntries[lightCacheSampleIndex].Position - ray.Origin;
-				float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
+				int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
+				vec3 lightSampleFlux = LightCacheEntries[lightCacheSampleIndex].Flux;
+				vec3 lightSampleHitNormal = vec3(0.0, 1.0, 0.0);
+				float connectionLightPathToEyePath;
+				float cosLight = 0.0;
+				vec3 lightSampleIntensity;
 
-				if(lightDistSq < MIN_CONNECTION_DISTSQ)
-					continue;
-
-				float lightDist = sqrt(lightDistSq);
-				lightRay.Direction /= lightDist + DIVISOR_EPSILON;
-				lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + ray.Origin;
-
-				if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON)) // Important to subtract epsilon, since light sample may be slightly behind the surface
+				if(LightCacheEntries[lightCacheSampleIndex].Normal1 < 1.5)
 				{
-				#ifdef SHOW_SPECIFIC_PATHLENGTH
-					int pathLength = LightCacheEntries[lightCacheSampleIndex].PathLength + i + 1;
-					if(pathLength != SHOW_SPECIFIC_PATHLENGTH)
-						continue;
-				#endif
+					lightSampleHitNormal = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1);
+					cosLight = saturate(-dot(lightRay.Direction, lightSampleHitNormal));
+				}
 
-					int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
-					vec3 lightSampleFlux = LightCacheEntries[lightCacheSampleIndex].Flux;
-					vec3 lightSampleHitNormal = vec3(0.0);
-					float connectionLightPathToEyePath;
-					float cosLight = 0.0;
-					vec3 lightSampleIntensity;
+				float pdf;
+				vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, materialData, hitNormal, pdf); // Note that this is also 1/samplingProbability!
+				float connectionEyePathToLightPath = MISHeuristic(pdf);
 
-					if(LightCacheEntries[lightCacheSampleIndex].Normal1 <= 1.0)
-					{
-						lightSampleHitNormal = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1);
-						cosLight = saturate(-dot(lightRay.Direction, lightSampleHitNormal));
-					}
-
+				// Additional to the light-path-segment-MIS we need the MIS for the previous
+				// eye-path-segment.
+				float distMIS = (i == 0) ? 1.0 : DistanceMISHeuristic(rayHit);
+				mis = lastConnectionProbability / max(lastConnectionProbability + connectionEyePathToLightPath * distMIS, DIVISOR_EPSILON);
+				
+				if(LightCacheEntries[lightCacheSampleIndex].Normal1 < 1.5) // If Lambertian
+				{
 					// Triangle material
 					if(lightSampleMaterialIndex != -1)
 					{
 						MaterialData lightSampleMaterialData = SampleMaterialData(lightSampleMaterialIndex, LightCacheEntries[lightCacheSampleIndex].Texcoord);
 
-						float pdf;
-						vec3 lightBSDF = AdjointBSDF(LightCacheEntries[lightCacheSampleIndex].IncidentDirection, -lightRay.Direction,
+						vec3 lightBSDF = AdjointBSDF(lightRay.Direction, -LightCacheEntries[lightCacheSampleIndex].IncidentDirection,
 												lightSampleMaterialData, lightSampleHitNormal, pdf);
 
 						lightSampleIntensity = lightSampleFlux * lightBSDF * cosLight;
-
-						#ifdef RUSSIAN_ROULETTE
-							// path continuation probability (russian roulette): saturate(bsdf * dot(N, outDir) / pdf)
-							// connection probability: continuation * pdf = bsdf * dot(N, outDir)
-							connectionLightPathToEyePath = MISHeuristic(saturate(GetLuminance(lightBSDF) * cosLight / (pdf + DIVISOR_EPSILON)) * pdf);
-						#else
-							connectionLightPathToEyePath = MISHeuristic(pdf);
-						#endif
+						
+						connectionLightPathToEyePath = MISHeuristic(pdf) * DistanceMISHeuristic(lightDist);
+					} else {
+						lightSampleIntensity = lightSampleFlux * (cosLight * PI_2);// hemispherical light source
+						connectionLightPathToEyePath = MISHeuristic(cosLight / PI) * DistanceMISHeuristic(lightDist);
 					}
-					// Connect to a light source.
-					else
-					{
-						connectionLightPathToEyePath = MISHeuristic(1.0); // Only possible via THIS next event estimation -> Fixed probability of 1.
-						if(LightCacheEntries[lightCacheSampleIndex].Normal1 < 1.5)
-							lightSampleIntensity = lightSampleFlux * (cosLight * PI_2);// hemispherical light source
-						else
-							lightSampleIntensity = lightSampleFlux * (PI_2);// omnidirectional light source
-					}
-
-					float cosCamera = saturate(dot(lightRay.Direction, hitNormal));
-
-					float pdf;
-					vec3 bsdf = BSDF(ray.Direction, lightRay.Direction, materialData, hitNormal, pdf); // Note that this is also 1/samplingProbability!
-
-				#ifdef RUSSIAN_ROULETTE
-					// path continuation probability (russian roulette): saturate(bsdf * dot(N, outDir) / pdf)
-					// connection probability: continuation * pdf = bsdf * dot(N, outDir)
-					float connectionEyePathToLightPath = MISHeuristic(saturate(GetLuminance(bsdf) * cosCamera / (pdf + DIVISOR_EPSILON)) * pdf);
-				#else
-					float connectionEyePathToLightPath = MISHeuristic(pdf);
-				#endif
-
-					float light_pathProbability = LightCacheEntries[lightCacheSampleIndex].PathProbability;
-					float light_anyPathProbabilitySum = LightCacheEntries[lightCacheSampleIndex].AnyPathProbabilitySum;
-
-					float connectedPathPropability = light_pathProbability * pathProbability;
-					float mis = connectedPathPropability / 
-								(light_pathProbability * connectionEyePathToLightPath * anyPathProbabilitySum + 
-								 pathProbability * connectionLightPathToEyePath * light_anyPathProbabilitySum +
-								 connectedPathPropability + DIVISOR_EPSILON);
-					//mis = connectedPathPropability;
-
-					vec3 irradiance = (mis * cosCamera / lightDistSq) * lightSampleIntensity;
-					color += irradiance * pathThroughput * bsdf; 
+					// MIS for the path segment computed here, because point lights have no MIS.
+					mis *= connectionLightPathToEyePath / max(connectionLightPathToEyePath + connectionEyePathToLightPath, DIVISOR_EPSILON);
 				}
+				// Point light source.
+				else
+				{
+					lightSampleIntensity = lightSampleFlux * (PI_2);// omnidirectional light source
+					// Only compute a MIS for area lights and light path vertices.
+					// Point lights cannot be hit randomly.
+					mis *= 1.0;
+				}
+
+				float cosCamera = saturate(dot(lightRay.Direction, hitNormal));
+
+				//mis = 0.0;
+				// Due to random sampling of light vertices the probability of long paths
+				// increases. E.g. the first eye-path vertex can randomly produce paths of
+				// the length 1+1+len(light-path), the next vertex of length 2+1+len(light-path), ...
+				// To compensate that higher energy we need to divide by the full path length.
+		//??		mis /= LightCacheEntries[lightCacheSampleIndex].PathLength + 1 + i;
+
+				vec3 irradiance = (mis * lightSampleWeight * cosCamera / lightDistSq) * lightSampleIntensity;
+				color += irradiance * pathThroughput * bsdf; 
 			}
 		}
 
@@ -159,20 +173,18 @@ void main()
 		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stoped -> >=
 			break;
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.
-		samplePDF *= continuationPropability; // WHY MULTIPLY -> DIVIDE???
 	#endif
-
-		// The probability to sample a vertex is the pdf times 1-terminationProbability
-		samplePDF = MISHeuristic(samplePDF);
-		anyPathProbabilitySum = anyPathProbabilitySum * samplePDF + pathProbability;
-		pathProbability *= samplePDF;
-		// Avoid too large numbers because of running into NaN problems
-		anyPathProbabilitySum = min(1e15, anyPathProbabilitySum);
-		pathProbability = min(1e15, pathProbability);
+	
+		// Update the pathThroughput according to MIS, because we could have created the
+		// same path in the reverse direction (with the reverse MIS).
+		// The pdf is reciprocal (HOPEFULLY) and therefore is equal to what the light tracer
+		// would have done in the inverse direction.
+		float distMIS = (i == 0) ? 1.0 : DistanceMISHeuristic(rayHit);
+		float reverseConnectionProbability = MISHeuristic(samplePDF);
+		mis = lastConnectionProbability / max(lastConnectionProbability + distMIS * reverseConnectionProbability, DIVISOR_EPSILON);
+		pathThroughput *= mis;
+		lastConnectionProbability = reverseConnectionProbability;
 	}
-
-	float lightSampleWeight = float(actualNumLightCacheEntries) / (AverageLightPathLength + 1);
-	color *= lightSampleWeight;
 
 	vec4 final = vec4(color, 1.0);
 	final += imageLoad(OutputTexture, gridPosition);
