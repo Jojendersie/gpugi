@@ -12,10 +12,10 @@
 		},
 		"Glass": {
 			"type": "legacy",
-			"albedo": [0.5882, 0.5882, 0.5882],
+			"albedo": [1.0, 1.0, 1.0],
 			"specularColor": [0.035, 0.035, 0.035],
 			"roughness": [0.1],
-			"opacity": [0.0, 0.0, 0.0],
+			"opacity": [0.0],
 			"emissivity": [0, 0, 0]
 		},
 		"Floor": {

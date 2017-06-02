@@ -45,13 +45,13 @@ void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, 
 	float cosAtSurface = dot(cameraRay.Direction, shadingNormal);
 	if(camViewDotRay > 0.0 && cosAtSurface > 0.0) // Camera faces point?
 	{
-		// Compute screen coord for this ray.
+		// Compute screen coords for this ray.
 		vec3 proj = vec3(-dot(CameraU, cameraRay.Direction), -dot(CameraV, cameraRay.Direction), camViewDotRay);
 		vec2 screenCoord = proj.xy / proj.z;
 		screenCoord.x /= dot(CameraU,CameraU);
 		screenCoord.y /= dot(CameraV,CameraV);
 
-		// Valid screencoors
+		// Valid screen coords
 		if(screenCoord.x >= -1.0 && screenCoord.x < 1.0 && screenCoord.y > -1.0 && screenCoord.y <= 1.0)
 		{
 			float cameraDistSq = dot(cameraRay.Direction, cameraRay.Direction);
@@ -95,7 +95,9 @@ void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, 
 					// here we have an eye-tracing segment, so we don't use the adjoint methods
 					// but since we are coming from the other direction, we swap in and out direction.
 					//bsdf = BSDF(-cameraRay.Direction, -ray.Direction, materialData, shadingNormal, pdf);
+					//bsdf = BSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal, pdf);
 					bsdf = AdjointBSDF(ray.Direction, cameraRay.Direction, materialData, shadingNormal, pdf);
+					//bsdf = AdjointBSDF(-cameraRay.Direction, -ray.Direction, materialData, shadingNormal, pdf);
 				}
 				//vec3 bsdf = GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
 				vec3 color = pathThroughput * fluxToIrradiance * bsdf;
