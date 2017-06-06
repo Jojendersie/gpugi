@@ -42,8 +42,12 @@ void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, 
 	Ray cameraRay;
 	cameraRay.Direction = CameraPosition - ray.Origin;
 	float camViewDotRay = -dot(CameraW, cameraRay.Direction);
+#ifdef DEPTH_BUFFER_OCCLUSION_TEST
 	float cosAtSurface = dot(cameraRay.Direction, shadingNormal);
 	if(camViewDotRay > 0.0 && cosAtSurface > 0.0) // Camera faces point?
+#else
+	if(camViewDotRay > 0.0)
+#endif
 	{
 		// Compute screen coord for this ray.
 		vec3 proj = vec3(-dot(CameraU, cameraRay.Direction), -dot(CameraV, cameraRay.Direction), camViewDotRay);
