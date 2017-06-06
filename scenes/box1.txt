@@ -5,11 +5,13 @@ cameraFOV = 67
 resolution = 1024, 768
 //resolution = 512, 384
 
+pathLength = 4
+
 // renderer 0:PathTracer	1:LightTracer	2:Bi-directionPT	4:Whitted	6:PhotonMapping		7:PixelCacheLightTracer
-renderer = 0
+renderer = 2
 //im_r = 0.1
 //im_progressive = true
 
-waitIterations = 100000
-screenshot
-exit
+//waitIterations = 200
+//screenshot
+//exit

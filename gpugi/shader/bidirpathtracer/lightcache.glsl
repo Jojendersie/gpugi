@@ -68,14 +68,19 @@ float MISHeuristic(float p)
 
 	// Power heuristic beta=2
 	//return min(1000, p*p);
+	//return p*p;
 }
 
 float InitialMIS()
 {
-	return 0.5;
+	return 0.1;
 }
 
-float DistanceMISHeuristic(float d)
+// d: Distance to the next event estimate point
+// c: cosine on current point (the flatter the less likely are random hits
+//    prefer NEE in that case.
+float DistanceMISHeuristic(float d, float c)
 {
+	//return MISHeuristic(d*d/(c+DIVISOR_EPSILON));
 	return MISHeuristic(d*d);
 }

@@ -41,6 +41,7 @@ void main()
 	// based measure to decide between NEE and Sampling. If another surface is very close
 	// Sampling is preferred, because direct illumination creates very bright spots in that case.
 	float lastConnectionProbability = InitialMIS();
+	float lastCosAbs = 1.0;
 	float mis = 0.0;
 
 	for(int i=0; i<MAX_PATHLENGTH; ++i)
@@ -72,7 +73,7 @@ void main()
 			// Need to compute the previous path segment weight based on the hit information.
 			// If i==0 we have a path which is never projected (special case) -> mis=1.
 			float incidentSurfaceCosSat = saturate(-dot(hitNormal, ray.Direction));
-			float connectionLightToEyePath = DistanceMISHeuristic(rayHit) * MISHeuristic(incidentSurfaceCosSat / PI);
+			float connectionLightToEyePath = DistanceMISHeuristic(rayHit, lastCosAbs) * MISHeuristic(incidentSurfaceCosSat / PI);
 			mis = (i == 0) ? 1.0 : (lastConnectionProbability / max(lastConnectionProbability + connectionLightToEyePath, DIVISOR_EPSILON));
 			color += mis * pathThroughput * materialData.Emissivity;
 	#ifdef SHOW_SPECIFIC_PATHLENGTH
@@ -104,6 +105,7 @@ void main()
 				float connectionLightPathToEyePath;
 				float cosLight = 0.0;
 				vec3 lightSampleIntensity;
+				float cosCamera = saturate(dot(lightRay.Direction, hitNormal));
 
 				if(LightCacheEntries[lightCacheSampleIndex].Normal1 < 1.5)
 				{
@@ -117,7 +119,7 @@ void main()
 
 				// Additional to the light-path-segment-MIS we need the MIS for the previous
 				// eye-path-segment.
-				float distMIS = (i == 0) ? 1.0 : DistanceMISHeuristic(rayHit);
+				float distMIS = (i == 0) ? 1.0 : DistanceMISHeuristic(rayHit, lastCosAbs);
 				mis = lastConnectionProbability / max(lastConnectionProbability + connectionEyePathToLightPath * distMIS, DIVISOR_EPSILON);
 				
 				if(LightCacheEntries[lightCacheSampleIndex].Normal1 < 1.5) // If Lambertian
@@ -132,10 +134,10 @@ void main()
 
 						lightSampleIntensity = lightSampleFlux * lightBSDF * cosLight;
 						
-						connectionLightPathToEyePath = MISHeuristic(pdf) * DistanceMISHeuristic(lightDist);
+						connectionLightPathToEyePath = MISHeuristic(pdf) * DistanceMISHeuristic(lightDist, cosCamera);
 					} else {
 						lightSampleIntensity = lightSampleFlux * (cosLight * PI_2);// hemispherical light source
-						connectionLightPathToEyePath = MISHeuristic(cosLight / PI) * DistanceMISHeuristic(lightDist);
+						connectionLightPathToEyePath = MISHeuristic(cosLight / PI) * DistanceMISHeuristic(lightDist, cosCamera);
 					}
 					// MIS for the path segment computed here, because point lights have no MIS.
 					mis *= connectionLightPathToEyePath / max(connectionLightPathToEyePath + connectionEyePathToLightPath, DIVISOR_EPSILON);
@@ -148,8 +150,6 @@ void main()
 					// Point lights cannot be hit randomly.
 					mis *= 1.0;
 				}
-
-				float cosCamera = saturate(dot(lightRay.Direction, hitNormal));
 
 				//mis = 0.0;
 				// Due to random sampling of light vertices the probability of long paths
@@ -179,11 +179,12 @@ void main()
 		// same path in the reverse direction (with the reverse MIS).
 		// The pdf is reciprocal (HOPEFULLY) and therefore is equal to what the light tracer
 		// would have done in the inverse direction.
-		float distMIS = (i == 0) ? 1.0 : DistanceMISHeuristic(rayHit);
+		float distMIS = (i == 0) ? 1.0 : DistanceMISHeuristic(rayHit, lastCosAbs);
 		float reverseConnectionProbability = MISHeuristic(samplePDF);
 		mis = lastConnectionProbability / max(lastConnectionProbability + distMIS * reverseConnectionProbability, DIVISOR_EPSILON);
 		pathThroughput *= mis;
 		lastConnectionProbability = reverseConnectionProbability;
+		lastCosAbs = abs(dot(ray.Direction, hitNormal));
 	}
 
 	vec4 final = vec4(color, 1.0);

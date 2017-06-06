@@ -28,7 +28,7 @@
 		},
 		"RightWall": {
 			"type": "legacy",
-			"albedo": [0, 0.2863, 0],
+			"albedo": [0.02, 0.2863, 0.02],
 			"specularColor": [0, 0, 0],
 			"roughness": [0.9],
 			"opacity": [1],
@@ -44,7 +44,7 @@
 		},
 		"LeftWall": {
 			"type": "legacy",
-			"albedo": [0, 0, 0.3373],
+			"albedo": [0.02, 0.02, 0.3373],
 			"specularColor": [0, 0, 0],
 			"roughness": [0.9],
 			"opacity": [1],
@@ -62,7 +62,7 @@
 			"type": "legacy",
 			"albedo": [0.5882, 0.5882, 0.5882],
 			"specularColor": [0, 0, 0],
-			"roughness": [0.000625],
+			"roughness": [1],
 			"opacity": [1],
 			"emissivity": [803.9, 192.2, 19.6]
 		},
@@ -70,7 +70,7 @@
 			"type": "legacy",
 			"albedo": [0.5882, 0.5882, 0.5882],
 			"specularColor": [0, 0, 0],
-			"roughness": [0.000625],
+			"roughness": [1],
 			"opacity": [1],
 			"emissivity": [98.0, 392.2, 788.2]
 		}
