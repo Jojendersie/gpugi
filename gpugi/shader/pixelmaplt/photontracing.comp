@@ -108,7 +108,7 @@ void main()
 		vec3 weight = pathThroughput;
 		if(!specularPath) weight *= bsdf;
 		if(Avg(weight) > 1e-6)
-			ProjectToScreen(ray, geometryNormal, shadingNormal, materialData, weight, specularPath);
+			ProjectToScreen(ray, geometryNormal, shadingNormal, materialData, weight, specularPath, false);
 	#endif
 
 		// Continue ray.
