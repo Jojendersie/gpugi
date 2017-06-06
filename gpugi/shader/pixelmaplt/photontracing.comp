@@ -79,7 +79,8 @@ void main()
 
 		// Get Material infos.
 		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
-		float cosThetaAbs = saturate(abs(dot(shadingNormal, ray.Direction)));
+		float cosTheta = dot(shadingNormal, ray.Direction);
+		float cosThetaAbs = saturate(abs(cosTheta));
 		vec3 bsdf = GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
 
 	#ifdef USE_PIXEL_CACHE
@@ -105,10 +106,8 @@ void main()
 		
 		// Contribute using reprojection
 	#ifdef REPROJECT
-		vec3 weight = pathThroughput;
-		if(!specularPath) weight *= bsdf;
-		if(Avg(weight) > 1e-6)
-			ProjectToScreen(ray, geometryNormal, shadingNormal, materialData, weight, specularPath, false);
+		if(Avg(pathThroughput) > 1e-6)
+			ProjectToScreen(ray, geometryNormal, shadingNormal, materialData, pathThroughput, specularPath, false);
 	#endif
 
 		// Continue ray.

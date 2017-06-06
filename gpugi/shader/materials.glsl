@@ -166,6 +166,7 @@ vec3 __SampleBSDF(vec3 incidentDirection, MaterialData materialData, inout uint 
 		pathThroughput *= (materialData.Diffuse * pdiffuse) / avgPDiffuse; // Divide with decision probability (avgPDiffuse) for russian roulette.
 
 		// Create diffuse sample
+		if(cosTheta > 0.0) N = -N; // Flip normal if we hit the surface from the other direction.
 		vec3 U, V;
 		CreateONB(N, U, V);
 		vec3 outDir = SampleHemisphereCosine(randomSamples, U, V, N);
@@ -341,6 +342,7 @@ vec3 __BSDF(vec3 incidentDirection, vec3 excidentDirection, MaterialData materia
 
 	// Diffuse
 	if(!specularOnly)
+	if(cosTheta * cosThetaOut < 0.0) // only if both rays are on the same side (remember incident points to the surface and exident away)
 	{
 		bsdf += pdiffuse * materialData.Diffuse / PI;
 		pdf += Avg(pdiffuse) * saturate(cosThetaOut) / PI;// TODO: Why is material.Diffuse not used here? What if material black?

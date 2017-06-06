@@ -46,7 +46,7 @@ void main()
 		// Compute hit normal and texture coordinate.
 		vec3 hitNormal; vec2 hitTexcoord;
 		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
-		hitNormal = geometryNormal;
+		//hitNormal = geometryNormal;
 		// Get Material infos.
 		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 

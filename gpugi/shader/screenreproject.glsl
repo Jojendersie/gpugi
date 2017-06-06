@@ -37,7 +37,8 @@ void WriteAtomic(vec3 value, ivec2 pixelCoord)
 // Compute a screen contribution of some point and add it to the output image.
 // 'ray' defines the position for back projection and the incident direction for shading
 // purposes.
-void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, in MaterialData materialData, in vec3 pathThroughput, in bool computeBSDF, in bool computeMIS)
+// computeFullBSDF: compute full BSDF (true) or diffuse part only
+void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, in MaterialData materialData, in vec3 pathThroughput, in bool computeFullBSDF, in bool computeMIS)
 {
 	Ray cameraRay;
 	cameraRay.Direction = CameraPosition - ray.Origin;
@@ -92,7 +93,7 @@ void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, 
 					(cosAtCamera * cosAtCamera * cosAtCamera * PixelArea * cameraDistSq);
 
 				vec3 bsdf = vec3(1.0);
-				if(computeBSDF)
+				if(computeFullBSDF)
 				{
 					float pdf;
 
@@ -110,8 +111,13 @@ void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, 
 						bsdf *= mis;
 					}
 				#endif
+				} else {
+					float surfaceInCos = dot(ray.Direction, shadingNormal);
+					float surfaceOutCos = dot(cameraRay.Direction, shadingNormal);
+					if(surfaceInCos * surfaceOutCos < 0.0)
+						bsdf = GetDiffuseReflectance(materialData, surfaceInCos) / PI;
+					else bsdf = vec3(0.0);
 				}
-				//vec3 bsdf = GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
 				vec3 color = pathThroughput * fluxToIrradiance * bsdf;
 
 				// Add Sample.
