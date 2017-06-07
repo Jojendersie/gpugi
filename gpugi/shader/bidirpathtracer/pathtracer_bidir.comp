@@ -150,7 +150,7 @@ void main()
 					mis *= 1.0;
 				}
 
-				//mis = 0.0;
+				//mis = 1.0;
 				// Due to random sampling of light vertices the probability of long paths
 				// increases. E.g. the first eye-path vertex can randomly produce paths of
 				// the length 1+1+len(light-path), the next vertex of length 2+1+len(light-path), ...

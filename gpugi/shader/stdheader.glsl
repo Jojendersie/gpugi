@@ -4,7 +4,7 @@
 #define RAY_HIT_EPSILON 0.0001
 #define RAY_MAX 3.402823466e+38
 
-//#define RUSSIAN_ROULETTE
+#define RUSSIAN_ROULETTE
 
 #include "helper.glsl"
 #include "scenedata.glsl"
