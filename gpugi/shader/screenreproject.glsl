@@ -107,7 +107,7 @@ void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, 
 					{
 						float connectionEyeToLightPath = InitialMIS(); // See lightcache.glsl initial value
 						float connectionLightPathToEye = MISHeuristic(pdf);
-						float mis = connectionLightPathToEye / max(connectionLightPathToEye + connectionEyeToLightPath, DIVISOR_EPSILON);
+						float mis = connectionEyeToLightPath / max(connectionLightPathToEye + connectionEyeToLightPath, DIVISOR_EPSILON);
 						bsdf *= mis;
 					}
 				#endif

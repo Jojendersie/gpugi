@@ -6,7 +6,6 @@
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
-#define MIN_CONNECTION_DISTSQ 0.001
 
 #define LOCAL_SIZE 8
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
@@ -61,7 +60,7 @@ void main()
 		// Compute hit normal and texture coordinate.
 		vec3 hitNormal; vec2 hitTexcoord;
 		GetTriangleHitInfo(triangle, barycentricCoord, hitNormal, hitTexcoord);
-		hitNormal = geometryNormal;
+		//hitNormal = geometryNormal;
 		// Get Material infos.
 		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 		
@@ -179,9 +178,14 @@ void main()
 		// same path in the reverse direction (with the reverse MIS).
 		// The pdf is reciprocal (HOPEFULLY) and therefore is equal to what the light tracer
 		// would have done in the inverse direction.
-		float distMIS = (i == 0) ? 1.0 : DistanceMISHeuristic(rayHit, lastCosAbs);
 		float reverseConnectionProbability = MISHeuristic(samplePDF);
-		mis = lastConnectionProbability / max(lastConnectionProbability + distMIS * reverseConnectionProbability, DIVISOR_EPSILON);
+		if(i == 0) // Special case PT or LPT-projection?
+		{
+			mis = reverseConnectionProbability / max(reverseConnectionProbability + lastConnectionProbability, DIVISOR_EPSILON);
+		} else {
+			float distMIS = (i == 0) ? 1.0 : DistanceMISHeuristic(rayHit, lastCosAbs);
+			mis = lastConnectionProbability / max(lastConnectionProbability + distMIS * reverseConnectionProbability, DIVISOR_EPSILON);
+		}
 		pathThroughput *= mis;
 		lastConnectionProbability = reverseConnectionProbability;
 		lastCosAbs = abs(dot(ray.Direction, hitNormal));

@@ -71,9 +71,10 @@ float MISHeuristic(float p)
 	//return p*p;
 }
 
+// Probability of a back projection
 float InitialMIS()
 {
-	return 0.1;
+	return 1.8;
 }
 
 // d: Distance to the next event estimate point
@@ -81,6 +82,7 @@ float InitialMIS()
 //    prefer NEE in that case.
 float DistanceMISHeuristic(float d, float c)
 {
-	//return MISHeuristic(d*d/(c+DIVISOR_EPSILON));
-	return MISHeuristic(d*d);
+	return MISHeuristic(d*d/(c+DIVISOR_EPSILON));
+	//return MISHeuristic(d*d);
+	//return 1.0;
 }
