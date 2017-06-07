@@ -19,7 +19,8 @@ void radianceEstimate(int hmDataIdx, vec3 pathThroughput, Ray ray, vec3 shadingN
 	// Also, if the photon is behind the current surface ignore it.
 	vec3 toImporton = importonPos - ray.Origin;
 	if((dot(toImporton, toImporton) <= PhotonQueryRadiusSq)
-		&& (abs(dot(toImporton, shadingNormal)) < 0.01))
+		&& (abs(dot(toImporton, shadingNormal)) < 0.01) // Inside flat ellipsoid?
+		&& (dot(ray.Direction, shadingNormal) * dot(shadingNormal, HashMapData[hmDataIdx + 2].xyz) > 0.0)) // From same direction?
 	{
 		vec3 viewPathThroughput = intBitsToFloat(HashMapData[hmDataIdx].yzw);
 		//vec3 importonDir = UnpackNormal(uint(HashMapData[hmDataIdx+2].w));

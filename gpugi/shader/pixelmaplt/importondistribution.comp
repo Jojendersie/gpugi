@@ -69,9 +69,10 @@ void main()
 			pathThroughput /= AvgProbability(GetDiffuseProbability(materialData, cosThetaAbs));
 //			pathThroughput *= GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
 			// Write importon map entry and terminate.
-			uint hmDataIndex = globalPixelAddress * 2;
+			uint hmDataIndex = globalPixelAddress * 3;
 			HashMapData[hmDataIndex].yzw = floatBitsToInt(pathThroughput);
 			HashMapData[hmDataIndex + 1].xyz = floatBitsToInt(ray.Origin);
+			HashMapData[hmDataIndex + 2].xyz = floatBitsToInt(ray.Direction);
 			//HashMapData[hmDataIndex + 2].w = int(PackNormal32(ray.Direction));
 			HashMapData[hmDataIndex + 1].w = gridPosition.x + (gridPosition.y << 16);
 		#ifdef USE_STOCHASTIC_HASHMAP
