@@ -27,12 +27,16 @@ PixelMapLighttracer::PixelMapLighttracer(RendererSystem& _rendererSystem) :
 {
 	m_rendererSystem.SetNumInitialLightSamples(128);
 
-	GlobalConfig::AddParameter("im_r", { m_queryRadius }, "Initial query radius for importon mapper.");
-	GlobalConfig::AddListener("im_r", "importon mapper", [=](const GlobalConfig::ParameterType& p){ this->m_currentQueryRadius = this->m_queryRadius = p[0].As<float>(); });
-	GlobalConfig::AddParameter("im_nphotons", { m_numPhotonsPerLightSample }, "Photons per light sample in importon mapper.");
-	GlobalConfig::AddListener("im_nphotons", "importon mapper", [=](const GlobalConfig::ParameterType& p){ m_numPhotonsPerLightSample = p[0].As<int>(); });
-	GlobalConfig::AddParameter("im_progressive", { m_progressiveRadius }, "Progressive radius shrinking in importon mapper.");
-	GlobalConfig::AddListener("im_progressive", "importon mapper", [=](const GlobalConfig::ParameterType& p){ m_progressiveRadius = p[0].As<bool>(); });
+	try {
+		GlobalConfig::AddParameter("im_r", { m_queryRadius }, "Initial query radius for importon mapper.");
+		GlobalConfig::AddListener("im_r", "importon mapper", [=](const GlobalConfig::ParameterType& p){ this->m_currentQueryRadius = this->m_queryRadius = p[0].As<float>(); });
+		GlobalConfig::AddParameter("im_nphotons", { m_numPhotonsPerLightSample }, "Photons per light sample in importon mapper.");
+		GlobalConfig::AddListener("im_nphotons", "importon mapper", [=](const GlobalConfig::ParameterType& p){ m_numPhotonsPerLightSample = p[0].As<int>(); });
+		GlobalConfig::AddParameter("im_progressive", { m_progressiveRadius }, "Progressive radius shrinking in importon mapper.");
+		GlobalConfig::AddListener("im_progressive", "importon mapper", [=](const GlobalConfig::ParameterType& p){ m_progressiveRadius = p[0].As<bool>(); });
+	} catch(const std::exception& _e) {
+		LOG_ERROR(_e.what());
+	}
 }
 
 PixelMapLighttracer::~PixelMapLighttracer()

@@ -25,6 +25,8 @@ class RendererSystem;
 class Renderer
 {
 public:
+	virtual ~Renderer() = default;
+
 	/// Returns a unique name for this renderer type.
 	virtual std::string GetName() const = 0;
 
