@@ -107,7 +107,7 @@ void main()
 		
 		// Contribute using reprojection
 	#ifdef REPROJECT
-		if(Avg(pathThroughput) > 1e-6)
+		if(Avg(pathThroughput) > 1e-10)
 			ProjectToScreen(ray, geometryNormal, shadingNormal, materialData, pathThroughput, specularPath, false);
 	#endif
 
