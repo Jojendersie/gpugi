@@ -1,0 +1,51 @@
+{
+	"scene": "veach.bim",
+	"accelerator": "aabox",
+	"materials": {
+		"material2": {
+			"type": "physical",
+			"albedo": [0.5, 0.5, 0.5]
+		},
+		"white": {
+			"type": "legacy",
+			"albedo": [0.5, 0.5, 0.5]
+		},
+		"material0": {
+			"type": "leagacy",
+			"albedo": [0.5],
+			"reflectivity": [0.05],
+			"specularColor": [1, 1, 1],
+			"refractionIdxN": [1.5],
+			"transmissivity": [1, 1, 1]
+		},
+		"material1": {
+			"type": "leagacy",
+			"albedo": [0, 0, 0],
+			"specularColor": [0.616, 0.4752, 0.352],
+			"roughness": [0.0775146],
+			"reflectivity": [0.05]
+		},
+		"material3": {
+			"type": "physical",
+			"albedo": [0.5, 0.5, 0.5],
+			"emissivity": [7000, 5450, 3630]
+		},
+		"material4": {
+			"type": "physical",
+			"albedo": [0.5, 0.5, 0.5],
+			"emissivity": [500, 500, 500]
+		}
+	},
+	"lights": {
+	},
+	"cameras": {
+		"cam0": {
+			"type": "perspective",
+			"position": [-0.223944, 0.366128, -6.64245],
+			"lookAt": [-0.261616, 0.309317, -5.64478],
+			"up": [0, 1, 0],
+			"fov": 34.1566,
+			"scenario": ["default"]
+		}
+	}
+}

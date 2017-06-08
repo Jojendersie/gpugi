@@ -1,0 +1,22 @@
+sceneFilename = ../scenes/villa/villa.json
+//cameraPos = 24.9132, 4.19941, 4.30613
+cameraPos = 24.9132, 4.30613, 4.19941
+//cameraLookAt = 24.1183, 4.77372, 4.11037
+cameraLookAt = 24.1183, 4.11037, 4.77372
+cameraFOV = 48
+resolution = 1024, 768
+//resolution = 512, 384
+
+// spotlights:
+//addPointLight = 16.8016, 4.18727, 8.15809, 8, 8, 8
+//addPointLight = 22.1166, 3.96, 7.18543, 1, 1, 1
+
+// spotlights:
+addPointLight = 16.8016, 4.18727, 8.15809, 8, 8, 8
+addPointLight = 21.2769, 3.96, 7.20042, 1, 1, 1
+addPointLight = 22.1166, 3.96 ,7.18543, 1, 1, 1
+addPointLight = 23.0586, 3.96, 7.1867, 1, 1, 1
+
+renderer = 7
+//pm_r = 0.1
+//pm_progressive = true

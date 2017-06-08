@@ -1,0 +1,12 @@
+sceneFilename = ../scenes/villa/villa.json
+cameraPos = 10.2391, 5.01395, 3.76
+cameraLookAt = 11.227, 5.16911, 3.76
+cameraFOV = 48
+resolution = 1024, 768
+//resolution = 512, 384
+
+addDirectionalLight = -10, -30, 5, 2.43146, 1.22051, 1.22051
+
+renderer = 1
+//pm_r = 0.1
+//pm_progressive = true

@@ -1,0 +1,191 @@
+{
+	"scene": "villa.bim",
+	"accelerator": "aabox",
+	"materials": {
+		"material11": {
+			"name": "pool water",
+			"type": "leagacy",
+			"albedo": [0,0,0],
+			"opacity": [0,0,0],
+			"roughness": [1e-6],
+			"specularColor": [0.05, 0.05, 0.05]
+		},
+		"material2": {
+			"name": "probaly steel? chair leg, lamp etc..",
+			"type": "leagacy",
+			"albedo": [0.0, 0.0, 0.0],
+			"roughness": [0.1],
+			"specularColor": [0.1,0.1,0.1]
+		},
+		"white": {
+			"name": "unused",
+			"type": "leagacy",
+			"albedo": [0.5, 0.5, 0.5]
+		},
+		"material13": {
+			"name": "carpet (living room)",
+			"type": "leagacy",
+			"albedo": "gen_image4.png",
+			"roughness": [0.5]
+		},
+		"material0": {
+			"name": "villa white: wall, chair, shelf",
+			"type": "leagacy",
+			"albedo": [0.43298, 0.43298, 0.43298],
+			"specularColor": [0.047366, 0.047366, 0.047366],
+			"roughness": [0.1]
+		},
+		"material12": {
+			"name": "living room floor",
+			"type": "legacy",
+			"albedo": "boards+02_d100.png",
+			"specularColor": [0.04, 0.04, 0.04],
+			"roughness": [0.2]
+		},
+		"material1": {
+			"name": "windows/glass",
+			"type": "legacy",
+			"opacity": [0,0,0],
+			"specularColor": [0.14,0.14,0.14],
+			"roughness": [0.0001],
+			"albedo": [1.0,1.0,1.0]
+		},
+		"material10": {
+			"name": "lamella",
+			"type": "leagacy",
+			"albedo": "boards+02_d100.png",
+			"specularColor": [0.01,0.01,0.01],
+			"roughness": [0.1]
+		},
+		"material3": {
+			"name": "grass",
+			"type": "leagacy",
+			"albedo": "gen_image0.png",
+			"specularColor": [0.000723, 0.000723, 0.000723],
+			"roughness": [0.1]
+		},
+		"material4": {
+			"name": "lampshade (4 in the back)",
+			"type": "leagacy",
+			"albedo": "gen_image1.png",
+			"roughness": [0.1],
+			"specularColor": [0.047366, 0.047366, 0.047366]
+		},
+		"material16": {
+			"name": "speaker thingy?",
+			"type": "leagacy",
+			"albedo": "gen_image7.png",
+			"specularColor": [0.047366, 0.047366, 0.047366],
+			"roughness": [0.1]
+		},
+		"material5": {
+			"name": "weird lamps in the background (lametta thingy)",
+			"type": "leagacy",
+			"albedo": [0.75,0.75,0.75],
+			"roughness": [0.02],
+			"specularColor": [0.01,0.01,0.01]
+		},
+		"material15": {
+			"name": "books",
+			"type": "leagacy",
+			"albedo": "gen_image6.png",
+			"specularColor": [0.01, 0.01, 0.01],
+			"roughness": [0.1]
+		},
+		"material6": {
+			"name": "couch",
+			"type": "leagacy",
+			"albedo": [0.8,0.8,0.8],
+			"specularColor": [0.1, 0.1, 0.1],
+			"roughness": [0.2]
+		},
+		"material14": {
+			"name": "other books",
+			"type": "leagacy",
+			"albedo": "gen_image5.png",
+			"specularColor": [0.01, 0.01, 0.01],
+			"roughness": [0.1]
+		},
+		"material7": {
+			"name": "tree leaves",
+			"type": "leagacy",
+			"albedo": "gen_image2.png",
+			"roughness": [0.1],
+			"specularColor": [0.01,0.01,0.01]
+		},
+		"material8": {
+			"name": "more tree leaves",
+			"type": "leagacy",
+			"albedo": [0.134088, 0.217766, 0.0111615],
+			"roughness": [0.1],
+			"specularColor": [0.01,0.01,0.01]
+		},
+		"material9": {
+			"name": "tree branches",
+			"type": "leagacy",
+			"albedo": "gen_image3.png",
+			"roughness": [0.2],
+			"specularColor": [0.01,0.01,0.01]
+		}
+	},
+	"lights": {
+		"light1": {
+			"type": "spot",
+			"position": [16.8016, 4.18727, 8.15809],
+			"direction": [7.91734e-43, 1.9478e-43, -736997],
+			"peakIntensity": [30, 30, 30],
+			"falloff": 0.1,
+			"halfAngle": 70,
+			"scenario": ["default"]
+		},
+		"light2": {
+			"type": "spot",
+			"position": [21.2769, 3.96, 7.20042],
+			"direction": [7.91734e-43, 0, 2.10195e-44],
+			"peakIntensity": [1, 1, 1],
+			"falloff": 0.1,
+			"halfAngle": 65,
+			"scenario": ["default"]
+		},
+		"light3": {
+			"type": "spot",
+			"position": [22.1166, 3.96, 7.18543],
+			"direction": [7.91734e-43, 0, 1.96182e-44],
+			"peakIntensity": [1, 1, 1],
+			"falloff": 0.1,
+			"halfAngle": 65,
+			"scenario": ["default"]
+		},
+		"light4": {
+			"type": "spot",
+			"position": [23.0586, 3.96, 7.1867],
+			"direction": [7.91734e-43, 0, 1.96182e-44],
+			"peakIntensity": [1, 1, 1],
+			"falloff": 0.1,
+			"halfAngle": 65,
+			"scenario": ["default"]
+		},
+		"light5": {
+			"type": "point",
+			"position": [23.5658, 4.35, 2.46295],
+			"intensity": [10, 10, 10],
+			"scenario": ["default"]
+		},
+		"light6": {
+			"type": "point",
+			"position": [21.3179, 4.35, 2.46144],
+			"intensity": [10, 10, 10],
+			"scenario": ["default"]
+		}
+	},
+	"cameras": {
+		"cam0": {
+			"type": "perspective",
+			"position": [12.9502, 3.8515, 7.38091],
+			"lookAt": [13.9208, 3.79473, 7.1467],
+			"up": [0, 1, 0],
+			"fov": 47,
+			"scenario": ["default"]
+		}
+	}
+}

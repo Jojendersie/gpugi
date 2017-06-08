@@ -1,0 +1,49 @@
+{
+    "accelerator": "aabox",
+    "cameras": {},
+    "lights": {},
+    "materials": {
+        "DefaultMaterial": {
+            "albedo": [0.6, 0.6, 0.6],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [1.0],
+            "specularColor": [0.0, 0.0, 0.0],
+            "type": "legacy"
+        },
+        "Ice": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [0.0],
+            "roughness": [0.001],
+            "specularColor": [0.2, 0.25, 0.4],
+			"refractionIndex": [1.25],
+            "type": "legacy"
+        },
+        "Mirror": {
+            "albedo": [0.0, 0.0, 0.0],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.001],
+            "specularColor": [1.0, 1.0, 1.0],
+            "type": "legacy"
+        },
+        "None": {
+            "albedo": [0.8, 0.8, 0.8],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.1],
+            "specularColor": [0.1, 0.1, 0.1],
+            "type": "legacy"
+        },
+        "RabbitduckFur": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [1.0],
+            "specularColor": [0.0, 0.0, 0.0],
+            "type": "legacy"
+        }
+    },
+    "scene": "bunnyduckonice.bim"
+}

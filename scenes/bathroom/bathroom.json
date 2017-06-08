@@ -1,0 +1,320 @@
+{
+    "accelerator": "aabox",
+    "cameras": {},
+    "lights": {},
+    "materials": {
+        "DefaultMaterial": {
+            "albedo": [0.6, 0.6, 0.6],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [1.0],
+            "specularColor": [0.0, 0.0, 0.0],
+            "type": "legacy"
+        },
+        "bathtube": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.001],
+            "specularColor": [0.3, 0.3, 0.3],
+            "type": "legacy"
+        },
+        "carpet": {
+            "albedo": "carpet.png",
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.9],
+            "specularColor": [0.1, 0.1, 0.1],
+            "type": "legacy"
+        },
+        "ceilling_white": {
+            "albedo": [0.8, 0.8, 0.8],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [1.0],
+            "specularColor": [0.0],
+            "type": "legacy"
+        },
+        "drawing": {
+            "albedo": "smoke.png",
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [6.77062e-06],
+            "specularColor": [0],
+            "type": "legacy"
+        },
+        "drawing2": {
+            "albedo": "hurricane.png",
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [6.77062e-06],
+            "specularColor": [0],
+            "type": "legacy"
+        },
+        "feuilles": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [6.77062e-06],
+            "specularColor": [0.5, 0.5, 0.5],
+            "type": "legacy"
+        },
+        "feuilles.001": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [6.77062e-06],
+            "specularColor": [0.5, 0.5, 0.5],
+            "type": "legacy"
+        },
+        "ficelle": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [1.0],
+            "specularColor": [0.01, 0.01, 0.01],
+            "type": "legacy"
+        },
+        "floor": {
+            "albedo": "97702high.png",
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.03],
+            "specularColor": [0.1, 0.1, 0.1],
+            "type": "legacy"
+        },
+        "glass_ewt_window": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [0.0],
+            "roughness": [1.0e-06],
+            "specularColor": [0.04, 0.04, 0.04],
+            "type": "legacy"
+        },
+        "glass_globe": {
+            "albedo": [0.0, 0.0, 0.0],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [0.0],
+            "roughness": [1.0e-06],
+            "specularColor": [0.04, 0.04, 0.04],
+            "type": "legacy"
+        },
+        "image_front": {
+            "albedo": [0.8, 0.8, 0.8],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [0.0],
+            "roughness": [1.0e-06],
+            "specularColor": [0.02, 0.02, 0.02],
+            "type": "legacy"
+        },
+        "inox": {
+            "albedo": [0.397537, 0.397537, 0.397537],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [6.77062e-06],
+            "specularColor": [0.5, 0.5, 0.5],
+            "type": "legacy"
+        },
+        "inox_pied": {
+            "albedo": [0.397537, 0.397537, 0.397537],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [6.77062e-06],
+            "specularColor": [0.5, 0.5, 0.5],
+            "type": "legacy"
+        },
+        "light": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [13.0, 13.0, 13.0],
+            "opacity": [1.0],
+            "roughness": [1.0],
+            "specularColor": [0, 0, 0],
+            "type": "legacy"
+        },
+        "low_light": {
+            "albedo": [0.64, 0.181951, 0.018709],
+            "emissivity": [64.0, 18.1951, 1.8709],
+            "opacity": [1.0],
+            "roughness": [1.0],
+            "specularColor": [0, 0, 0],
+            "type": "legacy"
+        },
+        "marble": {
+            "albedo": [0.64, 0.68, 0.69],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.001],
+            "specularColor": [0.3, 0.3, 0.3],
+            "type": "legacy"
+        },
+        "metal_gold": {
+            "albedo": [0.0, 0.0, 0.0],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [6.77062e-06],
+            "specularColor": [0.58588, 0.28707, 0.04],
+            "type": "legacy"
+        },
+        "metal_windows": {
+            "albedo": [0.0, 0.0, 0.0],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.4],
+            "specularColor": [0.55983, 0.55983, 0.55983],
+            "type": "legacy"
+        },
+        "metalic_plate": {
+            "albedo": [0.0, 0.0, 0.0],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.4],
+            "specularColor": [0.6, 0.6, 0.6],
+            "type": "legacy"
+        },
+        "mirror": {
+            "albedo": [0.0, 0.0, 0.0],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [1.0e-06],
+            "specularColor": [1.0, 1.0, 1.0],
+            "type": "legacy"
+        },
+        "papier": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [1.0],
+            "specularColor": [0.1, 0.1, 0.1],
+            "type": "legacy"
+        },
+        "plastic_black": {
+            "albedo": [0.023279, 0.023279, 0.023279],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.8],
+            "specularColor": [0.2, 0.2, 0.2],
+            "type": "legacy"
+        },
+        "pots": {
+            "albedo": [0.091948, 0.048243, 0.031452],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [1.0],
+            "specularColor": [0],
+            "type": "legacy"
+        },
+        "store_knot": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.001],
+            "specularColor": [0.05, 0.05, 0.05],
+            "type": "legacy"
+        },
+        "store_knot_plastic": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [0.7],
+            "roughness": [0.001],
+            "specularColor": [0.05, 0.05, 0.05],
+            "type": "legacy"
+        },
+        "stores": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.001],
+            "specularColor": [0.03, 0.03, 0.03],
+            "type": "legacy"
+        },
+        "tableau1": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.5],
+            "specularColor": [0.3, 0.5, 0.3],
+            "type": "legacy"
+        },
+        "tableau2": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.5],
+            "specularColor": [0.3, 0.3, 0.5],
+            "type": "legacy"
+        },
+        "tapware": {
+            "albedo": [0.397537, 0.397537, 0.397537],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [6.77062e-06],
+            "specularColor": [0.5, 0.5, 0.5],
+            "type": "legacy"
+        },
+        "vase_white": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [6.77062e-06],
+            "specularColor": [0.01],
+            "type": "legacy"
+        },
+        "wall_blue": {
+            "albedo": [0.19334, 0.310155, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [1.0],
+            "specularColor": [0.0],
+            "type": "legacy"
+        },
+        "wall_grey": {
+            "albedo": [0.501329, 0.501329, 0.501329],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [1.0],
+            "specularColor": [0, 0, 0],
+            "type": "legacy"
+        },
+        "water": {
+            "albedo": [0.64, 0.64, 0.64],
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [0.0],
+            "roughness": [6.77062e-06],
+            "specularColor": [0.05, 0.05, 0.05],
+            "type": "legacy"
+        },
+        "wood": {
+            "albedo": "WoodFine0034_7_S.png",
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.1],
+            "specularColor": [0.07, 0.07, 0.07],
+            "type": "legacy"
+        },
+        "wood_baguette": {
+            "albedo": "WoodFine0016_L.png",
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.1],
+            "specularColor": [0.01, 0.01, 0.01],
+            "type": "legacy"
+        },
+        "wood_cadre": {
+            "albedo": "WoodFine0016_L.png",
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.1],
+            "specularColor": [0.01, 0.01, 0.01],
+            "type": "legacy"
+        },
+        "wood_white": {
+            "albedo": "WoodFine0016_W.png",
+            "emissivity": [0.0, 0.0, 0.0],
+            "opacity": [1.0],
+            "roughness": [0.1],
+            "specularColor": [0.01, 0.01, 0.01],
+            "type": "legacy"
+        }
+    },
+    "scene": "bathroom.bim"
+}

@@ -1,0 +1,7 @@
+sceneFilename = ../scenes/veach/veach.json
+cameraPos = -0.223944, 0.366128, -6.64245
+cameraLookAt = -0.261616, 0.309317, -5.64478
+cameraFOV = 34
+resolution = 1024, 768
+
+renderer=7

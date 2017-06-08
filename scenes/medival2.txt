@@ -1,0 +1,23 @@
+sceneFilename = ../scenes/medivalvillage/MedivalVillage.json
+cameraPos = 99.868530, 41.301537, -84.863884
+cameraLookAt = 99.381393, 40.570442, -84.386185
+cameraFOV = 67
+resolution = 1024, 768
+//resolution = 512, 384
+
+addPointLight = -148.747192, 303.559357, 334.570099, 1200000.0, 1100000.0, 900000.0
+
+
+
+pathLength = 16
+
+// renderer 0:PathTracer	1:LightTracer	2:Bi-directionPT	4:Whitted	6:PhotonMapping		7:PixelCacheLightTracer
+renderer = 7
+//debugrenderer = 0
+//im_r = 0.1
+//im_progressive = true
+
+
+waitIterations = 1000
+screenshot
+exit
