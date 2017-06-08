@@ -45,7 +45,7 @@ void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, 
 	float camViewDotRay = -dot(CameraW, cameraRay.Direction);
 #ifdef DEPTH_BUFFER_OCCLUSION_TEST
 	float cosAtSurface = dot(cameraRay.Direction, shadingNormal);
-	if(camViewDotRay > 0.0 && cosAtSurface > 0.0) // Camera faces point?
+	if(camViewDotRay > 0.0 /*&& cosAtSurface > 0.0*/) // Camera faces point?
 #else
 	if(camViewDotRay > 0.0)
 #endif
@@ -68,7 +68,8 @@ void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, 
 			
 		#ifdef DEPTH_BUFFER_OCCLUSION_TEST
 			float viewDepth = imageLoad(OutputTexture, pixelCoord).w;
-			if(cameraDist <= viewDepth * 1.001)
+			float relativeBias = 1.001;//1.0 + 0.001/max(DIVISOR_EPSILON, abs(dot(cameraRay.Direction, geometryNormal)));
+			if(cameraDist <= viewDepth * relativeBias)
 			//if(abs(cameraDist - viewDepth) / cameraDist <= 0.01)
 		#else
 			// Hits *pinhole* camera

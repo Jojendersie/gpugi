@@ -32,6 +32,7 @@ void LightPathtracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 	// Rule: Every block (size = m_localSizeLightPathtracer) should work with the same initial light sample!
 	int numPixels = _newBackbuffer.GetWidth() * _newBackbuffer.GetHeight();
 	m_numRaysPerLightSample = std::max(m_localSizeLightPathtracer, (numPixels / m_rendererSystem.GetNumInitialLightSamples() / m_localSizeLightPathtracer) * m_localSizeLightPathtracer);
+	//m_numRaysPerLightSample = 1<<16;
 
 	if(m_lightpathtraceUBO)
 	{

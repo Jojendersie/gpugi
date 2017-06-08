@@ -8,6 +8,16 @@ uint wanghash(uint x)
 	return x;
 }
 
+uint RandomUInt(inout uint seed)
+{
+	// Xorshift32
+	seed ^= (seed << 13);
+	seed ^= (seed >> 17);
+	seed ^= (seed << 5);
+
+	return seed;
+}
+
 // Use this function to get an initial random seed in eye-paths or not at all.
 // It introduces structured noise and leads to artifacts in all light-tracing paths.
 uint InitCoherentRandomSeed(uint frameSeed, uint invocationID)
@@ -20,23 +30,16 @@ uint InitCoherentRandomSeed(uint frameSeed, uint invocationID)
 uint InitRandomSeed(uint frameSeed, uint invocationID)
 {
 	uint seed = frameSeed + invocationID;
-
-	return wanghash(seed);
-}
-
-uint RandomUInt(inout uint seed)
-{
-	// Xorshift32
-	seed ^= (seed << 13);
-	seed ^= (seed >> 17);
-	seed ^= (seed << 5);
+	seed = wanghash(seed);
 
 	return seed;
 }
 
 float Random(inout uint seed)
 {
-	return float(RandomUInt(seed) % 8388593) / 8388593.0;
+	//return float(RandomUInt(seed) % 8388593) / 8388593.0;
+	//return float(RandomUInt(seed) % 8388608) / 8388609.0;
+	return float(RandomUInt(seed)) / 4294967297.0;
 }
 
 
@@ -48,10 +51,10 @@ vec2 Random2(inout uint seed)
 // Sample a uniform direction
 vec3 SampleDirection(vec2 randomSample)
 {
-	float cosTheta = randomSample.x * 2.0f - 1.0f;
-	float sinTheta = sqrt((1.0f - cosTheta) * (1.0f + cosTheta));
+	float cosTheta = randomSample.x * 2.0 - 1.0;
+	float sinTheta = sqrt((1.0 - cosTheta) * (1.0 + cosTheta));
 	float phi = randomSample.y * PI_2;
-	return vec3(sinTheta * sin(phi), sinTheta * cos(phi), cosTheta);
+	return normalize(vec3(sinTheta * sin(phi), sinTheta * cos(phi), cosTheta));
 }
 
 // Sample hemisphere with cosine density.

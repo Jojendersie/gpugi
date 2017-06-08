@@ -123,6 +123,7 @@ void main()
 		
 	#ifdef RUSSIAN_ROULETTE
 		float continuationPropability = saturate(GetLuminance(throughput));
+		continuationPropability = pow(continuationPropability, 0.3);
 		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stoped -> >=
 			break;
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.

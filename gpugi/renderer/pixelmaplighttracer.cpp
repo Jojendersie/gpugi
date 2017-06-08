@@ -19,7 +19,7 @@ PixelMapLighttracer::PixelMapLighttracer(RendererSystem& _rendererSystem) :
 	Renderer(_rendererSystem),
 	m_photonTracingShader("photonTracing"),
 	m_importonDistributionShader("importonDistribution"),
-	m_numPhotonsPerLightSample(1 << 11),
+	m_numPhotonsPerLightSample(1 << 12),
 	m_queryRadius(0.005f),
 	m_currentQueryRadius(0.005f),
 	m_progressiveRadius(false),

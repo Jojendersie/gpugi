@@ -118,8 +118,12 @@ void main()
 
 				// Additional to the light-path-segment-MIS we need the MIS for the previous
 				// eye-path-segment.
-				float distMIS = (i == 0) ? 1.0 : DistanceMISHeuristic(rayHit, lastCosAbs);
-				mis = lastConnectionProbability / max(lastConnectionProbability + connectionEyePathToLightPath * distMIS, DIVISOR_EPSILON);
+				if(i > 0)
+				{
+					float distMIS = DistanceMISHeuristic(rayHit, lastCosAbs);
+					mis = lastConnectionProbability / max(lastConnectionProbability + connectionEyePathToLightPath * distMIS, DIVISOR_EPSILON);
+				} else
+					mis = connectionEyePathToLightPath / max(lastConnectionProbability + connectionEyePathToLightPath, DIVISOR_EPSILON);
 				
 				if(LightCacheEntries[lightCacheSampleIndex].Normal1 < 1.5) // If Lambertian
 				{
@@ -150,7 +154,7 @@ void main()
 					mis *= 1.0;
 				}
 
-				//mis = 1.0;
+				//mis = 0.0;
 				// Due to random sampling of light vertices the probability of long paths
 				// increases. E.g. the first eye-path vertex can randomly produce paths of
 				// the length 1+1+len(light-path), the next vertex of length 2+1+len(light-path), ...
@@ -183,7 +187,7 @@ void main()
 		{
 			mis = reverseConnectionProbability / max(reverseConnectionProbability + lastConnectionProbability, DIVISOR_EPSILON);
 		} else {
-			float distMIS = (i == 0) ? 1.0 : DistanceMISHeuristic(rayHit, lastCosAbs);
+			float distMIS = DistanceMISHeuristic(rayHit, lastCosAbs);
 			mis = lastConnectionProbability / max(lastConnectionProbability + distMIS * reverseConnectionProbability, DIVISOR_EPSILON);
 		}
 		pathThroughput *= mis;
