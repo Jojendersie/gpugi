@@ -37,7 +37,7 @@ float GetLuminance(vec3 rgb)
 // Expects: vec2(atan(normal.y, normal.x), normal.z)
 vec3 UnpackNormal(in vec2 packedNormal)
 {
-	float sinPhi = sqrt(1.0 - packedNormal.y*packedNormal.y);
+	float sinPhi = sqrt(saturate((1.0 - packedNormal.y) * (1.0 + packedNormal.y)));
 	return vec3(cos(packedNormal.x)*sinPhi, sin(packedNormal.x)*sinPhi, packedNormal.y);
 }
 vec3 UnpackNormal(float packedNormal0, float packedNormal1)

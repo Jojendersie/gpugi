@@ -1,5 +1,6 @@
 #version 450
 
+#define TRINORMAL_OUTPUT
 #define SAMPLING_DECISION_OUTPUT
 #include "../stdheader.glsl"
 #include "importonmap.glsl"
@@ -8,6 +9,9 @@ layout(binding=12) uniform samplerCubeArray EnvironmentMap;
 
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
+#ifdef DEPTH_BUFFER_OCCLUSION_TEST
+layout(binding = 2, rgba32f) coherent uniform image2D PositionTexture;
+#endif
 
 #define EXCLUDE_DIRECT_VISIBLE
 
@@ -18,13 +22,13 @@ void main()
 	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
 	int globalPixelAddress = gridPosition.x + gridPosition.y * BackbufferSize.x;
 	uint randomSeed = InitRandomSeed(FrameSeed, globalPixelAddress);
-	vec2 screenCoord = (Random2(randomSeed) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
+	vec2 screenCoord = (Random2(randomSeed) - 0.5 + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
 
 	Ray ray;
 	ray.Origin = CameraPosition;
 	ray.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
 
-	vec4 color_depth = vec4(0.0);
+	vec4 color_a = vec4(0.0);
 	vec3 pathThroughput = vec3(1.0);
 	bool specularPath = true;
 
@@ -34,7 +38,8 @@ void main()
 		Triangle triangle;
 		vec3 barycentricCoord;
 		float rayHit = RAY_MAX;
-		TraceRay(ray, rayHit, barycentricCoord, triangle);
+		vec3 geometryNormal;
+		TraceRay(ray, rayHit, barycentricCoord, triangle, geometryNormal);
 		if(rayHit == RAY_MAX) {
 			//color += pathThroughput * textureLod(EnvironmentMap, vec4(ray.Direction, 0.0), 0.0).xyz;
 			break;
@@ -47,11 +52,18 @@ void main()
 		// Get Material infos.
 		MaterialData materialData = SampleMaterialData(triangle.w, hitTexcoord);
 
-		if(i==0) color_depth.w = rayHit;
+	#ifdef DEPTH_BUFFER_OCCLUSION_TEST
+		if(i==0) {
+			geometryNormal = normalize(geometryNormal);
+			vec2 normalPacked = PackNormal(dot(geometryNormal, ray.Direction) > 0.0 ? -geometryNormal : geometryNormal);
+			color_a.w = normalPacked.x;
+			imageStore(PositionTexture, gridPosition, vec4(ray.Origin, normalPacked.y));
+		}
+	#endif
 	//#ifndef EXCLUDE_DIRECT_VISIBLE
 		// Add self emissivity of hit material.
 		if(specularPath)
-			color_depth.xyz += pathThroughput * materialData.Emissivity;
+			color_a.xyz += pathThroughput * materialData.Emissivity;
 	//#endif
 
 		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
@@ -106,8 +118,8 @@ void main()
 	#endif
 	}
 
-	vec4 final = color_depth;
+	vec4 final = color_a;
 	final.xyz += imageLoad(OutputTexture, gridPosition).xyz;
-	final.w = color_depth.w;
+	final.w = color_a.w;
 	imageStore(OutputTexture, gridPosition, final);
 }

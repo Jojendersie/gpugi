@@ -43,6 +43,7 @@ private:
 	std::unique_ptr<gl::Buffer> m_pixelMapData;
 
 	std::unique_ptr<gl::Texture2D> m_lockTexture;
+	std::unique_ptr<gl::Texture2D> m_gbuffer; // Storing position of first hit point and part of the normal
 
 	void RecompileShaders(const std::string& _additionalDefines);
 

@@ -7,7 +7,7 @@ resolution = 1024, 768
 
 pathLength = 16
 
-renderer = 7
+renderer = 6
 im_r = 0.004
 im_progressive = true
 pm_r = 0.004

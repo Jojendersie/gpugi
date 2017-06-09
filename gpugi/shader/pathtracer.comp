@@ -5,6 +5,7 @@
 
 layout(binding=12) uniform samplerCubeArray EnvironmentMap;
 
+#define RECONSTRUCTION_FILTER 3 // BSpline reconstruction filter
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
@@ -18,15 +19,31 @@ void main()
 
 	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
 	uint randomSeed = InitRandomSeed(FrameSeed, gridPosition.x + gridPosition.y * BackbufferSize.x);
-	vec2 screenCoord = (Random2(randomSeed) + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
-
-	Ray ray;
-	ray.Origin = CameraPosition;
-	ray.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
 
 	vec3 color = vec3(0.0);
 	vec3 pathThroughput = vec3(1.0);
 	bool didNextEventEstimation = false;
+	
+#ifdef RECONSTRUCTION_FILTER
+	// TODO: importance sample filter?
+	vec2 rval = Random2(randomSeed);
+	rval.x *= PI * 2.0;
+	rval.y = sqrt(rval.y) * 2.0;
+	vec2 subPixelPos = rval.y * vec2(sin(rval.x), cos(rval.x));
+	if(rval.y < 1.0)
+		pathThroughput = vec3( (3.0 * rval.y*rval.y*rval.y - 6.0 * rval.y*rval.y + 4.0) / 6.0 );
+	else
+		pathThroughput = vec3( (-rval.y*rval.y*rval.y + 6.0 * rval.y*rval.y - 12.0 * rval.y + 8.0) / 6.0 );
+	pathThroughput *= 2.0 * PI * 2.0; // currently pdf = 1 / 2 pi r
+#else
+	vec2 subPixelPos = Random2(randomSeed) - 0.5;
+#endif
+
+	vec2 screenCoord = (subPixelPos + gridPosition) / BackbufferSize * 2.0 - 1.0; // Random2 gives [0,1[. Adding [0, BackbufferSize[ should result in [0, BackbufferSize]
+
+	Ray ray;
+	ray.Origin = CameraPosition;
+	ray.Direction = normalize(screenCoord.x*CameraU + screenCoord.y*CameraV + CameraW);
 
 	for(int i=0; i<MAX_PATHLENGTH; ++i)
 	{

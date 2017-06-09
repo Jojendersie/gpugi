@@ -20,8 +20,8 @@ void radianceEstimate(int hmDataIdx, vec3 pathThroughput, Ray ray, vec3 shadingN
 	vec3 toImporton = importonPos - ray.Origin;
 	if((dot(toImporton, toImporton) <= PhotonQueryRadiusSq)
 		&& (abs(dot(toImporton, shadingNormal)) < 0.01) // Inside flat ellipsoid?
-		&& (dot(ray.Direction, shadingNormal) * dot(shadingNormal, HashMapData[hmDataIdx + 2].xyz) > 0.0)) // From same direction?
-	{
+		&& (dot(ray.Direction, shadingNormal) * dot(shadingNormal, HashMapData[hmDataIdx + 2].xyz) > 0.0) // From same direction?
+	) {
 		vec3 viewPathThroughput = intBitsToFloat(HashMapData[hmDataIdx].yzw);
 		//vec3 importonDir = UnpackNormal(uint(HashMapData[hmDataIdx+2].w));
 		ivec2 pixelCoord = ivec2(HashMapData[hmDataIdx+1].w & 0xffff, HashMapData[hmDataIdx+1].w >> 16);
@@ -123,7 +123,7 @@ void main()
 		
 	#ifdef RUSSIAN_ROULETTE
 		float continuationPropability = saturate(GetLuminance(throughput));
-		continuationPropability = pow(continuationPropability, 0.3);
+		//continuationPropability = pow(continuationPropability, 0.3);
 		if(Random(randomSeed) >= continuationPropability) // if terminationPropability is zero, path should be stoped -> >=
 			break;
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss. Photon (!) stays the same.

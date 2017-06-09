@@ -6,7 +6,14 @@
 layout(binding = 0, rgba32f) coherent uniform image2D OutputTexture;
 layout(binding = 1, r32ui) coherent uniform uimage2D LockTexture;
 
-//#define DEPTH_BUFFER_OCCLUSION_TEST
+#ifdef DEPTH_BUFFER_OCCLUSION_TEST
+layout(binding = 2, rgba32f) coherent readonly uniform image2D PositionTexture;
+#endif
+
+//#define RECONSTRUCTION_FILTER 1 // Mitchell 1/3,1/3
+//#define RECONSTRUCTION_FILTER 2 // Cone
+//#define RECONSTRUCTION_FILTER 3 // BSpline (Mitchell 1,0)
+// Default: box = 0
 
 void WriteAtomic(vec3 value, ivec2 pixelCoord)
 {
@@ -64,13 +71,25 @@ void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, 
 			cameraRay.Direction /= cameraDist;
 			cameraRay.Origin = cameraRay.Direction * RAY_HIT_EPSILON + ray.Origin;
 
-			ivec2 pixelCoord = ivec2((screenCoord*0.5 + vec2(0.5)) * BackbufferSize);
+			vec2 pixelPos = (screenCoord*0.5 + vec2(0.5)) * BackbufferSize;
+			ivec2 pixelCoord = ivec2(round(pixelPos));
 			
 		#ifdef DEPTH_BUFFER_OCCLUSION_TEST
-			float viewDepth = imageLoad(OutputTexture, pixelCoord).w;
+			/*float viewDepth = imageLoad(OutputTexture, pixelCoord).w;
 			float relativeBias = 1.001;//1.0 + 0.001/max(DIVISOR_EPSILON, abs(dot(cameraRay.Direction, geometryNormal)));
-			if(cameraDist <= viewDepth * relativeBias)
+			if(cameraDist <= viewDepth * relativeBias)*/
 			//if(abs(cameraDist - viewDepth) / cameraDist <= 0.01)
+			
+			vec2 packedOccluderNormal;
+			packedOccluderNormal.x = imageLoad(OutputTexture, pixelCoord).w;
+			vec4 occluderPos_Normal = imageLoad(PositionTexture, pixelCoord);
+			packedOccluderNormal.y = occluderPos_Normal.w;
+			vec3 occluderNormal = UnpackNormal(packedOccluderNormal);
+			occluderPos_Normal.xyz -= 4 * RAY_HIT_EPSILON * occluderNormal;
+			//WriteAtomic(abs(occluderNormal) * 0.1, pixelCoord);
+			//WriteAtomic(vec3(packedOccluderNormal.y * 0.2), pixelCoord);
+			//return;
+			if(dot(cameraRay.Origin - occluderPos_Normal.xyz, occluderNormal) >= 0.0)
 		#else
 			// Hits *pinhole* camera
 			if(!TraceRayAnyHit(cameraRay, cameraDist))
@@ -120,11 +139,45 @@ void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, 
 					else bsdf = vec3(0.0);
 				}
 				vec3 color = pathThroughput * fluxToIrradiance * bsdf;
-
-				// Add Sample.
-				//ivec2 pixelCoord = ivec2((screenCoord*0.5 + vec2(0.5)) * BackbufferSize);
-
+				
+				// Mitchell-Netravali-Filter
+			#if 1 == RECONSTRUCTION_FILTER
+				for(int y = -2; y <= 2; ++y) for(int x = -2; x <= 2; ++x)
+				{
+					ivec2 p = ivec2(pixelCoord.x+x, pixelCoord.y+y);
+					float d = length(pixelPos - vec2(p));
+					float filterValue = 0.0;
+					if(d < 1.0)
+						filterValue = (7.0 * d*d*d - 12.0 * d*d + 16.0 / 3.0) / 6.0;
+					else if(d < 2.0)
+						filterValue = (-7.0/3.0 * d*d*d + 12.0 * d*d - 20.0 * d + 32.0/3.0) / 6.0;
+					WriteAtomic(filterValue * color, p);
+				}
+			#elif 2 == RECONSTRUCTION_FILTER
+				for(int y = -2; y <= 2; ++y) for(int x = -2; x <= 2; ++x)
+				{
+					ivec2 p = ivec2(pixelCoord.x+x, pixelCoord.y+y);
+					float d = length(pixelPos - vec2(p));
+					float filterValue = 0.0;
+					if(d < 1.5)
+						filterValue = 1.0 - d / 1.5;
+					WriteAtomic(filterValue * color, p);
+				}
+			#elif 3 == RECONSTRUCTION_FILTER
+				for(int y = -2; y <= 2; ++y) for(int x = -2; x <= 2; ++x)
+				{
+					ivec2 p = ivec2(pixelCoord.x+x, pixelCoord.y+y);
+					float d = length(pixelPos - vec2(p));
+					float filterValue = 0.0;
+					if(d < 1.0)
+						filterValue = (3.0 * d*d*d - 6.0 * d*d + 4.0) / 6.0;
+					else if(d < 2.0)
+						filterValue = (-d*d*d + 6.0 * d*d - 12.0 * d + 8.0) / 6.0;
+					WriteAtomic(filterValue * color, p);
+				}
+			#else
 				WriteAtomic(color, pixelCoord);
+			#endif
 			}
 		}
 	}

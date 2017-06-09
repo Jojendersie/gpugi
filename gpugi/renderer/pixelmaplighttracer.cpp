@@ -19,7 +19,7 @@ PixelMapLighttracer::PixelMapLighttracer(RendererSystem& _rendererSystem) :
 	Renderer(_rendererSystem),
 	m_photonTracingShader("photonTracing"),
 	m_importonDistributionShader("importonDistribution"),
-	m_numPhotonsPerLightSample(1 << 12),
+	m_numPhotonsPerLightSample(1 << 11),
 	m_queryRadius(0.005f),
 	m_currentQueryRadius(0.005f),
 	m_progressiveRadius(false),
@@ -58,6 +58,10 @@ void PixelMapLighttracer::SetScreenSize(const gl::Texture2D& _newBackbuffer)
 	m_lockTexture.reset(new gl::Texture2D(_newBackbuffer.GetWidth(), _newBackbuffer.GetHeight(), gl::TextureFormat::R32UI));
 	m_lockTexture->ClearToZero(0);
 	m_lockTexture->BindImage(1, gl::Texture::ImageAccess::READ_WRITE);
+
+	m_gbuffer.reset(new gl::Texture2D(_newBackbuffer.GetWidth(), _newBackbuffer.GetHeight(), gl::TextureFormat::RGBA32F));
+	m_gbuffer->ClearToZero(0);
+	m_gbuffer->BindImage(2, gl::Texture::ImageAccess::READ_WRITE);
 }
 
 void PixelMapLighttracer::SetEnvironmentMap(std::shared_ptr<gl::TextureCubemap> _envMap)
@@ -118,6 +122,8 @@ void PixelMapLighttracer::RecompileShaders(const std::string& _additionalDefines
 	if(m_useStochasticHM)
 		additionalDefines += "#define USE_STOCHASTIC_HASHMAP\n";
 	additionalDefines += "#define MAX_PATHLENGTH " + std::to_string(GlobalConfig::GetParameter("pathLength")[0].As<int>()) + "\n";
+	// TODO: parameter
+	//additionalDefines += "#define DEPTH_BUFFER_OCCLUSION_TEST\n";
 
 	m_photonTracingShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pixelmaplt/photontracing.comp", additionalDefines);
 	m_photonTracingShader.CreateProgram();
