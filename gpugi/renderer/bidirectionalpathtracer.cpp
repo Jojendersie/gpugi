@@ -139,6 +139,8 @@ void BidirectionalPathtracer::RecompileShaders(const std::string& _additionalDef
 #endif
 	additionalDefines += "#define MAX_PATHLENGTH " + std::to_string(GlobalConfig::GetParameter("pathLength")[0].As<int>()) + "\n";
 
+	additionalDefines += "#define CHAINED_MIS\n";
+
 	m_pathtraceShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/bidirpathtracer/pathtracer_bidir.comp", additionalDefines);
 	m_pathtraceShader.CreateProgram();
 	additionalDefines += "#define SAVE_LIGHT_CACHE\n";

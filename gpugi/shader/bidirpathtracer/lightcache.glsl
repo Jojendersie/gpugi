@@ -10,8 +10,9 @@ struct LightCacheEntry // aka photon
 	float Normal1;
 	int PathLength;
 
-	vec3 IncidentDirection;
-	int _unused;
+	vec2 IncidentDirectionPacked;
+	float ChainedMISWeightN;	// A weight which simulates the quality of a path tracer along a light path to improve MIS in the PT. Quality for NEE.
+	float ChainedMISWeightT;	// A weight which simulates the quality of a path tracer along a light path to improve MIS in the PT. Quality for tracing.
 };
 
 // WRITE VERSION
@@ -74,7 +75,7 @@ float MISHeuristic(float p)
 // Probability of a back projection
 float InitialMIS()
 {
-	return 1.8;
+	return 1.0;//1.8;
 }
 
 // d: Distance to the next event estimate point
@@ -82,7 +83,7 @@ float InitialMIS()
 //    prefer NEE in that case.
 float DistanceMISHeuristic(float d, float c)
 {
-	return MISHeuristic(d*d/(c+DIVISOR_EPSILON));
-	//return MISHeuristic(d*d);
+	//return MISHeuristic(d*d/(c+DIVISOR_EPSILON));
+	return MISHeuristic(d*d);
 	//return 1.0;
 }

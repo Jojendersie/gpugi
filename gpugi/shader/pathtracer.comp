@@ -5,7 +5,7 @@
 
 layout(binding=12) uniform samplerCubeArray EnvironmentMap;
 
-#define RECONSTRUCTION_FILTER 3 // BSpline reconstruction filter
+//#define RECONSTRUCTION_FILTER 3 // BSpline reconstruction filter
 
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
@@ -34,7 +34,7 @@ void main()
 		pathThroughput = vec3( (3.0 * rval.y*rval.y*rval.y - 6.0 * rval.y*rval.y + 4.0) / 6.0 );
 	else
 		pathThroughput = vec3( (-rval.y*rval.y*rval.y + 6.0 * rval.y*rval.y - 12.0 * rval.y + 8.0) / 6.0 );
-	pathThroughput *= 2.0 * PI * 2.0; // currently pdf = 1 / 2 pi r
+	pathThroughput *= PI * 4.0; // currently pdf = 1 / pi r^2
 #else
 	vec2 subPixelPos = Random2(randomSeed) - 0.5;
 #endif

@@ -4,6 +4,10 @@
 #include "../stdheader.glsl"
 #include "lightcache.glsl"
 
+#ifdef CHAINED_MIS
+	#include "chained_mis.glsl"
+#endif
+
 layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attention! No coherent flag set!
 
 
@@ -42,6 +46,10 @@ void main()
 	float lastConnectionProbability = InitialMIS();
 	float lastCosAbs = 1.0;
 	float mis = 0.0;
+#ifdef CHAINED_MIS
+	for(int i=0; i<MAX_PATHLENGTH; ++i)
+		g_mis[i] = 0.0;
+#endif
 
 	for(int i=0; i<MAX_PATHLENGTH; ++i)
 	{
@@ -74,6 +82,11 @@ void main()
 			float incidentSurfaceCosSat = saturate(-dot(hitNormal, ray.Direction));
 			float connectionLightToEyePath = DistanceMISHeuristic(rayHit, lastCosAbs) * MISHeuristic(incidentSurfaceCosSat / PI);
 			mis = (i == 0) ? 1.0 : (lastConnectionProbability / max(lastConnectionProbability + connectionLightToEyePath, DIVISOR_EPSILON));
+		#ifdef CHAINED_MIS
+			// mis = qualityWeightedMIS_Trace(mis, 1.0, 1.0); // quality update with 1/1 has no effect
+			g_mis[i] = mis;
+			mis = cmisPathThroughputWeight(i+1, 1.0, 1.0); // Recursive quality depends on the past and has an effect!
+		#endif
 			color += mis * pathThroughput * materialData.Emissivity;
 	#ifdef SHOW_SPECIFIC_PATHLENGTH
 		}
@@ -84,11 +97,15 @@ void main()
 		for(int lightSample=0; lightSample<1; ++lightSample)//AverageLightPathLength
 		{
 			uint lightCacheSampleIndex = RandomUInt(randomSeed) % actualNumLightCacheEntries;
-		#ifdef SHOW_SPECIFIC_PATHLENGTH
 			int pathLength = LightCacheEntries[lightCacheSampleIndex].PathLength + i + 1;
+		#ifdef SHOW_SPECIFIC_PATHLENGTH
 			if(pathLength != SHOW_SPECIFIC_PATHLENGTH)
 				continue;
 		#endif
+			// This option helps to compare renderer by avoiding combined path with length
+			// [MAX_PATHLENGTH+1, MAX_PATHLENGTH*MAX_PATHLENGTH].
+			if(pathLength > MAX_PATHLENGTH)
+				continue;
 		
 			lightRay.Direction = LightCacheEntries[lightCacheSampleIndex].Position - ray.Origin;
 			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
@@ -124,7 +141,8 @@ void main()
 					mis = lastConnectionProbability / max(lastConnectionProbability + connectionEyePathToLightPath * distMIS, DIVISOR_EPSILON);
 				} else
 					mis = connectionEyePathToLightPath / max(lastConnectionProbability + connectionEyePathToLightPath, DIVISOR_EPSILON);
-				
+					
+				float misLight = 1.0;
 				if(LightCacheEntries[lightCacheSampleIndex].Normal1 < 1.5) // If Lambertian
 				{
 					// Triangle material
@@ -132,7 +150,8 @@ void main()
 					{
 						MaterialData lightSampleMaterialData = SampleMaterialData(lightSampleMaterialIndex, LightCacheEntries[lightCacheSampleIndex].Texcoord);
 
-						vec3 lightBSDF = AdjointBSDF(lightRay.Direction, -LightCacheEntries[lightCacheSampleIndex].IncidentDirection,
+						vec3 incidentDir = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].IncidentDirectionPacked);
+						vec3 lightBSDF = AdjointBSDF(lightRay.Direction, -incidentDir,
 												lightSampleMaterialData, lightSampleHitNormal, pdf);
 
 						lightSampleIntensity = lightSampleFlux * lightBSDF * cosLight;
@@ -143,7 +162,7 @@ void main()
 						connectionLightPathToEyePath = MISHeuristic(cosLight / PI) * DistanceMISHeuristic(lightDist, cosCamera);
 					}
 					// MIS for the path segment computed here, because point lights have no MIS.
-					mis *= connectionLightPathToEyePath / max(connectionLightPathToEyePath + connectionEyePathToLightPath, DIVISOR_EPSILON);
+					misLight = connectionLightPathToEyePath / max(connectionLightPathToEyePath + connectionEyePathToLightPath, DIVISOR_EPSILON);
 				}
 				// Point light source.
 				else
@@ -151,7 +170,7 @@ void main()
 					lightSampleIntensity = lightSampleFlux * (PI_2);// omnidirectional light source
 					// Only compute a MIS for area lights and light path vertices.
 					// Point lights cannot be hit randomly.
-					mis *= 1.0;
+					misLight = 1.0;
 				}
 
 				//mis = 0.0;
@@ -160,9 +179,25 @@ void main()
 				// the length 1+1+len(light-path), the next vertex of length 2+1+len(light-path), ...
 				// To compensate that higher energy we need to divide by the full path length.
 		//??		mis /= LightCacheEntries[lightCacheSampleIndex].PathLength + 1 + i;
+		
+			#ifdef CHAINED_MIS
+				float quality_nee = LightCacheEntries[lightCacheSampleIndex].ChainedMISWeightN;
+				float quality_trace = LightCacheEntries[lightCacheSampleIndex].ChainedMISWeightT;
+				misLight = qualityWeightedMIS_NEE(misLight, quality_nee, quality_trace);
+				updateQuality(quality_nee, 1.0 - misLight);
+				updateQuality(quality_trace, misLight);
+				g_mis[i] = mis;
+				mis = cmisPathThroughputWeight(i+1, quality_nee, quality_trace);
+				//mis = qualityWeightedMIS_Trace(mis, quality_nee, quality_trace);
+				//mis = 1.0-mis;
+				//mis = LightCacheEntries[lightCacheSampleIndex].ChainedMISWeightN;
+				//mis *= 100.0;
+			#endif
+				mis *= misLight;
 
 				vec3 irradiance = (mis * lightSampleWeight * cosCamera / lightDistSq) * lightSampleIntensity;
 				color += irradiance * pathThroughput * bsdf; 
+			//	color = vec3(mis);
 			}
 		}
 
@@ -190,7 +225,13 @@ void main()
 			float distMIS = DistanceMISHeuristic(rayHit, lastCosAbs);
 			mis = lastConnectionProbability / max(lastConnectionProbability + distMIS * reverseConnectionProbability, DIVISOR_EPSILON);
 		}
+		// Do not update pathThroughput in ChainedMIS, because mis changes with the future of the path.
+		// Instead store the mis for later correct computation.
+	#ifdef CHAINED_MIS
+		g_mis[i] = mis;
+	#else
 		pathThroughput *= mis;
+	#endif
 		lastConnectionProbability = reverseConnectionProbability;
 		lastCosAbs = abs(dot(ray.Direction, hitNormal));
 	}

@@ -45,8 +45,21 @@ void WriteAtomic(vec3 value, ivec2 pixelCoord)
 // 'ray' defines the position for back projection and the incident direction for shading
 // purposes.
 // computeFullBSDF: compute full BSDF (true) or diffuse part only
-void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, in MaterialData materialData, in vec3 pathThroughput, in bool computeFullBSDF, in bool computeMIS)
-{
+void ProjectToScreen(
+	in Ray ray,
+	in vec3 geometryNormal,
+	in vec3 shadingNormal,
+	in MaterialData materialData,
+	in vec3 pathThroughput,
+	in bool computeFullBSDF,
+#ifdef CHAINED_MIS
+	in float cmisQualityN,
+	in float cmisQualityT,
+	in float lastConnectionProbability,
+	in float lastDistMIS,
+#endif
+	in bool computeMIS
+) {
 	Ray cameraRay;
 	cameraRay.Direction = CameraPosition - ray.Origin;
 	float camViewDotRay = -dot(CameraW, cameraRay.Direction);
@@ -128,6 +141,16 @@ void ProjectToScreen(in Ray ray, in vec3 geometryNormal, in vec3 shadingNormal, 
 						float connectionEyeToLightPath = InitialMIS(); // See lightcache.glsl initial value
 						float connectionLightPathToEye = MISHeuristic(pdf);
 						float mis = connectionEyeToLightPath / max(connectionLightPathToEye + connectionEyeToLightPath, DIVISOR_EPSILON);
+					#ifdef CHAINED_MIS
+						// Require the PT-MIS for the last path segment too, to update the qualities.
+						//float lastPTmis = connectionLightPathToEye / max(connectionLightPathToEye + lastConnectionProbability * lastDistMIS, DIVISOR_EPSILON);
+						float lastPTmis = lastConnectionProbability / max(lastConnectionProbability + connectionLightPathToEye * lastDistMIS, DIVISOR_EPSILON);
+						updateQuality(cmisQualityN, lastPTmis);
+						updateQuality(cmisQualityT, 1.0 - lastPTmis);
+						
+						// Change projection MIS dependent on PT MIS quality
+						mis = qualityWeightedMIS_NEE(mis, cmisQualityN, cmisQualityT);
+					#endif
 						bsdf *= mis;
 					}
 				#endif

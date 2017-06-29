@@ -12,12 +12,12 @@ addPointLight = -148.747192, 303.559357, 334.570099, 1200000.0, 1100000.0, 90000
 pathLength = 16
 
 // renderer 0:PathTracer	1:LightTracer	2:Bi-directionPT	4:Whitted	6:PhotonMapping		7:PixelCacheLightTracer
-renderer = 7
+renderer = 2
 //debugrenderer = 0
 //im_r = 0.1
 //im_progressive = true
 
 
-waitIterations = 1000
+waitIterations = 10000
 screenshot
 exit
