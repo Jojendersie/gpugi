@@ -114,15 +114,18 @@ void main()
 
 		// Save light cache entry.
 #ifdef SAVE_LIGHT_CACHE
-		uint lightCacheEntryIndex = atomicAdd(NumLightCacheEntries, 1);
-	#ifdef SAVE_LIGHT_CACHE_WARMUP
-		atomicAdd(LightPathLengthSum, 1);
-	#else
-		saveLightCache(lightCacheEntryIndex, pathThroughput, triangle.w,
-			ray.Origin, PackNormal(shadingNormal), hitTexcoord, ray.Direction, i+1);
-		// Important: The cache misses the chained MIS information, because it is not
-		// available until next Monte Carlo decision.
-	#endif
+		if(materialData.Reflectiveness.w < 100.0)
+		{
+			uint lightCacheEntryIndex = atomicAdd(NumLightCacheEntries, 1);
+		#ifdef SAVE_LIGHT_CACHE_WARMUP
+			atomicAdd(LightPathLengthSum, 1);
+		#else
+			saveLightCache(lightCacheEntryIndex, pathThroughput, triangle.w,
+				ray.Origin, PackNormal(shadingNormal), hitTexcoord, ray.Direction, i+1);
+			// Important: The cache misses the chained MIS information, because it is not
+			// available until next Monte Carlo decision.
+		#endif
+		}
 #endif
 
 		// Path length debugging.

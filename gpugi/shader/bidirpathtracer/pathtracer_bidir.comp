@@ -110,10 +110,10 @@ void main()
 			lightRay.Direction = LightCacheEntries[lightCacheSampleIndex].Position - ray.Origin;
 			float lightDistSq = dot(lightRay.Direction, lightRay.Direction);
 			float lightDist = sqrt(lightDistSq);
-			lightRay.Direction /= lightDist + DIVISOR_EPSILON;
+			lightRay.Direction /= max(lightDist, DIVISOR_EPSILON);
 			lightRay.Origin = RAY_HIT_EPSILON * lightRay.Direction + ray.Origin;
 
-			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON)) // Important to subtract epsilon, since light sample may be slightly behind the surface
+			if(!TraceRayAnyHit(lightRay, lightDist - RAY_HIT_EPSILON*2)) // Important to subtract epsilon, since light sample may be slightly behind the surface
 			{
 				int lightSampleMaterialIndex = LightCacheEntries[lightCacheSampleIndex].MaterialIndex;
 				vec3 lightSampleFlux = LightCacheEntries[lightCacheSampleIndex].Flux;
@@ -121,12 +121,12 @@ void main()
 				float connectionLightPathToEyePath;
 				float cosLight = 0.0;
 				vec3 lightSampleIntensity;
-				float cosCamera = saturate(dot(lightRay.Direction, hitNormal));
+				float cosCamera = abs(dot(lightRay.Direction, hitNormal));
 
 				if(LightCacheEntries[lightCacheSampleIndex].Normal1 < 1.5)
 				{
 					lightSampleHitNormal = UnpackNormal(LightCacheEntries[lightCacheSampleIndex].Normal0, LightCacheEntries[lightCacheSampleIndex].Normal1);
-					cosLight = saturate(-dot(lightRay.Direction, lightSampleHitNormal));
+					cosLight = abs(dot(lightRay.Direction, lightSampleHitNormal));
 				}
 
 				float pdf;
@@ -138,10 +138,14 @@ void main()
 				if(i > 0)
 				{
 					float distMIS = DistanceMISHeuristic(rayHit, lastCosAbs);
-					mis = lastConnectionProbability / max(lastConnectionProbability + connectionEyePathToLightPath * distMIS, DIVISOR_EPSILON);
+					connectionEyePathToLightPath *= distMIS;
+					//mis = connectionEyePathToLightPath / max(lastConnectionProbability + connectionEyePathToLightPath, DIVISOR_EPSILON);
+					mis = lastConnectionProbability / max(lastConnectionProbability + connectionEyePathToLightPath, DIVISOR_EPSILON);
+					if(materialData.Reflectiveness.w >= 100.0) // On this material there is now light cache -> always trace with weight 1
+						mis = 1.0;
 				} else
 					mis = connectionEyePathToLightPath / max(lastConnectionProbability + connectionEyePathToLightPath, DIVISOR_EPSILON);
-					
+										
 				float misLight = 1.0;
 				if(LightCacheEntries[lightCacheSampleIndex].Normal1 < 1.5) // If Lambertian
 				{
@@ -223,7 +227,11 @@ void main()
 			mis = reverseConnectionProbability / max(reverseConnectionProbability + lastConnectionProbability, DIVISOR_EPSILON);
 		} else {
 			float distMIS = DistanceMISHeuristic(rayHit, lastCosAbs);
+			reverseConnectionProbability *= distMIS;
+			//mis = reverseConnectionProbability / max(reverseConnectionProbability + lastConnectionProbability, DIVISOR_EPSILON);
 			mis = lastConnectionProbability / max(lastConnectionProbability + distMIS * reverseConnectionProbability, DIVISOR_EPSILON);
+			if(materialData.Reflectiveness.w >= 100.0) // On this material there is now light cache -> always trace with weight 1
+				mis = 1.0;
 		}
 		// Do not update pathThroughput in ChainedMIS, because mis changes with the future of the path.
 		// Instead store the mis for later correct computation.
@@ -236,6 +244,7 @@ void main()
 		lastCosAbs = abs(dot(ray.Direction, hitNormal));
 	}
 
+	//color *= 0.0;
 	vec4 final = vec4(color, 1.0);
 	final += imageLoad(OutputTexture, gridPosition);
 	imageStore(OutputTexture, gridPosition, final);

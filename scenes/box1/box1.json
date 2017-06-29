@@ -22,7 +22,7 @@
 			"type": "legacy",
 			"albedo": [0.5882, 0.5882, 0.5882],
 			"specularColor": [0.0, 0.0, 0.0],
-			"roughness": [6.50364e-05],
+			"roughness": [0.9],
 			"opacity": [1],
 			"emissivity": [0, 0, 0]
 		},

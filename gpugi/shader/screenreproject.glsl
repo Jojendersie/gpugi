@@ -142,8 +142,9 @@ void ProjectToScreen(
 						float connectionLightPathToEye = MISHeuristic(pdf);
 						float mis = connectionEyeToLightPath / max(connectionLightPathToEye + connectionEyeToLightPath, DIVISOR_EPSILON);
 					#ifdef CHAINED_MIS
+					//	cmisQualityN = cmisQualityT = 1.0;
 						// Require the PT-MIS for the last path segment too, to update the qualities.
-						//float lastPTmis = connectionLightPathToEye / max(connectionLightPathToEye + lastConnectionProbability * lastDistMIS, DIVISOR_EPSILON);
+					//	float lastPTmis = 1.0 - connectionLightPathToEye / max(connectionLightPathToEye + lastConnectionProbability * lastDistMIS, DIVISOR_EPSILON);
 						float lastPTmis = lastConnectionProbability / max(lastConnectionProbability + connectionLightPathToEye * lastDistMIS, DIVISOR_EPSILON);
 						updateQuality(cmisQualityN, lastPTmis);
 						updateQuality(cmisQualityT, 1.0 - lastPTmis);

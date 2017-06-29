@@ -4,7 +4,8 @@ float g_mis[MAX_PATHLENGTH];
 
 void updateQuality(inout float prevQuality, float mis)
 {
-	prevQuality = prevQuality * mis;
+	//prevQuality = prevQuality * mis;
+	prevQuality = prevQuality * (mis + 1.0);
 }
 
 float qualityWeightedMIS_NEE(float mis_nee, float quality_nee, float quality_trace)
