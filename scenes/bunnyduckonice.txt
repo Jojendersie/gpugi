@@ -11,10 +11,10 @@ addPointLight = -2.668, 2.115, -2.699, 16.0, 16.0, 16.0
 // Must be set before the renderer is chosen
 pathLength = 16
 
-renderer = 2
-im_r = 0.0015
+renderer = 7
+im_r = 0.0035
 im_progressive = false
-pm_r = 0.004
+pm_r = 0.02
 pm_progressive = true
 
 waitSeconds = 60
@@ -22,4 +22,4 @@ waitSeconds = 60
 screenshot
 //waitIterations = 40000
 //screenshot
-exit
+//exit

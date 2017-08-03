@@ -95,9 +95,10 @@ void ProjectToScreen(
 			ivec2 pixelCoord = ivec2(round(pixelPos));
 			
 		#ifdef DEPTH_BUFFER_OCCLUSION_TEST
-			/*float viewDepth = imageLoad(OutputTexture, pixelCoord).w;
+			//float viewDepth = imageLoad(OutputTexture, pixelCoord).w;
+		/*	float viewDepth = imageAtomicAdd(OutputTexture, pixelCoord*ivec2(4,1)+ivec2(3,0), 0.0);
 			float relativeBias = 1.001;//1.0 + 0.001/max(DIVISOR_EPSILON, abs(dot(cameraRay.Direction, geometryNormal)));
-			if(cameraDist <= viewDepth * relativeBias)*/
+			if(cameraDist <= viewDepth * relativeBias)//*/
 			//if(abs(cameraDist - viewDepth) / cameraDist <= 0.01)
 			
 			vec2 packedOccluderNormal;
@@ -113,7 +114,10 @@ void ProjectToScreen(
 			//WriteAtomic(abs(occluderNormal) * 0.1, pixelCoord);
 			//WriteAtomic(vec3(packedOccluderNormal.y * 0.2), pixelCoord);
 			//return;
-			if(dot(cameraRay.Origin - occluderPos_Normal.xyz, occluderNormal) >= 0.0)
+			//if(dot(cameraRay.Origin - occluderPos_Normal.xyz, occluderNormal) >= 0.0)
+			float planeDist = dot(cameraRay.Origin - occluderPos_Normal.xyz, occluderNormal);
+			planeDist /= cameraDist;
+			if(planeDist >= -5e-4 && planeDist < 5e-3)//*/
 		#else
 			// Hits *pinhole* camera
 			if(!TraceRayAnyHit(cameraRay, cameraDist))
