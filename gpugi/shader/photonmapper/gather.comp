@@ -15,7 +15,8 @@ vec3 irradianceEstimate(int hmDataIdx, int multiplier, Ray ray, MaterialData mat
 	// Compare squared distance, if we are close enough to count this photon.
 	// Also, if the photon is behind the current surface ignore it.
 	vec3 toPhoton = photonPos - ray.Origin;
-	if((dot(toPhoton, toPhoton) <= PhotonQueryRadiusSq)
+	float rsq = dot(toPhoton, toPhoton);
+	if((rsq <= PhotonQueryRadiusSq)
 		&& (abs(dot(toPhoton, shadingNormal)) < 0.01))
 	{
 		vec3 flux = intBitsToFloat(HashMapData[hmDataIdx].yzw);
@@ -24,14 +25,18 @@ vec3 irradianceEstimate(int hmDataIdx, int multiplier, Ray ray, MaterialData mat
 		if(dot(ray.Direction, shadingNormal)*dot(photonDir, shadingNormal) < 0.0) return vec3(0.0);
 		
 		float pdf;
-		//vec3 fr = BSDF(ray.Direction, -photonDir, materialData, shadingNormal, pdf);
+		vec3 fr = BSDF(ray.Direction, -photonDir, materialData, shadingNormal, pdf);
 		//vec3 fr = GetDiffuseReflectance(materialData, abs(dot(ray.Direction, shadingNormal))) / PI;
 		
+		float kernel = 1 / (PI * PhotonQueryRadiusSq);
+		//float r = sqrt(rsq / PhotonQueryRadiusSq);
+		//float kernel = (r == 0 ? 1 : (sin(r*PI) / r)) / (PhotonQueryRadiusSq*4.0);
+		
 		// The chance to store a photon already depends on the diffuse probability -> no need to do that twice.
-		vec3 fr = materialData.Diffuse / PI;
+	//	vec3 fr = materialData.Diffuse / PI;
 		// We only gather on diffuse bounce -> divide by the influnce again.
 		fr /= GetDiffuseProbability(materialData, abs(dot(ray.Direction, shadingNormal)));
-		return fr * flux * float(multiplier);
+		return fr * flux * (float(multiplier) * kernel);
 	}
 	return vec3(0.0);
 }
@@ -105,7 +110,7 @@ void main()
 			#endif
 			}
 			// Normalize by query area and add to output
-			irradiance /= PI * PhotonQueryRadiusSq;
+		//	irradiance /= PI * PhotonQueryRadiusSq;
 			color += irradiance * pathThroughput;
 			break;
 		}
