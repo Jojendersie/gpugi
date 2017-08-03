@@ -114,9 +114,10 @@ void main()
 
 		// Save light cache entry.
 #ifdef SAVE_LIGHT_CACHE
+		uint lightCacheEntryIndex = ~0;
 		if(materialData.Reflectiveness.w < 100.0)
 		{
-			uint lightCacheEntryIndex = atomicAdd(NumLightCacheEntries, 1);
+			lightCacheEntryIndex = atomicAdd(NumLightCacheEntries, 1);
 		#ifdef SAVE_LIGHT_CACHE_WARMUP
 			atomicAdd(LightPathLengthSum, 1);
 		#else
@@ -170,8 +171,10 @@ void main()
 		// If chainedMISWeightN == chainedMISWeightT the standard MIS is used.
 		updateQuality(chainedMISWeightN, mis);
 		updateQuality(chainedMISWeightT, 1.0 - mis);
-		LightCacheEntries[lightCacheEntryIndex].ChainedMISWeightN = chainedMISWeightN;
-		LightCacheEntries[lightCacheEntryIndex].ChainedMISWeightT = chainedMISWeightT;
+		if(lightCacheEntryIndex != ~0) {
+			LightCacheEntries[lightCacheEntryIndex].ChainedMISWeightN = chainedMISWeightN;
+			LightCacheEntries[lightCacheEntryIndex].ChainedMISWeightT = chainedMISWeightT;
+		}
 
 		lastConnectionProbability = reverseConnectionProbability;
 		lastCosAbs = abs(dot(ray.Direction, geometryNormal));
