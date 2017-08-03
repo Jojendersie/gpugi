@@ -3,7 +3,8 @@
 // A possible alternative solution: Gather all events in an "append buffer" and apply them via classic vertex scattering (point rendering) and blending
 
 // coherent is necessary!
-layout(binding = 0, rgba32f) coherent uniform image2D OutputTexture;
+//layout(binding = 0, rgba32f) coherent uniform image2D OutputTexture;
+layout(binding = 0, r32f) coherent uniform image2D OutputTexture;
 layout(binding = 1, r32ui) coherent uniform uimage2D LockTexture;
 
 #ifdef DEPTH_BUFFER_OCCLUSION_TEST
@@ -21,7 +22,7 @@ void WriteAtomic(vec3 value, ivec2 pixelCoord)
 	// * ..due to shared command counter
 	// * ..due to buggy glsl optimizations
 	// -> Good overview: http://stackoverflow.com/questions/21538555/broken-glsl-spinlock-glsl-locks-compendium
-	bool hasWritten = false; // Do not use "break;" instead. There's a bug in the GLSL optimizer!
+	/*bool hasWritten = false; // Do not use "break;" instead. There's a bug in the GLSL optimizer!
 	do {
 		if(imageAtomicCompSwap(LockTexture, pixelCoord, uint(0), uint(1)) == 0)
 		{
@@ -35,10 +36,16 @@ void WriteAtomic(vec3 value, ivec2 pixelCoord)
 			imageAtomicExchange(LockTexture, pixelCoord, 0);
 			hasWritten = true;
 		}
-	} while(!hasWritten);
+	} while(!hasWritten);//*/
 	
+	// Non-atomic
 	//vec4 imageVal = imageLoad(OutputTexture, pixelCoord);
 	//imageStore(OutputTexture, pixelCoord, vec4(imageVal.xyz + value, imageVal.w));
+	
+	pixelCoord.x *= 4;
+	imageAtomicAdd(OutputTexture, pixelCoord, value.x);
+	imageAtomicAdd(OutputTexture, pixelCoord+ivec2(1,0), value.y);
+	imageAtomicAdd(OutputTexture, pixelCoord+ivec2(2,0), value.z);
 }
 
 // Compute a screen contribution of some point and add it to the output image.
@@ -94,7 +101,11 @@ void ProjectToScreen(
 			//if(abs(cameraDist - viewDepth) / cameraDist <= 0.01)
 			
 			vec2 packedOccluderNormal;
-			packedOccluderNormal.x = imageLoad(OutputTexture, pixelCoord).w;
+			//packedOccluderNormal.x = imageLoad(OutputTexture, pixelCoord).w;
+			// The following line should load a channel from r32f binding, but does
+			// not. The atomic add is a work around to load the data.
+			//packedOccluderNormal.x = imageLoad(OutputTexture, pixelCoord * ivec2(4,1)).x;
+			packedOccluderNormal.x = imageAtomicAdd(OutputTexture, pixelCoord*ivec2(4,1)+ivec2(3,0), 0.0);
 			vec4 occluderPos_Normal = imageLoad(PositionTexture, pixelCoord);
 			packedOccluderNormal.y = occluderPos_Normal.w;
 			vec3 occluderNormal = UnpackNormal(packedOccluderNormal);

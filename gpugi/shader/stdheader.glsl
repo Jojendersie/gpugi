@@ -1,3 +1,4 @@
+#extension GL_NV_shader_atomic_float : require
 #extension GL_ARB_bindless_texture : require
 // Header suitable for most ray based renderers
 
