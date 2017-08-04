@@ -20,9 +20,11 @@ pathLength = 16
 renderer = 6
 //debugrenderer=0
 //meshinfotype=1
-pm_r = 0.015
+pm_r = 0.025
 pm_progressive = true
+im_r = 0.025
+im_progressive = true
 
-waitIterations = 100
+waitIterations = 50
 screenshot
 exit

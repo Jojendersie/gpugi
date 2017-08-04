@@ -18,7 +18,7 @@ PhotonMapper::PhotonMapper(RendererSystem& _rendererSystem) :
 	Renderer(_rendererSystem),
 	m_photonDistributionShader("photonDistribution"),
 	m_gatherShader("gatherPhoton"),
-	m_numPhotonsPerLightSample(1 << 11),
+	m_numPhotonsPerLightSample(1 << 13),
 	m_queryRadius(0.01f),
 	m_currentQueryRadius(0.01f),
 	m_progressiveRadius(false),

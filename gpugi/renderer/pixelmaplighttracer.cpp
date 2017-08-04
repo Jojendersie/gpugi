@@ -19,7 +19,7 @@ PixelMapLighttracer::PixelMapLighttracer(RendererSystem& _rendererSystem) :
 	Renderer(_rendererSystem),
 	m_photonTracingShader("photonTracing"),
 	m_importonDistributionShader("importonDistribution"),
-	m_numPhotonsPerLightSample(1 << 11),
+	m_numPhotonsPerLightSample(1 << 13),
 	m_queryRadius(0.005f),
 	m_currentQueryRadius(0.005f),
 	m_progressiveRadius(false),
@@ -140,7 +140,7 @@ void PixelMapLighttracer::CreateBuffers()
 	uint minPixelMapSize = (numPixels * 3 / 2);
 	m_importonMapSize = ei::nextPrimeGreaterOrEqual(minPixelMapSize);
 	m_pixelMap = std::make_unique<gl::Buffer>(m_importonMapSize * 2 * 4, gl::Buffer::IMMUTABLE);
-	m_pixelMapData = std::make_unique<gl::Buffer>(numPixels * 12 * 4 + 4 * 4, gl::Buffer::IMMUTABLE);
+	m_pixelMapData = std::make_unique<gl::Buffer>(numPixels * 8 * 4 + 4 * 4, gl::Buffer::IMMUTABLE);
 	LOG_LVL2("Allocated " << (m_pixelMap->GetSize() + m_pixelMapData->GetSize()) / (1024*1024) << " MB for importon map.");
 
 	m_pixelMapLTUBOInfo = m_importonDistributionShader.GetUniformBufferInfo().find("ImportonMapperUBO")->second;

@@ -111,3 +111,46 @@ vec3 UnpackR11G11B10(uint code)
 	color.b = float(code & 0x3ff) / 1023.0;
 	return color;
 }
+
+// YCgCo Color space conversions
+vec3 rgbToYCgCo(vec3 _rgb)
+{
+	return vec3(dot(_rgb, vec3(0.25, 0.5, 0.25)),
+				dot(_rgb, vec3(-0.25, 0.5, -0.25)),
+				dot(_rgb.xz, vec2(0.5, -0.5)));
+}
+
+vec3 yCgCoToRGB(vec3 _yCgCo)
+{
+	float tmp = _yCgCo.x - _yCgCo.y;
+	return vec3(tmp + _yCgCo.z, _yCgCo.x + _yCgCo.y, tmp - _yCgCo.z);
+}
+
+// Pack an HDR color [0,inf]^3 into 64 bits.
+// Converts the RGB color to YCgCo, stores Y as float and CgCo as
+// signed shared exponent values. SCg12_SCo12S_E8
+vec2 PackHDR64(vec3 _color)
+{
+	_color = rgbToYCgCo(_color);
+	// Pack CoCg
+	float maxValue = max(abs(_color.y), abs(_color.z));
+	float commonExponent = clamp(ceil(log2(maxValue)), -126.0, 127.0);
+	float range = exp2(commonExponent);
+	vec2 mantissa = clamp(_color.yz * 2048.0 / range + 2048.0, 0.0, 4095.0);
+	return vec2(_color.x, uintBitsToFloat(
+		(uint(mantissa.x) << 20u) | (uint(mantissa.y) << 8u) | uint(commonExponent + 126.0)
+	));
+}
+
+vec3 UnpackHDR64(vec2 _hdr)
+{
+	vec3 color;
+	color.x	= _hdr.x;
+	uint packCgCo = floatBitsToUint(_hdr.y);
+	float exponent = float(packCgCo & 0xff) - 126.0;
+	float range = exp2(exponent);
+	float scale = range / 2048.0;
+	color.y = (float(packCgCo >> 20u) - 2048.0) * scale;
+	color.z = (float((packCgCo >> 8u) & 0xfff) - 2048.0) * scale;
+	return yCgCoToRGB(color);
+}

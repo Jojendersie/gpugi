@@ -18,11 +18,12 @@ void radianceEstimate(int hmDataIdx, vec3 pathThroughput, Ray ray, vec3 shadingN
 	// Compare squared distance, if we are close enough to count this photon.
 	// Also, if the photon is behind the current surface ignore it.
 	vec3 toImporton = importonPos - ray.Origin;
+	vec3 incidentDirection = UnpackNormal(uint(HashMapData[hmDataIdx].w)); // HashMapData[hmDataIdx + 2].xyz
 	if((dot(toImporton, toImporton) <= PhotonQueryRadiusSq)
 		&& (abs(dot(toImporton, shadingNormal)) < 0.01) // Inside flat ellipsoid?
-		&& (dot(ray.Direction, shadingNormal) * dot(shadingNormal, HashMapData[hmDataIdx + 2].xyz) > 0.0) // From same direction?
+		&& (dot(ray.Direction, shadingNormal) * dot(shadingNormal, incidentDirection) > 0.0) // From same direction?
 	) {
-		vec3 viewPathThroughput = intBitsToFloat(HashMapData[hmDataIdx].yzw);
+		vec3 viewPathThroughput = UnpackHDR64(intBitsToFloat(HashMapData[hmDataIdx].yz));
 		//vec3 importonDir = UnpackNormal(uint(HashMapData[hmDataIdx+2].w));
 		ivec2 pixelCoord = ivec2(HashMapData[hmDataIdx+1].w & 0xffff, HashMapData[hmDataIdx+1].w >> 16);
 		float pdf;

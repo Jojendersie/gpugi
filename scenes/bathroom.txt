@@ -13,6 +13,6 @@ im_progressive = true
 pm_r = 0.02
 pm_progressive = true
 
-waitIterations = 5000
-screenshot
-exit
+//waitIterations = 5000
+//screenshot
+//exit

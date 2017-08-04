@@ -66,7 +66,6 @@ void main()
 			color_a.xyz += pathThroughput * materialData.Emissivity;
 	//#endif
 
-		//if(i+1 < MAX_PATHLENGTH) // Not using is faster on GK104 on 18.11.14
 		vec3 throughput = vec3(1.0);
 		float pdf;
 		bool isReflectedDiffuse;
@@ -81,11 +80,12 @@ void main()
 			pathThroughput /= AvgProbability(GetDiffuseProbability(materialData, cosThetaAbs));
 //			pathThroughput *= GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
 			// Write importon map entry and terminate.
-			uint hmDataIndex = globalPixelAddress * 3;
-			HashMapData[hmDataIndex].yzw = floatBitsToInt(pathThroughput);
+			uint hmDataIndex = globalPixelAddress * 2;
+			//HashMapData[hmDataIndex].yzw = floatBitsToInt(pathThroughput);
+			HashMapData[hmDataIndex].yz = floatBitsToInt(PackHDR64(pathThroughput));
 			HashMapData[hmDataIndex + 1].xyz = floatBitsToInt(ray.Origin);
-			HashMapData[hmDataIndex + 2].xyz = floatBitsToInt(ray.Direction);
-			//HashMapData[hmDataIndex + 2].w = int(PackNormal32(ray.Direction));
+			//HashMapData[hmDataIndex + 2].xyz = floatBitsToInt(ray.Direction);
+			HashMapData[hmDataIndex + 0].w = int(PackNormal32(ray.Direction));
 			HashMapData[hmDataIndex + 1].w = gridPosition.x + (gridPosition.y << 16);
 		#ifdef USE_STOCHASTIC_HASHMAP
 			insertToHashGrid(ray.Origin, int(hmDataIndex), randomSeed);
