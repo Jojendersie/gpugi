@@ -13,7 +13,6 @@ layout(binding = 0, rgba32f) restrict uniform image2D OutputTexture; // attentio
 layout(binding = 2, rgba32f) coherent uniform image2D PositionTexture;
 #endif
 
-#define EXCLUDE_DIRECT_VISIBLE
 
 #define LOCAL_SIZE 8
 layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
@@ -60,11 +59,9 @@ void main()
 			imageStore(PositionTexture, gridPosition, vec4(ray.Origin, normalPacked.y));
 		}
 	#endif
-	//#ifndef EXCLUDE_DIRECT_VISIBLE
 		// Add self emissivity of hit material.
 		if(specularPath)
 			color_a.xyz += pathThroughput * materialData.Emissivity;
-	//#endif
 
 		vec3 throughput = vec3(1.0);
 		float pdf;
@@ -74,27 +71,33 @@ void main()
 		float cosThetaAbs = saturate(abs(dot(hitNormal, ray.Direction)));
 		if(isReflectedDiffuse)
 		{
-		#ifdef EXCLUDE_DIRECT_VISIBLE
-			if(i>0) {
-		#endif
-			pathThroughput /= AvgProbability(GetDiffuseProbability(materialData, cosThetaAbs));
-//			pathThroughput *= GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
-			// Write importon map entry and terminate.
-			uint hmDataIndex = globalPixelAddress * 2;
-			//HashMapData[hmDataIndex].yzw = floatBitsToInt(pathThroughput);
-			HashMapData[hmDataIndex].yz = floatBitsToInt(PackHDR64(pathThroughput));
-			HashMapData[hmDataIndex + 1].xyz = floatBitsToInt(ray.Origin);
-			//HashMapData[hmDataIndex + 2].xyz = floatBitsToInt(ray.Direction);
-			HashMapData[hmDataIndex + 0].w = int(PackNormal32(ray.Direction));
-			HashMapData[hmDataIndex + 1].w = gridPosition.x + (gridPosition.y << 16);
-		#ifdef USE_STOCHASTIC_HASHMAP
-			insertToHashGrid(ray.Origin, int(hmDataIndex), randomSeed);
-		#else
-			insertToHashGrid(ray.Origin, int(hmDataIndex));
-		#endif
-		#ifdef EXCLUDE_DIRECT_VISIBLE
+			if(i > 0)
+			{
+				pathThroughput /= AvgProbability(GetDiffuseProbability(materialData, cosThetaAbs));
+	//			pathThroughput *= GetDiffuseReflectance(materialData, cosThetaAbs) / PI;
+	
+				// Pack importon data
+				ivec3 throughputPacked_directionPacked = ivec3(
+					floatBitsToInt(PackHDR64(pathThroughput)),
+					int(PackNormal32(ray.Direction))
+				);
+				ivec4 position_pixel = ivec4(floatBitsToInt(ray.Origin),
+					gridPosition.x + (gridPosition.y << 16));
+
+				// Write importon map entry and terminate.
+			#ifdef USE_STOCHASTIC_HASHMAP
+				uint hmDataIndex = insertToHashGrid(ray.Origin, randomSeed);
+				if(hmDataIndex != ~0)
+				{
+					tryWriteLocked(hmDataIndex, throughputPacked_directionPacked, position_pixel);
+				}
+			#else
+				uint hmDataIndex = globalPixelAddress * 2;
+				HashMapData[hmDataIndex].yzw = throughputPacked_directionPacked;
+				HashMapData[hmDataIndex + 1] = position_pixel;
+				insertToHashGrid(ray.Origin, int(hmDataIndex));
+			#endif
 			}
-		#endif
 	
 			break;
 		}

@@ -18,11 +18,11 @@ PhotonMapper::PhotonMapper(RendererSystem& _rendererSystem) :
 	Renderer(_rendererSystem),
 	m_photonDistributionShader("photonDistribution"),
 	m_gatherShader("gatherPhoton"),
-	m_numPhotonsPerLightSample(1 << 13),
+	m_numPhotonsPerLightSample(1 << 11),
 	m_queryRadius(0.01f),
 	m_currentQueryRadius(0.01f),
 	m_progressiveRadius(false),
-	m_useStochasticHM(true)
+	m_useStochasticHM(false)
 {
 	// Save shader binary.
 /*	{
@@ -130,13 +130,24 @@ void PhotonMapper::RecompileShaders(const std::string& _additionalDefines)
 
 void PhotonMapper::CreateBuffers()
 {
-	// Determine a prime hash map size with at least 1.5x as much space as there
-	// are photons. Although, the real size depends on the number of filled cells this
-	// is a conservative heuristic.
-	uint minPhotonMapSize = (m_numPhotonsPerLightSample * m_rendererSystem.GetNumInitialLightSamples() * 3 / 2);
-	m_photonMapSize = ei::nextPrimeGreaterOrEqual(minPhotonMapSize);
+	uint dataSize = 0;
+	if(m_useStochasticHM)
+	{
+		//m_photonMapSize = ei::nextPrimeGreaterOrEqual(27500); // 1MB
+		m_photonMapSize = ei::nextPrimeGreaterOrEqual(275000); // 10MB
+		//m_photonMapSize = ei::nextPrimeGreaterOrEqual(870000);
+		dataSize = m_photonMapSize;
+	} else
+	{
+		// Determine a prime hash map size with at least 1.5x as much space as there
+		// are photons. Although, the real size depends on the number of filled cells this
+		// is a conservative heuristic.
+		uint minPhotonMapSize = (m_numPhotonsPerLightSample * m_rendererSystem.GetNumInitialLightSamples() * 3 / 2);
+		m_photonMapSize = ei::nextPrimeGreaterOrEqual(minPhotonMapSize);
+		dataSize = 5 * m_numPhotonsPerLightSample * m_rendererSystem.GetNumInitialLightSamples();
+	}
 	m_photonMap = std::make_unique<gl::Buffer>(m_photonMapSize * 2 * 4, gl::Buffer::IMMUTABLE);
-	m_photonMapData = std::make_unique<gl::Buffer>(5 * m_numPhotonsPerLightSample * m_rendererSystem.GetNumInitialLightSamples() * 8 * 4 + 4 * 4, gl::Buffer::IMMUTABLE);
+	m_photonMapData = std::make_unique<gl::Buffer>(dataSize * 8 * 4 + 4 * 4, gl::Buffer::IMMUTABLE);
 	LOG_LVL2("Allocated " << (m_photonMap->GetSize() + m_photonMapData->GetSize()) / (1024*1024) << " MB for photon map.");
 
 	if(!m_photonMapperUBO)

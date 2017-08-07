@@ -2,6 +2,7 @@
 #include "renderersystem.hpp"
 #include "scene/scene.hpp"
 #include "utilities/logger.hpp"
+#include "Time/Time.h"
 
 #include "control/scriptprocessing.hpp"
 #include "control/globalconfig.hpp"
@@ -19,11 +20,11 @@ PixelMapLighttracer::PixelMapLighttracer(RendererSystem& _rendererSystem) :
 	Renderer(_rendererSystem),
 	m_photonTracingShader("photonTracing"),
 	m_importonDistributionShader("importonDistribution"),
-	m_numPhotonsPerLightSample(1 << 13),
+	m_numPhotonsPerLightSample(1 << 12),
 	m_queryRadius(0.005f),
 	m_currentQueryRadius(0.005f),
 	m_progressiveRadius(false),
-	m_useStochasticHM(false)
+	m_useStochasticHM(true)
 {
 	m_rendererSystem.SetNumInitialLightSamples(128);
 
@@ -105,12 +106,23 @@ void PixelMapLighttracer::Draw()
 	m_pixelMapData->ClearToZero();
 	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
 
+//	GL_CALL(glFinish);
+//	ezTime begin = ezTime::Now();
+
 	m_importonDistributionShader.Activate();
 	GL_CALL(glDispatchCompute, m_rendererSystem.GetBackbuffer().GetWidth() / m_localWGSizeImportonShader.x, m_rendererSystem.GetBackbuffer().GetHeight() / m_localWGSizeImportonShader.y, 1);
 	GL_CALL(glMemoryBarrier, GL_SHADER_STORAGE_BARRIER_BIT);
 
+//	GL_CALL(glFinish);
+//	ezTime end = ezTime::Now();
+
 	m_photonTracingShader.Activate();
 	GL_CALL(glDispatchCompute, m_rendererSystem.GetNumInitialLightSamples() * m_numPhotonsPerLightSample / m_localWGSizePhotonShader.x, 1, 1);
+
+//	GL_CALL(glFinish);
+//	ezTime end2 = ezTime::Now();
+//	if(m_rendererSystem.GetIterationCount() < 8)
+//	std::cerr << (end - begin).GetMilliseconds() << ",  " << (end2 - end).GetMilliseconds() << std::endl;
 }
 
 void PixelMapLighttracer::RecompileShaders(const std::string& _additionalDefines)
@@ -123,7 +135,7 @@ void PixelMapLighttracer::RecompileShaders(const std::string& _additionalDefines
 		additionalDefines += "#define USE_STOCHASTIC_HASHMAP\n";
 	additionalDefines += "#define MAX_PATHLENGTH " + std::to_string(GlobalConfig::GetParameter("pathLength")[0].As<int>()) + "\n";
 	// TODO: parameter
-	additionalDefines += "#define DEPTH_BUFFER_OCCLUSION_TEST\n";
+//	additionalDefines += "#define DEPTH_BUFFER_OCCLUSION_TEST\n";
 
 	m_photonTracingShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pixelmaplt/photontracing.comp", additionalDefines);
 	m_photonTracingShader.CreateProgram();
@@ -133,14 +145,25 @@ void PixelMapLighttracer::RecompileShaders(const std::string& _additionalDefines
 
 void PixelMapLighttracer::CreateBuffers()
 {
-	uint numPixels = m_rendererSystem.GetBackbuffer().GetWidth() * m_rendererSystem.GetBackbuffer().GetHeight();
-	// Determine a prime hash map size with at least 1.5x as much space as there
-	// are photons. Although, the real size depends on the number of filled cells this
-	// is a conservative heuristic.
-	uint minPixelMapSize = (numPixels * 3 / 2);
-	m_importonMapSize = ei::nextPrimeGreaterOrEqual(minPixelMapSize);
+	uint mapDataSize = 0;
+	if(m_useStochasticHM)
+	{
+		//m_importonMapSize = ei::nextPrimeGreaterOrEqual(27500); // 1MB
+		m_importonMapSize = ei::nextPrimeGreaterOrEqual(275000); // 10MB
+		//m_importonMapSize = ei::nextPrimeGreaterOrEqual(870000);
+		mapDataSize = m_importonMapSize;
+	} else
+	{
+		// Determine a prime hash map size with at least 1.5x as much space as there
+		// are photons. Although, the real size depends on the number of filled cells this
+		// is a conservative heuristic.
+		uint numPixels = m_rendererSystem.GetBackbuffer().GetWidth() * m_rendererSystem.GetBackbuffer().GetHeight();
+		uint minPixelMapSize = (numPixels * 3 / 2);
+		m_importonMapSize = ei::nextPrimeGreaterOrEqual(minPixelMapSize);
+		mapDataSize = numPixels;
+	}
 	m_pixelMap = std::make_unique<gl::Buffer>(m_importonMapSize * 2 * 4, gl::Buffer::IMMUTABLE);
-	m_pixelMapData = std::make_unique<gl::Buffer>(numPixels * 8 * 4 + 4 * 4, gl::Buffer::IMMUTABLE);
+	m_pixelMapData = std::make_unique<gl::Buffer>(mapDataSize * 8 * 4 + 4 * 4, gl::Buffer::IMMUTABLE);
 	LOG_LVL2("Allocated " << (m_pixelMap->GetSize() + m_pixelMapData->GetSize()) / (1024*1024) << " MB for importon map.");
 
 	m_pixelMapLTUBOInfo = m_importonDistributionShader.GetUniformBufferInfo().find("ImportonMapperUBO")->second;

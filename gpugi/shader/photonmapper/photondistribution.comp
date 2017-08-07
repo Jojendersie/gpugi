@@ -69,14 +69,20 @@ void main()
 		#endif
 		
 			// Store flux, position and incident direction per photon.
-			uint hmDataIndex = atomicAdd(HashMapCounter, 1) * 2;
-			HashMapData[hmDataIndex].yzw = floatBitsToInt(pathThroughput);
-			//HashMapData[hmDataIndex + 1].xyz = floatBitsToInt(ray.Direction);
-			HashMapData[hmDataIndex + 1].xyz = floatBitsToInt(ray.Origin);
-			HashMapData[hmDataIndex + 1].w = int(PackNormal32(ray.Direction));
+			ivec3 hmDatThroughput = floatBitsToInt(pathThroughput);
+			ivec4 hmDatPosition_directionPacked = ivec4(floatBitsToInt(ray.Origin),
+				int(PackNormal32(ray.Direction)));
+				
 		#ifdef USE_STOCHASTIC_HASHMAP
-			insertToHashGrid(ray.Origin, int(hmDataIndex), randomSeed);
+			uint hmDataIndex = insertToHashGrid(ray.Origin, randomSeed);
+			if(hmDataIndex != ~0)
+			{
+				tryWriteLocked(hmDataIndex, hmDatThroughput, hmDatPosition_directionPacked);
+			}
 		#else
+			uint hmDataIndex = atomicAdd(HashMapCounter, 1) * 2;
+			HashMapData[hmDataIndex].yzw = hmDatThroughput;
+			HashMapData[hmDataIndex + 1] = hmDatPosition_directionPacked;
 			insertToHashGrid(ray.Origin, int(hmDataIndex));
 		#endif
 

@@ -1,0 +1,22 @@
+sceneFilename = ../scenes/bathroom/bathroom.json
+cameraPos = -1.027139, 1.657669, -0.505237
+cameraLookAt = -1.242443, 1.443007, -1.457899
+cameraFOV = 50
+resolution = 1024, 768
+//resolution = 512, 384
+
+pathLength = 16
+
+renderer = 7
+im_r = 0.006
+im_progressive = true
+pm_r = 0.02
+pm_progressive = true
+
+// Skip the first 10 iterations because of high varying GPU times
+waitIterations = 10
+cameraPos = -1.027139, 1.657669, -0.505237
+
+waitIterations = 8
+//screenshot
+//exit

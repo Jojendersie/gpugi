@@ -34,8 +34,8 @@ vec3 irradianceEstimate(int hmDataIdx, int multiplier, Ray ray, MaterialData mat
 		
 		// The chance to store a photon already depends on the diffuse probability -> no need to do that twice.
 	//	vec3 fr = materialData.Diffuse / PI;
-		// We only gather on diffuse bounce -> divide by the influnce again.
-		fr /= GetDiffuseProbability(materialData, abs(dot(ray.Direction, shadingNormal)));
+		// We only gather on diffuse bounce -> divide by the influence again.
+		fr /= Avg(GetDiffuseProbability(materialData, abs(dot(ray.Direction, shadingNormal))));
 		return fr * flux * (float(multiplier) * kernel);
 	}
 	return vec3(0.0);
@@ -98,7 +98,7 @@ void main()
 			#ifdef USE_STOCHASTIC_HASHMAP
 				ivec2 count_data = find(cell);
 				if(count_data.x > 0)
-					irradiance += irradianceEstimate(count_data.y, count_data.x, ray, materialData, hitNormal);
+					irradiance += irradianceEstimate(count_data.y * 2, count_data.x, ray, materialData, hitNormal);
 			#else
 				int hmDataIdx = findFirst(cell);
 				while(hmDataIdx != -1)

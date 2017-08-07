@@ -9,7 +9,7 @@
 
 #include "importonmap.glsl"
 
-#define REPROJECT
+//#define REPROJECT
 #define USE_PIXEL_CACHE
 
 void radianceEstimate(int hmDataIdx, vec3 pathThroughput, Ray ray, vec3 shadingNormal)
@@ -95,7 +95,7 @@ void main()
 		#ifdef USE_STOCHASTIC_HASHMAP
 			ivec2 count_data = find(cell);
 			if(count_data.x > 0)
-				radianceEstimate(count_data.y, bsdf * pathThroughput * count_data.x, ray, shadingNormal);
+				radianceEstimate(count_data.y * 2, bsdf * pathThroughput * count_data.x, ray, shadingNormal);
 		#else
 			int hmDataIdx = findFirst(cell);
 			while(hmDataIdx != -1)
