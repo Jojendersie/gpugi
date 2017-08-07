@@ -168,7 +168,7 @@
             "emissivity": [0.0, 0.0, 0.0],
             "opacity": [1.0],
             "roughness": [0.4],
-            "specularColor": [0.6, 0.6, 0.6],
+            "specularColor": [0.4, 0.4, 0.4],
             "type": "legacy"
         },
         "mirror": {
@@ -228,18 +228,18 @@
             "type": "legacy"
         },
         "tableau1": {
-            "albedo": [0.64, 0.64, 0.64],
+            "albedo": [0.4, 0.64, 0.4],
             "emissivity": [0.0, 0.0, 0.0],
             "opacity": [1.0],
-            "roughness": [0.5],
+            "roughness": [0.3],
             "specularColor": [0.3, 0.5, 0.3],
             "type": "legacy"
         },
         "tableau2": {
-            "albedo": [0.64, 0.64, 0.64],
+            "albedo": [0.4, 0.4, 0.64],
             "emissivity": [0.0, 0.0, 0.0],
             "opacity": [1.0],
-            "roughness": [0.5],
+            "roughness": [0.3],
             "specularColor": [0.3, 0.3, 0.5],
             "type": "legacy"
         },
@@ -264,7 +264,7 @@
             "emissivity": [0.0, 0.0, 0.0],
             "opacity": [1.0],
             "roughness": [1.0],
-            "specularColor": [0.0],
+            "specularColor": [0.0, 0.0, 0.0],
             "type": "legacy"
         },
         "wall_grey": {

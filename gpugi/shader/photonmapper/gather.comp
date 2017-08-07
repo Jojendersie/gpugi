@@ -25,8 +25,8 @@ vec3 irradianceEstimate(int hmDataIdx, int multiplier, Ray ray, MaterialData mat
 		if(dot(ray.Direction, shadingNormal)*dot(photonDir, shadingNormal) < 0.0) return vec3(0.0);
 		
 		float pdf;
-		vec3 fr = BSDF(ray.Direction, -photonDir, materialData, shadingNormal, pdf);
-		//vec3 fr = GetDiffuseReflectance(materialData, abs(dot(ray.Direction, shadingNormal))) / PI;
+		//vec3 fr = BSDF(ray.Direction, -photonDir, materialData, shadingNormal, pdf);
+		vec3 fr = GetDiffuseReflectance(materialData, abs(dot(ray.Direction, shadingNormal))) / PI;
 		
 		float kernel = 1 / (PI * PhotonQueryRadiusSq);
 		//float r = sqrt(rsq / PhotonQueryRadiusSq);
@@ -120,7 +120,7 @@ void main()
 		ray.Origin += ray.Direction * RAY_HIT_EPSILON;
 		pathThroughput *= throughput;
 	#ifdef RUSSIAN_ROULETTE
-		float continuationPropability = saturate(GetLuminance(throughput));
+		float continuationPropability = saturate(GetLuminance(throughput) + 0.02);
 		if(Random(randomSeed) >= continuationPropability) // if continuationPropability is zero, path should be stoped -> >=
 			break;
 		pathThroughput /= continuationPropability; // Only change in spectrum, no energy loss.

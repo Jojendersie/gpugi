@@ -82,16 +82,20 @@ vec3 GetBSDFDecisionPropabilityCorrectionDiffuse(MaterialData materialData, floa
 #	endif
 }
 
+vec3 GetReflectionProbability(MaterialData materialData, float cosThetaAbs)
+{
+#	if defined(USE_FRESNEL)
+		return materialData.Reflectiveness.xyz * (materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0);
+#	elif defined(USE_CONSTANT_REFLECTION)
+		return materialData.Fresnel0;
+#	else
+		return vec3(0.0);
+#	endif
+}
+
 vec3 GetDiffuseProbability(MaterialData materialData, float cosThetaAbs)
 {
-	vec3 preflect;
-#	if defined(USE_FRESNEL)
-		preflect = materialData.Reflectiveness.xyz * (materialData.Fresnel1 * pow(1.0 - cosThetaAbs, 5.0) + materialData.Fresnel0);
-#	elif defined(USE_CONSTANT_REFLECTION)
-		preflect = materialData.Fresnel0;
-#	else
-		preflect = vec3(0.0);
-#	endif
+	vec3 preflect = GetReflectionProbability(materialData, cosThetaAbs);
 	vec3 pdiffuse = (vec3(1.0) - saturate(preflect)) * materialData.Opacity;
 	return pdiffuse;
 }

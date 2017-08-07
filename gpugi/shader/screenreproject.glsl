@@ -174,7 +174,11 @@ void ProjectToScreen(
 					float surfaceInCos = dot(ray.Direction, shadingNormal);
 					float surfaceOutCos = dot(cameraRay.Direction, shadingNormal);
 					if(surfaceInCos * surfaceOutCos < 0.0)
-						bsdf = GetDiffuseReflectance(materialData, surfaceInCos) / PI;
+					{
+						vec3 pDiffuse = GetDiffuseProbability(materialData, abs(surfaceInCos));
+						bsdf = pDiffuse * materialData.Diffuse * Avg(pDiffuse) / PI;
+						//bsdf = GetDiffuseReflectance(materialData, abs(surfaceInCos)) / PI;
+					}
 					else bsdf = vec3(0.0);
 				}
 				vec3 color = pathThroughput * fluxToIrradiance * bsdf;
