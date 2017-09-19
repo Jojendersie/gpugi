@@ -54,7 +54,8 @@ void main()
 		if(i==0) {
 			geometryNormal = normalize(geometryNormal);
 			vec2 normalPacked = PackNormal(dot(geometryNormal, ray.Direction) > 0.0 ? -geometryNormal : geometryNormal);
-			color_a.w = normalPacked.x;//rayHit
+			color_a.w = normalPacked.x;
+			//color_a.w = rayHit;
 			imageStore(PositionTexture, gridPosition, vec4(ray.Origin, normalPacked.y));
 		}
 	#endif

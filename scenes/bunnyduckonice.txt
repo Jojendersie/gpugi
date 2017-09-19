@@ -6,20 +6,20 @@ resolution = 1000, 800
 //resolution = 1500, 1200
 //resolution = 512, 384
 
-addPointLight = -2.668, 2.115, -2.699, 16.0, 16.0, 16.0
+addPointLight = -2.668, 2.115, -2.699, 20.0, 20.0, 20.0
 
 // Must be set before the renderer is chosen
 pathLength = 16
 
-renderer = 7
+renderer = 6
 im_r = 0.0035
 im_progressive = false
 pm_r = 0.02
 pm_progressive = true
 
-waitSeconds = 60
+//waitSeconds = 60
 //waitIterations = 10000
-screenshot
-//waitIterations = 40000
 //screenshot
+waitIterations = 100000
+screenshot
 //exit

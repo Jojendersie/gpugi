@@ -135,7 +135,7 @@ void PixelMapLighttracer::RecompileShaders(const std::string& _additionalDefines
 		additionalDefines += "#define USE_STOCHASTIC_HASHMAP\n";
 	additionalDefines += "#define MAX_PATHLENGTH " + std::to_string(GlobalConfig::GetParameter("pathLength")[0].As<int>()) + "\n";
 	// TODO: parameter
-//	additionalDefines += "#define DEPTH_BUFFER_OCCLUSION_TEST\n";
+	additionalDefines += "#define DEPTH_BUFFER_OCCLUSION_TEST\n";
 
 	m_photonTracingShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "shader/pixelmaplt/photontracing.comp", additionalDefines);
 	m_photonTracingShader.CreateProgram();
